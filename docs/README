@@ -1,0 +1,146 @@
+README
+------
+
+libre - "Generic library for real-time communications with async IO support"
+Copyright (C) 2010 Creytiv.com
+
+Distributed under BSD license
+
+
+Design goals:
+
+* Portable POSIX source code (ANSI C89 and ISO C99 standard)
+* Robust, fast, low memory footprint
+* RFC compliance
+* IPv4 and IPv6 support
+
+
+Modules:
+
+  name:     status:       description:
+
+* base64    testing       Base-64 encoding/decoding functions
+* conf      testing       Configuration file parser
+* crc32     testing       32-bit CRC defined in ITU V.42
+* dbg       testing       Debug printing
+* dns       testing       DNS resolving (NAPTR, SRV, A)
+* fmt       testing       Formatted printing and regular expression
+* g711      stable        G.711 codec
+* hash      testing       Hashmap table
+* hmac      testing       HMAC: Keyed-Hashing for Message Authentication
+* httpauth  unstable      HTTP-based Authentication (RFC 2617)
+* ice       development   Interactive Connectivity Establishment (ICE)
+* jbuf      testing       Jitter buffer
+* list      stable        Sortable doubly-linked list handling
+* lock      testing       Resource locking functions
+* main      testing       Main poll loop
+* mbuf      stable        Linear memory buffers
+* md5       stable        The MD5 Message-Digest Algorithm (RFC 1321)
+* mem       stable        Memory referencing
+* mod       testing       Run-time module loading
+* mqueue    unstable      Thread-safe message queue
+* natbd     unstable      NAT Behavior Discovery using STUN
+* net       unstable      Networking routines
+* rtp       testing       Real-time Transport Protocol
+* sa        stable        Socket Address functions
+* sdp       unstable      Session Description Protocol
+* sha       testing       Secure Hash Standard, NIST, FIPS PUB 180-1
+* sip       unstable      Core SIP library
+* sipreg    testing       SIP register client
+* sipsess   unstable      SIP Sessions
+* stun      unstable      Session Traversal Utilities for NAT (STUN)
+* sys       testing       System information
+* tcp       testing       TCP transport
+* telev     testing       Telephony Events (RFC 4733)
+* tls       unstable      Transport Layer Security
+* tmr       stable        Timer handling
+* turn      unstable      Obtaining Relay Addresses from STUN (TURN)
+* udp       testing       UDP transport
+* uri       testing       Generic URI library
+
+legend:
+ "stable"       - Code complete; Stable code and stable API
+ "testing"      - Code complete, but API might change
+ "unstable"     - Code complete but not completely tested
+ "development"  - Code is under development
+
+
+Features:
+
+* RFC 1321 - The MD5 Message-Digest Algorithm
+* RFC 1886 - DNS Extensions to support IP version 6
+* RFC 2032 - RTP Payload Format for H.261 Video Streams
+* RFC 2617 - HTTP Authentication: Basic and Digest Access Authentication
+* RFC 2782 - A DNS RR for Specifying the Location of Services (DNS SRV)
+* RFC 2915 - The Naming Authority Pointer (NAPTR) DNS Resource Record
+* RFC 3261 - SIP: Session Initiation Protocol
+* RFC 3263 - Locating SIP Servers
+* RFC 3264 - An Offer/Answer Model with SDP
+* RFC 3327 - SIP Extension Header Field for Registering Non-Adjacent Contacts
+* RFC 3428 - SIP Extension for Instant Messaging
+* RFC 3489 - STUN - Simple Traversal of UDP Through NATs
+* RFC 3550 - RTP: A Transport Protocol for Real-Time Applications
+* RFC 3551 - RTP Profile for Audio and Video Conferences with Minimal Control
+* RFC 3555 - MIME Type Registration of RTP Payload Formats
+* RFC 3556 - SDP Bandwidth Modifiers for RTCP Bandwidth
+* RFC 3581 - An Extension to SIP for Symmetric Response Routing
+* RFC 3605 - RTCP attribute in SDP
+* RFC 3969 - The IANA URI Parameter Registry for SIP
+* RFC 3994 - Indication of Message Composition for Instant Messaging
+* RFC 4346 - The TLS Protocol Version 1.1
+* RFC 4566 - SDP: Session Description Protocol
+* RFC 4585 - Extended RTP Profile for RTCP-Based Feedback
+* RFC 4733 - RTP Payload for DTMF Digits, Telephony Tones, and Teleph. Signals
+* RFC 4961 - Symmetric RTP / RTP Control Protocol (RTCP)
+* RFC 5118 - SIP Torture Test Messages for IPv6
+* RFC 5245 - Interactive Connectivity Establishment (ICE)
+* RFC 5389 - Session Traversal Utilities for NAT (STUN)
+* RFC 5766 - Traversal Using Relays around NAT (TURN)
+* RFC 5768 - Indicating Support for ICE in SIP
+* RFC 5769 - Test vectors for STUN
+* RFC 5780 - NAT Behaviour Discovery Using STUN
+* RFC 6026 - Correct Transaction Handling for 2xx Resp. to SIP INVITE Requests
+* Symmetric RTP
+* draft-ietf-behave-turn-ipv6-08              - TURN Extension for IPv4/IPv6 Transition
+* ITU-T G.711 Appendix I and Appendix II
+
+
+Supported platforms:
+
+* Linux
+* FreeBSD
+* OpenBSD
+* NetBSD
+* Symbian OS
+* Solaris
+* Windows
+* Apple Mac OS X
+
+
+Supported compilers:
+
+* gcc (v2.9x to v4.x)
+* gcce
+* ms vc2003 compiler
+* codewarrior
+
+
+Feedback:
+
+- Please send feedback to <libre@creytiv.com>
+
+
+Coding guidelines:
+
+* Use enum for constants where appropriate
+* Use const as much as possible (where appropriate)
+* Use C99 data types (intN_t, uintN_t, bool)
+* Hide data-types in .c files where possible (use struct foo)
+* Avoid malloc/free, use mem_alloc/mem_deref instead
+* CVS/svn/git tags are NOT allowed in the code!
+* Avoid bit-fields in structs which are not portable
+* Use dummy handlers for timing-critical callbacks
+* return err, return alloced objects as pointer-pointers
+* in allocating functions, first arg is always double pointer
+* Use POSIX error-codes; EINVAL for invalid args, EBADMSG for
+  parse errors and EPROTO for protocol errors

@@ -1,0 +1,34 @@
+Source: libre
+Section: comm
+Priority: optional
+Maintainer: Alfred E. Heggestad <aeh@db.org>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.2
+
+Package: libre
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: Generic library for real-time communications with async IO support
+ .
+ Design goals:
+ .
+ - Portable POSIX source code (ANSI C89 and ISO C99 standard)
+ - Robust, fast, low memory footprint
+ - RFC compliance
+ - IPv4 and IPv6 support
+
+Package: libre-dev
+Architecture: any
+Section: libdevel
+Depends: libre (= ${Source-Version}), ${shlibs:Depends}
+Description: Generic library for real-time communications with async IO support (development files)
+ .
+ Design goals:
+ .
+ - Portable POSIX source code (ANSI C89 and ISO C99 standard)
+ - Robust, fast, low memory footprint
+ - RFC compliance
+ - IPv4 and IPv6 support
+ .
+ This package is only the library development files.

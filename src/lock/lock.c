@@ -1,0 +1,105 @@
+/**
+ * @file lock/lock.c  Pthread mutex locking
+ *
+ * Copyright (C) 2010 Creytiv.com
+ */
+#include <string.h>
+#define __USE_UNIX98 1
+#include <pthread.h>
+#include <re_types.h>
+#include <re_mem.h>
+#include <re_lock.h>
+
+
+#define DEBUG_MODULE "lock"
+#define DEBUG_LEVEL 5
+#include <re_dbg.h>
+
+
+#ifndef RELEASE
+#define LOCK_DEBUG 0
+#endif
+
+
+struct lock {
+	pthread_mutex_t m;
+};
+
+
+static void lock_destructor(void *data)
+{
+	struct lock *l = data;
+
+	int err = pthread_mutex_destroy(&l->m);
+	if (err) {
+		DEBUG_WARNING("pthread_mutex_destroy: %s\n", strerror(err));
+	}
+}
+
+
+int lock_alloc(struct lock **lp)
+{
+	pthread_mutexattr_t attr;
+	struct lock *l;
+
+	if (!lp)
+		return EINVAL;
+
+	l = mem_zalloc(sizeof(*l), lock_destructor);
+	if (!l)
+		return ENOMEM;
+
+	(void)pthread_mutex_init(&l->m, NULL);
+
+	pthread_mutexattr_init(&attr);
+
+#if LOCK_DEBUG
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+	DEBUG_NOTICE("init debug lock\n");
+#else
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+#endif
+	pthread_mutex_init(&l->m, &attr);
+
+	*lp = l;
+	return 0;
+}
+
+
+void lock_read_get(struct lock *l)
+{
+	const int err = pthread_mutex_lock(&l->m);
+	if (err) {
+		DEBUG_WARNING("lock_read_get: %s\n", strerror(err));
+	}
+}
+
+
+void lock_write_get(struct lock *l)
+{
+	const int err = pthread_mutex_lock(&l->m);
+	if (err) {
+		DEBUG_WARNING("lock_write_get: %s\n", strerror(err));
+	}
+}
+
+
+int lock_read_try(struct lock *l)
+{
+	return pthread_mutex_trylock(&l->m);
+}
+
+
+int lock_write_try(struct lock *l)
+{
+	return pthread_mutex_trylock(&l->m);
+}
+
+
+void lock_rel(struct lock *l)
+{
+	const int err = pthread_mutex_unlock(&l->m);
+	if (err) {
+		DEBUG_WARNING("lock_rel: %s\n", strerror(err));
+	}
+}
