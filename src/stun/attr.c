@@ -186,7 +186,7 @@ int stun_attr_decode(struct stun_attr **attrp, struct mbuf *mb,
 	if (mbuf_get_left(mb) < 4)
 		return EBADMSG;
 
-	attr = mem_zalloc(sizeof(struct stun_attr), destructor);
+	attr = mem_zalloc(sizeof(*attr), destructor);
 	if (!attr)
 		return ENOMEM;
 
