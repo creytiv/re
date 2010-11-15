@@ -56,6 +56,6 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Fri Nov 5 2010 Alfred E. Heggestad <aeh@db.org> - 
+* Fri Nov 5 2010 Alfred E. Heggestad <aeh@db.org> -
 - Initial build.
 
