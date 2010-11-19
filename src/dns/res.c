@@ -37,17 +37,20 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	else if (_res.defdname)
 		str_ncpy(domain, _res.defdname, dsize);
 
-	*n = min(*n, (uint32_t)_res.nscount);
-	if (!*n) {
+	if (!_res.nscount) {
 		err = ENOENT;
 		goto out;
 	}
 
 	err = 0;
-	for (i=0; i<*n && !err; i++) {
+	for (i=0; i<min(*n, (uint32_t)_res.nscount) && !err; i++) {
 		struct sockaddr_in *addr = &_res.nsaddr_list[i];
 		err |= sa_set_sa(&nsv[i], (struct sockaddr *)addr);
 	}
+	if (err)
+		goto out;
+
+	*n = i;
 
  out:
 	res_close();
