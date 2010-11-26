@@ -729,6 +729,20 @@ splint-test:
 
 ###############################################################################
 #
+# Clang section
+#
+
+CLANG_OPTIONS := -I$(LIBRE_INC) $(CFLAGS)
+CLANG_IGNORE  :=
+CLANG_SRCS    += $(filter-out $(CLANG_IGNORE), $(patsubst %,src/%,$(SRCS)))
+
+clang:
+	@clang --analyze $(CLANG_OPTIONS) $(CLANG_SRCS)
+	@rm -f *.plist
+
+
+###############################################################################
+#
 # Documentation section
 #
 DOX_DIR=../$(PROJECT)-dox
