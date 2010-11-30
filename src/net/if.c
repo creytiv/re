@@ -77,14 +77,12 @@ static bool if_getaddr_handler(const char *ifname,
 			       const struct sa *sa, void *arg)
 {
 	struct ifentry *ife = arg;
-	struct pl in = PL_INIT;
 
 	/* Match name of interface? */
-	pl_set_str(&in, ife->ifname);
-	if (pl_isset(&in) && 0 != pl_strcmp(&in, ifname))
+	if (str_len(ife->ifname) && 0 != str_casecmp(ife->ifname, ifname))
 		return false;
 
-	if (!sa)
+	if (!sa_isset(sa, SA_ADDR))
 		return false;
 
 #if 1
