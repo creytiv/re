@@ -76,6 +76,9 @@ int get_symbiandns(struct sa *nsv, uint32_t *n)
 	sock.Close();
 	serv.Close();
 
+	if (i == 0)
+		return ENOENT;
+
 	*n = i;
 
 	return 0;
