@@ -732,7 +732,7 @@ splint-test:
 # Clang section
 #
 
-CLANG_OPTIONS := -I$(LIBRE_INC) $(CFLAGS)
+CLANG_OPTIONS := -Iinclude -I$(LIBRE_INC) $(CFLAGS)
 CLANG_IGNORE  :=
 CLANG_SRCS    += $(filter-out $(CLANG_IGNORE), $(patsubst %,src/%,$(SRCS)))
 
