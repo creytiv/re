@@ -212,6 +212,7 @@ const struct sa *rtp_local(const struct rtp_sock *rs);
 /* RTCP session api */
 void  rtcp_start(struct rtp_sock *rs, const char *cname,
 		 const struct sa *peer);
+void  rtcp_enable_mux(struct rtp_sock *rs, bool enabled);
 void  rtcp_set_srate(struct rtp_sock *rs, uint32_t sr_tx, uint32_t sr_rx);
 int   rtcp_send_app(struct rtp_sock *rs, const char name[4],
 		    const uint8_t *data, size_t len);

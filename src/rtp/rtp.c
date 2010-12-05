@@ -38,6 +38,7 @@ struct rtp_sock {
 	rtcp_recv_h *rtcph;
 	void *arg;
 	struct rtcp_sess *rtcp;
+	bool rtcp_mux;
 };
 
 
@@ -167,17 +168,26 @@ static void udp_recv_handler(const struct sa *src, struct mbuf *mb, void *arg)
 {
 	struct rtp_sock *rs = arg;
 	struct rtp_header hdr;
-	size_t pos;
 	int err;
 
-	pos = mb->pos;
-	err = rtp_decode(rs, mb, &hdr);
-	if (err) {
-		/* Not an RTP packet - try RTCP */
-		mb->pos = pos;
-		rtcp_recv_handler(src, mb, arg);
-		return;
+	/* Handle RTCP multiplexed on RTP-port */
+	if (rs->rtcp_mux) {
+		uint8_t pt;
+
+		if (mbuf_get_left(mb) < 2)
+			return;
+
+		pt = mbuf_buf(mb)[1] & 0x7f;
+
+		if (64 <= pt && pt <= 95) {
+			rtcp_recv_handler(src, mb, arg);
+			return;
+		}
 	}
+
+	err = rtp_decode(rs, mb, &hdr);
+	if (err)
+		return;
 
 	if (rs->rtcp) {
 		rtcp_sess_rx_rtp(rs->rtcp, hdr.seq, hdr.ts,
@@ -444,12 +454,22 @@ void rtcp_start(struct rtp_sock *rs, const char *cname,
 }
 
 
+void rtcp_enable_mux(struct rtp_sock *rs, bool enabled)
+{
+	if (!rs)
+		return;
+
+	rs->rtcp_mux = enabled;
+}
+
+
 int rtcp_send(struct rtp_sock *rs, struct mbuf *mb)
 {
 	if (!rs || !rs->sock_rtcp || !sa_isset(&rs->rtcp_peer, SA_ALL))
 		return EINVAL;
 
-	return udp_send(rs->sock_rtcp, &rs->rtcp_peer, mb);
+	return udp_send(rs->rtcp_mux ? rs->sock_rtp : rs->sock_rtcp,
+			&rs->rtcp_peer, mb);
 }
 
 
