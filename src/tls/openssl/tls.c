@@ -115,9 +115,11 @@ int tls_alloc(struct tls **tlsp, const char *keyfile, const char *pwd)
 	if (keyfile) {
 		err = EINVAL;
 
-		tls->pass = pwd;
-		SSL_CTX_set_default_passwd_cb(tls->ctx, password_cb);
-		SSL_CTX_set_default_passwd_cb_userdata(tls->ctx, tls);
+		if (pwd) {
+			tls->pass = pwd;
+			SSL_CTX_set_default_passwd_cb(tls->ctx, password_cb);
+			SSL_CTX_set_default_passwd_cb_userdata(tls->ctx, tls);
+		}
 
 		r = SSL_CTX_use_certificate_chain_file(tls->ctx, keyfile);
 		if (r <= 0) {
