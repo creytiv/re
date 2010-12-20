@@ -175,7 +175,7 @@ int sipsess_reject(struct sipsess *sess, uint16_t scode, const char *reason,
 
 	va_start(ap, fmt);
 	err = sip_treplyf(&sess->st, NULL, sess->sip, sess->msg, false,
-			  scode, reason, "%v", fmt, &ap);
+			  scode, reason, fmt ? "%v" : NULL, fmt, &ap);
 	va_end(ap);
 
 	return err;
