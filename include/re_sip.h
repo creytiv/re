@@ -309,6 +309,8 @@ const struct sip_hdr *sip_msg_xhdr(const struct sip_msg *msg,
 const struct sip_hdr *sip_msg_xhdr_apply(const struct sip_msg *msg,
 					 bool fwd, const char *name,
 					 sip_hdr_h *h, void *arg);
+uint32_t sip_msg_hdr_count(const struct sip_msg *msg, enum sip_hdrid id);
+uint32_t sip_msg_xhdr_count(const struct sip_msg *msg, const char *name);
 struct tcp_conn *sip_msg_tcpconn(const struct sip_msg *msg);
 void sip_msg_dump(const struct sip_msg *msg);
 

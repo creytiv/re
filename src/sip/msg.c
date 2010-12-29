@@ -501,6 +501,39 @@ const struct sip_hdr *sip_msg_xhdr_apply(const struct sip_msg *msg,
 }
 
 
+static bool count_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
+			  void *arg)
+{
+	uint32_t *n = arg;
+	(void)hdr;
+	(void)msg;
+
+	++(*n);
+
+	return false;
+}
+
+
+uint32_t sip_msg_hdr_count(const struct sip_msg *msg, enum sip_hdrid id)
+{
+	uint32_t n = 0;
+
+	sip_msg_hdr_apply(msg, true, id, count_handler, &n);
+
+	return n;
+}
+
+
+uint32_t sip_msg_xhdr_count(const struct sip_msg *msg, const char *name)
+{
+	uint32_t n = 0;
+
+	sip_msg_xhdr_apply(msg, true, name, count_handler, &n);
+
+	return n;
+}
+
+
 void sip_msg_dump(const struct sip_msg *msg)
 {
 	struct le *le;
