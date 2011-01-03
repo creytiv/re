@@ -31,3 +31,9 @@ void     tmr_init(struct tmr *tmr);
 void     tmr_start(struct tmr *tmr, uint64_t delay, tmr_h *th, void *arg);
 void     tmr_cancel(struct tmr *tmr);
 uint64_t tmr_get_expire(const struct tmr *tmr);
+
+
+static inline bool tmr_isrunning(const struct tmr *tmr)
+{
+	return tmr ? NULL != tmr->th : false;
+}
