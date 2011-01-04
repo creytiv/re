@@ -285,3 +285,12 @@ int sip_auth_alloc(struct sip_auth **authp, sip_auth_h *authh,
 
 	return 0;
 }
+
+
+void sip_auth_reset(struct sip_auth *auth)
+{
+	if (!auth)
+		return;
+
+	list_flush(&auth->realml);
+}

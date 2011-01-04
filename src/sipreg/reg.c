@@ -168,6 +168,10 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 
 			return;
 
+		case 403:
+			sip_auth_reset(reg->auth);
+			break;
+
 		case 423:
 			minexp = sip_msg_hdr(msg, SIP_HDR_MIN_EXPIRES);
 			if (!minexp || !pl_u32(&minexp->val) || !reg->expires)
