@@ -84,7 +84,9 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 			map = stun_msg_attr(msg, STUN_ATTR_MAPPED_ADDR);
 
 		if (!map || !other) {
-			DEBUG_WARNING("mapped- or other-addr attr missing\n");
+			DEBUG_WARNING("missing attributes: %s %s\n",
+				      map   ? "" : "MAPPED-ADDR",
+				      other ? "" : "OTHER-ADDR");
 			nm->mh(EPROTO, NAT_TYPE_UNKNOWN, nm->arg);
 			return;
 		}

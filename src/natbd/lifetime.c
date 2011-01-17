@@ -35,6 +35,8 @@
 /** Defines a NAT Binding Lifetime Discovery session */
 struct nat_lifetime {
 	struct stun *stun;                      /**< STUN Client            */
+	struct stun_ctrans *ctx;                /**< STUN Transaction 1     */
+	struct stun_ctrans *cty;                /**< STUN Transaction 2     */
 	struct udp_sock *us_x;                  /**< First UDP socket       */
 	struct udp_sock *us_y;                  /**< Second UDP socket      */
 	struct sa srv;                          /**< Server IP-address/port */
@@ -181,8 +183,9 @@ static int start_test(struct nat_lifetime *nl)
 
 	tmr_cancel(&nl->tmr);
 
-	return stun_request(NULL, nl->stun, IPPROTO_UDP, nl->us_x, &nl->srv, 0,
-			    STUN_METHOD_BINDING, NULL, 0, false,
+	nl->ctx = mem_deref(nl->ctx);
+	return stun_request(&nl->ctx, nl->stun, IPPROTO_UDP, nl->us_x,
+			    &nl->srv, 0, STUN_METHOD_BINDING, NULL, 0, false,
 			    stun_response_handler_x, nl, 1,
 			    STUN_ATTR_SOFTWARE, stun_software);
 }
@@ -196,8 +199,9 @@ static void timeout(void *arg)
 
 	nl->probing = true;
 
-	err = stun_request(NULL, nl->stun, IPPROTO_UDP, nl->us_y, &nl->srv, 0,
-			   STUN_METHOD_BINDING, NULL, 0, false,
+	nl->cty = mem_deref(nl->cty);
+	err = stun_request(&nl->cty, nl->stun, IPPROTO_UDP, nl->us_y,
+			   &nl->srv, 0, STUN_METHOD_BINDING, NULL, 0, false,
 			   stun_response_handler_y, nl, 2,
 			   STUN_ATTR_RESP_PORT, &rp,
 			   STUN_ATTR_SOFTWARE, stun_software);
@@ -250,6 +254,8 @@ static void lifetime_destructor(void *data)
 
 	tmr_cancel(&nl->tmr);
 
+	mem_deref(nl->ctx);
+	mem_deref(nl->cty);
 	mem_deref(nl->us_x);
 	mem_deref(nl->us_y);
 	mem_deref(nl->stun);
