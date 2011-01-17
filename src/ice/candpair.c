@@ -16,7 +16,7 @@
 #include "ice.h"
 
 
-#define DEBUG_MODULE "candpair"
+#define DEBUG_MODULE "cndpair"
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
 
@@ -26,6 +26,7 @@ static void candpair_destructor(void *data)
 	struct candpair *cp = data;
 
 	list_unlink(&cp->le);
+	list_unlink(&cp->le_tq);
 
 	mem_deref(cp->ct_conn);
 
@@ -55,9 +56,14 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 			struct cand *lcand, struct cand *rcand)
 {
 	struct candpair *cp;
+	struct icem_comp *comp;
 
 	if (!icem || !lcand || !rcand)
 		return EINVAL;
+
+	comp = icem_comp_find(icem, lcand->compid);
+	if (!comp)
+		return ENOENT;
 
 	cp = mem_zalloc(sizeof(*cp), candpair_destructor);
 	if (!cp)
@@ -66,10 +72,12 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 	list_append(&icem->checkl, &cp->le, cp);
 
 	cp->icem  = icem;
+	cp->comp  = comp;
 	cp->lcand = mem_ref(lcand);
 	cp->rcand = mem_ref(rcand);
 	cp->state = CANDPAIR_FROZEN;
 	cp->rtt   = -1;
+	cp->def   = comp->def_lcand == lcand && comp->def_rcand == rcand;
 
 	candpair_set_pprio(cp);
 
@@ -120,6 +128,88 @@ void icem_candpair_cancel(struct candpair *cp)
 		return;
 
 	cp->ct_conn = mem_deref(cp->ct_conn);
+
+	icem_conncheck_continue(cp->icem);
+}
+
+
+void icem_candpair_make_valid(struct candpair *cp)
+{
+	if (!cp)
+		return;
+
+	cp->err = 0;
+	cp->scode = 0;
+	cp->valid = true;
+
+	if (cp->tick_sent)
+		cp->rtt = (int)(tmr_jiffies() - cp->tick_sent);
+
+	icem_candpair_set_state(cp, CANDPAIR_SUCCEEDED);
+	icem_candpair_move(cp, &cp->icem->validl);
+}
+
+
+void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode)
+{
+	if (!cp)
+		return;
+
+	cp->err = err;
+	cp->scode = scode;
+
+	icem_candpair_set_state(cp, CANDPAIR_FAILED);
+}
+
+
+void icem_candpair_set_state(struct candpair *cp, enum candpair_state state)
+{
+	if (!cp)
+		return;
+
+	if (cp->state != state) {
+		icecomp_printf(cp->comp, "FSM: %10s ===> %-10s\n",
+			       ice_candpair_state2name(cp->state),
+			       ice_candpair_state2name(state));
+	}
+
+	cp->state = state;
+}
+
+
+/**
+ * Delete all Candidate-Pairs where the Local candidate is of a given type
+ */
+void icem_candpairs_flush(struct list *lst, enum cand_type type, uint8_t id)
+{
+	struct le *le = list_head(lst);
+
+	while (le) {
+
+		struct candpair *cp = le->data;
+
+		le = le->next;
+
+		if (cp->lcand->compid != id)
+			continue;
+
+		if (cp->lcand->type != type)
+			continue;
+
+		/* also remove the local candidate */
+		mem_deref(cp->lcand);
+
+		mem_deref(cp);
+	}
+}
+
+
+bool icem_candpair_iscompleted(const struct candpair *cp)
+{
+	if (!cp)
+		return false;
+
+	return cp->state == CANDPAIR_FAILED || cp->state == CANDPAIR_SUCCEEDED;
 }
 
 
@@ -193,6 +283,25 @@ struct candpair *icem_candpair_find_st(const struct list *lst, uint8_t compid,
 }
 
 
+struct candpair *icem_candpair_find_compid(const struct list *lst,
+					   uint8_t compid)
+{
+	struct le *le;
+
+	for (le = list_head(lst); le; le = le->next) {
+
+		struct candpair *cp = le->data;
+
+		if (cp->lcand->compid != compid)
+			continue;
+
+		return cp;
+	}
+
+	return NULL;
+}
+
+
 bool icem_candpair_cmp_fnd(const struct candpair *cp1,
 			   const struct candpair *cp2)
 {
@@ -211,7 +320,7 @@ int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
 	if (!cp)
 		return 0;
 
-	err = re_hprintf(pf, "{%u} %10s {%c%c%c%c}  %28H --> %28H",
+	err = re_hprintf(pf, "{%u} %10s {%c%c%c%c}  %28H <---> %28H",
 			 cp->lcand->compid,
 			 ice_candpair_state2name(cp->state),
 			 cp->def ? 'D' : ' ',
@@ -221,9 +330,14 @@ int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
 			 icem_cand_print, cp->lcand,
 			 icem_cand_print, cp->rcand);
 
-	if (cp->rtt != -1) {
+	if (cp->rtt != -1)
 		err |= re_hprintf(pf, " RTT=%dms", cp->rtt);
-	}
+
+	if (cp->err)
+		err |= re_hprintf(pf, " (%s)", strerror(cp->err));
+
+	if (cp->scode)
+		err |= re_hprintf(pf, " [%u]", cp->scode);
 
 	return err;
 }

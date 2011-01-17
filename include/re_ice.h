@@ -14,8 +14,21 @@ enum ice_compid {
 	ICE_COMPID_RTCP = 2
 };
 
+enum ice_nomination {
+	NOMINATION_REGULAR = 0,
+	NOMINATION_AGGRESSIVE
+};
+
 struct ice;
 struct icem;
+
+/** ICE Configuration */
+struct ice_conf {
+	enum ice_nomination nom;  /**< Nomination algorithm        */
+	uint32_t rto;             /**< STUN Retransmission TimeOut */
+	uint32_t rc;              /**< STUN Retransmission Count   */
+	bool debug;               /**< Enable ICE debugging        */
+};
 
 typedef void (ice_gather_h)(int err, uint16_t scode, const char *reason,
 			    void *arg);
@@ -24,6 +37,7 @@ typedef void (ice_connchk_h)(int err, bool update, void *arg);
 
 /* ICE Session */
 int  ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer);
+struct ice_conf *ice_conf(struct ice *ice);
 void ice_set_offerer(struct ice *ice, bool offerer);
 int  ice_sdp_decode(struct ice *ice, const char *name, const char *value);
 int  ice_conncheck_start(struct ice *ice);
@@ -36,6 +50,7 @@ const char *ice_pwd(const struct ice *ice);
 /* ICE Media */
 int  icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 		ice_gather_h *gh, ice_connchk_h *chkh, void *arg);
+void icem_set_name(struct icem *icem, const char *name);
 int  icem_comp_add(struct icem *icem, uint8_t compid, void *sock);
 int  icem_cand_add(struct icem *icem, uint8_t compid, uint16_t lprio,
 		   const char *ifname, const struct sa *addr);
@@ -46,6 +61,7 @@ bool icem_verify_support(struct icem *icem, uint8_t compid,
 			 const struct sa *raddr);
 int  icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr);
 bool icem_mismatch(const struct icem *icem);
+void icem_update(struct icem *icem);
 int  icem_sdp_decode(struct icem *icem, const char *name, const char *value);
 int  icem_debug(struct re_printf *pf, const struct icem *icem);
 struct list *icem_lcandl(const struct icem *icem);

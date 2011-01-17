@@ -64,7 +64,7 @@ static void stun_resp_handler(int err, uint16_t scode, const char *reason,
 	--icem->nstun;
 
 	if (err || scode > 0) {
-		DEBUG_WARNING("{%u} keepalive failed: %s\n",
+		DEBUG_WARNING("{%u} STUN Request failed: %s\n",
 			      comp->id, strerror(err));
 		goto out;
 	}

@@ -19,9 +19,15 @@
 
 /*
  * ICE Implementation as of RFC 5245
- *
- * - only Regular nomination is supported
  */
+
+
+static const struct ice_conf conf_default = {
+	NOMINATION_REGULAR,
+	ICE_DEFAULT_RTO_RTP,
+	ICE_DEFAULT_RC,
+	false
+};
 
 
 /** Determining Role */
@@ -60,6 +66,7 @@ int ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer)
 
 	list_init(&ice->ml);
 
+	ice->conf = conf_default;
 	ice->lmode = mode;
 	ice->tiebrk = rand_u64();
 
@@ -71,6 +78,12 @@ int ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer)
 	*icep = ice;
 
 	return 0;
+}
+
+
+struct ice_conf *ice_conf(struct ice *ice)
+{
+	return ice ? &ice->conf : NULL;
 }
 
 

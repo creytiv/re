@@ -16,7 +16,7 @@
 #include "ice.h"
 
 
-#define DEBUG_MODULE "checklist"
+#define DEBUG_MODULE "chklist"
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
 
@@ -118,7 +118,7 @@ static void candpair_set_states(struct icem *icem)
 				cp = cp2;
 		}
 
-		cp->state = CANDPAIR_WAITING;
+		icem_candpair_set_state(cp, CANDPAIR_WAITING);
 	}
 }
 
@@ -169,7 +169,7 @@ int icem_checklist_form(struct icem *icem)
 /* If all of the pairs in the check list are now either in the Failed or
    Succeeded state:
  */
-static bool iscompleted(struct icem *icem)
+static bool iscompleted(const struct icem *icem)
 {
 	struct le *le;
 
@@ -177,15 +177,8 @@ static bool iscompleted(struct icem *icem)
 
 		const struct candpair *cp = le->data;
 
-		switch (cp->state) {
-
-		case CANDPAIR_FAILED:
-		case CANDPAIR_SUCCEEDED:
-			continue;
-
-		default:
+		if (!icem_candpair_iscompleted(cp))
 			return false;
-		}
 	}
 
 	return true;
@@ -221,7 +214,9 @@ static void concluding_ice(struct icem_comp *comp)
 }
 
 
-/* 7.1.3.3.  Check List and Timer State Updates */
+/**
+ * Check List and Timer State Updates
+ */
 void icem_checklist_update(struct icem *icem)
 {
 	struct le *le;
@@ -231,15 +226,14 @@ void icem_checklist_update(struct icem *icem)
 		return;
 
 	/*
-	  o  If there is not a pair in the valid list for each component of the
-	  media stream, the state of the check list is set to Failed.
-	*/
+	 * If there is not a pair in the valid list for each component of the
+	 * media stream, the state of the check list is set to Failed.
+	 */
 	for (le = icem->compl.head; le; le = le->next) {
 
 		struct icem_comp *comp = le->data;
 
-		if (!icem_candpair_find_st(&icem->validl, comp->id,
-					   CANDPAIR_SUCCEEDED)) {
+		if (!icem_candpair_find_compid(&icem->validl, comp->id)) {
 			DEBUG_WARNING("no candidate pair for compid %u\n",
 				      comp->id);
 			err = ENOENT;
@@ -251,9 +245,7 @@ void icem_checklist_update(struct icem *icem)
 		if (!comp->cp_sel)
 			continue;
 
-		/* remove TURN client if not used */
-		if (comp->cp_sel->lcand->type != CAND_TYPE_RELAY)
-			comp->turnc = mem_deref(comp->turnc);
+		icem_comp_keepalive(comp, true);
 	}
 
 	icem->state = err ? CHECKLIST_FAILED : CHECKLIST_COMPLETED;

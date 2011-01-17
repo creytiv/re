@@ -10,6 +10,7 @@
 #include <re_mbuf.h>
 #include <re_list.h>
 #include <re_tmr.h>
+#include <re_sys.h>
 #include <re_sa.h>
 #include <re_udp.h>
 #include <re_stun.h>
@@ -18,12 +19,34 @@
 #include "ice.h"
 
 
-#define DEBUG_MODULE "comp"
+#define DEBUG_MODULE "icecomp"
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
 
 
 enum {COMPID_MIN = 1, COMPID_MAX = 255};
+enum {DEFAULT_KEEPALIVE = 15};
+
+
+#if 0
+/* for debugging */
+static bool helper_send_handler(int *err, struct sa *dst,
+				struct mbuf *mb, void *arg)
+{
+	struct icem_comp *comp = arg;
+
+	(void)comp;
+	(void)err;
+	(void)dst;
+	(void)mb;
+
+	re_printf("{id=%d} ......... UDP send %u bytes  to  %J via %s\n",
+		  comp->id, mbuf_get_left(mb), dst,
+		  (mb->pos && comp->turnc) ? "tunnel" : "socket");
+
+	return false;
+}
+#endif
 
 
 static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
@@ -33,40 +56,29 @@ static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 	struct stun_msg *msg = NULL;
 	struct stun_unknown_attr ua;
 	const size_t start = mb->pos;
-	int err;
 
 #if 0
 	re_printf("{%d} UDP recv_helper: %u bytes from %J\n",
 		  comp->id, mbuf_get_left(mb), src);
 #endif
 
-	err = stun_msg_decode(&msg, mb, &ua);
-	if (err)
+	if (stun_msg_decode(&msg, mb, &ua))
 		return false;
 
-	if (STUN_METHOD_BINDING != stun_msg_method(msg)) {
-		DEBUG_NOTICE("ignore STUN message %s from %J\n",
-			     stun_method_name(stun_msg_method(msg)), src);
-		goto out;
+	if (STUN_METHOD_BINDING == stun_msg_method(msg)) {
+
+		switch (stun_msg_class(msg)) {
+
+		case STUN_CLASS_REQUEST:
+			(void)icem_stund_recv(comp, src, msg, start);
+			break;
+
+		default:
+			(void)stun_ctrans_recv(icem->stun, msg, &ua);
+			break;
+		}
 	}
 
-	switch (stun_msg_class(msg)) {
-
-	case STUN_CLASS_REQUEST:
-		err = icem_stund_recv(comp, src, msg, start);
-		break;
-
-	case STUN_CLASS_SUCCESS_RESP:
-	case STUN_CLASS_ERROR_RESP:
-		(void)stun_ctrans_recv(icem->stun, msg, &ua);
-		break;
-
-	default:
-		DEBUG_WARNING("udp_recv: ignore STUN msg from %J\n", src);
-		break;
-	}
-
- out:
 	mem_deref(msg);
 
 	return true;  /* handled */
@@ -77,10 +89,13 @@ static void destructor(void *data)
 {
 	struct icem_comp *comp = data;
 
+	tmr_cancel(&comp->tmr_ka);
+
 	mem_deref(comp->ct_gath);
 	mem_deref(comp->turnc);
 	mem_deref(comp->cp_sel);
-	mem_deref(comp->def_cand);
+	mem_deref(comp->def_lcand);
+	mem_deref(comp->def_rcand);
 	mem_deref(comp->uh);
 	mem_deref(comp->sock);
 }
@@ -141,7 +156,8 @@ int icem_comp_alloc(struct icem_comp **cp, struct icem *icem, int id,
 	comp->sock = mem_ref(sock);
 	comp->icem = icem;
 
-	err = udp_register_helper(&comp->uh, sock, NULL, icem->layer, NULL,
+	err = udp_register_helper(&comp->uh, sock, NULL, icem->layer,
+				  NULL, /*helper_send_handler*/
 				  helper_recv_handler, comp);
 	if (err)
 		goto out;
@@ -173,10 +189,27 @@ int icem_comp_set_default_cand(struct icem_comp *comp)
 	if (!cand)
 		return ENOENT;
 
-	mem_deref(comp->def_cand);
-	comp->def_cand = mem_ref(cand);
+	mem_deref(comp->def_lcand);
+	comp->def_lcand = mem_ref(cand);
 
 	return 0;
+}
+
+
+void icem_comp_set_default_rcand(struct icem_comp *comp, struct cand *rcand)
+{
+	if (!comp)
+		return;
+
+	icecomp_printf(comp, "Set default remote candidate: %s:%J\n",
+		       ice_cand_type2name(rcand->type), &rcand->addr);
+
+	mem_deref(comp->def_rcand);
+	comp->def_rcand = mem_ref(rcand);
+
+	if (comp->turnc) {
+		(void)turnc_add_chan(comp->turnc, &rcand->addr, NULL, NULL);
+	}
 }
 
 
@@ -206,4 +239,51 @@ struct icem_comp *icem_comp_find(const struct icem *icem, uint8_t compid)
 	}
 
 	return NULL;
+}
+
+
+static void timeout(void *arg)
+{
+	struct icem_comp *comp = arg;
+	struct candpair *cp;
+
+	tmr_start(&comp->tmr_ka, DEFAULT_KEEPALIVE * 1000 + rand_u16() % 1000,
+		  timeout, comp);
+
+	/* find selected candidate-pair */
+	cp = comp->cp_sel;
+	if (!cp)
+		return;
+
+	(void)stun_indication(comp->icem->proto, comp->sock, &cp->rcand->addr,
+			      (cp->lcand->type == CAND_TYPE_RELAY) ? 4 : 0,
+			      STUN_METHOD_BINDING, NULL, 0, true, 0);
+}
+
+
+void icem_comp_keepalive(struct icem_comp *comp, bool enable)
+{
+	if (!comp)
+		return;
+
+	if (enable) {
+		tmr_start(&comp->tmr_ka, DEFAULT_KEEPALIVE * 1000,
+			  timeout, comp);
+	}
+	else {
+		tmr_cancel(&comp->tmr_ka);
+	}
+}
+
+
+void icecomp_printf(struct icem_comp *comp, const char *fmt, ...)
+{
+	va_list ap;
+
+	if (!comp || !comp->icem->ice->conf.debug)
+		return;
+
+	va_start(ap, fmt);
+	(void)re_printf("{%s.%u} %v", comp->icem->name, comp->id, fmt, &ap);
+	va_end(ap);
 }

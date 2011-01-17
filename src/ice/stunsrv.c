@@ -41,7 +41,8 @@ static int learn_peer_reflexive(struct icem_comp *comp, const struct sa *src,
 	if (icem_cand_find(&icem->rcandl, comp->id, src))
 		return 0;
 
-	DEBUG_NOTICE("**** Adding Peer-Reflexive candidate: %J\n", src);
+	DEBUG_NOTICE("{%d} Adding Peer-Reflexive remote candidate: %J\n",
+		     comp->id, src);
 
 	/*
 	  The foundation of the candidate is set to an arbitrary value,
@@ -62,6 +63,7 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 			    struct cand *rcand)
 {
 	struct candpair *cp;
+	int err;
 
 	if (!lcand || !rcand)
 		return;
@@ -71,12 +73,20 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 
 		switch (cp->state) {
 
+#if 0
+			/* TODO: I am not sure why we should cancel the
+			 *       pending Connectivity check here. this
+			 *       can lead to a deadlock situation where
+			 *       both agents are stuck on sending
+			 *       triggered checks on the same candidate pair
+			 */
 		case CANDPAIR_INPROGRESS:
 			icem_candpair_cancel(cp);
 			/*@fallthrough@*/
+#endif
 
 		case CANDPAIR_FAILED:
-			cp->state = CANDPAIR_WAITING;
+			icem_candpair_set_state(cp, CANDPAIR_WAITING);
 			/*@fallthrough@*/
 
 		case CANDPAIR_FROZEN:
@@ -85,8 +95,22 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 			break;
 
 		case CANDPAIR_SUCCEEDED:
+		default:
 			break;
 		}
+	}
+	else {
+		err = icem_candpair_alloc(&cp, icem, lcand, rcand);
+		if (err) {
+			DEBUG_WARNING("failed to allocate candpair\n");
+			return;
+		}
+
+		icem_candpair_prio_order(&icem->checkl);
+
+		icem_candpair_set_state(cp, CANDPAIR_WAITING);
+
+		icem_triggq_push(icem, cp);
 	}
 }
 
@@ -114,12 +138,10 @@ static struct candpair *lookup_candpair(struct icem *icem,
 
 static void handle_stun(struct ice *ice, struct icem *icem,
 			struct icem_comp *comp, const struct sa *src,
-			uint32_t prio, bool use_cand)
+			uint32_t prio, bool use_cand, bool tunnel)
 {
-	struct cand *lcand = NULL;
-	struct cand *rcand = NULL;
+	struct cand *lcand = NULL, *rcand = NULL;
 	struct candpair *cp = NULL;
-	int err;
 
 	rcand = icem_cand_find(&icem->rcandl, comp->id, src);
 	if (rcand) {
@@ -133,15 +155,30 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 	}
 
 #if ICE_TRACE
-	DEBUG_NOTICE("{id=%u} Binding Request from %J (candpair=%s)\n",
-		     comp->id, src,
-		     cp ? ice_candpair_state2name(cp->state) : "n/a");
+	icecomp_printf(comp, "Rx Binding Request from %J via %s"
+		       " (candpair=%s) %s\n",
+		       src, tunnel ? "Tunnel" : "Socket",
+		       cp ? ice_candpair_state2name(cp->state) : "n/a",
+		       use_cand ? "[USE]" : "");
+#else
+	(void)tunnel;
 #endif
 
+	/* 7.2.1.3.  Learning Peer Reflexive Candidates */
+	(void)learn_peer_reflexive(comp, src, prio);
+
+	/* 7.2.1.4.  Triggered Checks */
+	if (ICE_MODE_FULL == ice->lmode)
+		triggered_check(icem, lcand, rcand);
+
+	/* 7.2.1.5.  Updating the Nominated Flag */
 	if (use_cand) {
 		if (ice->lrole == ROLE_CONTROLLED) {
 			if (cp && cp->state == CANDPAIR_SUCCEEDED) {
-				DEBUG_NOTICE("setting NOMINATED flag\n");
+				DEBUG_NOTICE("{id=%d} setting NOMINATED"
+					     " flag on candpair [%H]\n",
+					     comp->id,
+					     icem_candpair_debug, cp);
 				cp->nominated = true;
 			}
 		}
@@ -151,15 +188,10 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 			icem_candpair_cancel(cp);
 			icem_comp_set_selected(comp, cp);
 		}
+
+		/* ICE should complete now .. */
+		icem_checklist_update(icem);
 	}
-
-	/* Send TRIGGERED CHECK to peer if mode=full */
-	if (ICE_MODE_FULL == ice->lmode)
-		triggered_check(icem, lcand, rcand);
-
-	err = learn_peer_reflexive(comp, src, prio);
-
-	/* 7.2.1.5.  Updating the Nominated Flag */
 }
 
 
@@ -227,7 +259,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 	if (attr)
 		use_cand = true;
 
-	handle_stun(ice, icem, comp, src, prio_prflx, use_cand);
+	handle_stun(ice, icem, comp, src, prio_prflx, use_cand, presz > 0);
 
 	return stun_reply(icem->proto, comp->sock, src, presz, req,
 			  (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 2,

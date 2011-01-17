@@ -63,21 +63,24 @@ struct ice {
 	char lpwd[23];                /**< Local Password                   */
 	struct list ml;               /**< Media list (struct icem)         */
 	uint64_t tiebrk;              /**< Tie-break value for roleconflict */
+	struct ice_conf conf;         /**< ICE Configuration                */
 };
 
 /** Defines a media-stream component */
 struct icem_comp {
 	struct le le;                /**< Linked-list element               */
 	struct icem *icem;           /**< Parent ICE media                  */
-	struct cand *def_cand;       /**< Default candidate                 */
+	struct cand *def_lcand;      /**< Default local candidate           */
+	struct cand *def_rcand;      /**< Default remote candidate          */
 	struct candpair *cp_sel;     /**< Selected candidate-pair           */
 	struct udp_helper *uh;       /**< UDP helper                        */
 	void *sock;                  /**< Transport socket                  */
 	uint16_t lport;              /**< Local port number                 */
 	uint8_t id;                  /**< Component ID                      */
 	bool concluded;              /**< Concluded flag                    */
-	struct turnc *turnc;         /**< TURN Client                        */
-	struct stun_ctrans *ct_gath; /**< STUN Transaction for gathering     */
+	struct turnc *turnc;         /**< TURN Client                       */
+	struct stun_ctrans *ct_gath; /**< STUN Transaction for gathering    */
+	struct tmr tmr_ka;           /**< Keep-alive timer                  */
 };
 
 /** Defines an ICE media-stream */
@@ -103,6 +106,7 @@ struct icem {
 	ice_gather_h *gh;            /**< Gather handler                     */
 	ice_connchk_h *chkh;         /**< Connectivity check handler         */
 	void *arg;                   /**< Handler argument                   */
+	char name[32];               /**< Name of the media stream           */
 };
 
 /** Defines a candidate */
@@ -124,7 +128,9 @@ struct cand {
 /** Defines a candidate pair */
 struct candpair {
 	struct le le;                /**< List element                       */
+	struct le le_tq;             /**< Triggered queue element            */
 	struct icem *icem;           /**< Pointer to parent ICE media        */
+	struct icem_comp *comp;      /**< Pointer to media-stream component  */
 	struct cand *lcand;          /**< Local candidate                    */
 	struct cand *rcand;          /**< Remote candidate                   */
 	bool def;                    /**< Default flag                       */
@@ -136,6 +142,8 @@ struct candpair {
 	int rtt;                     /**< Estimated Round-Trip Time in [ms]  */
 	bool use_cand;               /**< Use-candidate flag                 */
 	struct stun_ctrans *ct_conn; /**< STUN Transaction for conncheck     */
+	int err;                     /**< Saved error code, if failed        */
+	uint16_t scode;              /**< Saved STUN code, if failed         */
 };
 
 
@@ -160,6 +168,11 @@ int  icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 void icem_candpair_prio_order(struct list *lst);
 void icem_candpair_move(struct candpair *cp, struct list *list);
 void icem_candpair_cancel(struct candpair *cp);
+void icem_candpair_make_valid(struct candpair *cp);
+void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode);
+void icem_candpair_set_state(struct candpair *cp, enum candpair_state state);
+void icem_candpairs_flush(struct list *lst, enum cand_type type, uint8_t id);
+bool icem_candpair_iscompleted(const struct candpair *cp);
 bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2);
 bool icem_candpair_cmp_fnd(const struct candpair *cp1,
 			   const struct candpair *cp2);
@@ -168,6 +181,8 @@ struct candpair *icem_candpair_find(const struct list *lst,
 				    const struct cand *rcand);
 struct candpair *icem_candpair_find_st(const struct list *lst, uint8_t compid,
 				       enum candpair_state state);
+struct candpair *icem_candpair_find_compid(const struct list *lst,
+					   uint8_t compid);
 int  icem_candpair_debug(struct re_printf *pf, const struct candpair *cp);
 int  icem_candpairs_debug(struct re_printf *pf, const struct list *list);
 
@@ -190,13 +205,17 @@ void icem_checklist_update(struct icem *icem);
 int  icem_comp_alloc(struct icem_comp **cp, struct icem *icem, int id,
 		     void *sock);
 int  icem_comp_set_default_cand(struct icem_comp *comp);
+void icem_comp_set_default_rcand(struct icem_comp *comp, struct cand *rcand);
 void icem_comp_set_selected(struct icem_comp *comp, struct candpair *cp);
 struct icem_comp *icem_comp_find(const struct icem *icem, uint8_t compid);
+void icem_comp_keepalive(struct icem_comp *comp, bool enable);
+void icecomp_printf(struct icem_comp *comp, const char *fmt, ...);
 
 
 /* conncheck */
 int  icem_conncheck_start(struct icem *icem);
 void icem_conncheck_schedule_check(struct icem *icem);
+void icem_conncheck_continue(struct icem *icem);
 
 
 /* triggered check queue */

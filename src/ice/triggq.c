@@ -22,8 +22,8 @@ void icem_triggq_push(struct icem *icem, struct candpair *cp)
 	if (!icem || !cp)
 		return;
 
-	if (!list_contains(&icem->triggl, &cp->le))
-		icem_candpair_move(cp, &icem->triggl);
+	if (!list_contains(&icem->triggl, &cp->le_tq))
+		list_append(&icem->triggl, &cp->le_tq, cp);
 }
 
 
@@ -38,8 +38,7 @@ struct candpair *icem_triggq_pop(struct icem *icem)
 	if (!cp)
 		return NULL;
 
-	/* Move candidate pair back to Check-List */
-	icem_candpair_move(cp, &icem->checkl);
+	list_unlink(&cp->le_tq);
 
 	return cp;
 }
