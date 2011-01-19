@@ -215,8 +215,13 @@ void icem_comp_set_default_rcand(struct icem_comp *comp, struct cand *rcand)
 
 void icem_comp_set_selected(struct icem_comp *comp, struct candpair *cp)
 {
-	if (!comp)
+	if (!comp || !cp)
 		return;
+
+	if (cp->state != CANDPAIR_SUCCEEDED) {
+		DEBUG_WARNING("set_selected: invalid state %s\n",
+			      ice_candpair_state2name(cp->state));
+	}
 
 	mem_deref(comp->cp_sel);
 	comp->cp_sel = mem_ref(cp);

@@ -15,8 +15,8 @@ enum ice_compid {
 };
 
 enum ice_nomination {
-	NOMINATION_REGULAR = 0,
-	NOMINATION_AGGRESSIVE
+	ICE_NOMINATION_REGULAR = 0,
+	ICE_NOMINATION_AGGRESSIVE
 };
 
 struct ice;

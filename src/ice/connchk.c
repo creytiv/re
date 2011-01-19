@@ -22,11 +22,15 @@
 #include <re_dbg.h>
 
 
-#define ICE_CONNCHECK_MULTIPLE 1
+/** Enable multiple parallel connectivity checks */
+#define ICE_CONNCHECK_MULTIPLE 0
 
 
 static void pace_next(struct icem *icem)
 {
+	if (icem->state != CHECKLIST_RUNNING)
+		return;
+
 #if 0
 	re_printf("\n");
 	re_printf("---> Pace next check: checklist=%u validlist=%u"
@@ -42,10 +46,15 @@ static void pace_next(struct icem *icem)
 }
 
 
-/** Constructing a Valid Pair */
-static void construct_valid_pair(struct icem *icem, struct candpair *cp,
-				 const struct sa *mapped,
-				 const struct sa *dest)
+/**
+ * Constructing a Valid Pair
+ *
+ * @return The valid pair
+ */
+static struct candpair *construct_valid_pair(struct icem *icem,
+					     struct candpair *cp,
+					     const struct sa *mapped,
+					     const struct sa *dest)
 {
 	struct cand *lcand, *rcand;
 	struct candpair *cp2;
@@ -53,13 +62,14 @@ static void construct_valid_pair(struct icem *icem, struct candpair *cp,
 
 	lcand = icem_cand_find(&icem->lcandl, cp->lcand->compid, mapped);
 	rcand = icem_cand_find(&icem->rcandl, cp->rcand->compid, dest);
+
 	if (!lcand) {
 		DEBUG_WARNING("no such local candidate: %J\n", mapped);
-		return;
+		return NULL;
 	}
 	if (!rcand) {
 		DEBUG_WARNING("no such remote candidate: %J\n", dest);
-		return;
+		return NULL;
 	}
 
 	/* New candidate? -- implicit success */
@@ -81,22 +91,27 @@ static void construct_valid_pair(struct icem *icem, struct candpair *cp,
 		 * This happens for UAs behind NAT where the original
 		 * pair is of type 'host' and the implicit pair is 'srflx'
 		 */
-		icem_candpair_failed(cp, EINTR, 0);
 
-		if (icem_candpair_find(&icem->validl, lcand, rcand)) {
+		cp2 = icem_candpair_find(&icem->validl, lcand, rcand);
+		if (cp2) {
 			DEBUG_NOTICE("candpair already in VALID list\n");
-			return;
+			return cp2;
 		}
 
-		err = icem_candpair_alloc(&cp2, icem, lcand, rcand);
+		err = icem_candpair_clone(&cp2, cp, lcand, rcand);
 		if (err)
-			return;
+			return NULL;
 
 		icem_candpair_make_valid(cp2);
+		icem_candpair_failed(cp, EINTR, 0);
+
+		return cp2;
 	}
 	else {
 		/* Add to VALID LIST, the pair that generated the check */
 		icem_candpair_make_valid(cp);
+
+		return cp;
 	}
 }
 
@@ -108,9 +123,10 @@ static void handle_success(struct icem *icem, struct candpair *cp,
 
 		int err;
 
-		DEBUG_NOTICE("adding PRFLX Candidate: %J\n", addr);
+		icecomp_printf(cp->comp, "adding local PRFLX Candidate: %J\n",
+			       addr);
 
-		err = icem_lcand_add(icem, cp->lcand->base,
+		err = icem_lcand_add(icem, cp->lcand,
 				     CAND_TYPE_PRFLX, addr);
 		if (err) {
 			DEBUG_WARNING("failed to add PRFLX: %s\n",
@@ -118,10 +134,19 @@ static void handle_success(struct icem *icem, struct candpair *cp,
 		}
 	}
 
-	construct_valid_pair(icem, cp, addr, &cp->rcand->addr);
+	cp = construct_valid_pair(icem, cp, addr, &cp->rcand->addr);
+	if (!cp) {
+		DEBUG_WARNING("no valid pair\n");
+		return;
+	}
 
-	if (icem->ice->lrole == ROLE_CONTROLLING && cp->use_cand)
-		cp->nominated = true;
+	icem_candpair_make_valid(cp);
+	icem_comp_set_selected(cp->comp, cp);
+
+	cp->nominated = true;
+
+	/* stop conncheck now -- conclude */
+	icem_conncheck_stop(icem);
 }
 
 
@@ -162,10 +187,12 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 	case 487: /* Role Conflict */
 		ice_switch_local_role(icem->ice);
 		icem_candpair_set_state(cp, CANDPAIR_WAITING);
-		icem_triggq_push(icem, cp);
+		(void)icem_conncheck_send(cp, true);
 		break;
 
 	default:
+		DEBUG_WARNING("%s: STUN Response: %u %s\n", icem->name,
+			      scode, reason);
 		icem_candpair_failed(cp, err, scode);
 		break;
 	}
@@ -175,22 +202,17 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 }
 
 
-static int send_req(struct candpair *cp)
+int icem_conncheck_send(struct candpair *cp, bool trigged)
 {
 	struct cand *lcand = cp->lcand;
 	struct icem *icem = cp->icem;
 	struct ice *ice = icem->ice;
-	struct icem_comp *comp;
 	char username_buf[64];
 	size_t presz = 0;
 	int use_cand = 0;
 	uint32_t prio_prflx;
 	uint16_t ctrl_attr;
 	int err = 0;
-
-	comp = icem_comp_find(icem, lcand->compid);
-	if (!comp)
-		return ENOENT;
 
 	icem_candpair_set_state(cp, CANDPAIR_INPROGRESS);
 
@@ -205,7 +227,7 @@ static int send_req(struct candpair *cp)
 	case ROLE_CONTROLLING:
 		ctrl_attr = STUN_ATTR_CONTROLLING;
 
-		if (cp->use_cand || ice->conf.nom == NOMINATION_AGGRESSIVE)
+		if (cp->use_cand || ice->conf.nom == ICE_NOMINATION_AGGRESSIVE)
 			use_cand = 1;
 		break;
 
@@ -218,10 +240,11 @@ static int send_req(struct candpair *cp)
 	}
 
 #if ICE_TRACE
-	icecomp_printf(cp->comp, "Tx %H ---> %H (%s) %s\n",
-		     icem_cand_print, cp->lcand, icem_cand_print, cp->rcand,
-		     ice_candpair_state2name(cp->state),
-		     use_cand ? "[USE]" : "");
+	icecomp_printf(cp->comp, "Tx %H ---> %H (%s) %s %s\n",
+		       icem_cand_print, cp->lcand, icem_cand_print, cp->rcand,
+		       ice_candpair_state2name(cp->state),
+		       use_cand ? "[USE]" : "",
+		       trigged ? "[Trigged]" : "");
 #endif
 
 	/* A connectivity check MUST utilize the STUN short term credential
@@ -232,7 +255,7 @@ static int send_req(struct candpair *cp)
 		DEBUG_WARNING("no remote password!\n");
 	}
 
-	cp->tick_sent = tmr_jiffies();
+	cp->usec_sent = ice_get_usec();
 
 	if (cp->ct_conn) {
 		DEBUG_WARNING("send_req: CONNCHECK already Pending!\n");
@@ -243,7 +266,7 @@ static int send_req(struct candpair *cp)
 
 	case CAND_TYPE_RELAY:
 		/* Creating Permissions for Relayed Candidates */
-		err = turnc_add_chan(comp->turnc, &cp->rcand->addr,
+		err = turnc_add_chan(cp->comp->turnc, &cp->rcand->addr,
 				     NULL, NULL);
 		if (err) {
 			DEBUG_WARNING("add channel: %s\n", strerror(err));
@@ -254,9 +277,10 @@ static int send_req(struct candpair *cp)
 
 	case CAND_TYPE_HOST:
 	case CAND_TYPE_SRFLX:
+	case CAND_TYPE_PRFLX:
 		cp->ct_conn = mem_deref(cp->ct_conn);
 		err = stun_request(&cp->ct_conn, icem->stun, icem->proto,
-				   comp->sock, &cp->rcand->addr, presz,
+				   cp->comp->sock, &cp->rcand->addr, presz,
 				   STUN_METHOD_BINDING,
 				   (uint8_t *)icem->rpwd, str_len(icem->rpwd),
 				   true, stunc_resp_handler, cp,
@@ -267,8 +291,8 @@ static int send_req(struct candpair *cp)
 				   STUN_ATTR_USE_CAND, use_cand);
 		break;
 
-	case CAND_TYPE_PRFLX:
-		DEBUG_WARNING("cannot send conncheck from Peer Reflexive\n");
+	default:
+		DEBUG_WARNING("unknown candidate type %d\n", lcand->type);
 		err = EINVAL;
 		break;
 	}
@@ -281,7 +305,7 @@ static void do_check(struct candpair *cp)
 {
 	int err;
 
-	err = send_req(cp);
+	err = icem_conncheck_send(cp, false);
 	if (err) {
 		icem_candpair_failed(cp, err, 0);
 		return;
@@ -290,18 +314,11 @@ static void do_check(struct candpair *cp)
 
 
 /**
- * 5.8.  Scheduling Checks
+ * Scheduling Checks
  */
 void icem_conncheck_schedule_check(struct icem *icem)
 {
 	struct candpair *cp;
-
-	/* search in triggered check queue first */
-	cp = icem_triggq_pop(icem);
-	if (cp) {
-		do_check(cp);
-		return;
-	}
 
 	/* Find the highest priority pair in that check list that is in the
 	   Waiting state. */
@@ -372,10 +389,11 @@ int icem_conncheck_start(struct icem *icem)
 	DEBUG_NOTICE("starting connectivity checks with %u candidate pairs\n",
 		     list_count(&icem->checkl));
 #if 0
-	re_printf("%H\n", icem_debug, icem);
+	(void)re_printf("%H\n", icem_debug, icem);
 #endif
 
-	tmr_start(&icem->tmr_pace, 1, timeout, icem);
+	/* add some delay, to wait for call to be 'established' */
+	tmr_start(&icem->tmr_pace, 1000, timeout, icem);
 
 	return 0;
 }
@@ -385,4 +403,28 @@ void icem_conncheck_continue(struct icem *icem)
 {
 	if (!tmr_isrunning(&icem->tmr_pace))
 		tmr_start(&icem->tmr_pace, 1, timeout, icem);
+}
+
+
+/**
+ * Stop checklist, cancel all connectivity checks
+ */
+void icem_conncheck_stop(struct icem *icem)
+{
+	struct le *le;
+
+	icem->state = CHECKLIST_COMPLETED;
+
+	tmr_cancel(&icem->tmr_pace);
+
+	for (le = icem->checkl.head; le; le = le->next) {
+		struct candpair *cp = le->data;
+
+		icem_candpair_cancel(cp);
+
+		if (cp->state != CANDPAIR_SUCCEEDED)
+			icem_candpair_failed(cp, EINTR, 0);
+	}
+
+	icem_checklist_update(icem);
 }

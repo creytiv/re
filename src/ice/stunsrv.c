@@ -25,51 +25,19 @@
 static const char *sw = "ice stunsrv v" VERSION " (" ARCH "/" OS ")";
 
 
-/** Learning Peer Reflexive Candidates */
-static int learn_peer_reflexive(struct icem_comp *comp, const struct sa *src,
-				uint32_t prio)
-{
-	struct icem *icem = comp->icem;
-	char foundation[8];
-	struct pl fnd;
-
-	/*
-	  If the source transport address of the request does not match any
-	  existing remote candidates, it represents a new peer reflexive remote
-	  candidate.  This candidate is constructed as follows:
-	*/
-	if (icem_cand_find(&icem->rcandl, comp->id, src))
-		return 0;
-
-	DEBUG_NOTICE("{%d} Adding Peer-Reflexive remote candidate: %J\n",
-		     comp->id, src);
-
-	/*
-	  The foundation of the candidate is set to an arbitrary value,
-	  different from the foundation for all other remote candidates.  If
-	  any subsequent offer/answer exchanges contain this peer reflexive
-	  candidate in the SDP, it will signal the actual foundation for the
-	  candidate.
-	 */
-	rand_str(foundation, sizeof(foundation));
-	pl_set_str(&fnd, foundation);
-
-	return icem_rcand_add(icem, CAND_TYPE_PRFLX, comp->id, prio,
-			      src, NULL, &fnd);
-}
-
-
 static void triggered_check(struct icem *icem, struct cand *lcand,
 			    struct cand *rcand)
 {
-	struct candpair *cp;
+	struct candpair *cp = NULL;
 	int err;
 
-	if (!lcand || !rcand)
-		return;
+	if (lcand && rcand)
+		cp = icem_candpair_find(&icem->checkl, lcand, rcand);
 
-	cp = icem_candpair_find(&icem->checkl, lcand, rcand);
 	if (cp) {
+		DEBUG_NOTICE("triggered_check: found CANDPAIR on checklist"
+			     " in state: %s\n",
+			     ice_candpair_state2name(cp->state));
 
 		switch (cp->state) {
 
@@ -91,7 +59,10 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 
 		case CANDPAIR_FROZEN:
 		case CANDPAIR_WAITING:
-			icem_triggq_push(icem, cp);
+			err = icem_conncheck_send(cp, true);
+			if (err) {
+				DEBUG_WARNING("triggered check failed\n");
+			}
 			break;
 
 		case CANDPAIR_SUCCEEDED:
@@ -102,7 +73,9 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 	else {
 		err = icem_candpair_alloc(&cp, icem, lcand, rcand);
 		if (err) {
-			DEBUG_WARNING("failed to allocate candpair\n");
+			DEBUG_WARNING("failed to allocate candpair:"
+				      " lcand=%p rcand=%p (%s)\n",
+				      lcand, rcand, strerror(err));
 			return;
 		}
 
@@ -110,7 +83,7 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 
 		icem_candpair_set_state(cp, CANDPAIR_WAITING);
 
-		icem_triggq_push(icem, cp);
+		(void)icem_conncheck_send(cp, true);
 	}
 }
 
@@ -128,9 +101,33 @@ static struct candpair *lookup_candpair(struct icem *icem,
 	if (cp)
 		return cp;
 
-	cp = icem_candpair_find(&icem->triggl, NULL, rcand);
-	if (cp)
-		return cp;
+	return NULL;
+}
+
+
+/**
+ * Find the highest priority LCAND on the check-list of type HOST/RELAY
+ */
+static struct cand *lookup_lcand(struct icem *icem, uint8_t compid)
+{
+	struct le *le;
+
+	for (le = icem->checkl.head; le; le = le->next) {
+		struct candpair *cp = le->data;
+
+		if (cp->lcand->compid != compid)
+			continue;
+
+		switch (cp->lcand->type) {
+
+		case CAND_TYPE_HOST:
+		case CAND_TYPE_RELAY:
+			return cp->lcand;
+
+		default:
+			break;
+		}
+	}
 
 	return NULL;
 }
@@ -142,16 +139,49 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 {
 	struct cand *lcand = NULL, *rcand = NULL;
 	struct candpair *cp = NULL;
+	int err;
 
-	rcand = icem_cand_find(&icem->rcandl, comp->id, src);
-	if (rcand) {
-		cp = lookup_candpair(icem, rcand);
-		if (cp)
-			lcand = cp->lcand;
+	if (icem->state != CHECKLIST_RUNNING) {
+		DEBUG_WARNING("Checklist is not running \n");
 	}
+
+	/* 7.2.1.3.  Learning Peer Reflexive Candidates */
+	rcand = icem_cand_find(&icem->rcandl, comp->id, src);
+	if (!rcand) {
+
+		icecomp_printf(comp, "Adding PRFLX remote candidate: %J\n",
+			       src);
+
+		err = icem_rcand_add_prflx(&rcand, icem, comp->id, prio, src);
+		if (err) {
+			DEBUG_WARNING("icem_rcand_add_prflx: %s\n",
+				      strerror(err));
+			return;
+		}
+	}
+
+	cp = lookup_candpair(icem, rcand);
+	if (cp)
+		lcand = cp->lcand;
+	else {
+		lcand = lookup_lcand(icem, comp->id);
+	}
+
+	if (!lcand) {
+		DEBUG_WARNING("%s: local candidate not found\n", icem->name);
+	}
+
+	/* 7.2.1.4.  Triggered Checks */
+	if (ICE_MODE_FULL == ice->lmode)
+		triggered_check(icem, lcand, rcand);
+
 	if (!cp) {
-		DEBUG_NOTICE("candidate pair not found: remote=%J\n", src);
-		/* This can happen for Peer-Reflexive candidates */
+		cp = lookup_candpair(icem, rcand);
+
+		if (!cp) {
+			DEBUG_WARNING("candidate pair not found:"
+				      " source=%J\n", src);
+		}
 	}
 
 #if ICE_TRACE
@@ -163,13 +193,6 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 #else
 	(void)tunnel;
 #endif
-
-	/* 7.2.1.3.  Learning Peer Reflexive Candidates */
-	(void)learn_peer_reflexive(comp, src, prio);
-
-	/* 7.2.1.4.  Triggered Checks */
-	if (ICE_MODE_FULL == ice->lmode)
-		triggered_check(icem, lcand, rcand);
 
 	/* 7.2.1.5.  Updating the Nominated Flag */
 	if (use_cand) {
@@ -185,12 +208,13 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 
 		/* Cancel conncheck. Choose Selected Pair */
 		if (cp) {
-			icem_candpair_cancel(cp);
-			icem_comp_set_selected(comp, cp);
-		}
+			icem_candpair_make_valid(cp);
 
-		/* ICE should complete now .. */
-		icem_checklist_update(icem);
+			if (ice->conf.nom == ICE_NOMINATION_REGULAR) {
+				icem_candpair_cancel(cp);
+				icem_comp_set_selected(comp, cp);
+			}
+		}
 	}
 }
 
@@ -227,7 +251,14 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 
 	err = re_regex(attr->v.username, strlen(attr->v.username),
 		       "[^:]+:[^]+", &lu, &ru);
-	if (err || pl_strcmp(&lu, ice->lufrag) || pl_strcmp(&ru, icem->rufrag))
+	if (err) {
+		DEBUG_WARNING("could not parse USERNAME attribute (%s)\n",
+			      attr->v.username);
+		goto unauth;
+	}
+	if (pl_strcmp(&lu, ice->lufrag))
+		goto unauth;
+	if (str_len(icem->rufrag) && pl_strcmp(&ru, icem->rufrag))
 		goto unauth;
 
 	attr = stun_msg_attr(req, STUN_ATTR_CONTROLLED);

@@ -21,6 +21,9 @@
 #include <re_dbg.h>
 
 
+/**
+ * Forming Candidate Pairs
+ */
 static int candpairs_form(struct icem *icem)
 {
 	struct le *le;
@@ -72,7 +75,9 @@ static void *unique_handler(struct le *le1, struct le *le2)
 }
 
 
-/** Pruning the Pairs */
+/**
+ * Pruning the Pairs
+ */
 static void candpair_prune(struct icem *icem)
 {
 	/* The agent MUST prune the list.
@@ -85,12 +90,15 @@ static void candpair_prune(struct icem *icem)
 
 	uint32_t n = ice_list_unique(&icem->checkl, unique_handler);
 	if (n > 0) {
-		DEBUG_NOTICE("pruned candidate pairs: %u\n", n);
+		DEBUG_NOTICE("%s: pruned candidate pairs: %u\n",
+			     icem->name, n);
 	}
 }
 
 
-/** Computing States */
+/**
+ * Computing States
+ */
 static void candpair_set_states(struct icem *icem)
 {
 	struct le *le, *le2;
@@ -205,10 +213,12 @@ static void concluding_ice(struct icem_comp *comp)
 
 	icem_comp_set_selected(comp, cp);
 
-	/* send STUN request with USE_CAND flag via triggered qeueue */
-	cp->use_cand = true;
-	icem_triggq_push(comp->icem, cp);
-	icem_conncheck_schedule_check(comp->icem);
+	if (comp->icem->ice->conf.nom == ICE_NOMINATION_REGULAR) {
+		/* send STUN request with USE_CAND flag via triggered qeueue */
+		cp->use_cand = true;
+		(void)icem_conncheck_send(cp, true);
+		icem_conncheck_schedule_check(comp->icem);
+	}
 
 	comp->concluded = true;
 }
@@ -234,8 +244,8 @@ void icem_checklist_update(struct icem *icem)
 		struct icem_comp *comp = le->data;
 
 		if (!icem_candpair_find_compid(&icem->validl, comp->id)) {
-			DEBUG_WARNING("no candidate pair for compid %u\n",
-				      comp->id);
+			DEBUG_WARNING("%s: no candidate pair for compid %u\n",
+				      icem->name, comp->id);
 			err = ENOENT;
 			break;
 		}

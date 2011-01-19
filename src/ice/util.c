@@ -4,6 +4,14 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #include <string.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <time.h>
+#endif
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -128,4 +136,29 @@ uint32_t ice_list_unique(struct list *list, list_unique_h *uh)
 	}
 
 	return n;
+}
+
+
+/** Get time of day in [microseconds] */
+uint64_t ice_get_usec(void)
+{
+	uint64_t jfs;
+
+#if defined(WIN32)
+	FILETIME ft;
+	ULARGE_INTEGER li;
+	GetSystemTimeAsFileTime(&ft);
+	li.LowPart = ft.dwLowDateTime;
+	li.HighPart = ft.dwHighDateTime;
+	jfs = li.QuadPart/10;
+#else
+	struct timeval now;
+
+	if (0 != gettimeofday(&now, NULL))
+		return 0;
+
+	jfs = 1000000UL * now.tv_sec + now.tv_usec;
+#endif
+
+	return jfs;
 }

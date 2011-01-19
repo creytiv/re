@@ -33,7 +33,6 @@ static void icem_destructor(void *data)
 	list_flush(&icem->checkl);
 	list_flush(&icem->lcandl);
 	list_flush(&icem->rcandl);
-	list_flush(&icem->triggl);
 
 	mem_deref(icem->stun);
 	mem_deref(icem->rufrag);
@@ -62,7 +61,6 @@ int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 	list_init(&icem->rcandl);
 	list_init(&icem->checkl);
 	list_init(&icem->validl);
-	list_init(&icem->triggl);
 
 	icem->ice   = ice;
 	icem->layer = layer;
@@ -280,8 +278,6 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 			  icem_candpairs_debug, &icem->checkl);
 	err |= re_hprintf(pf, " Valid list: %H",
 			  icem_candpairs_debug, &icem->validl);
-	err |= re_hprintf(pf, " Triggered queue: %H",
-			  icem_candpairs_debug, &icem->triggl);
 
 	for (le = icem->compl.head; le; le = le->next) {
 

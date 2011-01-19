@@ -26,12 +26,22 @@ static void candpair_destructor(void *data)
 	struct candpair *cp = data;
 
 	list_unlink(&cp->le);
-	list_unlink(&cp->le_tq);
 
 	mem_deref(cp->ct_conn);
 
 	mem_deref(cp->lcand);
 	mem_deref(cp->rcand);
+}
+
+
+static bool sort_handler(struct le *le1, struct le *le2, void *arg)
+{
+	const struct candpair *cp1 = le1->data;
+	const struct candpair *cp2 = le2->data;
+
+	(void)arg;
+
+	return cp1->pprio >= cp2->pprio;
 }
 
 
@@ -52,6 +62,27 @@ static void candpair_set_pprio(struct candpair *cp)
 }
 
 
+/**
+ * Add candidate pair to list, sorted by pair priority (highest is first)
+ */
+static void list_add_sorted(struct list *list, struct candpair *cp)
+{
+	struct le *le;
+
+	/* find our slot */
+	for (le = list_tail(list); le; le = le->prev) {
+		struct candpair *cp0 = le->data;
+
+		if (cp->pprio < cp0->pprio) {
+			list_insert_after(list, le, &cp->le, cp);
+			return;
+		}
+	}
+
+	list_prepend(list, &cp->le, cp);
+}
+
+
 int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 			struct cand *lcand, struct cand *rcand)
 {
@@ -69,17 +100,17 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 	if (!cp)
 		return ENOMEM;
 
-	list_append(&icem->checkl, &cp->le, cp);
-
 	cp->icem  = icem;
 	cp->comp  = comp;
 	cp->lcand = mem_ref(lcand);
 	cp->rcand = mem_ref(rcand);
 	cp->state = CANDPAIR_FROZEN;
-	cp->rtt   = -1;
+	cp->ertt  = -1;
 	cp->def   = comp->def_lcand == lcand && comp->def_rcand == rcand;
 
 	candpair_set_pprio(cp);
+
+	list_add_sorted(&icem->checkl, cp);
 
 	if (cpp)
 		*cpp = cp;
@@ -88,14 +119,39 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 }
 
 
-static bool sort_handler(struct le *le1, struct le *le2, void *arg)
+int icem_candpair_clone(struct candpair **cpp, struct candpair *cp0,
+			struct cand *lcand, struct cand *rcand)
 {
-	const struct candpair *cp1 = le1->data;
-	const struct candpair *cp2 = le2->data;
+	struct candpair *cp;
 
-	(void)arg;
+	if (!cp0)
+		return EINVAL;
 
-	return cp1->pprio >= cp2->pprio;
+	cp = mem_zalloc(sizeof(*cp), candpair_destructor);
+	if (!cp)
+		return ENOMEM;
+
+	cp->icem      = cp0->icem;
+	cp->comp      = cp0->comp;
+	cp->lcand     = mem_ref(lcand ? lcand : cp0->lcand);
+	cp->rcand     = mem_ref(rcand ? rcand : cp0->rcand);
+	cp->def       = cp0->def;
+	cp->valid     = cp0->valid;
+	cp->nominated = cp0->nominated;
+	cp->use_cand  = cp0->use_cand;
+	cp->state     = cp0->state;
+	cp->pprio     = cp0->pprio;
+	cp->usec_sent = cp0->usec_sent;
+	cp->ertt      = cp0->ertt;
+	cp->err       = cp0->err;
+	cp->scode     = cp0->scode;
+
+	list_add_sorted(&cp0->icem->checkl, cp);
+
+	if (cpp)
+		*cpp = cp;
+
+	return 0;
 }
 
 
@@ -117,7 +173,7 @@ void icem_candpair_prio_order(struct list *lst)
 void icem_candpair_move(struct candpair *cp, struct list *list)
 {
 	list_unlink(&cp->le);
-	list_append(list, &cp->le, cp);
+	list_add_sorted(list, cp);
 }
 
 
@@ -128,8 +184,6 @@ void icem_candpair_cancel(struct candpair *cp)
 		return;
 
 	cp->ct_conn = mem_deref(cp->ct_conn);
-
-	icem_conncheck_continue(cp->icem);
 }
 
 
@@ -142,8 +196,8 @@ void icem_candpair_make_valid(struct candpair *cp)
 	cp->scode = 0;
 	cp->valid = true;
 
-	if (cp->tick_sent)
-		cp->rtt = (int)(tmr_jiffies() - cp->tick_sent);
+	if (cp->usec_sent)
+		cp->ertt = (long)(ice_get_usec() - cp->usec_sent);
 
 	icem_candpair_set_state(cp, CANDPAIR_SUCCEEDED);
 	icem_candpair_move(cp, &cp->icem->validl);
@@ -168,12 +222,14 @@ void icem_candpair_set_state(struct candpair *cp, enum candpair_state state)
 		return;
 
 	if (cp->state != state) {
-		icecomp_printf(cp->comp, "FSM: %10s ===> %-10s\n",
+		icecomp_printf(cp->comp,
+			       "%5s <---> %5s  FSM:  %10s ===> %-10s\n",
+			       ice_cand_type2name(cp->lcand->type),
+			       ice_cand_type2name(cp->rcand->type),
 			       ice_candpair_state2name(cp->state),
 			       ice_candpair_state2name(state));
+		cp->state = state;
 	}
-
-	cp->state = state;
 }
 
 
@@ -195,9 +251,6 @@ void icem_candpairs_flush(struct list *lst, enum cand_type type, uint8_t id)
 
 		if (cp->lcand->type != type)
 			continue;
-
-		/* also remove the local candidate */
-		mem_deref(cp->lcand);
 
 		mem_deref(cp);
 	}
@@ -320,18 +373,19 @@ int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
 	if (!cp)
 		return 0;
 
-	err = re_hprintf(pf, "{%u} %10s {%c%c%c%c}  %28H <---> %28H",
+	err = re_hprintf(pf, "{%u} %10s {%c%c%c%c} %22llu  %28H <---> %28H",
 			 cp->lcand->compid,
 			 ice_candpair_state2name(cp->state),
 			 cp->def ? 'D' : ' ',
 			 cp->valid ? 'V' : ' ',
 			 cp->nominated ? 'N' : ' ',
 			 cp->use_cand ? 'U' : ' ',
+			 cp->pprio,
 			 icem_cand_print, cp->lcand,
 			 icem_cand_print, cp->rcand);
 
-	if (cp->rtt != -1)
-		err |= re_hprintf(pf, " RTT=%dms", cp->rtt);
+	if (cp->ertt != -1)
+		err |= re_hprintf(pf, " ERTT = %.2fms", cp->ertt / 1000.0);
 
 	if (cp->err)
 		err |= re_hprintf(pf, " (%s)", strerror(cp->err));

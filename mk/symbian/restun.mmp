@@ -13,6 +13,9 @@ VENDORID      0
 CAPABILITY    NetworkServices
 #endif
 
+MACRO         HAVE_SYS_TIME_H
+MACRO         HAVE_UNISTD_H
+
 SOURCEPATH    .
 SOURCE        dll.cpp
 
@@ -28,7 +31,6 @@ SOURCE        icem.c
 SOURCE        icesdp.c
 SOURCE        icestr.c
 SOURCE        stunsrv.c
-SOURCE        triggq.c
 SOURCE        util.c
 
 SOURCEPATH    ..\..\src\natbd

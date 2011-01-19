@@ -15,5 +15,4 @@ SRCS	+= ice/icem.c
 SRCS	+= ice/icesdp.c
 SRCS	+= ice/icestr.c
 SRCS	+= ice/stunsrv.c
-SRCS	+= ice/triggq.c
 SRCS	+= ice/util.c

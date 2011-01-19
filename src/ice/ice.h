@@ -91,9 +91,8 @@ struct icem {
 	int nstun;                   /**< Number of pending STUN candidates  */
 	struct list lcandl;          /**< List of local candidates           */
 	struct list rcandl;          /**< List of remote candidates          */
-	struct list checkl;          /**< Check List of cand pairs           */
-	struct list validl;          /**< Valid List of cand pairs           */
-	struct list triggl;          /**< Triggered check-list               */
+	struct list checkl;          /**< Check List of cand pairs (sorted)  */
+	struct list validl;          /**< Valid List of cand pairs (sorted)  */
 	bool mismatch;               /**< ICE mismatch flag                  */
 	struct tmr tmr_pace;         /**< Timer for pacing STUN requests     */
 	struct stun *stun;           /**< STUN Transport                     */
@@ -128,7 +127,6 @@ struct cand {
 /** Defines a candidate pair */
 struct candpair {
 	struct le le;                /**< List element                       */
-	struct le le_tq;             /**< Triggered queue element            */
 	struct icem *icem;           /**< Pointer to parent ICE media        */
 	struct icem_comp *comp;      /**< Pointer to media-stream component  */
 	struct cand *lcand;          /**< Local candidate                    */
@@ -136,11 +134,11 @@ struct candpair {
 	bool def;                    /**< Default flag                       */
 	bool valid;                  /**< Valid flag                         */
 	bool nominated;              /**< Nominated flag                     */
+	bool use_cand;               /**< Use-candidate flag                 */
 	enum candpair_state state;   /**< Candidate pair state               */
 	uint64_t pprio;              /**< Pair priority                      */
-	uint64_t tick_sent;          /**< When connectivity request was sent */
-	int rtt;                     /**< Estimated Round-Trip Time in [ms]  */
-	bool use_cand;               /**< Use-candidate flag                 */
+	uint64_t usec_sent;          /**< When connectivity request was sent */
+	long ertt;                   /**< Estimated Round-Trip Time in [usec]*/
 	struct stun_ctrans *ct_conn; /**< STUN Transaction for conncheck     */
 	int err;                     /**< Saved error code, if failed        */
 	uint16_t scode;              /**< Saved STUN code, if failed         */
@@ -156,6 +154,8 @@ int icem_lcand_add(struct icem *icem, struct cand *base, enum cand_type type,
 int icem_rcand_add(struct icem *icem, enum cand_type type, uint8_t compid,
 		   uint32_t prio, const struct sa *addr,
 		   const struct sa *rel_addr, const struct pl *foundation);
+int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
+			 uint32_t prio, const struct sa *addr);
 struct cand *icem_cand_find(const struct list *lst, uint8_t compid,
 			    const struct sa *addr);
 int icem_cands_debug(struct re_printf *pf, const struct list *lst);
@@ -164,6 +164,8 @@ int icem_cand_print(struct re_printf *pf, const struct cand *c);
 
 /* candpair */
 int  icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
+			 struct cand *lcand, struct cand *rcand);
+int  icem_candpair_clone(struct candpair **cpp, struct candpair *cp0,
 			 struct cand *lcand, struct cand *rcand);
 void icem_candpair_prio_order(struct list *lst);
 void icem_candpair_move(struct candpair *cp, struct list *list);
@@ -216,11 +218,8 @@ void icecomp_printf(struct icem_comp *comp, const char *fmt, ...);
 int  icem_conncheck_start(struct icem *icem);
 void icem_conncheck_schedule_check(struct icem *icem);
 void icem_conncheck_continue(struct icem *icem);
-
-
-/* triggered check queue */
-void icem_triggq_push(struct icem *icem, struct candpair *cp);
-struct candpair *icem_triggq_pop(struct icem *icem);
+void icem_conncheck_stop(struct icem *icem);
+int  icem_conncheck_send(struct candpair *cp, bool trigged);
 
 
 /* icestr */
@@ -239,3 +238,4 @@ uint32_t ice_calc_prio(enum cand_type type, uint16_t local, uint8_t compid);
 uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d);
 void ice_switch_local_role(struct ice *ice);
 uint32_t ice_list_unique(struct list *list, list_unique_h *uh);
+uint64_t ice_get_usec(void);

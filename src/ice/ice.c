@@ -23,7 +23,7 @@
 
 
 static const struct ice_conf conf_default = {
-	NOMINATION_REGULAR,
+	ICE_NOMINATION_REGULAR,
 	ICE_DEFAULT_RTO_RTP,
 	ICE_DEFAULT_RC,
 	false

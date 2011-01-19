@@ -11,6 +11,7 @@
 #include <re_list.h>
 #include <re_tmr.h>
 #include <re_sa.h>
+#include <re_sys.h>
 #include <re_stun.h>
 #include <re_turn.h>
 #include <re_ice.h>
@@ -164,6 +165,37 @@ int icem_rcand_add(struct icem *icem, enum cand_type type, uint8_t compid,
 
 	if (err)
 		mem_deref(rcand);
+
+	return err;
+}
+
+
+int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
+			 uint32_t prio, const struct sa *addr)
+{
+	struct cand *rcand;
+	int err;
+
+	if (!icem || !addr)
+		return EINVAL;
+
+	rcand = mem_zalloc(sizeof(*rcand), cand_destructor);
+	if (!rcand)
+		return ENOMEM;
+
+	list_append(&icem->rcandl, &rcand->le, rcand);
+
+	rcand->type   = CAND_TYPE_PRFLX;
+	rcand->compid = compid;
+	rcand->prio   = prio;
+	rcand->addr   = *addr;
+
+	err = re_sdprintf(&rcand->foundation, "%08x", rand_u32());
+
+	if (err)
+		mem_deref(rcand);
+	else if (rcp)
+		*rcp = rcand;
 
 	return err;
 }
