@@ -386,8 +386,9 @@ int icem_conncheck_start(struct icem *icem)
 
 	icem->state = CHECKLIST_RUNNING;
 
-	DEBUG_NOTICE("starting connectivity checks with %u candidate pairs\n",
-		     list_count(&icem->checkl));
+	DEBUG_NOTICE("%s: starting connectivity checks"
+		     " with %u candidate pairs\n",
+		     icem->name, list_count(&icem->checkl));
 #if 0
 	(void)re_printf("%H\n", icem_debug, icem);
 #endif

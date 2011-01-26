@@ -215,7 +215,6 @@ void icecomp_printf(struct icem_comp *comp, const char *fmt, ...);
 
 
 /* conncheck */
-int  icem_conncheck_start(struct icem *icem);
 void icem_conncheck_schedule_check(struct icem *icem);
 void icem_conncheck_continue(struct icem *icem);
 void icem_conncheck_stop(struct icem *icem);

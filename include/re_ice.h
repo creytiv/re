@@ -59,6 +59,7 @@ int  icem_gather_relay(struct icem *icem, const struct sa *stun_srv,
 		       const char *username, const char *password);
 bool icem_verify_support(struct icem *icem, uint8_t compid,
 			 const struct sa *raddr);
+int  icem_conncheck_start(struct icem *icem);
 int  icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr);
 bool icem_mismatch(const struct icem *icem);
 void icem_update(struct icem *icem);

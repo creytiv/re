@@ -142,7 +142,9 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 	int err;
 
 	if (icem->state != CHECKLIST_RUNNING) {
-		DEBUG_WARNING("Checklist is not running \n");
+		DEBUG_WARNING("%s.%u: Checklist is not running (%s)\n",
+			      icem->name, comp->id,
+			      ice_checkl_state2name(icem->state));
 	}
 
 	/* 7.2.1.3.  Learning Peer Reflexive Candidates */
@@ -168,7 +170,9 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 	}
 
 	if (!lcand) {
-		DEBUG_WARNING("%s: local candidate not found\n", icem->name);
+		DEBUG_WARNING("%s.%u: local candidate not found (checkl=%u)\n",
+			      icem->name, comp->id,
+			      list_count(&icem->checkl));
 	}
 
 	/* 7.2.1.4.  Triggered Checks */
