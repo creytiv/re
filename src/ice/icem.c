@@ -214,7 +214,10 @@ int icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr)
 	if (!comp)
 		return ENOENT;
 
-	return turnc_add_chan(comp->turnc, raddr, NULL, NULL);
+	if (comp->turnc)
+		return turnc_add_chan(comp->turnc, raddr, NULL, NULL);
+
+	return 0;
 }
 
 

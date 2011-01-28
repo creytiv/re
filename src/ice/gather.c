@@ -122,6 +122,11 @@ static void turnc_handler(int err, uint16_t scode, const char *reason,
 
 	--icem->nstun;
 
+	/* TURN failed, so we destroy the client */
+	if (err || scode) {
+		comp->turnc = mem_deref(comp->turnc);
+	}
+
 	if (err) {
 		DEBUG_WARNING("{%s.%d} TURN Client error: %s\n",
 			      icem->name, comp->id, strerror(err));
