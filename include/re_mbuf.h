@@ -38,6 +38,7 @@ struct mbuf {
 
 
 struct pl;
+struct re_printf;
 
 struct mbuf *mbuf_alloc(size_t size);
 struct mbuf *mbuf_alloc_ref(struct mbuf *mbr);
@@ -63,6 +64,7 @@ int      mbuf_vprintf(struct mbuf *mb, const char *fmt, va_list ap);
 int      mbuf_printf(struct mbuf *mb, const char *fmt, ...);
 int      mbuf_write_pl_skip(struct mbuf *mb, const struct pl *pl,
 			    const struct pl *skip);
+int      mbuf_debug(struct re_printf *pf, const struct mbuf *mb);
 
 
 /**
