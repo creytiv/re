@@ -78,8 +78,6 @@ void sa_set_in(struct sa *sa, uint32_t addr, uint16_t port)
 	sa->u.in.sin_addr.s_addr = htonl(addr);
 	sa->u.in.sin_port = htons(port);
 	sa->len = sizeof(struct sockaddr_in);
-
-	return;
 }
 
 
