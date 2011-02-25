@@ -95,6 +95,7 @@ Features:
 * RFC 5118 - SIP Torture Test Messages for IPv6
 * RFC 5245 - Interactive Connectivity Establishment (ICE)
 * RFC 5389 - Session Traversal Utilities for NAT (STUN)
+* RFC 5626 - Managing Client-Initiated Connections in SIP
 * RFC 5761 - Multiplexing RTP Data and Control Packets on a Single Port
 * RFC 5766 - Traversal Using Relays around NAT (TURN)
 * RFC 5768 - Indicating Support for ICE in SIP

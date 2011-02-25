@@ -14,6 +14,7 @@
 #include <re_sys.h>
 #include <re_tmr.h>
 #include <re_udp.h>
+#include <re_stun.h>
 #include <re_sip.h>
 #include "sip.h"
 
@@ -42,11 +43,15 @@ static void destructor(void *arg)
 	hash_flush(sip->ht_conn);
 	mem_deref(sip->ht_conn);
 
+	hash_flush(sip->ht_udpconn);
+	mem_deref(sip->ht_udpconn);
+
 	list_flush(&sip->transpl);
 	list_flush(&sip->lsnrl);
 
 	mem_deref(sip->software);
 	mem_deref(sip->dnsc);
+	mem_deref(sip->stun);
 }
 
 
@@ -84,6 +89,14 @@ int sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 		goto out;
 
 	err = sip_strans_init(sip, stsz);
+	if (err)
+		goto out;
+
+	err = hash_alloc(&sip->ht_udpconn, tcsz);
+	if (err)
+		goto out;
+
+	err = stun_alloc(&sip->stun, NULL, NULL, NULL);
 	if (err)
 		goto out;
 

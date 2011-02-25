@@ -45,6 +45,7 @@ enum sip_hdrid {
 	SIP_HDR_ERROR_INFO                    =   21,
 	SIP_HDR_EVENT                         = 3286,
 	SIP_HDR_EXPIRES                       = 1983,
+	SIP_HDR_FLOW_TIMER                    =  584,
 	SIP_HDR_FROM                          = 1963,
 	SIP_HDR_HIDE                          =  283,
 	SIP_HDR_HISTORY_INFO                  = 2582,
@@ -210,6 +211,7 @@ struct sip_request;
 struct sip_strans;
 struct sip_auth;
 struct sip_dialog;
+struct sip_keepalive;
 struct dnsc;
 
 typedef bool(sip_msg_h)(const struct sip_msg *msg, void *arg);
@@ -222,6 +224,7 @@ typedef int(sip_auth_h)(char **username, char **password, const char *realm,
 			void *arg);
 typedef bool(sip_hdr_h)(const struct sip_hdr *hdr, const struct sip_msg *msg,
 			void *arg);
+typedef void(sip_keepalive_h)(int err, void *arg);
 
 
 /* sip */
@@ -312,6 +315,10 @@ const struct sip_hdr *sip_msg_xhdr_apply(const struct sip_msg *msg,
 					 sip_hdr_h *h, void *arg);
 uint32_t sip_msg_hdr_count(const struct sip_msg *msg, enum sip_hdrid id);
 uint32_t sip_msg_xhdr_count(const struct sip_msg *msg, const char *name);
+bool sip_msg_hdr_has_value(const struct sip_msg *msg, enum sip_hdrid id,
+			   const char *value);
+bool sip_msg_xhdr_has_value(const struct sip_msg *msg, const char *name,
+			    const char *value);
 struct tcp_conn *sip_msg_tcpconn(const struct sip_msg *msg);
 void sip_msg_dump(const struct sip_msg *msg);
 
@@ -320,3 +327,9 @@ int sip_via_decode(struct sip_via *via, const struct pl *pl);
 int sip_cseq_decode(struct sip_cseq *cseq, const struct pl *pl);
 int sip_param_decode(const struct pl *pl, const char *name, struct pl *val);
 int sip_param_exists(const struct pl *pl, const char *name, struct pl *end);
+
+
+/* keepalive */
+int sip_keepalive_start(struct sip_keepalive **kap, struct sip *sip,
+			const struct sip_msg *msg, uint32_t interval,
+			sip_keepalive_h *kah, void *arg);

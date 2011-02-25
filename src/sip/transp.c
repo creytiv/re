@@ -15,6 +15,7 @@
 #include <re_sys.h>
 #include <re_tmr.h>
 #include <re_udp.h>
+#include <re_stun.h>
 #include <re_tcp.h>
 #include <re_tls.h>
 #include <re_sip.h>
@@ -22,7 +23,9 @@
 
 
 enum {
-	TCP_ACCEPT_TIMEOUT = 32000,
+	TCP_ACCEPT_TIMEOUT    = 32,
+	TCP_KEEPALIVE_TIMEOUT = 10,
+	TCP_KEEPALIVE_INTVAL  = 120,
 };
 
 
@@ -39,13 +42,16 @@ struct sip_transport {
 struct sip_conn {
 	struct le he;
 	struct list ql;
+	struct list kal;
 	struct tmr tmr;
+	struct tmr tmr_ka;
 	struct sa laddr;
 	struct sa paddr;
 	struct tls_conn *sc;
 	struct tcp_conn *tc;
 	struct mbuf *mb;
 	struct sip *sip;
+	uint32_t ka_interval;
 	bool established;
 };
 
@@ -59,6 +65,9 @@ struct sip_connqent {
 };
 
 
+static uint8_t crlfcrlf[4] = {0x0d, 0x0a, 0x0d, 0x0a};
+
+
 static void internal_transport_handler(int err, void *arg)
 {
 	(void)err;
@@ -70,6 +79,9 @@ static void transp_destructor(void *arg)
 {
 	struct sip_transport *transp = arg;
 
+	if (transp->tp == SIP_TRANSP_UDP)
+		udp_handler_set(transp->sock, NULL, NULL);
+
 	list_unlink(&transp->le);
 	mem_deref(transp->sock);
 	mem_deref(transp->tls);
@@ -80,7 +92,9 @@ static void conn_destructor(void *arg)
 {
 	struct sip_conn *conn = arg;
 
+	tmr_cancel(&conn->tmr_ka);
 	tmr_cancel(&conn->tmr);
+	list_flush(&conn->kal);
 	list_flush(&conn->ql);
 	hash_unlink(&conn->he);
 	mem_deref(conn->sc);
@@ -155,6 +169,7 @@ static void conn_close(struct sip_conn *conn, int err)
 
 	conn->sc = mem_deref(conn->sc);
 	conn->tc = mem_deref(conn->tc);
+	tmr_cancel(&conn->tmr_ka);
 	tmr_cancel(&conn->tmr);
 	hash_unlink(&conn->he);
 
@@ -174,6 +189,8 @@ static void conn_close(struct sip_conn *conn, int err)
 		list_unlink(&qent->le);
 		mem_deref(qent);
 	}
+
+	sip_keepalive_signal(&conn->kal, err);
 }
 
 
@@ -183,6 +200,31 @@ static void conn_tmr_handler(void *arg)
 
 	conn_close(conn, ETIMEDOUT);
 	mem_deref(conn);
+}
+
+
+static void conn_keepalive_handler(void *arg)
+{
+	struct sip_conn *conn = arg;
+	struct mbuf mb;
+	int err;
+
+	mb.buf  = crlfcrlf;
+	mb.size = sizeof(crlfcrlf);
+	mb.pos  = 0;
+	mb.end  = 4;
+
+	err = tcp_send(conn->tc, &mb);
+	if (err) {
+		conn_close(conn, err);
+		mem_deref(conn);
+		return;
+	}
+
+	tmr_start(&conn->tmr, TCP_KEEPALIVE_TIMEOUT * 1000,
+		  conn_tmr_handler, conn);
+	tmr_start(&conn->tmr_ka, sip_keepalive_wait(conn->ka_interval),
+		  conn_keepalive_handler, conn);
 }
 
 
@@ -224,11 +266,41 @@ static void sip_recv(struct sip *sip, const struct sip_msg *msg)
 static void udp_recv_handler(const struct sa *src, struct mbuf *mb, void *arg)
 {
 	struct sip_transport *transp = arg;
+	struct stun_unknown_attr ua;
+	struct stun_msg *stun_msg;
 	struct sip_msg *msg;
 	int err;
 
 	if (mb->end <= 4)
 		return;
+
+	if (!stun_msg_decode(&stun_msg, mb, &ua)) {
+
+		if (stun_msg_method(stun_msg) == STUN_METHOD_BINDING) {
+
+			switch (stun_msg_class(stun_msg)) {
+
+			case STUN_CLASS_REQUEST:
+				(void)stun_reply(IPPROTO_UDP, transp->sock,
+						 src, 0, stun_msg,
+						 NULL, 0, false, 2,
+						 STUN_ATTR_XOR_MAPPED_ADDR,
+						 src,
+						 STUN_ATTR_SOFTWARE,
+						 transp->sip->software);
+				break;
+
+			default:
+				(void)stun_ctrans_recv(transp->sip->stun,
+						       stun_msg, &ua);
+				break;
+			}
+		}
+
+		mem_deref(stun_msg);
+
+		return;
+	}
 
 	err = sip_msg_decode(&msg, mb);
 	if (err) {
@@ -281,7 +353,26 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 			break;
 
 		if (!memcmp(mbuf_buf(conn->mb), "\r\n", 2)) {
+
 			conn->mb->pos += 2;
+
+			if (mbuf_get_left(conn->mb) >= 2 &&
+			    !memcmp(mbuf_buf(conn->mb), "\r\n", 2)) {
+
+				struct mbuf mbr;
+
+				conn->mb->pos += 2;
+
+				mbr.buf  = crlfcrlf;
+				mbr.size = sizeof(crlfcrlf);
+				mbr.pos  = 0;
+				mbr.end  = 2;
+
+				err = tcp_send(conn->tc, &mbr);
+				if (err)
+					break;
+			}
+
 			if (mbuf_get_left(conn->mb))
 				continue;
 
@@ -436,7 +527,8 @@ static void tcp_connect_handler(const struct sa *paddr, void *arg)
 	}
 #endif
 
-	tmr_start(&conn->tmr, TCP_ACCEPT_TIMEOUT, conn_tmr_handler, conn);
+	tmr_start(&conn->tmr, TCP_ACCEPT_TIMEOUT * 1000,
+		  conn_tmr_handler, conn);
 
  out:
 	if (err) {
@@ -780,4 +872,30 @@ struct tcp_conn *sip_msg_tcpconn(const struct sip_msg *msg)
 	default:
 		return NULL;
 	}
+}
+
+
+int  sip_keepalive_tcp(struct sip_keepalive *ka, struct sip_conn *conn,
+		       uint32_t interval)
+{
+	if (!ka || !conn)
+		return EINVAL;
+
+	if (!conn->tc || !conn->established)
+		return ENOTCONN;
+
+	list_append(&conn->kal, &ka->le, ka);
+
+	if (!tmr_isrunning(&conn->tmr_ka)) {
+
+		interval = MAX(interval ? interval : TCP_KEEPALIVE_INTVAL,
+			       TCP_KEEPALIVE_TIMEOUT * 2);
+
+		conn->ka_interval = interval;
+
+		tmr_start(&conn->tmr_ka, sip_keepalive_wait(conn->ka_interval),
+			  conn_keepalive_handler, conn);
+	}
+
+	return 0;
 }

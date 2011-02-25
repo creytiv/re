@@ -26,6 +26,8 @@ SOURCE        auth.c
 SOURCE        cseq.c
 SOURCE        ctrans.c
 SOURCE        dialog.c
+SOURCE        keepalive.c
+SOURCE        keepalive_udp.c
 SOURCE        msg.c
 SOURCE        param.c
 SOURCE        reply.c

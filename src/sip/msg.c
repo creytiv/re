@@ -13,6 +13,7 @@
 #include <re_hash.h>
 #include <re_fmt.h>
 #include <re_uri.h>
+#include <re_udp.h>
 #include <re_sip.h>
 #include "sip.h"
 
@@ -531,6 +532,31 @@ uint32_t sip_msg_xhdr_count(const struct sip_msg *msg, const char *name)
 	sip_msg_xhdr_apply(msg, true, name, count_handler, &n);
 
 	return n;
+}
+
+
+static bool value_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
+			  void *arg)
+{
+	(void)msg;
+
+	return 0 == pl_strcasecmp(&hdr->val, (const char *)arg);
+}
+
+
+bool sip_msg_hdr_has_value(const struct sip_msg *msg, enum sip_hdrid id,
+			   const char *value)
+{
+	return NULL != sip_msg_hdr_apply(msg, true, id, value_handler,
+					 (void *)value);
+}
+
+
+bool sip_msg_xhdr_has_value(const struct sip_msg *msg, const char *name,
+			    const char *value)
+{
+	return NULL != sip_msg_xhdr_apply(msg, true, name, value_handler,
+					  (void *)value);
 }
 
 

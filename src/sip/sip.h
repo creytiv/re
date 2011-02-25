@@ -12,7 +12,9 @@ struct sip {
 	struct hash *ht_ctrans;
 	struct hash *ht_strans;
 	struct hash *ht_conn;
+	struct hash *ht_udpconn;
 	struct dnsc *dnsc;
+	struct stun *stun;
 	char *software;
 	sip_exit_h *exith;
 	void *arg;
@@ -26,6 +28,14 @@ struct sip_lsnr {
 	sip_msg_h *msgh;
 	void *arg;
 	bool req;
+};
+
+
+struct sip_keepalive {
+	struct le le;
+	struct sip_keepalive **kap;
+	sip_keepalive_h *kah;
+	void *arg;
 };
 
 
@@ -78,3 +88,15 @@ int  sip_dialog_encode(struct mbuf *mb, struct sip_dialog *dlg, uint32_t cseq,
 		       const char *met);
 const char *sip_dialog_uri(const struct sip_dialog *dlg);
 const struct uri *sip_dialog_route(const struct sip_dialog *dlg);
+
+
+/* keepalive */
+struct sip_conn;
+
+void sip_keepalive_signal(struct list *kal, int err);
+uint64_t sip_keepalive_wait(uint32_t interval);
+int  sip_keepalive_tcp(struct sip_keepalive *ka, struct sip_conn *conn,
+		       uint32_t interval);
+int  sip_keepalive_udp(struct sip_keepalive *ka, struct sip *sip,
+		       struct udp_sock *us, const struct sa *paddr,
+		       uint32_t interval);
