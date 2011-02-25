@@ -10,7 +10,7 @@ VER_MINOR := 1
 VER_PATCH := 0
 
 PROJECT   := re
-VERSION   := 0.1.0
+VERSION   := 0.2.0
 
 MK	:= mk/re.mk
 
