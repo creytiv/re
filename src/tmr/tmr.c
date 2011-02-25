@@ -228,7 +228,6 @@ void tmr_start(struct tmr *tmr, uint64_t delay, tmr_h *th, void *arg)
 		return;
 
 	tmr->jfs = delay + tmr_jiffies();
-	tmr->tmrl = tmrl;
 
 	le = list_apply(tmrl, false, inspos_handler, &tmr->jfs);
 	if (le) {

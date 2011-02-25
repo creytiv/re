@@ -15,7 +15,6 @@ typedef void (tmr_h)(void *arg);
 /** Defines a timer */
 struct tmr {
 	struct le le;       /**< Linked list element */
-	struct list *tmrl;  /**< Parent list         */
 	tmr_h *th;          /**< Timeout handler     */
 	void *arg;          /**< Handler argument    */
 	uint64_t jfs;       /**< Jiffies for timeout */
