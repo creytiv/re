@@ -5,7 +5,6 @@ Version v0.2.0
 
   tcp_register_helper: remove int *fd, add int layer
   udp_register_helper: remove int *fd
-  struct tmr:  remove unused member 'tmrl'
 
 -------------------------------------------------------------------------------
 Version v0.x.y
