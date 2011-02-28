@@ -156,7 +156,7 @@ int icem_comp_alloc(struct icem_comp **cp, struct icem *icem, int id,
 	comp->sock = mem_ref(sock);
 	comp->icem = icem;
 
-	err = udp_register_helper(&comp->uh, sock, NULL, icem->layer,
+	err = udp_register_helper(&comp->uh, sock, icem->layer,
 				  NULL, /*helper_send_handler*/
 				  helper_recv_handler, comp);
 	if (err)

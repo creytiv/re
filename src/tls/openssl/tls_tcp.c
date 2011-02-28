@@ -209,8 +209,9 @@ static bool send_handler(int *err, struct mbuf *mb, void *arg)
 
 int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp)
 {
-	int err, fd;
 	struct tls_conn *tc;
+	const int layer = 0;
+	int err;
 
 	if (!ptc || !tls || !tcp)
 		return EINVAL;
@@ -219,7 +220,7 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp)
 	if (!tc)
 		return ENOMEM;
 
-	err = tcp_register_helper(&tc->th, tcp, &fd, estab_handler,
+	err = tcp_register_helper(&tc->th, tcp, layer, estab_handler,
 				  send_handler, recv_handler, tc);
 	if (err)
 		goto out;
@@ -241,7 +242,7 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp)
 		goto out;
 	}
 
-	tc->sbio_out = BIO_new_socket(fd, BIO_NOCLOSE);
+	tc->sbio_out = BIO_new_socket(tcp_conn_fd(tcp), BIO_NOCLOSE);
 	if (!tc->sbio_out) {
 		DEBUG_WARNING("alloc: BIO_new_socket() failed\n");
 		goto out;

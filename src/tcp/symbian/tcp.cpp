@@ -117,6 +117,7 @@ public:
 
 struct tcp_helper {
 	struct le le;
+	int layer;
 	tcp_helper_estab_h *estabh;
 	tcp_helper_send_h *sendh;
 	tcp_helper_recv_h *recvh;
@@ -965,13 +966,24 @@ static bool helper_recv_handler(int *err, struct mbuf *mb, bool *estab,
 }
 
 
-int tcp_register_helper(struct tcp_helper **thp, struct tcp_conn *tc, int *fd,
+static bool sort_handler(struct le *le1, struct le *le2, void *arg)
+{
+	struct tcp_helper *th1 = (struct tcp_helper *)le1->data;
+	struct tcp_helper *th2 = (struct tcp_helper *)le2->data;
+	(void)arg;
+
+	return th1->layer <= th2->layer;
+}
+
+
+int tcp_register_helper(struct tcp_helper **thp, struct tcp_conn *tc,
+			int layer,
 			tcp_helper_estab_h *eh, tcp_helper_send_h *sh,
 			tcp_helper_recv_h *rh, void *arg)
 {
 	struct tcp_helper *th;
 
-	if (!thp || !tc)
+	if (!tc)
 		return EINVAL;
 
 	th = (struct tcp_helper *)mem_zalloc(sizeof(*th), helper_destructor);
@@ -980,18 +992,16 @@ int tcp_register_helper(struct tcp_helper **thp, struct tcp_conn *tc, int *fd,
 
 	list_append(&tc->helpers, &th->le, th);
 
+	th->layer  = layer;
 	th->estabh = eh ? eh : helper_estab_handler;
 	th->sendh  = sh ? sh : helper_send_handler;
 	th->recvh  = rh ? rh : helper_recv_handler;
 	th->arg = arg;
 
-#if 0
-	if (fd)
-		*fd = tc->fdc;
-#endif
-	(void)fd;
+	list_sort(&tc->helpers, sort_handler, NULL);
 
-	*thp = th;
+	if (thp)
+		*thp = th;
 
 	return 0;
 }

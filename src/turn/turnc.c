@@ -416,7 +416,7 @@ int turnc_alloc(struct turnc **turncp, const struct stun_conf *conf, int proto,
 	switch (proto) {
 
 	case IPPROTO_UDP:
-		err = udp_register_helper(&turnc->uh, sock, NULL, layer,
+		err = udp_register_helper(&turnc->uh, sock, layer,
 					  udp_send_handler, udp_recv_handler,
 					  turnc);
 		break;

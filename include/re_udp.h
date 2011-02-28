@@ -46,7 +46,7 @@ struct udp_helper;
 
 
 int udp_register_helper(struct udp_helper **uhp, struct udp_sock *us,
-			int *fd, int layer,
+			int layer,
 			udp_helper_send_h *sh, udp_helper_recv_h *rh,
 			void *arg);
 

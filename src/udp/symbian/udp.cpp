@@ -536,18 +536,19 @@ static bool sort_handler(struct le *le1, struct le *le2, void *arg)
 	struct udp_helper *uh1 = (struct udp_helper *)le1->data;
 	struct udp_helper *uh2 = (struct udp_helper *)le2->data;
 	(void)arg;
+
 	return uh1->layer <= uh2->layer;
 }
 
 
 int udp_register_helper(struct udp_helper **uhp, struct udp_sock *us,
-			int *fd, int layer,
+			int layer,
 			udp_helper_send_h *sh, udp_helper_recv_h *rh,
 			void *arg)
 {
 	struct udp_helper *uh;
 
-	if (!uhp || !us)
+	if (!us)
 		return EINVAL;
 
 	uh = (struct udp_helper *)mem_zalloc(sizeof(*uh), helper_destructor);
@@ -563,14 +564,8 @@ int udp_register_helper(struct udp_helper **uhp, struct udp_sock *us,
 
 	list_sort(&us->helpers, sort_handler, NULL);
 
-#if 0
-	/* Symbian has no `fd' */
-	if (fd)
-		*fd = us->fd;
-#endif
-	(void)fd;
-
-	*uhp = uh;
+	if (uhp)
+		*uhp = uh;
 
 	return 0;
 }

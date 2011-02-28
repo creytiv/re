@@ -3,8 +3,6 @@ TODO
 -------------------------------------------------------------------------------
 Version v0.2.0
 
-  tcp_register_helper: remove int *fd, add int layer
-  udp_register_helper: remove int *fd
 
 -------------------------------------------------------------------------------
 Version v0.x.y

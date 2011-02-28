@@ -96,6 +96,7 @@ typedef bool (tcp_helper_recv_h)(int *err, struct mbuf *mb, bool *estab,
 struct tcp_helper;
 
 
-int tcp_register_helper(struct tcp_helper **thp, struct tcp_conn *tc, int *fd,
+int tcp_register_helper(struct tcp_helper **thp, struct tcp_conn *tc,
+			int layer,
 			tcp_helper_estab_h *eh, tcp_helper_send_h *sh,
 			tcp_helper_recv_h *rh, void *arg);
