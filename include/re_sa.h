@@ -11,14 +11,18 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
+
+
 struct pl;
 
+/** Socket Address flags */
 enum sa_flag {
 	SA_ADDR      = 1<<0,
 	SA_PORT      = 1<<1,
 	SA_ALL       = SA_ADDR | SA_PORT
 };
 
+/** Defines a Socket Address */
 struct sa {
 	union {
 		struct sockaddr sa;

@@ -1,4 +1,6 @@
-/*-
+/**
+ * @file crc32.c CRC32 Implementation
+ *
  *  COPYRIGHT (C) 1986 Gary S. Brown.  You may use this program, or
  *  code or tables extracted from it, as desired without restriction.
  */
@@ -97,6 +99,12 @@ static const uint32_t crc32_tab[] = {
  * given below for documentation purposes. An equivalent implementation
  * of this function that's actually used in the kernel can be found
  * in sys/libkern.h, where it can be inlined.
+ *
+ * @param crc  Initial CRC value
+ * @param buf  Buffer to generate CRC from
+ * @param size Number of bytes in buffer
+ *
+ * @return CRC value
  */
 uint32_t crc32(uint32_t crc, const void *buf, uint32_t size)
 {

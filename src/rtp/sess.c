@@ -264,6 +264,13 @@ int rtcp_sess_alloc(struct rtcp_sess **sessp, struct rtp_sock *rs)
 }
 
 
+/**
+ * Set the Sampling-rate on an RTCP Session
+ *
+ * @param rs       RTP Socket
+ * @param srate_tx Transmit samplerate
+ * @param srate_rx Receive samplerate
+ */
 void rtcp_set_srate(struct rtp_sock *rs, uint32_t srate_tx, uint32_t srate_rx)
 {
 	struct rtcp_sess *sess = rtp_rtcp_sess(rs);
@@ -536,6 +543,15 @@ void rtcp_sess_rx_rtp(struct rtcp_sess *sess, uint16_t seq, uint32_t ts,
 }
 
 
+/**
+ * Get the RTCP Statistics for a source
+ *
+ * @param rs    RTP Socket
+ * @param ssrc  Synchronization source
+ * @param stats RTCP Statistics, set on return
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtcp_stats(struct rtp_sock *rs, uint32_t ssrc, struct rtcp_stats *stats)
 {
 	const struct rtcp_sess *sess = rtp_rtcp_sess(rs);
@@ -586,6 +602,14 @@ static bool debug_handler(struct le *le, void *arg)
 }
 
 
+/**
+ * RTCP Debug handler, use with fmt %H
+ *
+ * @param pf Print function
+ * @param rs RTP Socket
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtcp_debug(struct re_printf *pf, const struct rtp_sock *rs)
 {
 	const struct rtcp_sess *sess = rtp_rtcp_sess(rs);

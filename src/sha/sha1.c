@@ -1,5 +1,6 @@
-/*
-SHA-1 in C
+/**
+ * @file sha1.c SHA-1 in C
+
 By Steve Reid <sreid@sea-to-sky.net>
 100% Public Domain
 
@@ -183,7 +184,11 @@ void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64])
 }
 
 
-/** SHA1Init - Initialize new context */
+/**
+ * Initialize new context
+ *
+ * @param context SHA1-Context
+ */
 void SHA1_Init(SHA1_CTX* context)
 {
 	/* SHA1 initialization constants */
@@ -196,7 +201,13 @@ void SHA1_Init(SHA1_CTX* context)
 }
 
 
-/** Run your data through this. */
+/**
+ * Run your data through this
+ *
+ * @param context SHA1-Context
+ * @param data    Buffer to run SHA1 on
+ * @param len     Number of bytes
+ */
 void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)
 {
 	size_t i, j;
@@ -217,7 +228,12 @@ void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)
 }
 
 
-/** Add padding and return the message digest. */
+/**
+ * Add padding and return the message digest
+ *
+ * @param digest  Generated message digest
+ * @param context SHA1-Context
+ */
 void SHA1_Final(uint8_t digest[SHA1_DIGEST_SIZE], SHA1_CTX* context)
 {
 	uint32_t i;

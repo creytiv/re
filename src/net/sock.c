@@ -77,8 +77,6 @@ int net_sock_init(void)
 
 /**
  * Cleanup network sockets
- *
- * @return 0 if success, otherwise errorcode
  */
 void net_sock_close(void)
 {

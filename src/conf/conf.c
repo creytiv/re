@@ -26,6 +26,11 @@
 #endif
 
 
+/**
+ * Defines a Configuration state. The configuration data is stored in a
+ * linear buffer which can be used for reading key-value pairs of
+ * configuration data. The config data can be strings or numeric values.
+ */
 struct conf {
 	struct mbuf *mb;
 };
@@ -65,6 +70,14 @@ static void conf_destructor(void *data)
 }
 
 
+/**
+ * Load configuration from file
+ *
+ * @param confp    Configuration object to be allocated
+ * @param filename Name of configuration file
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int conf_alloc(struct conf **confp, const char *filename)
 {
 	struct conf *conf;
@@ -97,6 +110,15 @@ int conf_alloc(struct conf **confp, const char *filename)
 }
 
 
+/**
+ * Allocate configuration from a buffer
+ *
+ * @param confp    Configuration object to be allocated
+ * @param buf      Buffer containing configuration
+ * @param sz       Size of configuration buffer
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int conf_alloc_buf(struct conf **confp, const uint8_t *buf, size_t sz)
 {
 	struct conf *conf;
@@ -117,6 +139,15 @@ int conf_alloc_buf(struct conf **confp, const uint8_t *buf, size_t sz)
 }
 
 
+/**
+ * Get the value of a configuration item PL string
+ *
+ * @param conf Configuration object
+ * @param name Name of config item key
+ * @param pl   Value of config item, if present
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int conf_get(struct conf *conf, const char *name, struct pl *pl)
 {
 	char expr[512];
@@ -135,6 +166,16 @@ int conf_get(struct conf *conf, const char *name, struct pl *pl)
 }
 
 
+/**
+ * Get the value of a configuration item string
+ *
+ * @param conf Configuration object
+ * @param name Name of config item key
+ * @param str  Value of config item, if present
+ * @param size Size of string to store value
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int conf_get_str(struct conf *conf, const char *name, char *str,
 		 size_t size)
 {
@@ -152,6 +193,15 @@ int conf_get_str(struct conf *conf, const char *name, char *str,
 }
 
 
+/**
+ * Get the numeric value of a configuration item
+ *
+ * @param conf Configuration object
+ * @param name Name of config item key
+ * @param num  Returned numeric value of config item, if present
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int conf_get_u32(struct conf *conf, const char *name, uint32_t *num)
 {
 	struct pl pl;
@@ -170,6 +220,16 @@ int conf_get_u32(struct conf *conf, const char *name, uint32_t *num)
 }
 
 
+/**
+ * Apply a function handler to all config items of a certain key
+ *
+ * @param conf Configuration object
+ * @param name Name of config item key
+ * @param ch   Config item handler
+ * @param arg  Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int conf_apply(struct conf *conf, const char *name, conf_h *ch, void *arg)
 {
 	char expr[512];

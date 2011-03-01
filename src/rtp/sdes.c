@@ -24,7 +24,15 @@ enum {
 };
 
 
-/** Encode one SDES chunk into mbuffer */
+/**
+ * Encode one SDES chunk into mbuffer
+ *
+ * @param mb    Buffer to encode into
+ * @param src   First SSRC/CSRC
+ * @param itemc Number of SDES items to encode
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtcp_sdes_encode(struct mbuf *mb, uint32_t src, uint32_t itemc, ...)
 {
 	va_list ap;
@@ -70,6 +78,14 @@ int rtcp_sdes_encode(struct mbuf *mb, uint32_t src, uint32_t itemc, ...)
 }
 
 
+/**
+ * Decode SDES items from a buffer
+ *
+ * @param mb   Buffer to decode from
+ * @param sdes RTCP SDES to decode into
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtcp_sdes_decode(struct mbuf *mb, struct rtcp_sdes *sdes)
 {
 	size_t start;

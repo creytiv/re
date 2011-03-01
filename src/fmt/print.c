@@ -130,8 +130,16 @@ static size_t local_ftoa(char *buf, double n, size_t dp)
 /**
  * Print a formatted string
  *
+ * @param fmt Formatted string
+ * @param ap  Variable argument
+ * @param vph Print handler
+ * @param arg Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ *
  * Extensions:
  *
+ * <pre>
  *   %b  (char *, size_t)        Buffer string with pointer and length
  *   %r  (struct pl)             Pointer-length object
  *   %w  (uint8_t *, size_t)     Binary buffer to hexadecimal format
@@ -139,6 +147,7 @@ static size_t local_ftoa(char *buf, double n, size_t dp)
  *   %J  (struct sa *)           Socket address and port - like 1.2.3.4:1234
  *   %H  (re_printf_h *, void *) Print handler with argument
  *   %v  (char *fmt, va_list *)  Variable argument list
+ * </pre>
  *
  * Reserved for the future:
  *

@@ -1,5 +1,5 @@
 /**
- * @file keepalive.c  STUN usage for NAT Keepalives
+ * @file stun/keepalive.c  STUN usage for NAT Keepalives
  *
  * Copyright (C) 2010 Creytiv.com
  */

@@ -369,6 +369,23 @@ static bool udp_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 }
 
 
+/**
+ * Allocate a TURN Client
+ *
+ * @param turncp    Pointer to allocated TURN Client
+ * @param conf      Optional STUN Configuration
+ * @param proto     Transport Protocol
+ * @param sock      Transport socket
+ * @param layer     Transport layer
+ * @param srv       TURN Server IP-address
+ * @param username  Authentication username
+ * @param password  Authentication password
+ * @param lifetime  Allocate lifetime in [seconds]
+ * @param th        TURN handler
+ * @param arg       Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int turnc_alloc(struct turnc **turncp, const struct stun_conf *conf, int proto,
 		void *sock, int layer, const struct sa *srv,
 		const char *username, const char *password,

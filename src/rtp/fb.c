@@ -29,6 +29,15 @@ enum {
 /* Encode functions */
 
 
+/**
+ * Encode an RTCP Generic NACK (GNACK) message
+ *
+ * @param mb  Buffer to encode into
+ * @param pid Packet ID
+ * @param blp Bitmask of following lost packets (BLP)
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_rtpfb_gnack_encode(struct mbuf *mb, uint16_t pid, uint16_t blp)
 {
 	int err;
@@ -38,6 +47,16 @@ int rtcp_rtpfb_gnack_encode(struct mbuf *mb, uint16_t pid, uint16_t blp)
 }
 
 
+/**
+ * Encode an RTCP Slice Loss Indication (SLI) message
+ *
+ * @param mb     Buffer to encode into
+ * @param first  Macroblock (MB) address of the first lost macroblock
+ * @param number Number of lost macroblocks
+ * @param picid  Picture ID
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_psfb_sli_encode(struct mbuf *mb, uint16_t first, uint16_t number,
 			 uint8_t picid)
 {
@@ -49,6 +68,14 @@ int rtcp_psfb_sli_encode(struct mbuf *mb, uint16_t first, uint16_t number,
 /* Decode functions */
 
 
+/**
+ * Decode an RTCP Transport Layer Feedback Message
+ *
+ * @param mb  Buffer to decode
+ * @param msg RTCP Message to decode into
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_rtpfb_decode(struct mbuf *mb, struct rtcp_msg *msg)
 {
 	size_t i, sz;
@@ -81,6 +108,14 @@ int rtcp_rtpfb_decode(struct mbuf *mb, struct rtcp_msg *msg)
 }
 
 
+/**
+ * Decode an RTCP Payload-Specific Feedback Message
+ *
+ * @param mb  Buffer to decode
+ * @param msg RTCP Message to decode into
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_psfb_decode(struct mbuf *mb, struct rtcp_msg *msg)
 {
 	size_t i, sz;

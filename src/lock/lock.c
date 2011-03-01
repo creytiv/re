@@ -21,6 +21,7 @@
 #endif
 
 
+/** Defines a lock */
 struct lock {
 	pthread_mutex_t m;
 };
@@ -37,6 +38,13 @@ static void lock_destructor(void *data)
 }
 
 
+/**
+ * Allocate a new lock
+ *
+ * @param lp Pointer to allocated lock object
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int lock_alloc(struct lock **lp)
 {
 	pthread_mutexattr_t attr;
@@ -66,6 +74,11 @@ int lock_alloc(struct lock **lp)
 }
 
 
+/**
+ * Get the lock for reading
+ *
+ * @param l Lock object
+ */
 void lock_read_get(struct lock *l)
 {
 	const int err = pthread_mutex_lock(&l->m);
@@ -75,6 +88,11 @@ void lock_read_get(struct lock *l)
 }
 
 
+/**
+ * Get the lock for writing
+ *
+ * @param l Lock object
+ */
 void lock_write_get(struct lock *l)
 {
 	const int err = pthread_mutex_lock(&l->m);
@@ -84,18 +102,37 @@ void lock_write_get(struct lock *l)
 }
 
 
+/**
+ * Attempt to get a lock for reading
+ *
+ * @param l Lock object
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int lock_read_try(struct lock *l)
 {
 	return pthread_mutex_trylock(&l->m);
 }
 
 
+/**
+ * Attempt to get a lock for writing
+ *
+ * @param l Lock object
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int lock_write_try(struct lock *l)
 {
 	return pthread_mutex_trylock(&l->m);
 }
 
 
+/**
+ * Release a lock
+ *
+ * @param l Lock object
+ */
 void lock_rel(struct lock *l)
 {
 	const int err = pthread_mutex_unlock(&l->m);

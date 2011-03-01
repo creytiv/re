@@ -34,7 +34,7 @@
 
 
 enum {
-	MAX_BLOCKING = 100,          /**< Maximum ticks spent in handler */
+	MAX_BLOCKING = 100   /**< Maximum time spent in handler [ms] */
 };
 
 extern struct list *tmrl_get(void);
@@ -70,6 +70,8 @@ static void call_handler(tmr_h *th, void *arg)
 
 /**
  * Poll all timers in the current thread
+ *
+ * @param tmrl Timer list
  */
 void tmr_poll(struct list *tmrl)
 {
@@ -108,7 +110,7 @@ void tmr_poll(struct list *tmrl)
 /**
  * Get the timer jiffies in milliseconds
  *
- * @return Jiffies [ms]
+ * @return Jiffies in [ms]
  */
 uint64_t tmr_jiffies(void)
 {
@@ -139,9 +141,11 @@ uint64_t tmr_jiffies(void)
 
 
 /**
- * Get number of ticks until the next timer timeout.
+ * Get number of milliseconds until the next timer expires
  *
- * @return Ticks, or 0 if no active timers.
+ * @param tmrl Timer-list
+ *
+ * @return Number of [ms], or 0 if no active timers
  */
 uint64_t tmr_next_timeout(struct list *tmrl)
 {
@@ -202,7 +206,7 @@ void tmr_init(struct tmr *tmr)
 
 
 /**
- * Start the timer on a timer object
+ * Start a timer
  *
  * @param tmr   Timer to start
  * @param delay Timer delay in [ms]

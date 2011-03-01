@@ -215,6 +215,8 @@ const struct mod_export *mod_export(const struct mod *m)
  *
  * @param pf     Print handler for debug output
  * @param unused Unused parameter
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int mod_debug(struct re_printf *pf, void *unused)
 {

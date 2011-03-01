@@ -1,7 +1,8 @@
 #
 # mod.mk
 #
-
+# Copyright (C) 2010 Creytiv.com
+#
 
 SRCS	+= sa/ntop.c
 SRCS	+= sa/pton.c

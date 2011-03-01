@@ -72,6 +72,16 @@ static void rtcp_destructor(void *data)
 }
 
 
+/**
+ * Encode the RTCP Header
+ *
+ * @param mb     Buffer to encode into
+ * @param count  Number of sub-elemements
+ * @param type   RTCP Packet type
+ * @param length Packet length in words
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_hdr_encode(struct mbuf *mb, uint8_t count, enum rtcp_type type,
 		    uint16_t length)
 {
@@ -88,6 +98,14 @@ int rtcp_hdr_encode(struct mbuf *mb, uint8_t count, enum rtcp_type type,
 }
 
 
+/**
+ * Decode the RTCP Header
+ *
+ * @param mb  Buffer to decode from
+ * @param hdr RTCP Header to decode into
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_hdr_decode(struct mbuf *mb, struct rtcp_hdr *hdr)
 {
 	uint8_t b;
@@ -227,6 +245,15 @@ int rtcp_vencode(struct mbuf *mb, enum rtcp_type type, uint32_t count,
 }
 
 
+/**
+ * Encode an RTCP Packet into a buffer
+ *
+ * @param mb    Buffer to encode into
+ * @param type  RTCP Packet type
+ * @param count Packet-specific count
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_encode(struct mbuf *mb, enum rtcp_type type, uint32_t count, ...)
 {
 	va_list ap;
@@ -240,7 +267,14 @@ int rtcp_encode(struct mbuf *mb, enum rtcp_type type, uint32_t count, ...)
 }
 
 
-/** Allocate one RTCP message and decode from mbuf */
+/**
+ * Decode one RTCP message from a buffer
+ *
+ * @param msgp Pointer to allocated RTCP Message
+ * @param mb   Buffer to decode from
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_decode(struct rtcp_msg **msgp, struct mbuf *mb)
 {
 	struct rtcp_msg *msg = NULL;

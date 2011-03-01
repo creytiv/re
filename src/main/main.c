@@ -69,7 +69,7 @@
 
 
 enum {
-	MAX_BLOCKING = 100,          /**< Maximum ticks spent in handler */
+	MAX_BLOCKING = 100,    /**< Maximum time spent in handler in [ms] */
 #if defined (WIN32) || defined (CYGWIN)
 	DEFAULT_MAXFDS = 8192
 #else
@@ -770,6 +770,8 @@ static void signal_handler(int sig)
  * Main polling loop for async I/O events. This function will only return when
  * re_cancel() is called or an error occured.
  *
+ * @param signalh Optional Signal handler
+ *
  * @return 0 if success, otherwise errorcode
  */
 int re_main(re_signal_h *signalh)
@@ -866,6 +868,8 @@ void re_cancel(void)
  *
  * @param pf     Print handler where debug output is printed to
  * @param unused Unused parameter
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int re_debug(struct re_printf *pf, void *unused)
 {
@@ -1023,6 +1027,8 @@ void re_thread_leave(void)
 
 /**
  * Get the timer-list for this thread
+ *
+ * @return Timer list
  *
  * @note only used by tmr module
  */

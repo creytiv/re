@@ -17,13 +17,6 @@
 #include <re_dbg.h>
 
 
-/*
- * The jitter buffer is for incoming RTP packets. Sorting by 'timestamp' works
- * fine for audio. However, this does not work so well for video or telephony
- * events. A better approach is to sort them by the sequence number.
- */
-
-
 #ifndef RELEASE
 #define JBUF_STAT 1  /**< Jitter buffer statistics */
 #endif
@@ -46,7 +39,12 @@ struct frame {
 };
 
 
-/** Defines a jitter buffer */
+/**
+ * Defines a jitter buffer
+ *
+ * The jitter buffer is for incoming RTP packets, which are sorted by
+ * sequence number.
+ */
 struct jbuf {
 	struct list pooll;   /**< List of free frames in pool               */
 	struct list framel;  /**< List of buffered frames                   */
@@ -389,6 +387,8 @@ int jbuf_stats(const struct jbuf *jb, struct jbuf_stat *jstat)
  *
  * @param pf Print handler
  * @param jb Jitter buffer
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int jbuf_debug(struct re_printf *pf, const struct jbuf *jb)
 {

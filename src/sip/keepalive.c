@@ -1,5 +1,5 @@
 /**
- * @file keepalive.c  SIP Keepalive
+ * @file sip/keepalive.c  SIP Keepalive
  *
  * Copyright (C) 2010 Creytiv.com
  */

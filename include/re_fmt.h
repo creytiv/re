@@ -57,6 +57,8 @@ static inline void pl_advance(struct pl *pl, ssize_t n)
  * @param p    String to print
  * @param size Size of string to print
  * @param arg  Handler argument
+ *
+ * @return 0 for success, otherwise errorcode
  */
 typedef int(re_vprintf_h)(const char *p, size_t size, void *arg);
 
@@ -71,6 +73,8 @@ struct re_printf {
  *
  * @param pf  Print backend
  * @param arg Handler argument
+ *
+ * @return 0 for success, otherwise errorcode
  */
 typedef int(re_printf_h)(struct re_printf *pf, void *arg);
 

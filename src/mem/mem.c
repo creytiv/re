@@ -411,6 +411,8 @@ void mem_threshold_set(ssize_t n)
  *
  * @param pf     Print handler for debug output
  * @param unused Unused parameter
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int mem_status(struct re_printf *pf, void *unused)
 {

@@ -22,6 +22,7 @@ enum {
 };
 
 
+/** Defines a SIP Registration client */
 struct sipreg {
 	struct sip_loopstate ls;
 	struct sa laddr;
@@ -297,6 +298,29 @@ static int request(struct sipreg *reg, bool reset_ls)
 }
 
 
+/**
+ * Allocate a SIP Registration client
+ *
+ * @param regp     Pointer to allocated SIP Registration client
+ * @param sip      SIP Stack instance
+ * @param reg_uri  SIP Request URI
+ * @param to_uri   SIP To-header URI
+ * @param from_uri SIP From-header URI
+ * @param expires  Registration interval in [seconds]
+ * @param cuser    Contact username
+ * @param routev   Optional route vector
+ * @param routec   Number of routes
+ * @param regid    Register identification
+ * @param authh    Authentication handler
+ * @param aarg     Authentication handler argument
+ * @param aref     True to ref argument
+ * @param resph    Response handler
+ * @param arg      Response handler argument
+ * @param params   Optional Contact-header parameters
+ * @param fmt      Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 		    const char *to_uri, const char *from_uri, uint32_t expires,
 		    const char *cuser, const char *routev[], uint32_t routec,

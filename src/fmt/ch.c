@@ -8,9 +8,9 @@
 
 
 /**
- * Convert a ascii hex character to binary format
+ * Convert an ASCII hex character to binary format
  *
- * @param ch Ascii hex character
+ * @param ch ASCII hex character
  *
  * @return Binary value
  */

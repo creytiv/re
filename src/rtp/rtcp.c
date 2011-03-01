@@ -42,6 +42,16 @@ static int rtcp_quick_send(struct rtp_sock *rs, enum rtcp_type type,
 }
 
 
+/**
+ * Send an RTCP Application-Defined (APP) packet
+ *
+ * @param rs   RTP Socket
+ * @param name Ascii name (4 octets)
+ * @param data Application-dependent data
+ * @param len  Number of bytes of data
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_send_app(struct rtp_sock *rs, const char name[4],
 		  const uint8_t *data, size_t len)
 {
@@ -64,12 +74,29 @@ int rtcp_send_fir(struct rtp_sock *rs, uint32_t ssrc)
 }
 
 
+/**
+ * Send an RTCP NACK packet
+ *
+ * @param rs   RTP Socket
+ * @param fsn  First Sequence Number lost
+ * @param blp  Bitmask of lost packets
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_send_nack(struct rtp_sock *rs, uint16_t fsn, uint16_t blp)
 {
 	return rtcp_quick_send(rs, RTCP_NACK, 0, rtp_sess_ssrc(rs), fsn, blp);
 }
 
 
+/**
+ * Send an RTCP Picture Loss Indication (PLI) packet
+ *
+ * @param rs      RTP Socket
+ * @param fb_ssrc Feedback SSRC
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int rtcp_send_pli(struct rtp_sock *rs, uint32_t fb_ssrc)
 {
 	return rtcp_quick_send(rs, RTCP_PSFB, RTCP_PSFB_PLI,
@@ -115,6 +142,14 @@ const char *rtcp_sdes_name(enum rtcp_sdes_type sdes)
 }
 
 
+/**
+ * Print an RTCP Message
+ *
+ * @param pf  Print handler for debug output
+ * @param msg RTCP Message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtcp_msg_print(struct re_printf *pf, const struct rtcp_msg *msg)
 {
 	size_t i, j;

@@ -82,6 +82,7 @@ struct tcp_conn {
 };
 
 
+/** Defines a TCP-Connection Helper */
 struct tcp_helper {
 	struct le le;
 	int layer;
@@ -1082,6 +1083,15 @@ int tcp_send(struct tcp_conn *tc, struct mbuf *mb)
 }
 
 
+/**
+ * Set the send handler on a TCP Connection, which will be called
+ * every time it is ready to send data
+ *
+ * @param tc    TCP Connection
+ * @param sendh TCP Send handler
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int tcp_set_send(struct tcp_conn *tc, tcp_send_h *sendh)
 {
 	if (!tc)
@@ -1186,6 +1196,13 @@ void tcp_conn_rxsz_set(struct tcp_conn *tc, size_t rxsz)
 }
 
 
+/**
+ * Get the file descriptor of a TCP Connection
+ *
+ * @param tc TCP-Connection
+ *
+ * @return File destriptor, or -1 if errors
+ */
 int tcp_conn_fd(const struct tcp_conn *tc)
 {
 	return tc ? tc->fdc : -1;
@@ -1201,6 +1218,19 @@ static bool sort_handler(struct le *le1, struct le *le2, void *arg)
 }
 
 
+/**
+ * Register a new TCP-helper on a TCP-Connection
+ *
+ * @param thp   Pointer to allocated TCP helper
+ * @param tc    TCP Connection
+ * @param layer Protocol layer; higher number means higher up in stack
+ * @param eh    Established handler
+ * @param sh    Send handler
+ * @param rh    Receive handler
+ * @param arg   Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int tcp_register_helper(struct tcp_helper **thp, struct tcp_conn *tc,
 			int layer,
 			tcp_helper_estab_h *eh, tcp_helper_send_h *sh,

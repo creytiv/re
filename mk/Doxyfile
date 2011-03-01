@@ -75,8 +75,8 @@ FILE_VERSION_FILTER    =
 QUIET                  = YES
 WARNINGS               = YES
 WARN_IF_UNDOCUMENTED   = YES
-WARN_IF_DOC_ERROR      = YES
-WARN_NO_PARAMDOC       = NO
+WARN_IF_DOC_ERROR      = NO
+WARN_NO_PARAMDOC       = YES
 WARN_FORMAT            = "$file:$line: $text"
 WARN_LOGFILE           = 
 #---------------------------------------------------------------------------
@@ -90,21 +90,17 @@ RECURSIVE              = YES
 EXCLUDE                = test.c \
 			 include/re_bitv.h \
 			 src/md5/md5.h src/md5/md5.c \
-			 src/conf     include/re_conf.h \
 			 src/dns      include/re_dns.h \
 			 src/httpauth include/re_httpauth.h \
 			 src/ice      include/re_ice.h \
-			 src/lock     include/re_lock.h \
 			 src/sdp      include/re_sdp.h \
+			 src/sip/     include/re_sip.h \
+			 src/sipsess/ include/re_sipsess.h \
 			 src/stun     include/re_stun.h \
-			 src/tcp      include/re_tcp.h \
-			 src/telev    include/re_telev.h \
-			 src/tls      include/re_tls.h \
-			 src/turn     include/re_turn.h \
-			 src/udp      include/re_udp.h
+			 src/tls      include/re_tls.h
 
 EXCLUDE_SYMLINKS       = NO
-EXCLUDE_PATTERNS       = */.svn/* *src/sip* *include/re_sip*
+EXCLUDE_PATTERNS       = */.svn/*
 EXAMPLE_PATH           = 
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO

@@ -1,6 +1,5 @@
 /**
- * @file re_natbd.h  NAT Behavior Discovery Using STUN
- *                   draft-ietf-behave-nat-behavior-discovery-06
+ * @file re_natbd.h  NAT Behavior Discovery Using STUN (RFC 5780)
  *
  * Copyright (C) 2010 Creytiv.com
  */

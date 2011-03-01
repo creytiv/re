@@ -16,6 +16,12 @@
 #include <re_dbg.h>
 
 
+/**
+ * Initialize a Socket Address
+ *
+ * @param sa Socket Address
+ * @param af Address Family
+ */
 void sa_init(struct sa *sa, int af)
 {
 	if (!sa)
@@ -27,6 +33,15 @@ void sa_init(struct sa *sa, int af)
 }
 
 
+/**
+ * Set a Socket Address from a PL string
+ *
+ * @param sa   Socket Address
+ * @param addr IP-address
+ * @param port Port number
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sa_set(struct sa *sa, const struct pl *addr, uint16_t port)
 {
 	char buf[64];
@@ -36,6 +51,15 @@ int sa_set(struct sa *sa, const struct pl *addr, uint16_t port)
 }
 
 
+/**
+ * Set a Socket Address from a string
+ *
+ * @param sa   Socket Address
+ * @param addr IP-address
+ * @param port Port number
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sa_set_str(struct sa *sa, const char *addr, uint16_t port)
 {
 	int err;
@@ -69,6 +93,15 @@ int sa_set_str(struct sa *sa, const char *addr, uint16_t port)
 }
 
 
+/**
+ * Set a Socket Address from an IPv4 address
+ *
+ * @param sa   Socket Address
+ * @param addr IPv4 address in host order
+ * @param port Port number
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 void sa_set_in(struct sa *sa, uint32_t addr, uint16_t port)
 {
 	if (!sa)
@@ -81,6 +114,15 @@ void sa_set_in(struct sa *sa, uint32_t addr, uint16_t port)
 }
 
 
+/**
+ * Set a Socket Address from an IPv6 address
+ *
+ * @param sa   Socket Address
+ * @param addr IPv6 address
+ * @param port Port number
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 void sa_set_in6(struct sa *sa, const uint8_t *addr, uint16_t port)
 {
 	if (!sa)
@@ -98,12 +140,21 @@ void sa_set_in6(struct sa *sa, const uint8_t *addr, uint16_t port)
 }
 
 
+/**
+ * Set a Socket Address from a sockaddr
+ *
+ * @param sa Socket Address
+ * @param s  Sockaddr
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sa_set_sa(struct sa *sa, const struct sockaddr *s)
 {
 	if (!sa || !s)
 		return EINVAL;
 
 	switch (s->sa_family) {
+
 	case AF_INET:
 		memcpy(&sa->u.in, s, sizeof(struct sockaddr_in));
 		sa->len = sizeof(struct sockaddr_in);
@@ -126,6 +177,12 @@ int sa_set_sa(struct sa *sa, const struct sockaddr *s)
 }
 
 
+/**
+ * Set the port number on a Socket Address
+ *
+ * @param sa   Socket Address
+ * @param port Port number
+ */
 void sa_set_port(struct sa *sa, uint16_t port)
 {
 	if (!sa)
@@ -206,18 +263,38 @@ int sa_decode(struct sa *sa, const char *str, size_t len)
 }
 
 
+/**
+ * Get the Address Family of a Socket Address
+ *
+ * @param sa Socket Address
+ *
+ * @return Address Family
+ */
 int sa_af(const struct sa *sa)
 {
 	return sa ? sa->u.sa.sa_family : AF_UNSPEC;
 }
 
 
+/**
+ * Get the IPv4-address of a Socket Address
+ *
+ * @param sa Socket Address
+ *
+ * @return IPv4 address in host order
+ */
 uint32_t sa_in(const struct sa *sa)
 {
 	return sa ? ntohl(sa->u.in.sin_addr.s_addr) : 0;
 }
 
 
+/**
+ * Get the IPv6-address of a Socket Address
+ *
+ * @param sa   Socket Address
+ * @param addr On return, contains the IPv6-address
+ */
 void sa_in6(const struct sa *sa, uint8_t *addr)
 {
 	if (!sa || !addr)
@@ -229,12 +306,28 @@ void sa_in6(const struct sa *sa, uint8_t *addr)
 }
 
 
+/**
+ * Convert a Socket Address to Presentation format
+ *
+ * @param sa   Socket Address
+ * @param buf  Buffer to store presentation format
+ * @param size Buffer size
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sa_ntop(const struct sa *sa, char *buf, int size)
 {
 	return net_inet_ntop(sa, buf, size);
 }
 
 
+/**
+ * Get the port number from a Socket Address
+ *
+ * @param sa Socket Address
+ *
+ * @return Port number  in host order
+ */
 uint16_t sa_port(const struct sa *sa)
 {
 	if (!sa)
@@ -256,6 +349,14 @@ uint16_t sa_port(const struct sa *sa)
 }
 
 
+/**
+ * Check if a Socket Address is set
+ *
+ * @param sa   Socket Address
+ * @param flag Flags specifying which fields to check
+ *
+ * @return true if set, false if not set
+ */
 bool sa_isset(const struct sa *sa, int flag)
 {
 	if (!sa)
@@ -291,6 +392,14 @@ bool sa_isset(const struct sa *sa, int flag)
 }
 
 
+/**
+ * Calculate the hash value of a Socket Address
+ *
+ * @param sa   Socket Address
+ * @param flag Flags specifying which fields to use
+ *
+ * @return Hash value
+ */
 uint32_t sa_hash(const struct sa *sa, int flag)
 {
 	uint32_t v = 0;
@@ -327,6 +436,12 @@ uint32_t sa_hash(const struct sa *sa, int flag)
 }
 
 
+/**
+ * Copy a Socket Address
+ *
+ * @param dst Socket Address to be written
+ * @param src Socket Address to be copied
+ */
 void sa_cpy(struct sa *dst, const struct sa *src)
 {
 	if (!dst || !src)
@@ -336,6 +451,15 @@ void sa_cpy(struct sa *dst, const struct sa *src)
 }
 
 
+/**
+ * Compare two Socket Address objects
+ *
+ * @param l    Socket Address number one
+ * @param r    Socket Address number two
+ * @param flag Flags specifying which fields to use
+ *
+ * @return true if match, false if no match
+ */
 bool sa_cmp(const struct sa *l, const struct sa *r, int flag)
 {
 	if (!l || !r)
@@ -396,6 +520,7 @@ bool sa_is_linklocal(const struct sa *sa)
 		return false;
 
 	switch (sa_af(sa)) {
+
 	case AF_INET:
 		return IN_IS_ADDR_LINKLOCAL(sa->u.in.sin_addr.s_addr);
 
@@ -423,6 +548,7 @@ bool sa_is_loopback(const struct sa *sa)
 		return false;
 
 	switch (sa_af(sa)) {
+
 	case AF_INET:
 		return INADDR_LOOPBACK == ntohl(sa->u.in.sin_addr.s_addr);
 
@@ -450,6 +576,7 @@ bool sa_is_any(const struct sa *sa)
 		return false;
 
 	switch (sa_af(sa)) {
+
 	case AF_INET:
 		return INADDR_ANY == ntohl(sa->u.in.sin_addr.s_addr);
 

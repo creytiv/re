@@ -13,16 +13,17 @@ struct loop_state {
 
 struct channels;
 
+/** Defines a TURN Client */
 struct turnc {
-	struct loop_state ls;
-	struct udp_helper *uh;
-	struct stun_ctrans *ct;
-	char *username;
-	char *password;
-	struct sa psrv;
-	struct sa srv;
-	void *sock;
-	int proto;
+	struct loop_state ls;          /**< Loop state                      */
+	struct udp_helper *uh;         /**< UDP Helper for the TURN Socket  */
+	struct stun_ctrans *ct;        /**< Pending STUN Client Transaction */
+	char *username;                /**< Authentication username         */
+	char *password;                /**< Authentication password         */
+	struct sa psrv;                /**< Previous TURN Server address    */
+	struct sa srv;                 /**< TURN Server address             */
+	void *sock;                    /**< Transport socket                */
+	int proto;                     /**< Transport protocol              */
 	struct stun *stun;             /**< STUN Instance                   */
 	uint32_t lifetime;             /**< Allocation lifetime in [seconds]*/
 	struct tmr tmr;                /**< Allocation refresh timer        */
@@ -31,9 +32,9 @@ struct turnc {
 	uint8_t md5_hash[MD5_SIZE];    /**< Cached MD5-sum of credentials   */
 	char *nonce;                   /**< Saved NONCE value from server   */
 	char *realm;                   /**< Saved REALM value from server   */
-	struct hash *perms;
-	struct channels *chans;
-	bool allocated;
+	struct hash *perms;            /**< Hash-table of permissions       */
+	struct channels *chans;        /**< TURN Channels                   */
+	bool allocated;                /**< Allocation was done flag        */
 };
 
 

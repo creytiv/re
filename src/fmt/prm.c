@@ -7,6 +7,15 @@
 #include <re_fmt.h>
 
 
+/**
+ * Fetch a semicolon separated parameter from a PL string
+ *
+ * @param pl    PL string to search
+ * @param pname Parameter name
+ * @param val   Parameter value, set on return
+ *
+ * @return true if found, false if not found
+ */
 bool fmt_param_get(const struct pl *pl, const char *pname, struct pl *val)
 {
 	char expr[128];
@@ -20,6 +29,13 @@ bool fmt_param_get(const struct pl *pl, const char *pname, struct pl *val)
 }
 
 
+/**
+ * Apply a function handler for each semicolon separated parameter
+ *
+ * @param pl  PL string to search
+ * @param ph  Parameter handler
+ * @param arg Handler argument
+ */
 void fmt_param_apply(const struct pl *pl, fmt_param_h *ph, void *arg)
 {
 	size_t i;

@@ -1,7 +1,8 @@
 #
 # mod.mk
 #
-
+# Copyright (C) 2010 Creytiv.com
+#
 
 # Generic files
 SRCS	+= net/if.c

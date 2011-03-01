@@ -134,6 +134,16 @@ static int createperm_request(struct perm *perm, bool reset_ls)
 }
 
 
+/**
+ * Add TURN Permission for a peer
+ *
+ * @param turnc TURN Client
+ * @param peer  Peer IP-address
+ * @param ph    Permission handler
+ * @param arg   Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int turnc_add_perm(struct turnc *turnc, const struct sa *peer,
 		   turnc_perm_h *ph, void *arg)
 {

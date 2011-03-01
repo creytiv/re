@@ -72,7 +72,7 @@ struct udp_sock {
 	int err;             /**< Cached error code           */
 };
 
-
+/** Defines a UDP helper */
 struct udp_helper {
 	struct le le;
 	int layer;
@@ -577,7 +577,7 @@ int udp_setsockopt(struct udp_sock *us, int level, int optname,
  * Set the send/receive buffer size on a UDP Socket
  *
  * @param us   UDP Socket
- * @param size Buffer size
+ * @param size Buffer size in bytes
  *
  * @return 0 if success, otherwise errorcode
  */
@@ -642,6 +642,14 @@ void udp_handler_set(struct udp_sock *us, udp_recv_h *rh, void *arg)
 }
 
 
+/**
+ * Get the File Descriptor from a UDP Socket
+ *
+ * @param us  UDP Socket
+ * @param af  Address Family
+ *
+ * @return File Descriptor, or -1 for errors
+ */
 int udp_sock_fd(const struct udp_sock *us, int af)
 {
 	if (!us)

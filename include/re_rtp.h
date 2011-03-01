@@ -1,5 +1,5 @@
 /**
- * @file re_rtp.h  Interface to Real-time Transport Protocol
+ * @file re_rtp.h  Interface to Real-time Transport Protocol and RTCP
  *
  * Copyright (C) 2010 Creytiv.com
  */
@@ -91,11 +91,11 @@ struct rtcp_sdes_item {
 struct rtcp_msg {
 	/** RTCP Header */
 	struct rtcp_hdr {
-		unsigned int version:2;  /**< Protocol version      */
-		unsigned int p:1;        /**< Padding flag          */
-		unsigned int count:5;    /**< Varies by packet type */
-		unsigned int pt:8;       /**< RTCP packet type      */
-		uint16_t length;         /**< Packet len in words   */
+		unsigned int version:2;  /**< Protocol version       */
+		unsigned int p:1;        /**< Padding flag           */
+		unsigned int count:5;    /**< Varies by packet type  */
+		unsigned int pt:8;       /**< RTCP packet type       */
+		uint16_t length;         /**< Packet length in words */
 	} hdr;
 	union {
 		/** Sender report (SR) */
@@ -170,6 +170,7 @@ struct rtcp_msg {
 	} r;
 };
 
+/** RTCP Statistics */
 struct rtcp_stats {
 	struct {
 		uint32_t sent;

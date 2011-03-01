@@ -29,7 +29,7 @@ Modules:
 * hash      testing       Hashmap table
 * hmac      testing       HMAC: Keyed-Hashing for Message Authentication
 * httpauth  unstable      HTTP-based Authentication (RFC 2617)
-* ice       development   Interactive Connectivity Establishment (ICE)
+* ice       unstable      Interactive Connectivity Establishment (ICE)
 * jbuf      testing       Jitter buffer
 * list      stable        Sortable doubly-linked list handling
 * lock      testing       Resource locking functions
@@ -38,7 +38,7 @@ Modules:
 * md5       stable        The MD5 Message-Digest Algorithm (RFC 1321)
 * mem       stable        Memory referencing
 * mod       testing       Run-time module loading
-* mqueue    unstable      Thread-safe message queue
+* mqueue    testing       Thread-safe message queue
 * natbd     unstable      NAT Behavior Discovery using STUN
 * net       unstable      Networking routines
 * rtp       testing       Real-time Transport Protocol
@@ -54,7 +54,7 @@ Modules:
 * telev     testing       Telephony Events (RFC 4733)
 * tls       unstable      Transport Layer Security
 * tmr       stable        Timer handling
-* turn      unstable      Obtaining Relay Addresses from STUN (TURN)
+* turn      testing       Obtaining Relay Addresses from STUN (TURN)
 * udp       testing       UDP transport
 * uri       testing       Generic URI library
 

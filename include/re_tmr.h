@@ -32,6 +32,13 @@ void     tmr_cancel(struct tmr *tmr);
 uint64_t tmr_get_expire(const struct tmr *tmr);
 
 
+/**
+ * Check if the timer is running
+ *
+ * @param tmr Timer to check
+ *
+ * @return true if running, false if not running
+ */
 static inline bool tmr_isrunning(const struct tmr *tmr)
 {
 	return tmr ? NULL != tmr->th : false;

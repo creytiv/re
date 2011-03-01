@@ -67,6 +67,7 @@ struct telev_fmt {
 };
 
 
+/** Defines a Telephony Events state */
 struct telev {
 	/* tx */
 	struct mbuf *mb;
@@ -134,6 +135,14 @@ static void destructor(void *arg)
 }
 
 
+/**
+ * Allocate a new Telephony Events state
+ *
+ * @param tp    Pointer to allocated object
+ * @param ptime Packet time in [ms]
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int telev_alloc(struct telev **tp, uint32_t ptime)
 {
 	struct telev *t;
@@ -166,6 +175,15 @@ int telev_alloc(struct telev **tp, uint32_t ptime)
 }
 
 
+/**
+ * Send a Telephony Event
+ *
+ * @param tel   Telephony Event state
+ * @param event The Event to send
+ * @param end   End-of-event flag
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int telev_send(struct telev *tel, int event, bool end)
 {
 	size_t pos;
@@ -184,6 +202,16 @@ int telev_send(struct telev *tel, int event, bool end)
 }
 
 
+/**
+ * Receive a Telephony Event
+ *
+ * @param tel   Telephony Event state
+ * @param mb    Buffer to decode
+ * @param event The received event, set on return
+ * @param end   End-of-event flag, set on return
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int telev_recv(struct telev *tel, struct mbuf *mb, int *event, bool *end)
 {
 	struct telev_fmt fmt;
@@ -217,6 +245,15 @@ int telev_recv(struct telev *tel, struct mbuf *mb, int *event, bool *end)
 }
 
 
+/**
+ * Poll a Telephony Event state for sending
+ *
+ * @param tel    Telephony Event state
+ * @param marker Marker bit, set on return
+ * @param mb     Buffer with encoded data to send
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int telev_poll(struct telev *tel, bool *marker, struct mbuf *mb)
 {
 	bool mrk = false;

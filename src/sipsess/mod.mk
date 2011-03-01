@@ -1,7 +1,8 @@
 #
 # mod.mk
 #
-
+# Copyright (C) 2010 Creytiv.com
+#
 
 SRCS	+= sipsess/sess.c
 SRCS	+= sipsess/accept.c
