@@ -220,7 +220,7 @@ static int udp_range_listen(struct rtp_sock *rs, const struct sa *ip,
 {
 	struct sa rtcp;
 	int tries = 64;
-	int err;
+	int err = 0;
 
 	rs->local = rtcp = *ip;
 
