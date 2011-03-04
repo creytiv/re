@@ -147,7 +147,8 @@ int icem_checklist_form(struct icem *icem)
 		return EINVAL;
 
 	if (ICE_MODE_LITE == icem->ice->lmode) {
-		DEBUG_WARNING("Checklist form: only valid for full-mode\n");
+		DEBUG_WARNING("%s: Checklist: only valid for full-mode\n",
+			      icem->name);
 		return EINVAL;
 	}
 
@@ -202,21 +203,22 @@ static void concluding_ice(struct icem_comp *comp)
 		return;
 
 	/* pick the best candidate pair, highest priority */
-	icem_candpair_prio_order(&comp->icem->validl);
 	cp = icem_candpair_find_st(&comp->icem->validl, comp->id,
 				   CANDPAIR_SUCCEEDED);
 	if (!cp) {
-		DEBUG_WARNING("valid candpair not found for compid %u\n",
-			      comp->id);
+		DEBUG_WARNING("{%s.%u} conclude: no valid candpair found"
+			      " (validl=%u)\n",
+			      comp->icem->name, comp->id,
+			      list_count(&comp->icem->validl));
 		return;
 	}
 
 	icem_comp_set_selected(comp, cp);
 
 	if (comp->icem->ice->conf.nom == ICE_NOMINATION_REGULAR) {
+
 		/* send STUN request with USE_CAND flag via triggered qeueue */
-		cp->use_cand = true;
-		(void)icem_conncheck_send(cp, true);
+		(void)icem_conncheck_send(cp, true, true);
 		icem_conncheck_schedule_check(comp->icem);
 	}
 
@@ -244,8 +246,10 @@ void icem_checklist_update(struct icem *icem)
 		struct icem_comp *comp = le->data;
 
 		if (!icem_candpair_find_compid(&icem->validl, comp->id)) {
-			DEBUG_WARNING("%s: no candidate pair for compid %u\n",
-				      icem->name, comp->id);
+			DEBUG_WARNING("{%s.%u} no valid candidate pair"
+				      " (validl=%u)\n",
+				      icem->name, comp->id,
+				      list_count(&icem->validl));
 			err = ENOENT;
 			break;
 		}

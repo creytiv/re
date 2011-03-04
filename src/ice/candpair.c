@@ -21,14 +21,12 @@
 #include <re_dbg.h>
 
 
-static void candpair_destructor(void *data)
+static void candpair_destructor(void *arg)
 {
-	struct candpair *cp = data;
+	struct candpair *cp = arg;
 
 	list_unlink(&cp->le);
-
 	mem_deref(cp->ct_conn);
-
 	mem_deref(cp->lcand);
 	mem_deref(cp->rcand);
 }
@@ -36,9 +34,7 @@ static void candpair_destructor(void *data)
 
 static bool sort_handler(struct le *le1, struct le *le2, void *arg)
 {
-	const struct candpair *cp1 = le1->data;
-	const struct candpair *cp2 = le2->data;
-
+	const struct candpair *cp1 = le1->data, *cp2 = le2->data;
 	(void)arg;
 
 	return cp1->pprio >= cp2->pprio;
@@ -138,7 +134,6 @@ int icem_candpair_clone(struct candpair **cpp, struct candpair *cp0,
 	cp->def       = cp0->def;
 	cp->valid     = cp0->valid;
 	cp->nominated = cp0->nominated;
-	cp->use_cand  = cp0->use_cand;
 	cp->state     = cp0->state;
 	cp->pprio     = cp0->pprio;
 	cp->usec_sent = cp0->usec_sent;
@@ -170,13 +165,6 @@ void icem_candpair_prio_order(struct list *lst)
 }
 
 
-void icem_candpair_move(struct candpair *cp, struct list *list)
-{
-	list_unlink(&cp->le);
-	list_add_sorted(list, cp);
-}
-
-
 /* cancel transaction */
 void icem_candpair_cancel(struct candpair *cp)
 {
@@ -200,7 +188,9 @@ void icem_candpair_make_valid(struct candpair *cp)
 		cp->ertt = (long)(ice_get_usec() - cp->usec_sent);
 
 	icem_candpair_set_state(cp, CANDPAIR_SUCCEEDED);
-	icem_candpair_move(cp, &cp->icem->validl);
+
+	list_unlink(&cp->le);
+	list_add_sorted(&cp->icem->validl, cp);
 }
 
 
@@ -211,6 +201,7 @@ void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode)
 
 	cp->err = err;
 	cp->scode = scode;
+	cp->valid = false;
 
 	icem_candpair_set_state(cp, CANDPAIR_FAILED);
 }
@@ -373,14 +364,12 @@ int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
 	if (!cp)
 		return 0;
 
-	err = re_hprintf(pf, "{%u} %10s {%c%c%c%c} %22llu  %28H <---> %28H",
+	err = re_hprintf(pf, "{%u} %10s {%c%c%c} %28H <---> %28H",
 			 cp->lcand->compid,
 			 ice_candpair_state2name(cp->state),
 			 cp->def ? 'D' : ' ',
 			 cp->valid ? 'V' : ' ',
 			 cp->nominated ? 'N' : ' ',
-			 cp->use_cand ? 'U' : ' ',
-			 cp->pprio,
 			 icem_cand_print, cp->lcand,
 			 icem_cand_print, cp->rcand);
 

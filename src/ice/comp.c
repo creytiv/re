@@ -25,7 +25,6 @@
 
 
 enum {COMPID_MIN = 1, COMPID_MAX = 255};
-enum {DEFAULT_KEEPALIVE = 15};
 
 
 #if 0
@@ -85,12 +84,11 @@ static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 }
 
 
-static void destructor(void *data)
+static void destructor(void *arg)
 {
-	struct icem_comp *comp = data;
+	struct icem_comp *comp = arg;
 
 	tmr_cancel(&comp->tmr_ka);
-
 	mem_deref(comp->ct_gath);
 	mem_deref(comp->turnc);
 	mem_deref(comp->cp_sel);
@@ -208,6 +206,9 @@ void icem_comp_set_default_rcand(struct icem_comp *comp, struct cand *rcand)
 	comp->def_rcand = mem_ref(rcand);
 
 	if (comp->turnc) {
+		DEBUG_NOTICE("{%s.%u} Default: Add TURN Channel to peer %J\n",
+			     comp->icem->name, comp->id, &rcand->addr);
+
 		(void)turnc_add_chan(comp->turnc, &rcand->addr, NULL, NULL);
 	}
 }
@@ -219,7 +220,8 @@ void icem_comp_set_selected(struct icem_comp *comp, struct candpair *cp)
 		return;
 
 	if (cp->state != CANDPAIR_SUCCEEDED) {
-		DEBUG_WARNING("set_selected: invalid state %s\n",
+		DEBUG_WARNING("{%s.%u} set_selected: invalid state %s\n",
+			      comp->icem->name, comp->id,
 			      ice_candpair_state2name(cp->state));
 	}
 
@@ -252,7 +254,7 @@ static void timeout(void *arg)
 	struct icem_comp *comp = arg;
 	struct candpair *cp;
 
-	tmr_start(&comp->tmr_ka, DEFAULT_KEEPALIVE * 1000 + rand_u16() % 1000,
+	tmr_start(&comp->tmr_ka, ICE_DEFAULT_Tr * 1000 + rand_u16() % 1000,
 		  timeout, comp);
 
 	/* find selected candidate-pair */
@@ -272,8 +274,7 @@ void icem_comp_keepalive(struct icem_comp *comp, bool enable)
 		return;
 
 	if (enable) {
-		tmr_start(&comp->tmr_ka, DEFAULT_KEEPALIVE * 1000,
-			  timeout, comp);
+		tmr_start(&comp->tmr_ka, ICE_DEFAULT_Tr * 1000, timeout, comp);
 	}
 	else {
 		tmr_cancel(&comp->tmr_ka);

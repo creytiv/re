@@ -45,12 +45,12 @@ enum ice_transp {
 };
 
 enum {
-	ICE_DEFAULT_Tr          =  15,   /* [ms] */
-	ICE_DEFAULT_Ta_RTP      =  20,   /* [ms] */
-	ICE_DEFAULT_Ta_NON_RTP  = 500,   /* [ms] */
-	ICE_DEFAULT_RTO_RTP     = 100,   /* [ms] */
-	ICE_DEFAULT_RTO_NONRTP  = 500,   /* [ms] */
-	ICE_DEFAULT_RC          =   4
+	ICE_DEFAULT_Tr          =  15, /**< Keepalive interval [s]          */
+	ICE_DEFAULT_Ta_RTP      =  20, /**< Pacing interval RTP [ms]        */
+	ICE_DEFAULT_Ta_NON_RTP  = 500, /**< Pacing interval [ms]            */
+	ICE_DEFAULT_RTO_RTP     = 100, /**< Retransmission TimeOut RTP [ms] */
+	ICE_DEFAULT_RTO_NONRTP  = 500, /**< Retransmission TimeOut [ms]     */
+	ICE_DEFAULT_RC          =   7  /**< Retransmission count            */
 };
 
 
@@ -134,7 +134,6 @@ struct candpair {
 	bool def;                    /**< Default flag                       */
 	bool valid;                  /**< Valid flag                         */
 	bool nominated;              /**< Nominated flag                     */
-	bool use_cand;               /**< Use-candidate flag                 */
 	enum candpair_state state;   /**< Candidate pair state               */
 	uint64_t pprio;              /**< Pair priority                      */
 	uint64_t usec_sent;          /**< When connectivity request was sent */
@@ -168,7 +167,6 @@ int  icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 int  icem_candpair_clone(struct candpair **cpp, struct candpair *cp0,
 			 struct cand *lcand, struct cand *rcand);
 void icem_candpair_prio_order(struct list *lst);
-void icem_candpair_move(struct candpair *cp, struct list *list);
 void icem_candpair_cancel(struct candpair *cp);
 void icem_candpair_make_valid(struct candpair *cp);
 void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode);
@@ -218,7 +216,7 @@ void icecomp_printf(struct icem_comp *comp, const char *fmt, ...);
 void icem_conncheck_schedule_check(struct icem *icem);
 void icem_conncheck_continue(struct icem *icem);
 void icem_conncheck_stop(struct icem *icem);
-int  icem_conncheck_send(struct candpair *cp, bool trigged);
+int  icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged);
 
 
 /* icestr */

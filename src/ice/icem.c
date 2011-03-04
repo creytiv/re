@@ -27,13 +27,11 @@ static void icem_destructor(void *data)
 
 	list_unlink(&icem->le);
 	tmr_cancel(&icem->tmr_pace);
-
 	list_flush(&icem->compl);
 	list_flush(&icem->validl);
 	list_flush(&icem->checkl);
 	list_flush(&icem->lcandl);
 	list_flush(&icem->rcandl);
-
 	mem_deref(icem->stun);
 	mem_deref(icem->rufrag);
 	mem_deref(icem->rpwd);
@@ -155,7 +153,8 @@ void icem_cand_redund_elim(struct icem *icem)
 {
 	uint32_t n = ice_list_unique(&icem->lcandl, unique_handler);
 	if (n > 0) {
-		DEBUG_NOTICE("redundant candidates eliminated: %u\n", n);
+		DEBUG_NOTICE("%s: redundant candidates eliminated: %u\n",
+			     icem->name, n);
 	}
 }
 
@@ -214,8 +213,12 @@ int icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr)
 	if (!comp)
 		return ENOENT;
 
-	if (comp->turnc)
+	if (comp->turnc) {
+		DEBUG_NOTICE("{%s.%u} Add TURN Channel to peer %J\n",
+			     comp->icem->name, comp->id, raddr);
+
 		return turnc_add_chan(comp->turnc, raddr, NULL, NULL);
+	}
 
 	return 0;
 }
@@ -223,7 +226,8 @@ int icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr)
 
 static void purge_relayed(struct icem *icem, struct icem_comp *comp)
 {
-	icecomp_printf(comp, "purge local RELAY candidates\n");
+	DEBUG_NOTICE("{%s.%u} purge local RELAY candidates\n",
+		     icem->name, comp->id);
 
 	/*
 	 * Purge all Candidate-Pairs where the Local candidate
@@ -249,6 +253,7 @@ void icem_update(struct icem *icem)
 
 		/* remove TURN client if not used by local "Selected" */
 		if (comp->cp_sel) {
+
 			if (comp->cp_sel->lcand->type != CAND_TYPE_RELAY)
 				purge_relayed(icem, comp);
 		}
@@ -287,8 +292,7 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 		const struct icem_comp *comp = le->data;
 
 		if (comp->cp_sel) {
-			err |= re_hprintf(pf, " Selected id=%u:  %H\n",
-					  comp->id,
+			err |= re_hprintf(pf, " Selected: %H\n",
 					  icem_candpair_debug, comp->cp_sel);
 		}
 	}

@@ -35,9 +35,11 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 		cp = icem_candpair_find(&icem->checkl, lcand, rcand);
 
 	if (cp) {
-		DEBUG_NOTICE("triggered_check: found CANDPAIR on checklist"
-			     " in state: %s\n",
-			     ice_candpair_state2name(cp->state));
+		DEBUG_NOTICE("{%s.%u} triggered_check: found CANDPAIR on"
+			     " checklist in state: %s [%H]\n",
+			     icem->name, cp->comp->id,
+			     ice_candpair_state2name(cp->state),
+			     icem_candpair_debug, cp);
 
 		switch (cp->state) {
 
@@ -59,7 +61,7 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 
 		case CANDPAIR_FROZEN:
 		case CANDPAIR_WAITING:
-			err = icem_conncheck_send(cp, true);
+			err = icem_conncheck_send(cp, false, true);
 			if (err) {
 				DEBUG_WARNING("triggered check failed\n");
 			}
@@ -83,7 +85,7 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 
 		icem_candpair_set_state(cp, CANDPAIR_WAITING);
 
-		(void)icem_conncheck_send(cp, true);
+		(void)icem_conncheck_send(cp, false, true);
 	}
 }
 
@@ -142,9 +144,10 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 	int err;
 
 	if (icem->state != CHECKLIST_RUNNING) {
-		DEBUG_WARNING("%s.%u: Checklist is not running (%s)\n",
-			      icem->name, comp->id,
+		DEBUG_WARNING("{%s.%u} src=%J Checklist is not running (%s)\n",
+			      icem->name, comp->id, src,
 			      ice_checkl_state2name(icem->state));
+		return;
 	}
 
 	/* 7.2.1.3.  Learning Peer Reflexive Candidates */
@@ -170,7 +173,7 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 	}
 
 	if (!lcand) {
-		DEBUG_WARNING("%s.%u: local candidate not found (checkl=%u)\n",
+		DEBUG_WARNING("{%s.%u} no local candidate (checkl=%u)\n",
 			      icem->name, comp->id,
 			      list_count(&icem->checkl));
 	}
@@ -183,8 +186,9 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 		cp = lookup_candpair(icem, rcand);
 
 		if (!cp) {
-			DEBUG_WARNING("candidate pair not found:"
-				      " source=%J\n", src);
+			DEBUG_WARNING("{%s.%u} candidate pair not found:"
+				      " source=%J\n",
+				      icem->name, comp->id, src);
 		}
 	}
 
@@ -202,9 +206,9 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 	if (use_cand) {
 		if (ice->lrole == ROLE_CONTROLLED) {
 			if (cp && cp->state == CANDPAIR_SUCCEEDED) {
-				DEBUG_NOTICE("{id=%d} setting NOMINATED"
+				DEBUG_NOTICE("{%s.%u} setting NOMINATED"
 					     " flag on candpair [%H]\n",
-					     comp->id,
+					     icem->name, comp->id,
 					     icem_candpair_debug, cp);
 				cp->nominated = true;
 			}

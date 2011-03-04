@@ -23,12 +23,11 @@
 #include <re_dbg.h>
 
 
-static void cand_destructor(void *data)
+static void cand_destructor(void *arg)
 {
-	struct cand *cand = data;
+	struct cand *cand = arg;
 
 	list_unlink(&cand->le);
-
 	mem_deref(cand->foundation);
 	mem_deref(cand->ifname);
 
@@ -120,10 +119,8 @@ int icem_lcand_add(struct icem *icem, struct cand *base, enum cand_type type,
 	struct cand *cand;
 	int err;
 
-	if (!base) {
-		DEBUG_WARNING("icem add local candidate: no base\n");
+	if (!base)
 		return EINVAL;
-	}
 
 	err = cand_alloc(&cand, icem, type, base->compid,
 			 ice_calc_prio(type, 0, base->compid),

@@ -93,10 +93,8 @@ static struct candpair *construct_valid_pair(struct icem *icem,
 		 */
 
 		cp2 = icem_candpair_find(&icem->validl, lcand, rcand);
-		if (cp2) {
-			DEBUG_NOTICE("candpair already in VALID list\n");
+		if (cp2)
 			return cp2;
-		}
 
 		err = icem_candpair_clone(&cp2, cp, lcand, rcand);
 		if (err)
@@ -186,13 +184,12 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 
 	case 487: /* Role Conflict */
 		ice_switch_local_role(icem->ice);
-		icem_candpair_set_state(cp, CANDPAIR_WAITING);
-		(void)icem_conncheck_send(cp, true);
+		(void)icem_conncheck_send(cp, false, true);
 		break;
 
 	default:
-		DEBUG_WARNING("%s: STUN Response: %u %s\n", icem->name,
-			      scode, reason);
+		DEBUG_WARNING("{%s.%u} STUN Response: %u %s\n",
+			      icem->name, cp->comp->id, scode, reason);
 		icem_candpair_failed(cp, err, scode);
 		break;
 	}
@@ -202,14 +199,13 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 }
 
 
-int icem_conncheck_send(struct candpair *cp, bool trigged)
+int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 {
 	struct cand *lcand = cp->lcand;
 	struct icem *icem = cp->icem;
 	struct ice *ice = icem->ice;
 	char username_buf[64];
 	size_t presz = 0;
-	int use_cand = 0;
 	uint32_t prio_prflx;
 	uint16_t ctrl_attr;
 	int err = 0;
@@ -227,8 +223,8 @@ int icem_conncheck_send(struct candpair *cp, bool trigged)
 	case ROLE_CONTROLLING:
 		ctrl_attr = STUN_ATTR_CONTROLLING;
 
-		if (cp->use_cand || ice->conf.nom == ICE_NOMINATION_AGGRESSIVE)
-			use_cand = 1;
+		if (ice->conf.nom == ICE_NOMINATION_AGGRESSIVE)
+			use_cand = true;
 		break;
 
 	case ROLE_CONTROLLED:
@@ -284,7 +280,7 @@ int icem_conncheck_send(struct candpair *cp, bool trigged)
 				   STUN_METHOD_BINDING,
 				   (uint8_t *)icem->rpwd, str_len(icem->rpwd),
 				   true, stunc_resp_handler, cp,
-				   3 + use_cand,
+				   3 + !!use_cand,
 				   STUN_ATTR_USERNAME, username_buf,
 				   STUN_ATTR_PRIORITY, &prio_prflx,
 				   ctrl_attr, &ice->tiebrk,
@@ -305,7 +301,7 @@ static void do_check(struct candpair *cp)
 {
 	int err;
 
-	err = icem_conncheck_send(cp, false);
+	err = icem_conncheck_send(cp, false, false);
 	if (err) {
 		icem_candpair_failed(cp, err, 0);
 		return;
@@ -374,11 +370,8 @@ int icem_conncheck_start(struct icem *icem)
 	if (!icem)
 		return EINVAL;
 
-	if (ICE_MODE_FULL != icem->ice->lmode) {
-		DEBUG_WARNING("connchk: invalid mode %s\n",
-			      ice_mode2name(icem->ice->lmode));
+	if (ICE_MODE_FULL != icem->ice->lmode)
 		return EINVAL;
-	}
 
 	err = icem_checklist_form(icem);
 	if (err)
@@ -389,9 +382,6 @@ int icem_conncheck_start(struct icem *icem)
 	DEBUG_NOTICE("%s: starting connectivity checks"
 		     " with %u candidate pairs\n",
 		     icem->name, list_count(&icem->checkl));
-#if 0
-	(void)re_printf("%H\n", icem_debug, icem);
-#endif
 
 	/* add some delay, to wait for call to be 'established' */
 	tmr_start(&icem->tmr_pace, 1000, timeout, icem);
