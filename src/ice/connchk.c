@@ -280,7 +280,7 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 				   STUN_METHOD_BINDING,
 				   (uint8_t *)icem->rpwd, str_len(icem->rpwd),
 				   true, stunc_resp_handler, cp,
-				   3 + !!use_cand,
+				   4,
 				   STUN_ATTR_USERNAME, username_buf,
 				   STUN_ATTR_PRIORITY, &prio_prflx,
 				   ctrl_attr, &ice->tiebrk,
