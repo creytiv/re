@@ -245,6 +245,8 @@ int conf_get_bool(struct conf *conf, const char *name, bool *val)
 		*val = true;
 	else if (!pl_strcasecmp(&pl, "yes"))
 		*val = true;
+	else if (!pl_strcasecmp(&pl, "1"))
+		*val = true;
 	else
 		*val = false;
 
