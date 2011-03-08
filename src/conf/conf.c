@@ -221,6 +221,38 @@ int conf_get_u32(struct conf *conf, const char *name, uint32_t *num)
 
 
 /**
+ * Get the boolean value of a configuration item
+ *
+ * @param conf Configuration object
+ * @param name Name of config item key
+ * @param val  Returned boolean value of config item, if present
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int conf_get_bool(struct conf *conf, const char *name, bool *val)
+{
+	struct pl pl;
+	int err;
+
+	if (!conf || !name || !val)
+		return EINVAL;
+
+	err = conf_get(conf, name, &pl);
+	if (err)
+		return err;
+
+	if (!pl_strcasecmp(&pl, "true"))
+		*val = true;
+	else if (!pl_strcasecmp(&pl, "yes"))
+		*val = true;
+	else
+		*val = false;
+
+	return 0;
+}
+
+
+/**
  * Apply a function handler to all config items of a certain key
  *
  * @param conf Configuration object
