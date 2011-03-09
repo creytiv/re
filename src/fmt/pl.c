@@ -303,19 +303,21 @@ int pl_cmp(const struct pl *pl1, const struct pl *pl2)
 	if (pl1->l != pl2->l)
 		return EINVAL;
 
+	/* Zero-length strings are always identical */
+	if (pl1->l == 0)
+		return 0;
+
 	/*
 	 * ~35% speed increase for fmt/pl test
 	 */
 
 	/* The two pl's are the same */
-	if (pl1 == pl2) {
+	if (pl1 == pl2)
 		return 0;
-	}
 
 	/* Two different pl's pointing to same string */
-	if (pl1->p == pl2->p && pl1->l == pl2->l) {
+	if (pl1->p == pl2->p)
 		return 0;
-	}
 
 	return 0 == memcmp(pl1->p, pl2->p, pl1->l) ? 0 : EINVAL;
 }
@@ -372,19 +374,21 @@ int pl_casecmp(const struct pl *pl1, const struct pl *pl2)
 	if (pl1->l != pl2->l)
 		return EINVAL;
 
+	/* Zero-length strings are always identical */
+	if (pl1->l == 0)
+		return 0;
+
 	/*
 	 * ~35% speed increase for fmt/pl test
 	 */
 
 	/* The two pl's are the same */
-	if (pl1 == pl2) {
+	if (pl1 == pl2)
 		return 0;
-	}
 
 	/* Two different pl's pointing to same string */
-	if (pl1->p == pl2->p && pl1->l == pl2->l) {
+	if (pl1->p == pl2->p)
 		return 0;
-	}
 
 #ifdef HAVE_STRINGS_H
 	return 0 == strncasecmp(pl1->p, pl2->p, pl1->l) ? 0 : EINVAL;
