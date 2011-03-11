@@ -181,3 +181,20 @@ void hash_flush(struct hash *h)
 	for (i=0; i<h->bsize; i++)
 		list_flush(&h->bucket[i]);
 }
+
+
+/**
+ * Calculate a valid hash size from a random size
+ *
+ * @param size Requested size
+ *
+ * @return Valid hash size
+ */
+uint32_t hash_valid_size(uint32_t size)
+{
+	uint32_t x;
+
+	for (x=0; (uint32_t)1<<x < size && x < 31; x++);
+
+	return 1<<x;
+}
