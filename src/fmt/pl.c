@@ -149,6 +149,44 @@ uint64_t pl_u64(const struct pl *pl)
 
 
 /**
+ * Convert a hex pointer-length object to a numeric 64-bit value
+ *
+ * @param pl Pointer-length object
+ *
+ * @return 64-bit value
+ */
+uint64_t pl_x64(const struct pl *pl)
+{
+	uint64_t v=0, mul=1;
+	const char *p;
+
+	if (!pl || !pl->p)
+		return 0;
+
+	p = &pl->p[pl->l];
+	while (p > pl->p) {
+
+		const char ch = *--p;
+		uint8_t c;
+
+		if ('0' <= ch && ch <= '9')
+			c = ch - '0';
+		else if ('A' <= ch && ch <= 'F')
+			c = ch - 'A' + 10;
+		else if ('a' <= ch && ch <= 'f')
+			c = ch - 'a' + 10;
+		else
+			return 0;
+
+		v += mul * c;
+		mul *= 16;
+	}
+
+	return v;
+}
+
+
+/**
  * Check if pointer-length object is set
  *
  * @param pl Pointer-length object
