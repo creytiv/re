@@ -125,8 +125,6 @@ static bool auth_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
 	int err;
 	(void)msg;
 
-	memset(&ch, 0, sizeof(ch));
-
 	if (httpauth_digest_challenge_decode(&ch, &hdr->val)) {
 		err = EBADMSG;
 		goto out;
