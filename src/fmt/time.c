@@ -3,8 +3,46 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#include <time.h>
 #include <re_types.h>
 #include <re_fmt.h>
+
+
+static const char *dayv[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
+static const char *monv[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+
+/**
+ * Print Greenwich Mean Time
+ *
+ * @param pf Print function for output
+ * @param ts Time in seconds since the Epoch or NULL for current time
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int fmt_gmtime(struct re_printf *pf, void *ts)
+{
+	const struct tm *tm;
+	time_t t;
+
+	if (!ts) {
+		t  = time(NULL);
+		ts = &t;
+	}
+
+	tm = gmtime(ts);
+	if (!tm)
+		return EINVAL;
+
+	return re_hprintf(pf, "%s, %02u %s %u %02u:%02u:%02u GMT",
+			  dayv[min((unsigned)tm->tm_wday, ARRAY_SIZE(dayv)-1)],
+			  tm->tm_mday,
+			  monv[min((unsigned)tm->tm_mon, ARRAY_SIZE(monv)-1)],
+			  tm->tm_year + 1900,
+			  tm->tm_hour, tm->tm_min, tm->tm_sec);
+}
 
 
 /**
