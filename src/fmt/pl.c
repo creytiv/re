@@ -187,6 +187,44 @@ uint64_t pl_x64(const struct pl *pl)
 
 
 /**
+ * Convert a pointer-length object to floating point representation
+ *
+ * @param pl Pointer-length object
+ *
+ * @return Double value
+ */
+double pl_float(const struct pl *pl)
+{
+	double v=0, mul=1;
+	const char *p;
+
+	if (!pl || !pl->p)
+		return 0;
+
+	p = &pl->p[pl->l];
+
+	while (p > pl->p) {
+
+		const char ch = *--p;
+
+		if ('0' <= ch && ch <= '9') {
+			v += mul * (ch - '0');
+			mul *= 10;
+		}
+		else if (ch == '.') {
+			v /= mul;
+			mul = 1;
+		}
+		else {
+			return 0;
+		}
+	}
+
+	return v;
+}
+
+
+/**
  * Check if pointer-length object is set
  *
  * @param pl Pointer-length object
