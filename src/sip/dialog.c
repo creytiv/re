@@ -112,7 +112,7 @@ int sip_dialog_alloc(struct sip_dialog **dlgp,
 	}
 
 	for (i=0; i<routec; i++) {
-		err |= mbuf_printf(dlg->mb, "Route: <%s>\r\n", routev[i]);
+		err |= mbuf_printf(dlg->mb, "Route: <%s;lr>\r\n", routev[i]);
 		if (i == 0)
 			rend = dlg->mb->pos - 2;
 	}
