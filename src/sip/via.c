@@ -12,9 +12,23 @@
 #include <re_sip.h>
 
 
+static int decode_hostport(const struct pl *hostport, struct pl *host,
+			   struct pl *port)
+{
+	/* Try IPv6 first */
+	if (!re_regex(hostport->p, hostport->l, "\\[[0-9a-f:]+\\][:]*[0-9]*",
+		      host, NULL, port))
+		return 0;
+
+	/* Then non-IPv6 host */
+	return re_regex(hostport->p, hostport->l, "[^:]+[:]*[0-9]*",
+			host, NULL, port);
+}
+
+
 int sip_via_decode(struct sip_via *via, const struct pl *pl)
 {
-	struct pl received, rport, ip;
+	struct pl host, port;
 	int err;
 
 	if (!via || !pl)
@@ -28,23 +42,16 @@ int sip_via_decode(struct sip_via *via, const struct pl *pl)
 	if (err)
 		return err;
 
-	if (!sip_param_decode(&via->params, "received", &received)) {
-		(void)sa_set(&via->addr, &received, 0);
+	err = decode_hostport(&via->sentby, &host, &port);
+	if (err)
+		return err;
 
-		if (!sip_param_decode(&via->params, "rport", &rport))
-			sa_set_port(&via->addr, pl_u32(&rport));
-	}
-	else if (sa_decode(&via->addr, via->sentby.p, via->sentby.l)) {
+	sa_init(&via->addr, AF_INET);
 
-		ip = via->sentby;
+	(void)sa_set(&via->addr, &host, 0);
 
-		if (ip.l > 1 && ip.p[0] == '[' && ip.p[ip.l-1] == ']') {
-			ip.p += 1;
-			ip.l -= 2;
-		}
-
-		(void)sa_set(&via->addr, &ip, 0);
-	}
+	if (pl_isset(&port))
+		sa_set_port(&via->addr, pl_u32(&port));
 
 	via->val = *pl;
 
