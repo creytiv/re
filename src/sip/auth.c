@@ -112,6 +112,10 @@ static bool cmp_handler(struct le *le, void *arg)
 	struct realm *realm = le->data;
 	struct pl *chrealm = arg;
 
+	/* handle multiple authenticate headers with equal realm value */
+	if (realm->nc == 1)
+		return false;
+
 	return 0 == pl_strcasecmp(chrealm, realm->realm);
 }
 
@@ -252,8 +256,10 @@ int sip_auth_encode(struct mbuf *mb, struct sip_auth *auth, const char *met,
 		if (realm->qop) {
 			err |= mbuf_printf(mb, ", cnonce=\"%016llx\"", cnonce);
 			err |= mbuf_write_str(mb, ", qop=auth");
-			err |= mbuf_printf(mb, ", nc=%08x", realm->nc++);
+			err |= mbuf_printf(mb, ", nc=%08x", realm->nc);
 		}
+
+		++realm->nc;
 
 		err |= mbuf_write_str(mb, "\r\n");
 		if (err)
