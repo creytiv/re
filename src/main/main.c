@@ -842,6 +842,8 @@ int re_main(re_signal_h *signalh)
 	re_unlock(re);
 
  out:
+	re->polling = false;
+
 	return err;
 }
 
