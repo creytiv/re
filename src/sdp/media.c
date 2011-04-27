@@ -347,8 +347,10 @@ void sdp_media_raddr_rtcp(const struct sdp_media *m, struct sa *raddr)
 		sa_set_port(raddr, sa_port(&m->raddr_rtcp));
 	}
 	else {
+		uint16_t port = sa_port(&m->raddr);
+
 		*raddr = m->raddr;
-		sa_set_port(raddr, sa_port(&m->raddr) + 1);
+		sa_set_port(raddr, port ? port + 1 : 0);
 	}
 }
 
