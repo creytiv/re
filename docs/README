@@ -102,8 +102,8 @@ Features:
 * RFC 5769 - Test vectors for STUN
 * RFC 5780 - NAT Behaviour Discovery Using STUN
 * RFC 6026 - Correct Transaction Handling for 2xx Resp. to SIP INVITE Requests
+* RFC 6156 - TURN Extension for IPv6
 * Symmetric RTP
-* draft-ietf-behave-turn-ipv6-08              - TURN Extension for IPv4/IPv6 Transition
 * ITU-T G.711 Appendix I and Appendix II
 
 
