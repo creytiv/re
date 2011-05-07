@@ -550,6 +550,12 @@
 					RelativePath="..\..\src\sip\dialog.c">
 				</File>
 				<File
+					RelativePath="..\..\src\sip\keepalive.c">
+				</File>
+				<File
+					RelativePath="..\..\src\sip\keepalive_udp.c">
+				</File>
+				<File
 					RelativePath="..\..\src\sip\msg.c">
 				</File>
 				<File
