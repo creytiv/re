@@ -3,6 +3,7 @@ TODO
 -------------------------------------------------------------------------------
 Version v0.2.0
 
+  VC2003: c:\svn\re\src\main\main.c(594) : warning C4244: '=' : conversion from 'time_t' to 'long', possible loss of data
 
 -------------------------------------------------------------------------------
 Version v0.x.y
