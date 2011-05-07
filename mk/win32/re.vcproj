@@ -253,9 +253,6 @@
 					RelativePath="..\..\src\ice\stunsrv.c">
 				</File>
 				<File
-					RelativePath="..\..\src\ice\triggq.c">
-				</File>
-				<File
 					RelativePath="..\..\src\ice\util.c">
 				</File>
 			</Filter>
