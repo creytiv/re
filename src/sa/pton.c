@@ -193,6 +193,7 @@ static int inet_pton(int af, const char *src, void *dst)
 		return 0;
 
 	switch (af) {
+
 	case AF_INET:
 		return inet_pton4(src, (u_char*) dst);
 

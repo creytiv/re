@@ -144,7 +144,9 @@ static void dbg_vprintf(int level, const char *fmt, va_list ap)
 	dbg_lock();
 
 	if (dbg.flags & DBG_ANSI) {
+
 		switch (level) {
+
 		case DBG_WARNING:
 			(void)re_fprintf(stderr, "\x1b[31m"); /* Red */
 			break;

@@ -56,6 +56,7 @@ static int tls_connect(struct tls_conn *tc)
 		const int ssl_err = SSL_get_error(tc->ssl, r);
 
 		switch (ssl_err) {
+
 		case SSL_ERROR_WANT_READ:
 			break;
 
@@ -80,6 +81,7 @@ static int tls_accept(struct tls_conn *tc)
 		const int ssl_err = SSL_get_error(tc->ssl, r);
 
 		switch (ssl_err) {
+
 		case SSL_ERROR_WANT_READ:
 			break;
 
@@ -166,6 +168,7 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 			const int ssl_err = SSL_get_error(tc->ssl, n);
 
 			switch (ssl_err) {
+
 			case SSL_ERROR_WANT_READ:
 				break;
 

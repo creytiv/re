@@ -111,6 +111,7 @@ static int a_or_aaaa_query(struct stun_dns *dns, const char *name)
 	dns->dq = mem_deref(dns->dq);
 
 	switch (dns->af) {
+
 	case AF_INET:
 		return dnsc_query(&dns->dq, dns->dnsc, name, DNS_TYPE_A,
 				  DNS_CLASS_IN, true, a_handler, dns);
@@ -158,6 +159,7 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 
 	/* Look for Additional information */
 	switch (dns->af) {
+
 	case AF_INET:
 		arr = dns_rrlist_find(addl, rr->rdata.srv.target,
 				      DNS_TYPE_A, DNS_CLASS_IN, true);

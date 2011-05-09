@@ -34,6 +34,7 @@ static struct sa local_ip;
 int kerr2errno(int kerr)
 {
 	switch (kerr) {
+
 	case KErrNone:           return 0;
 	case KErrNotFound:       return ENOENT;
 	case KErrGeneral:        return EINVAL;

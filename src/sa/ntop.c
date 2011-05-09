@@ -153,6 +153,7 @@ const char* inet_ntop(int af, const void *src, char *dst, size_t size);
 const char* inet_ntop(int af, const void *src, char *dst, size_t size)
 {
 	switch (af) {
+
 	case AF_INET:
 		return inet_ntop4(src, dst, size);
 
@@ -190,6 +191,7 @@ int net_inet_ntop(const struct sa *sa, char *buf, int size)
 		return EINVAL;
 
 	switch (sa->u.sa.sa_family) {
+
 	case AF_INET:
 		inet_ntop(AF_INET, &sa->u.in.sin_addr, buf, size);
 		break;

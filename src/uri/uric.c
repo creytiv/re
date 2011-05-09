@@ -21,6 +21,7 @@ typedef bool (esc_h)(char c);
 static bool is_mark(int c)
 {
 	switch (c) {
+
 	case '-':
 	case '_':
 	case '.':
@@ -46,6 +47,7 @@ static bool is_unreserved(char c)
 static bool is_user_unreserved(int c)
 {
 	switch (c) {
+
 	case '&':
 	case '=':
 	case '+':
@@ -63,6 +65,7 @@ static bool is_user_unreserved(int c)
 static bool is_hnv_unreserved(char c)
 {
 	switch (c) {
+
 	case '[':
 	case ']':
 	case '/':
@@ -86,6 +89,7 @@ static bool is_user(char c)
 static bool is_password(char c)
 {
 	switch (c) {
+
 	case '&':
 	case '=':
 	case '+':
@@ -101,6 +105,7 @@ static bool is_password(char c)
 static bool is_param_unreserved(char c)
 {
 	switch (c) {
+
 	case '[':
 	case ']':
 	case '/':

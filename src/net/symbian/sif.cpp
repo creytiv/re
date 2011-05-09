@@ -62,6 +62,7 @@ int net_if_debug(struct re_printf *pf, void *unused)
 		err |= re_hprintf(pf, "Interface Name: %s\n", buf);
 
 		switch (ifinfo().iState) {
+
 		case EIfPending: state = "Pending"; break;
 		case EIfUp:      state = "Up";      break;
 		case EIfBusy:    state = "Busy";    break;

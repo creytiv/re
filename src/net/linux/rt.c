@@ -119,6 +119,7 @@ static int rt_parse(const struct nlmsghdr *nlhdr, struct net_rt *rt)
 
 		case RTA_GATEWAY:
 			switch (rtmsg->rtm_family) {
+
 			case AF_INET:
 				sa_init(&rt->gw, AF_INET);
 				rt->gw.u.in.sin_addr.s_addr
@@ -146,6 +147,7 @@ static int rt_parse(const struct nlmsghdr *nlhdr, struct net_rt *rt)
 
 		case RTA_DST:
 			switch (rtmsg->rtm_family) {
+
 			case AF_INET:
 				sa_init(&rt->dst, AF_INET);
 				rt->dst.u.in.sin_addr.s_addr
