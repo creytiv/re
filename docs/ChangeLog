@@ -1,0 +1,55 @@
+2011-05-25 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.2.0
+
+	* updated doxygen comments
+
+	* conf: added conf_get_bool()
+
+	* dns: fixed a bug in get_resolv_dns()
+
+	* fmt: added pl_x64() pl_float() fmt_gmtime()
+	
+	* hash: added hash_valid_size()
+
+	* httpauth: clean up API
+
+	* ice: many improvements and bugfixes
+
+	* main: fix a bug if re_main() fails
+
+	* mbuf: added mbuf_debug()
+
+	* natbd: fixed some race conditions and memory leaks
+
+	* rtp: added rtcp_enable_mux() (RFC 5761; RTP and RTCP multiplexing)
+
+	* sdp: fixed setting RTCP port if RTP port is zero
+
+	* sip: added support for SIP Outbound (RFC 5626)
+	       added sip_msg_hdr_count() sip_msg_xhdr_count()
+	       added sip_msg_hdr_has_value() sip_msg_xhdr_has_value()
+	       added sip_auth_reset()
+	       handle multiple authenticate headers with equal realm value
+	       fixed a bug with loose-routing in Route header
+	       fixed decoding of Via header
+	
+	* sipreg: added support for SIP Outbound (breaks API compatibility)
+
+	* sipsess: fix a bug in sipsess_reject() if fmt is NULL
+	
+	* tcp: update tcp_register_helper() (breaks API)
+
+	* tmr: removed tmrl from 'struct tmr' (breaks ABI)
+	       added tmr_isrunning()
+
+	* udp: update udp_register_helper() (breaks API)
+
+	* uri: fix optional username in uri_decode()
+
+
+2010-11-05 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.1.0
+	
+	* Initial Release
