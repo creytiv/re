@@ -241,6 +241,8 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 		       ice_candpair_state2name(cp->state),
 		       use_cand ? "[USE]" : "",
 		       trigged ? "[Trigged]" : "");
+#else
+	(void)trigged;
 #endif
 
 	/* A connectivity check MUST utilize the STUN short term credential
