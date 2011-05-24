@@ -66,6 +66,8 @@ int  tcp_conn_bind(struct tcp_conn *tc, const struct sa *local);
 int  tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer);
 int  tcp_send(struct tcp_conn *tc, struct mbuf *mb);
 int  tcp_set_send(struct tcp_conn *tc, tcp_send_h *sendh);
+void tcp_set_handlers(struct tcp_conn *tc, tcp_estab_h *eh, tcp_recv_h *rh,
+		      tcp_close_h *ch, void *arg);
 void tcp_conn_rxsz_set(struct tcp_conn *tc, size_t rxsz);
 int  tcp_conn_local_get(const struct tcp_conn *tc, struct sa *local);
 int  tcp_conn_peer_get(const struct tcp_conn *tc, struct sa *peer);

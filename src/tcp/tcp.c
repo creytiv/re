@@ -1107,6 +1107,28 @@ int tcp_set_send(struct tcp_conn *tc, tcp_send_h *sendh)
 
 
 /**
+ * Set handlers on a TCP Connection
+ *
+ * @param tc  TCP Connection
+ * @param eh  TCP Connection Established handler
+ * @param rh  TCP Connection Receive data handler
+ * @param ch  TCP Connection Close handler
+ * @param arg Handler argument
+ */
+void tcp_set_handlers(struct tcp_conn *tc, tcp_estab_h *eh, tcp_recv_h *rh,
+		      tcp_close_h *ch, void *arg)
+{
+	if (!tc)
+		return;
+
+	tc->estabh = eh;
+	tc->recvh  = rh;
+	tc->closeh = ch;
+	tc->arg    = arg;
+}
+
+
+/**
  * Get local network address of TCP Socket
  *
  * @param ts    TCP Socket
