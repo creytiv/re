@@ -22,6 +22,8 @@ int turnc_alloc(struct turnc **turncp, const struct stun_conf *conf, int proto,
 		void *sock, int layer, const struct sa *srv,
 		const char *username, const char *password,
 		uint32_t lifetime, turnc_h *th, void *arg);
+int turnc_send(struct turnc *turnc, const struct sa *dst, struct mbuf *mb);
+int turnc_recv(struct turnc *turnc, struct sa *src, struct mbuf *mb);
 int turnc_add_perm(struct turnc *turnc, const struct sa *peer,
 		   turnc_perm_h *ph, void *arg);
 int turnc_add_chan(struct turnc *turnc, const struct sa *peer,

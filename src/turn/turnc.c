@@ -234,7 +234,7 @@ static int refresh_request(struct turnc *t, uint32_t lifetime, bool reset_ls,
 }
 
 
-static inline size_t stun_indlen(struct sa *sa)
+static inline size_t stun_indlen(const struct sa *sa)
 {
 	size_t len = STUN_HEADER_SIZE + STUN_ATTR_HEADER_SIZE * 2;
 
@@ -455,6 +455,158 @@ int turnc_alloc(struct turnc **turncp, const struct stun_conf *conf, int proto,
 		mem_deref(turnc);
 	else
 		*turncp = turnc;
+
+	return err;
+}
+
+
+int turnc_send(struct turnc *turnc, const struct sa *dst, struct mbuf *mb)
+{
+	size_t pos, indlen;
+	struct chan *chan;
+	int err;
+
+	if (!turnc || !dst || !mb)
+		return EINVAL;
+
+	chan = turnc_chan_find_peer(turnc, dst);
+	if (chan) {
+		struct chan_hdr hdr;
+
+		if (mb->pos < CHAN_HDR_SIZE)
+			return EINVAL;
+
+		hdr.nr  = turnc_chan_numb(chan);
+		hdr.len = mbuf_get_left(mb);
+
+		mb->pos -= CHAN_HDR_SIZE;
+		pos = mb->pos;
+
+		err = turnc_chan_hdr_encode(&hdr, mb);
+		if (err)
+			return err;
+
+		if (turnc->proto == IPPROTO_TCP) {
+
+			mb->pos = mb->end;
+
+			/* padding */
+			while (hdr.len++ & 0x03) {
+				err = mbuf_write_u8(mb, 0x00);
+				if (err)
+					return err;
+			}
+		}
+
+		mb->pos = pos;
+	}
+	else {
+		indlen = stun_indlen(dst);
+
+		if (mb->pos < indlen)
+			return EINVAL;
+
+		mb->pos -= indlen;
+		pos = mb->pos;
+
+		err = stun_msg_encode(mb, STUN_METHOD_SEND,
+				      STUN_CLASS_INDICATION, sendind_tid,
+				      NULL, NULL, 0, false, 0x00, 2,
+				      STUN_ATTR_XOR_PEER_ADDR, dst,
+				      STUN_ATTR_DATA, mb);
+		if (err)
+			return err;
+
+		mb->pos = pos;
+	}
+
+	switch (turnc->proto) {
+
+	case IPPROTO_UDP:
+		err = udp_send(turnc->sock, &turnc->srv, mb);
+		break;
+
+	case IPPROTO_TCP:
+		err = tcp_send(turnc->sock, mb);
+		break;
+
+	default:
+		err = EPROTONOSUPPORT;
+		break;
+	}
+
+	return err;
+}
+
+
+int turnc_recv(struct turnc *turnc, struct sa *src, struct mbuf *mb)
+{
+	struct stun_attr *peer, *data;
+	struct stun_unknown_attr ua;
+	struct stun_msg *msg;
+	int err = 0;
+
+	if (!turnc || !src || !mb)
+		return EINVAL;
+
+	if (stun_msg_decode(&msg, mb, &ua)) {
+
+		struct chan_hdr hdr;
+		struct chan *chan;
+
+		if (turnc_chan_hdr_decode(&hdr, mb))
+			return EBADMSG;
+
+		if (mbuf_get_left(mb) < hdr.len)
+			return EBADMSG;
+
+		chan = turnc_chan_find_numb(turnc, hdr.nr);
+		if (!chan)
+			return EBADMSG;
+
+		*src = *turnc_chan_peer(chan);
+
+		return 0;
+	}
+
+	switch (stun_msg_class(msg)) {
+
+	case STUN_CLASS_INDICATION:
+		if (ua.typec > 0) {
+			err = ENOSYS;
+			break;
+		}
+
+		if (stun_msg_method(msg) != STUN_METHOD_DATA) {
+			err = ENOSYS;
+			break;
+		}
+
+		peer = stun_msg_attr(msg, STUN_ATTR_XOR_PEER_ADDR);
+		data = stun_msg_attr(msg, STUN_ATTR_DATA);
+		if (!peer || !data) {
+			err = EPROTO;
+			break;
+		}
+
+		*src = peer->v.xor_peer_addr;
+
+		mb->pos = data->v.data.pos;
+		mb->end = data->v.data.end;
+		break;
+
+	case STUN_CLASS_ERROR_RESP:
+	case STUN_CLASS_SUCCESS_RESP:
+		(void)stun_ctrans_recv(turnc->stun, msg, &ua);
+		mb->pos = mb->end;
+		break;
+
+	default:
+		err = ENOSYS;
+		break;
+	}
+
+	mem_deref(msg);
 
 	return err;
 }
