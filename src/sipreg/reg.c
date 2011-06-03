@@ -92,7 +92,7 @@ static void destructor(void *arg)
 
 static uint32_t failwait(uint32_t failc)
 {
-	return min(1800, (30 * (1<<failc))) * (500 + rand_u16() % 501);
+	return min(1800, (30 * (1<<min(failc, 6)))) * (500 + rand_u16() % 501);
 }
 
 
