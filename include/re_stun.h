@@ -7,6 +7,7 @@
 
 enum {
 	STUN_PORT        = 3478,   /**< STUN Port number */
+	STUNS_PORT       = 5349,   /**< STUNS Port number                    */
 	STUN_HEADER_SIZE = 20,     /**< Number of bytes in header            */
 	STUN_ATTR_HEADER_SIZE = 4, /**< Size of attribute header             */
 	STUN_TID_SIZE    = 12,     /**< Number of bytes in transaction ID    */

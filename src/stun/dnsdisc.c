@@ -28,6 +28,7 @@ struct stun_dns {
 	struct dnsc *dnsc;     /**< DNS Client              */
 	struct dns_query *dq;  /**< Current DNS query       */
 	int af;                /**< Preferred Address family*/
+	uint16_t port;         /**< Default Port            */
 };
 
 const char *stun_proto_udp = "udp";   /**< UDP Protocol  */
@@ -145,7 +146,7 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 		DEBUG_INFO("no SRV entry, trying A lookup on \"%s\"\n",
 			   dns->domain);
 
-		sa_set_in(&dns->srv, 0, STUN_PORT);
+		sa_set_in(&dns->srv, 0, dns->port);
 
 		err = a_or_aaaa_query(dns, dns->domain);
 		if (err)
@@ -240,13 +241,14 @@ int stun_server_discover(struct stun_dns **dnsp, struct dnsc *dnsc,
 	if (!dns)
 		return ENOMEM;
 
+	dns->port = service[strlen(service)-1] == 's' ? STUNS_PORT : STUN_PORT;
 	dns->dnsh = dnsh;
 	dns->arg  = arg;
 	dns->dnsc = dnsc;
 	dns->af   = af;
 
 	/* Numeric IP address - no lookup */
-	if (0 == sa_set_str(&dns->srv, domain, port ? port : STUN_PORT)) {
+	if (0 == sa_set_str(&dns->srv, domain, port ? port : dns->port)) {
 
 		DEBUG_INFO("IP (%s)\n", domain);
 
