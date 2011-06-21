@@ -188,7 +188,6 @@ int net_rt_list(net_rt_h *rth, void *arg)
 		struct nlmsghdr msg[1];
 	} u;
 	struct nlmsghdr *nlmsg;
-	struct rtmsg *rtmsg;
 	int sock, len, seq = 0, err = 0;
 
 	if (!rth)
@@ -205,7 +204,6 @@ int net_rt_list(net_rt_h *rth, void *arg)
 
 	/* point the header and the msg structure pointers into the buffer */
 	nlmsg = u.msg;
-	rtmsg = (struct rtmsg *)NLMSG_DATA(nlmsg);
 
 	/* Fill in the nlmsg header*/
 	nlmsg->nlmsg_len   = NLMSG_LENGTH(sizeof(struct rtmsg));
