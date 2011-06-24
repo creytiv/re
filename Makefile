@@ -93,6 +93,12 @@ install: $(SHARED) $(STATIC)
 	$(INSTALL) -m 0755 $(STATIC) $(DESTDIR)$(LIBDIR)
 	$(INSTALL) -m 0644 $(MK) $(DESTDIR)$(MKDIR)
 
+uninstall:
+	@rm -rf $(DESTDIR)$(INCDIR)
+	@rm -rf $(DESTDIR)$(MKDIR)
+	@rm -f $(DESTDIR)$(LIBDIR)/$(SHARED)
+	@rm -f $(DESTDIR)$(LIBDIR)/$(STATIC)
+
 -include test.d
 
 test.o:	test.c Makefile $(MK)
