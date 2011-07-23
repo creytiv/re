@@ -116,7 +116,8 @@ Supported platforms:
 * Symbian OS
 * Solaris
 * Windows
-* Apple Mac OS X
+* Apple Mac OS X and iOS
+* Android
 
 
 Supported compilers:
