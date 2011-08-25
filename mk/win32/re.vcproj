@@ -183,13 +183,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="g711"
-				Filter="">
-				<File
-					RelativePath="..\..\src\g711\g711.c">
-				</File>
-			</Filter>
-			<Filter
 				Name="hash"
 				Filter="">
 				<File

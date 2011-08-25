@@ -44,9 +44,6 @@ SOURCE        regex.c
 SOURCE        str.c
 SOURCE        time.c
 
-SOURCEPATH    ..\..\src\g711
-SOURCE        g711.c
-
 SOURCEPATH    ..\..\src\hash
 SOURCE        hash.c
 SOURCE        func.c

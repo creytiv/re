@@ -25,7 +25,6 @@ Modules:
 * dbg       testing       Debug printing
 * dns       testing       DNS resolving (NAPTR, SRV, A)
 * fmt       testing       Formatted printing and regular expression
-* g711      stable        G.711 codec
 * hash      testing       Hashmap table
 * hmac      testing       HMAC: Keyed-Hashing for Message Authentication
 * httpauth  unstable      HTTP-based Authentication (RFC 2617)
