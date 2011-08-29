@@ -379,8 +379,10 @@ endif
 #
 
 USE_OPENSSL := $(shell [ -f $(SYSROOT)/include/openssl/ssl.h ] || \
+	[ -f $(SYSROOT)/local/include/openssl/ssl.h ] || \
 	[ -f $(SYSROOT_ALT)/include/openssl/ssl.h ] && echo "yes")
 USE_ZLIB    := $(shell [ -f $(SYSROOT)/include/zlib.h ] || \
+	[ -f $(SYSROOT)/local/include/zlib.h ] || \
 	[ -f $(SYSROOT_ALT)/include/zlib.h ] && echo "yes")
 
 ifneq ($(USE_OPENSSL),)
