@@ -194,6 +194,11 @@ ifeq ($(MACHINE), i586-mingw32msvc)
 	OS   := win32
 	ARCH := i586
 endif
+ifeq ($(MACHINE), mingw32)
+	OS   := win32
+	ARCH := i386
+	CROSS_COMPILE :=
+endif
 ifeq ($(MACHINE), i686-pc-cygwin)
 	OS   := cygwin
 	ARCH := i686
@@ -310,7 +315,7 @@ ifeq ($(OS),win32)
 	APP_LFLAGS	+= -Wl,-E
 	AR		:= ar
 	AFLAGS		:= cru
-	CROSS_COMPILE	:= $(MACHINE)-
+	CROSS_COMPILE	?= $(MACHINE)-
 	RANLIB		:= $(CROSS_COMPILE)ranlib
 	LIB_SUFFIX	:= .dll
 	MOD_SUFFIX	:= .dll
