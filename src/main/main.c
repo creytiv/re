@@ -591,7 +591,11 @@ static int fd_poll(struct re *re)
 				FD_SET(i, &efds);
 		}
 
+#ifdef WIN32
+		tv.tv_sec  = (long) to / 1000;
+#else
 		tv.tv_sec  = (time_t) to / 1000;
+#endif
 		tv.tv_usec = (uint32_t) (to % 1000) * 1000;
 		re_unlock(re);
 		n = select(re->nfds, &rfds, &wfds, &efds, to ? &tv : NULL);
