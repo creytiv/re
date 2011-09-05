@@ -1,3 +1,22 @@
+2011-09-07 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.3.0
+
+	* build support for native mingw32
+
+	* bfcp: new module for The Binary Floor Control Protocol (RFC 4582)
+
+	* g711: module moved to librem
+
+	* sipreg: fix a bug in failwait() calculation
+
+	* stun: add support for STUNS (secure STUN)
+
+	* tcp: added tcp_set_handlers()
+
+	* turn: added send/recv functions
+
+
 2011-05-20 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.2.0
