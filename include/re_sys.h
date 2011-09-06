@@ -59,6 +59,8 @@ int sys_coredump_set(bool enable);
 int sys_daemon(void);
 
 
+uint16_t sys_htols(uint16_t v);
+uint32_t sys_htoll(uint32_t v);
 uint16_t sys_ltohs(uint16_t v);
 uint32_t sys_ltohl(uint32_t v);
 uint64_t sys_htonll(uint64_t v);

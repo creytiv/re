@@ -14,6 +14,46 @@
 
 
 /**
+ * Convert a 16-bit value from host order to little endian
+ *
+ * @param v 16-bit in host order
+ *
+ * @return 16-bit little endian value
+ */
+uint16_t sys_htols(uint16_t v)
+{
+	uint8_t *p = (uint8_t *)&v;
+	uint16_t l = 0;
+
+	l |= (uint16_t)*p++ << 0;
+	l |= (uint16_t)*p   << 8;
+
+	return l;
+}
+
+
+/**
+ * Convert a 32-bit value from host order to little endian
+ *
+ * @param v 32-bit in host order
+ *
+ * @return 32-bit little endian value
+ */
+uint32_t sys_htoll(uint32_t v)
+{
+	uint8_t *p = (uint8_t *)&v;
+	uint32_t l = 0;
+
+	l |= (uint32_t)*p++ << 0;
+	l |= (uint32_t)*p++ << 8;
+	l |= (uint32_t)*p++ << 16;
+	l |= (uint32_t)*p   << 24;
+
+	return l;
+}
+
+
+/**
  * Convert a 16-bit value from little endian to host order
  *
  * @param v 16-bit little endian value
