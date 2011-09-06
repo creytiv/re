@@ -207,9 +207,9 @@ uint16_t bfcp_msg_userid(const struct bfcp_msg *msg)
 }
 
 
-const char *bfcp_reqstat_name(enum bfcp_rstat stat)
+const char *bfcp_reqstat_name(enum bfcp_rstat rstat)
 {
-	switch (stat) {
+	switch (rstat) {
 
 	case BFCP_PENDING:    return "Pending";
 	case BFCP_ACCEPTED:   return "Accepted";

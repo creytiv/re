@@ -203,7 +203,7 @@ const struct sa *bfcp_msg_src(const struct bfcp_msg *msg);
 
 const char *bfcp_prim_name(enum bfcp_prim prim);
 const char *bfcp_attr_name(enum bfcp_attrib attr);
-const char *bfcp_reqstat_name(enum bfcp_rstat stat);
+const char *bfcp_reqstat_name(enum bfcp_rstat rstat);
 const char *bfcp_errcode_name(enum bfcp_err code);
 
 
