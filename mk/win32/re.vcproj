@@ -109,6 +109,31 @@
 				</File>
 			</Filter>
 			<Filter
+				Name="bfcp"
+				Filter="">
+				<File
+					RelativePath="..\..\src\bfcp\attr.c">
+				</File>
+				<File
+					RelativePath="..\..\src\bfcp\hdr.c">
+				</File>
+				<File
+					RelativePath="..\..\src\bfcp\msg.c">
+				</File>
+				<File
+					RelativePath="..\..\src\bfcp\rep.c">
+				</File>
+				<File
+					RelativePath="..\..\src\bfcp\req.c">
+				</File>
+				<File
+					RelativePath="..\..\src\bfcp\sock.c">
+				</File>
+				<File
+					RelativePath="..\..\src\bfcp\transp.c">
+				</File>
+			</Filter>
+			<Filter
 				Name="conf"
 				Filter="">
 				<File

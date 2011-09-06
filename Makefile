@@ -28,6 +28,7 @@ MODULES += udp sa net tcp tls
 MODULES += list mbuf hash
 MODULES += fmt tmr main mem dbg sys lock mqueue
 MODULES += mod conf
+MODULES += bfcp
 
 INSTALL := install
 ifeq ($(DESTDIR),)

@@ -88,6 +88,7 @@ Features:
 * RFC 3994 - Indication of Message Composition for Instant Messaging
 * RFC 4346 - The TLS Protocol Version 1.1
 * RFC 4566 - SDP: Session Description Protocol
+* RFC 4582 - The Binary Floor Control Protocol (BFCP)
 * RFC 4585 - Extended RTP Profile for RTCP-Based Feedback
 * RFC 4733 - RTP Payload for DTMF Digits, Telephony Tones, and Teleph. Signals
 * RFC 4961 - Symmetric RTP / RTP Control Protocol (RTCP)

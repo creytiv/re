@@ -8,6 +8,7 @@ PRJ_EXPORTS
 
 ..\..\include\re.h             \epoc32\include\re\re.h
 ..\..\include\re_base64.h      \epoc32\include\re\re_base64.h
+..\..\include\re_bfcp.h        \epoc32\include\re\re_bfcp.h
 ..\..\include\re_bitv.h        \epoc32\include\re\re_bitv.h
 ..\..\include\re_conf.h        \epoc32\include\re\re_conf.h
 ..\..\include\re_crc32.h       \epoc32\include\re\re_crc32.h
@@ -51,6 +52,7 @@ PRJ_EXPORTS
 PRJ_MMPFILES
 
 re.mmp
+rebfcp.mmp
 redns.mmp
 resdp.mmp
 resip.mmp
