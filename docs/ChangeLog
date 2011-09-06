@@ -2,7 +2,7 @@
 
 	* Version 0.3.0
 
-	* build support for native mingw32
+	* build support for native mingw32 (thanks to Michael Erskine)
 
 	* bfcp: new module for The Binary Floor Control Protocol (RFC 4582)
 
