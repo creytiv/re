@@ -20,6 +20,7 @@ Modules:
   name:     status:       description:
 
 * base64    testing       Base-64 encoding/decoding functions
+* bfcp      unstable      The Binary Floor Control Protocol (BFCP)
 * conf      testing       Configuration file parser
 * crc32     testing       32-bit CRC defined in ITU V.42
 * dbg       testing       Debug printing
