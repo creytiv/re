@@ -167,16 +167,20 @@ int tls_verify_cert(struct tls_conn *tc, char *cn, size_t cn_size)
 {
 	X509 *peer;
 
-	if (!tc)
+	if (!tc || !cn || !cn_size)
 		return EINVAL;
 
 	/* Check the cert chain. The chain length
 	   is automatically checked by OpenSSL when
 	   we set the verify depth in the ctx */
 
-	/* Get the common name */
 	peer = SSL_get_peer_certificate(tc->ssl);
-	/* todo: check return value */
+	if (!peer) {
+		DEBUG_WARNING("Unable to get peer certificate\n");
+		return EPROTO;
+	}
+
+	/* Get the common name */
 	X509_NAME_get_text_by_NID(X509_get_subject_name(peer),
 				  NID_commonName, cn, (int)cn_size);
 
