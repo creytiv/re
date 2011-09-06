@@ -194,7 +194,7 @@ int udp_sock::send(const struct sa *dst, struct mbuf *mb)
 {
 	struct sa hdst;
 	TRequestStatus stat;
-	int err;
+	int err = 0;
 
 	DEBUG_INFO("udp_sock::send %u bytes to %J\n", mbuf_get_left(mb), dst);
 
