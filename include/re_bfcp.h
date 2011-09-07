@@ -131,7 +131,7 @@ struct bfcp_floor_reqinfo {
 	size_t frsc;
 	struct bfcp_beneficiary_info bfi;
 	struct bfcp_reqby_info rbi;
-	uint8_t prio;
+	enum bfcp_prio prio;
 	char *ppi;
 };
 
@@ -148,7 +148,7 @@ struct bfcp_attr {
 		uint16_t bfid;
 		uint16_t floorid;
 		uint16_t freqid;
-		uint8_t prio;
+		enum bfcp_prio prio;
 		struct bfcp_reqstat reqstat;
 		struct bfcp_errcode errcode;
 		char *errinfo;

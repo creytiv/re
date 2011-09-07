@@ -96,7 +96,8 @@ int bfcp_attr_encode(struct mbuf *mb, bool mand, enum bfcp_attrib type,
 	const struct bfcp_reqby_info *rbi = v;
 	const struct bfcp_floor_reqstat *frs = v;
 	const struct bfcp_overall_reqstat *ors = v;
-	const unsigned int *num = v;
+	const uint16_t *u16 = v;
+	const enum bfcp_prio *prio = v;
 	size_t start, len, i;
 	int err = 0;
 
@@ -111,11 +112,11 @@ int bfcp_attr_encode(struct mbuf *mb, bool mand, enum bfcp_attrib type,
 	case BFCP_BENEFICIARY_ID:
 	case BFCP_FLOOR_ID:
 	case BFCP_FLOOR_REQUEST_ID:
-		err |= mbuf_write_u16(mb, htons(*num));
+		err |= mbuf_write_u16(mb, htons(*u16));
 		break;
 
 	case BFCP_PRIORITY:
-		err |= mbuf_write_u8(mb, *num << 5);
+		err |= mbuf_write_u8(mb, *prio << 5);
 		err |= mbuf_write_u8(mb, 0x00);
 		break;
 
@@ -598,8 +599,11 @@ static int attr_print(int16_t level, struct re_printf *pf,
 	case BFCP_BENEFICIARY_ID:
 	case BFCP_FLOOR_ID:
 	case BFCP_FLOOR_REQUEST_ID:
-	case BFCP_PRIORITY:
 		err |= re_hprintf(pf, "%u", v->u16);
+		break;
+
+	case BFCP_PRIORITY:
+		err |= re_hprintf(pf, "%d", v->prio);
 		break;
 
 	case BFCP_REQUEST_STATUS:
