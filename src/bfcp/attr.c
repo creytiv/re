@@ -574,7 +574,7 @@ static int leadh(struct re_printf *pf, void *arg)
 
 
 static int attr_print(int16_t level, struct re_printf *pf,
-		      uint8_t type, const void *p)
+		      enum bfcp_attrib type, const void *p)
 {
 	const union bfcp_union *v = p;
 	uint32_t i;
