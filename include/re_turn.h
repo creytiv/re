@@ -12,6 +12,7 @@ enum {
 typedef void(turnc_h)(int err, uint16_t scode, const char *reason,
 		      const struct sa *relay_addr,
 		      const struct sa *mapped_addr,
+		      const struct stun_msg *msg,
 		      void *arg);
 typedef void(turnc_perm_h)(void *arg);
 typedef void(turnc_chan_h)(void *arg);

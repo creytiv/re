@@ -96,7 +96,8 @@ static void timeout(void *arg)
 
 	err = chanbind_request(chan, true);
 	if (err)
-		chan->turnc->th(err, 0, NULL, NULL, NULL, chan->turnc->arg);
+		chan->turnc->th(err, 0, NULL, NULL, NULL, NULL,
+				chan->turnc->arg);
 }
 
 
@@ -136,7 +137,7 @@ static void chanbind_resp_handler(int err, uint16_t scode, const char *reason,
 	}
 
  out:
-	chan->turnc->th(err, scode, reason, NULL, NULL, chan->turnc->arg);
+	chan->turnc->th(err, scode, reason, NULL, NULL, msg, chan->turnc->arg);
 }
 
 

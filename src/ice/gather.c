@@ -114,11 +114,12 @@ static int send_binding_request(struct icem *icem, struct icem_comp *comp)
 
 static void turnc_handler(int err, uint16_t scode, const char *reason,
 			  const struct sa *relay, const struct sa *mapped,
-			  void *arg)
+			  const struct stun_msg *msg, void *arg)
 {
 	struct icem_comp *comp = arg;
 	struct icem *icem = comp->icem;
 	struct cand *lcand;
+	(void)msg;
 
 	--icem->nstun;
 

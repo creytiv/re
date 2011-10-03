@@ -73,7 +73,7 @@ static void timeout(void *arg)
 	err = refresh_request(turnc, turnc->lifetime, true,
 			      refresh_resp_handler, turnc);
 	if (err)
-		turnc->th(err, 0, NULL, NULL, NULL, turnc->arg);
+		turnc->th(err, 0, NULL, NULL, NULL, NULL, turnc->arg);
 }
 
 
@@ -116,6 +116,9 @@ static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 		break;
 
 	case 300:
+		if (turnc->proto == IPPROTO_TCP)
+			break;
+
 		alt = stun_msg_attr(msg, STUN_ATTR_ALT_SERVER);
 		if (!alt)
 			break;
@@ -149,6 +152,7 @@ static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 	turnc->th(err, scode, reason,
 		  rel ? &rel->v.xor_relay_addr : NULL,
 		  map ? &map->v.xor_mapped_addr : NULL,
+		  msg,
 		  turnc->arg);
 }
 
@@ -206,7 +210,7 @@ static void refresh_resp_handler(int err, uint16_t scode, const char *reason,
 	}
 
  out:
-	turnc->th(err, scode, reason, NULL, NULL, turnc->arg);
+	turnc->th(err, scode, reason, NULL, NULL, msg, turnc->arg);
 }
 
 
