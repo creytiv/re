@@ -248,6 +248,7 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp)
 	tc->sbio_out = BIO_new_socket(tcp_conn_fd(tcp), BIO_NOCLOSE);
 	if (!tc->sbio_out) {
 		DEBUG_WARNING("alloc: BIO_new_socket() failed\n");
+		BIO_free(tc->sbio_in);
 		goto out;
 	}
 
