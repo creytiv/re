@@ -5,34 +5,37 @@
 #
 # Imported variables:
 #
-#   PROJECT      Project name
-#   VERSION      Version number
-#   CC           Compiler
-#   GCOV         If non-empty, enable GNU Coverage testing
-#   GPROF        If non-empty, enable GNU Profiling
-#   OPT_SPEED    If non-empty, optimize for speed
-#   OPT_SIZE     If non-empty, optimize for size
-#   USE_OPENSSL  If non-empty, link to libssl library
-#   USE_ZLIB     If non-empty, link to libz library
-#   SYSROOT      System root of library and include files
-#   SYSROOT_ALT  Alternative system root of library and include files
-#   EXTRA_CFLAGS Extra compiler flags appended to CFLAGS
-#   EXTRA_LFLAGS Extra linker flags appended to LFLAGS
+#   ARCH           Target architecture
+#   CC             Compiler
+#   CROSS_COMPILE  Cross-compiler prefix (optional)
+#   EXTRA_CFLAGS   Extra compiler flags appended to CFLAGS
+#   EXTRA_LFLAGS   Extra linker flags appended to LFLAGS
+#   GCOV           If non-empty, enable GNU Coverage testing
+#   GPROF          If non-empty, enable GNU Profiling
+#   OPT_SIZE       If non-empty, optimize for size
+#   OPT_SPEED      If non-empty, optimize for speed
+#   PROJECT        Project name
+#   RELEASE        Release build
+#   SYSROOT        System root of library and include files
+#   SYSROOT_ALT    Alternative system root of library and include files
+#   USE_OPENSSL    If non-empty, link to libssl library
+#   USE_ZLIB       If non-empty, link to libz library
+#   VERSION        Version number
 #
 # Exported variables:
 #
-#   CC           Compiler
-#   CCACHE       Compiler ccache tool
-#   CFLAGS       Compiler flags
-#   DFLAGS       Dependency generator flags
-#   LFLAGS       Common linker flags
-#   SH_LFLAGS    Linker flags for shared libraries
-#   MOD_LFLAGS   Linker flags for dynamic modules
-#   APP_LFLAGS   Linker flags for applications using modules
-#   LIBS         Libraries to link against
-#   LIB_SUFFIX   Suffix for shared libraries
-#   MOD_SUFFIX   Suffix for dynamic modules
-#   BIN_SUFFIX   Suffix for binary executables
+#   APP_LFLAGS     Linker flags for applications using modules
+#   BIN_SUFFIX     Suffix for binary executables
+#   CC             Compiler
+#   CCACHE         Compiler ccache tool
+#   CFLAGS         Compiler flags
+#   DFLAGS         Dependency generator flags
+#   LFLAGS         Common linker flags
+#   LIBS           Libraries to link against
+#   LIB_SUFFIX     Suffix for shared libraries
+#   MOD_LFLAGS     Linker flags for dynamic modules
+#   MOD_SUFFIX     Suffix for dynamic modules
+#   SH_LFLAGS      Linker flags for shared libraries
 #
 
 
