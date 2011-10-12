@@ -279,8 +279,6 @@ endif
 	AR		:= ar
 	AFLAGS		:= cru
 	LIB_SUFFIX	:= .dylib
-	ARCH            := $(shell echo $(MACHINE) | \
-				sed -e 's/\([^-]*\)-.*/\1/')
 endif
 ifeq ($(OS),netbsd)
 	CFLAGS		+= -fPIC -DNETBSD
@@ -355,24 +353,74 @@ endif
 # Architecture section
 #
 
-ifeq ($(OS),solaris)
-	GETARCH=uname -p
-else
-	GETARCH=uname -m
-endif
 
 ifeq ($(ARCH),)
-ARCH := $(shell $(GETARCH) | sed -e s/i.86/i386/ -e s/sun4u/sparc64/  \
-			-e s/armv4l/arm/ -e "s/Power Macintosh/ppc/" \
-			-e "s/cobalt/mips2/" \
-			-e s/amd64/x86_64/ )
+ifeq ($(CC_NAME),gcc)
+PREDEF	:= $(shell $(CC) -dM -E -x c $(EXTRA_CFLAGS) $(CFLAGS) /dev/null)
+
+ifneq ($(strip $(filter i386 __i386__ __i386 _M_IX86 __X86__ _X86_, \
+	$(PREDEF))),)
+ARCH	:= i386
 endif
-# fix sparc -> sparc64
-ifeq ($(ARCH),sparc)
-	ifeq ($(shell uname -m),sun4u)
-		ARCH := sparc64
-	endif
+
+ifneq ($(strip $(filter __i486__,$(PREDEF))),)
+ARCH	:= i486
 endif
+
+ifneq ($(strip $(filter __i586__,$(PREDEF))),)
+ARCH	:= i586
+endif
+
+ifneq ($(strip $(filter __i686__ ,$(PREDEF))),)
+ARCH	:= i686
+endif
+
+ifneq ($(strip $(filter __amd64__ __amd64 __x86_64__ __x86_64, \
+	$(PREDEF))),)
+ARCH	:= x86_64
+endif
+
+ifneq ($(strip $(filter __arm__ __thumb__,$(PREDEF))),)
+
+ifneq ($(strip $(filter __ARM_ARCH_6__,$(PREDEF))),)
+ARCH	:= arm6
+else
+ARCH	:= arm
+endif
+
+endif
+
+ifneq ($(strip $(filter __mips__ __mips, $(PREDEF))),)
+ARCH	:= mips
+endif
+
+ifneq ($(strip $(filter __powerpc __powerpc__ __POWERPC__ __ppc__ \
+	_ARCH_PPC, $(PREDEF))),)
+ARCH	:= ppc
+endif
+
+ifneq ($(strip $(filter __ppc64__ _ARCH_PPC64 , $(PREDEF))),)
+ARCH	:= ppc64
+endif
+
+ifneq ($(strip $(filter __sparc__ __sparc __sparcv8 , $(PREDEF))),)
+
+ifneq ($(strip $(filter __sparcv9 __sparc_v9__ , $(PREDEF))),)
+ARCH	:= sparc64
+else
+ARCH	:= sparc
+endif
+
+endif
+
+endif
+endif
+
+
+ifeq ($(ARCH),)
+$(warning Could not detect ARCH)
+endif
+
 
 CFLAGS	+= -DARCH=\"$(ARCH)\"
 
