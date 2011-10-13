@@ -1,5 +1,5 @@
 /**
- * @file sock.c  Networking sockets code.
+ * @file net/sock.c  Networking sockets code
  *
  * Copyright (C) 2010 Creytiv.com
  */
