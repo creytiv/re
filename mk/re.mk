@@ -180,64 +180,22 @@ endif
 #
 # OS section
 #
-MACHINE   := $(shell $(CC) -dumpmachine)
-OS        := $(shell uname -s | sed -e s/SunOS/solaris/ | tr "[A-Z]" "[a-z]")
-#ARCH      := $(shell echo $(MACHINE) | sed -e 's/\([^-]*\)-.*/\1/')
 
-# TODO get ARCH from first tuple in CC -dumpmachine which is more future proof
-ifeq ($(MACHINE), i386-mingw32)
-	OS   := win32
-	ARCH := i386
+MACHINE   := $(shell $(CC) -dumpmachine)
+
+ifeq ($(CROSS_COMPILE),)
+OS        := $(shell uname -s | sed -e s/SunOS/solaris/ | tr "[A-Z]" "[a-z]")
 endif
-ifeq ($(MACHINE), i486-mingw32)
+
+
+ifneq ($(strip $(filter i386-mingw32 i486-mingw32 i586-mingw32msvc mingw32, \
+	$(MACHINE))),)
 	OS   := win32
-	ARCH := i486
-endif
-ifeq ($(MACHINE), i586-mingw32msvc)
-	OS   := win32
-	ARCH := i586
-endif
 ifeq ($(MACHINE), mingw32)
-	OS   := win32
-	ARCH := i386
 	CROSS_COMPILE :=
 endif
-ifeq ($(MACHINE), i686-pc-cygwin)
-	OS   := cygwin
-	ARCH := i686
 endif
-ifeq ($(MACHINE), mipsel-linux-uclibc)
-	OS   := linux
-	ARCH := mipsel
-endif
-ifeq ($(MACHINE), bfin-linux-uclibc)
-	OS   := linux
-	ARCH := bfin
-endif
-ifeq ($(MACHINE), bfin-uclinux)
-	OS   := linux
-	ARCH := bfin
-endif
-ifeq ($(MACHINE), arm-apple-darwin)
-	OS   := darwin
-	ARCH := arm
-	CROSS_COMPILE ?= $(MACHINE)-
-	CFLAGS += -F/Developer/SDKs/MacOSX10.4u.sdk/System/Library/Frameworks
-endif
-ifeq ($(MACHINE), arm-apple-darwin9)
-	OS   := darwin
-	ARCH := arm
-	CROSS_COMPILE ?= $(MACHINE)-
-	ROOT   := /Developer//Platforms/iPhoneOS.platform/Developer
-	SDK    := $(ROOT)/SDKs/iPhoneOS3.0.sdk
-	CFLAGS += -F$(SDK)/System/Library/Frameworks/
-	CFLAGS += -I$(SDK)/usr/include
-	CFLAGS += -I$(SDK)/usr/lib/gcc/arm-apple-darwin9/4.2.1/include
-	CFLAGS += -isysroot $(SDK)
-	LFLAGS += -F$(SDK)/System/Library/Frameworks
-	LFLAGS += -L$(SDK)/usr/lib
-	LFLAGS += -L$(SDK)/usr/lib/gcc/arm-apple-darwin9/4.2.1/
-endif
+
 
 # default
 LIB_SUFFIX	:= .so
@@ -345,6 +303,11 @@ endif # CC_SHORTVER
 
 ifneq ($(PEDANTIC),)
 CFLAGS  += -pedantic
+endif
+
+
+ifeq ($(OS),)
+$(warning Could not detect OS)
 endif
 
 
