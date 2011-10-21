@@ -20,9 +20,9 @@ bool bfcp_transp_reliable(enum bfcp_transp tp)
 {
 	switch (tp) {
 
-	case BFCP_TRANSP_TCP: return true;
-	case BFCP_TRANSP_TLS: return true;
-	default:              return false;
+	case BFCP_TRANSP_TCP:  return true;
+	case BFCP_TRANSP_TLS:  return true;
+	default:               return false;
 	}
 }
 
@@ -31,8 +31,8 @@ const char *bfcp_transp_proto(enum bfcp_transp tp)
 {
 	switch (tp) {
 
-	case BFCP_TRANSP_TCP: return "TCP/BFCP";
-	case BFCP_TRANSP_TLS: return "TCP/TLS/BFCP";
-	default:              return "???";
+	case BFCP_TRANSP_TCP:  return "TCP/BFCP";
+	case BFCP_TRANSP_TLS:  return "TCP/TLS/BFCP";
+	default:               return "???";
 	}
 }

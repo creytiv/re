@@ -9,19 +9,19 @@ enum {BFCP_VERSION = 1};
 
 /** BFCP Primitives */
 enum bfcp_prim {
-	BFCP_FLOOR_REQUEST        =  1,
-	BFCP_FLOOR_RELEASE        =  2,
-	BFCP_FLOOR_REQUEST_QUERY  =  3,
-	BFCP_FLOOR_REQUEST_STAT   =  4,
-	BFCP_USER_QUERY           =  5,
-	BFCP_USER_STATUS          =  6,
-	BFCP_FLOOR_QUERY          =  7,
-	BFCP_FLOOR_STATUS         =  8,
-	BFCP_CHAIR_ACTION         =  9,
-	BFCP_CHAIR_ACTION_ACK     = 10,
-	BFCP_HELLO                = 11,
-	BFCP_HELLO_ACK            = 12,
-	BFCP_ERROR                = 13,
+	BFCP_FLOOR_REQUEST          =  1,
+	BFCP_FLOOR_RELEASE          =  2,
+	BFCP_FLOOR_REQUEST_QUERY    =  3,
+	BFCP_FLOOR_REQUEST_STAT     =  4,
+	BFCP_USER_QUERY             =  5,
+	BFCP_USER_STATUS            =  6,
+	BFCP_FLOOR_QUERY            =  7,
+	BFCP_FLOOR_STATUS           =  8,
+	BFCP_CHAIR_ACTION           =  9,
+	BFCP_CHAIR_ACTION_ACK       = 10,
+	BFCP_HELLO                  = 11,
+	BFCP_HELLO_ACK              = 12,
+	BFCP_ERROR                  = 13,
 };
 
 /** BFCP Attributes */
@@ -169,8 +169,8 @@ struct bfcp_attr {
 };
 
 enum bfcp_transp {
-	BFCP_TRANSP_TCP = 0,
-	BFCP_TRANSP_TLS = 1
+	BFCP_TRANSP_TCP  = 0,
+	BFCP_TRANSP_TLS  = 1
 };
 
 
