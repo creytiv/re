@@ -227,20 +227,20 @@ const char *bfcp_prim_name(enum bfcp_prim prim)
 {
 	switch (prim) {
 
-	case BFCP_FLOOR_REQUEST:         return "FloorRequest";
-	case BFCP_FLOOR_RELEASE:         return "FloorRelease";
-	case BFCP_FLOOR_REQUEST_QUERY:   return "FloorRequestQuery";
-	case BFCP_FLOOR_REQUEST_STAT:    return "FloorRequestStatus";
-	case BFCP_USER_QUERY:            return "UserQuery";
-	case BFCP_USER_STATUS:           return "UserStatus";
-	case BFCP_FLOOR_QUERY:           return "FloorQuery";
-	case BFCP_FLOOR_STATUS:          return "FloorStatus";
-	case BFCP_CHAIR_ACTION:          return "ChairAction";
-	case BFCP_CHAIR_ACTION_ACK:      return "ChairActionAck";
-	case BFCP_HELLO:                 return "Hello";
-	case BFCP_HELLO_ACK:             return "HelloAck";
-	case BFCP_ERROR:                 return "Error";
-	default:                         return "???";
+	case BFCP_FLOOR_REQUEST:          return "FloorRequest";
+	case BFCP_FLOOR_RELEASE:          return "FloorRelease";
+	case BFCP_FLOOR_REQUEST_QUERY:    return "FloorRequestQuery";
+	case BFCP_FLOOR_REQUEST_STAT:     return "FloorRequestStatus";
+	case BFCP_USER_QUERY:             return "UserQuery";
+	case BFCP_USER_STATUS:            return "UserStatus";
+	case BFCP_FLOOR_QUERY:            return "FloorQuery";
+	case BFCP_FLOOR_STATUS:           return "FloorStatus";
+	case BFCP_CHAIR_ACTION:           return "ChairAction";
+	case BFCP_CHAIR_ACTION_ACK:       return "ChairActionAck";
+	case BFCP_HELLO:                  return "Hello";
+	case BFCP_HELLO_ACK:              return "HelloAck";
+	case BFCP_ERROR:                  return "Error";
+	default:                          return "???";
 	}
 }
 
