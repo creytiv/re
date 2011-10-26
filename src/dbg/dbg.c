@@ -207,8 +207,8 @@ static void dbg_fmt_vprintf(int level, const char *fmt, va_list ap)
 
 	/* Output to file */
 	if (dbg.f) {
-		(void)fwrite(buf, 1, len, dbg.f);
-		(void)fflush(dbg.f);
+		if (fwrite(buf, 1, len, dbg.f) > 0)
+			(void)fflush(dbg.f);
 	}
 
  out:
