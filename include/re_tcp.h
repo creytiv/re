@@ -102,3 +102,5 @@ int tcp_register_helper(struct tcp_helper **thp, struct tcp_conn *tc,
 			int layer,
 			tcp_helper_estab_h *eh, tcp_helper_send_h *sh,
 			tcp_helper_recv_h *rh, void *arg);
+int tcp_send_helper(struct tcp_conn *tc, struct mbuf *mb,
+		    struct tcp_helper *th);

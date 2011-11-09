@@ -28,7 +28,7 @@ struct tls_conn {
 	BIO *sbio_out;
 	BIO *sbio_in;
 	struct tcp_helper *th;
-	struct tcpconn *tcp;
+	struct tcp_conn *tcp;
 	bool active;
 	bool up;
 };
@@ -45,6 +45,77 @@ static void destructor(void *arg)
 	mem_deref(tc->th);
 	mem_deref(tc->tcp);
 }
+
+
+static int bio_create(BIO *b)
+{
+	b->init  = 1;
+	b->num   = 0;
+	b->ptr   = NULL;
+	b->flags = 0;
+
+	return 1;
+}
+
+
+static int bio_destroy(BIO *b)
+{
+	if (!b)
+		return 0;
+
+	b->ptr   = NULL;
+	b->init  = 0;
+	b->flags = 0;
+
+	return 1;
+}
+
+
+static int bio_write(BIO *b, const char *buf, int len)
+{
+	struct tls_conn *tc = b->ptr;
+	struct mbuf mb;
+	int err;
+
+	mb.buf = (void *)buf;
+	mb.pos = 0;
+	mb.end = mb.size = len;
+
+	err = tcp_send_helper(tc->tcp, &mb, tc->th);
+	if (err)
+		return -1;
+
+	return len;
+}
+
+
+static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
+{
+	(void)b;
+	(void)num;
+	(void)ptr;
+
+	if (cmd == BIO_CTRL_FLUSH) {
+		/* The OpenSSL library needs this */
+		return 1;
+	}
+
+	return 0;
+}
+
+
+static struct bio_method_st bio_tcp_send = {
+	BIO_TYPE_SOURCE_SINK,
+	"tcp_send",
+	bio_write,
+	0,
+	0,
+	0,
+	bio_ctrl,
+	bio_create,
+	bio_destroy,
+	0
+};
 
 
 static int tls_connect(struct tls_conn *tc)
@@ -245,12 +316,14 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp)
 		goto out;
 	}
 
-	tc->sbio_out = BIO_new_socket(tcp_conn_fd(tcp), BIO_NOCLOSE);
+	tc->sbio_out = BIO_new(&bio_tcp_send);
 	if (!tc->sbio_out) {
 		DEBUG_WARNING("alloc: BIO_new_socket() failed\n");
 		BIO_free(tc->sbio_in);
 		goto out;
 	}
+
+	tc->sbio_out->ptr = tc;
 
 	SSL_set_bio(tc->ssl, tc->sbio_in, tc->sbio_out);
 

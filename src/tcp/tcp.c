@@ -247,9 +247,14 @@ static int dequeue(struct tcp_conn *tc)
 
 static void conn_close(struct tcp_conn *tc, int err)
 {
+	list_flush(&tc->sendq);
+
 	/* Stop polling */
-	if (tc->fdc >= 0)
+	if (tc->fdc >= 0) {
 		fd_close(tc->fdc);
+		(void)close(tc->fdc);
+		tc->fdc = -1;
+	}
 
 	if (tc->closeh)
 		tc->closeh(err, tc->arg);
@@ -316,6 +321,8 @@ static void tcp_recv_handler(int flags, void *arg)
 			return;
 		}
 
+		tc->connected = true;
+
 		err = fd_listen(tc->fdc, FD_READ, tcp_recv_handler, tc);
 		if (err) {
 			DEBUG_WARNING("recv handler: fd_listen(): %s\n",
@@ -340,7 +347,6 @@ static void tcp_recv_handler(int flags, void *arg)
 		if (tc->estabh)
 			tc->estabh(tc->arg);
 
-		tc->connected = true;
 		return;
 	}
 
@@ -1012,17 +1018,9 @@ int tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer)
 }
 
 
-/**
- * Send data on a TCP Connection to a remote peer
- *
- * @param tc TCP Connection
- * @param mb Buffer to send
- *
- * @return 0 if success, otherwise errorcode
- */
-int tcp_send(struct tcp_conn *tc, struct mbuf *mb)
+static int tcp_send_internal(struct tcp_conn *tc, struct mbuf *mb,
+			     struct le *le)
 {
-	struct le *le;
 	int err = 0;
 	ssize_t n;
 #ifdef MSG_NOSIGNAL
@@ -1031,8 +1029,8 @@ int tcp_send(struct tcp_conn *tc, struct mbuf *mb)
 	const int flags = 0;
 #endif
 
-	if (!tc || !mb)
-		return EINVAL;
+	if (tc->fdc < 0)
+		return ENOTCONN;
 
 	if (!mbuf_get_left(mb)) {
 		DEBUG_WARNING("send: empty mbuf (pos=%u end=%u)\n",
@@ -1041,7 +1039,6 @@ int tcp_send(struct tcp_conn *tc, struct mbuf *mb)
 	}
 
 	/* call helpers in reverse order */
-	le = tc->helpers.tail;
 	while (le) {
 		struct tcp_helper *th = le->data;
 
@@ -1080,6 +1077,43 @@ int tcp_send(struct tcp_conn *tc, struct mbuf *mb)
 		return enqueue(tc, mb, n);
 
 	return 0;
+}
+
+
+/**
+ * Send data on a TCP Connection to a remote peer
+ *
+ * @param tc TCP Connection
+ * @param mb Buffer to send
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tcp_send(struct tcp_conn *tc, struct mbuf *mb)
+{
+	if (!tc || !mb)
+		return EINVAL;
+
+	return tcp_send_internal(tc, mb, tc->helpers.tail);
+}
+
+
+/**
+ * Send data on a TCP Connection to a remote peer bypassing this
+ * helper and the helpers above it.
+ *
+ * @param tc TCP Connection
+ * @param mb Buffer to send
+ * @param th TCP Helper
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tcp_send_helper(struct tcp_conn *tc, struct mbuf *mb,
+		    struct tcp_helper *th)
+{
+	if (!tc || !mb || !th)
+		return EINVAL;
+
+	return tcp_send_internal(tc, mb, th->le.prev);
 }
 
 
