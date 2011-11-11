@@ -220,8 +220,6 @@ static void udp_read(struct udp_sock *us, int fd)
 			goto out;
 	}
 
-	DEBUG_INFO("udp recv %u bytes from %j:%u\n", mb->end,
-		   &src, sa_port(&src));
 	us->rh(&src, mb, us->arg);
 
  out:
@@ -416,23 +414,11 @@ void udp_connect(struct udp_sock *us, bool conn)
 }
 
 
-/**
- * Send a UDP Datagram to a peer
- *
- * @param us  UDP Socket
- * @param dst Destination network address
- * @param mb  Buffer to send
- *
- * @return 0 if success, otherwise errorcode
- */
-int udp_send(struct udp_sock *us, const struct sa *dst, struct mbuf *mb)
+static int udp_send_internal(struct udp_sock *us, const struct sa *dst,
+			     struct mbuf *mb, struct le *le)
 {
 	struct sa hdst;
-	struct le *le;
 	int err = 0, fd;
-
-	if (!us || !dst || !mb)
-		return EINVAL;
 
 	/* check for error in e.g. connected state */
 	if (us->err) {
@@ -448,7 +434,6 @@ int udp_send(struct udp_sock *us, const struct sa *dst, struct mbuf *mb)
 		fd = us->fd;
 
 	/* call helpers in reverse order */
-	le = us->helpers.tail;
 	while (le) {
 		struct udp_helper *uh = le->data;
 
@@ -485,6 +470,24 @@ int udp_send(struct udp_sock *us, const struct sa *dst, struct mbuf *mb)
 
 
 /**
+ * Send a UDP Datagram to a peer
+ *
+ * @param us  UDP Socket
+ * @param dst Destination network address
+ * @param mb  Buffer to send
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int udp_send(struct udp_sock *us, const struct sa *dst, struct mbuf *mb)
+{
+	if (!us || !dst || !mb)
+		return EINVAL;
+
+	return udp_send_internal(us, dst, mb, us->helpers.tail);
+}
+
+
+/**
  * Send an anonymous UDP Datagram to a peer
  *
  * @param dst Destination network address
@@ -504,7 +507,7 @@ int udp_send_anon(const struct sa *dst, struct mbuf *mb)
 	if (err)
 		return err;
 
-	err = udp_send(us, dst, mb);
+	err = udp_send_internal(us, dst, mb, NULL);
 	mem_deref(us);
 
 	return err;
@@ -772,4 +775,25 @@ int udp_register_helper(struct udp_helper **uhp, struct udp_sock *us,
 		*uhp = uh;
 
 	return 0;
+}
+
+
+/**
+ * Send a UDP Datagram to a remote peer bypassing this helper and
+ * the helpers above it.
+ *
+ * @param us  UDP Socket
+ * @param dst Destination network address
+ * @param mb  Buffer to send
+ * @param uh  UDP Helper
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int udp_send_helper(struct udp_sock *us, const struct sa *dst,
+		    struct mbuf *mb, struct udp_helper *uh)
+{
+	if (!us || !dst || !mb || !uh)
+		return EINVAL;
+
+	return udp_send_internal(us, dst, mb, uh->le.prev);
 }
