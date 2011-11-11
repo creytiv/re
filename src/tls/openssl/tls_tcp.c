@@ -214,13 +214,11 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 		DEBUG_INFO("state=0x%04x\n", SSL_state(tc->ssl));
 
 		/* TLS connection is established */
-		if (SSL_state(tc->ssl) == SSL_ST_OK) {
-			*estab = true;
-			tc->up = true;
-			return false;
-		}
+		if (SSL_state(tc->ssl) != SSL_ST_OK)
+			return true;
 
-		return true;
+		*estab = true;
+		tc->up = true;
 	}
 
 	mbuf_set_pos(mb, 0);
@@ -255,9 +253,6 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 
 		mb->pos += n;
 	}
-
-	if (!mb->pos)
-		return true;
 
 	mbuf_set_end(mb, mb->pos);
 	mbuf_set_pos(mb, 0);

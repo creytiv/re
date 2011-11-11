@@ -299,7 +299,19 @@ static void tcp_recv_handler(int flags, void *arg)
 
 		if (tc->connected) {
 
+			uint32_t nrefs;
+
+			mem_ref(tc);
+
 			err = dequeue(tc);
+
+			nrefs = mem_nrefs(tc);
+			mem_deref(tc);
+
+			/* check if connection was deref'd from send handler */
+			if (nrefs == 1)
+				return;
+
 			if (err) {
 				conn_close(tc, err);
 				return;
@@ -371,31 +383,52 @@ static void tcp_recv_handler(int flags, void *arg)
 	le = tc->helpers.head;
 	while (le) {
 		struct tcp_helper *th = le->data;
-		bool hdld;
+		bool hdld = false;
 
 		le = le->next;
 
-		if (!hlp_estab)
-		        hdld = th->recvh(&err, mb, &hlp_estab, th->arg);
-		else
-			hdld = th->estabh(&err, tc->active, th->arg);
+		if (hlp_estab) {
 
-		if (hdld || err) {
-			if (err)
+			hdld |= th->estabh(&err, tc->active, th->arg);
+			if (err) {
 				conn_close(tc, err);
-			goto out;
+				goto out;
+			}
 		}
+
+		if (mb->pos < mb->end) {
+
+		        hdld |= th->recvh(&err, mb, &hlp_estab, th->arg);
+			if (err) {
+				conn_close(tc, err);
+				goto out;
+			}
+		}
+
+		if (hdld)
+			goto out;
 	}
 
 	mbuf_trim(mb);
 
-	if (!hlp_estab) {
-		if (tc->recvh)
-			tc->recvh(mb, tc->arg);
+	if (hlp_estab && tc->estabh) {
+
+		uint32_t nrefs;
+
+		mem_ref(tc);
+
+		tc->estabh(tc->arg);
+
+		nrefs = mem_nrefs(tc);
+		mem_deref(tc);
+
+		/* check if connection was deref'ed from establish handler */
+		if (nrefs == 1)
+			goto out;
 	}
-	else {
-		if (tc->estabh)
-			tc->estabh(tc->arg);
+
+	if (mb->pos < mb->end && tc->recvh) {
+		tc->recvh(mb, tc->arg);
 	}
 
  out:
