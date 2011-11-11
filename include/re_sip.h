@@ -234,6 +234,8 @@ int  sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 int  sip_transp_add(struct sip *sip, enum sip_transp tp,
 		    const struct sa *laddr, ...);
 void sip_transp_flush(struct sip *sip);
+bool sip_transp_isladdr(const struct sip *sip, enum sip_transp tp,
+			const struct sa *laddr);
 void sip_close(struct sip *sip, bool force);
 int  sip_listen(struct sip_lsnr **lsnrp, struct sip *sip, bool req,
 		sip_msg_h *msgh, void *arg);

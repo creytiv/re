@@ -771,6 +771,31 @@ bool sip_transp_supported(struct sip *sip, enum sip_transp tp, int af)
 }
 
 
+bool sip_transp_isladdr(const struct sip *sip, enum sip_transp tp,
+			const struct sa *laddr)
+{
+	struct le *le;
+
+	if (!sip || !laddr)
+		return false;
+
+	for (le=sip->transpl.head; le; le=le->next) {
+
+		const struct sip_transport *transp = le->data;
+
+		if (tp != SIP_TRANSP_NONE && transp->tp != tp)
+			continue;
+
+		if (!sa_cmp(&transp->laddr, laddr, SA_ALL))
+			continue;
+
+		return true;
+	}
+
+	return false;
+}
+
+
 const char *sip_transp_name(enum sip_transp tp)
 {
 	switch (tp) {
