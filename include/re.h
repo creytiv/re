@@ -36,6 +36,7 @@ extern "C" {
 #include "re_sdp.h"
 #include "re_uri.h"
 #include "re_sip.h"
+#include "re_sipevent.h"
 #include "re_sipreg.h"
 #include "re_sipsess.h"
 #include "re_stun.h"
