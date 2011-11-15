@@ -448,17 +448,6 @@ static void tcp_estab_handler(void *arg)
 	struct le *le;
 	int err;
 
-#ifdef USE_TLS
-	if (conn->sc) {
-		char cn[256];
-
-		err = tls_verify_cert(conn->sc, cn, sizeof(cn));
-
-		re_fprintf(stderr, "CN: '%s' (%sverified)\n",
-			   cn, err ? "not " : "");
-	}
-#endif
-
 	conn->established = true;
 
 	le = list_head(&conn->ql);
