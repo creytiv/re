@@ -764,6 +764,9 @@
 					RelativePath="..\..\src\sys\rand.c">
 				</File>
 				<File
+					RelativePath="..\..\src\sys\sleep.c">
+				</File>
+				<File
 					RelativePath="..\..\src\sys\sys.c">
 				</File>
 			</Filter>
