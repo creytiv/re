@@ -57,6 +57,12 @@ const char *sys_os_get(void);
 const char *sys_libre_version_get(void);
 int sys_coredump_set(bool enable);
 int sys_daemon(void);
+void sys_usleep(unsigned int us);
+
+static inline void sys_msleep(unsigned int ms)
+{
+	sys_usleep(ms * 1000);
+}
 
 
 uint16_t sys_htols(uint16_t v);
