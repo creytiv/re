@@ -15,6 +15,7 @@
 
 #define COMP_MASK   0xc0
 #define OFFSET_MASK 0x3fff
+#define COMP_LOOP   255
 
 
 struct dname {
@@ -140,15 +141,15 @@ int dns_dname_encode(struct mbuf *mb, const char *name,
 
 int dns_dname_decode(struct mbuf *mb, char **name, size_t start)
 {
+	uint32_t i = 0, loopc = 0;
 	bool comp = false;
 	size_t pos = 0;
 	char buf[256];
-	uint32_t i = 0;
 
 	if (!mb || !name)
 		return EINVAL;
 
-	while (mbuf_get_left(mb)) {
+	while (mb->pos < mb->end) {
 
 		uint8_t len = mb->buf[mb->pos++];
 		if (!len) {
@@ -167,6 +168,9 @@ int dns_dname_decode(struct mbuf *mb, char **name, size_t start)
 		}
 		else if ((len & COMP_MASK) == COMP_MASK) {
 			uint16_t offset;
+
+			if (loopc++ > COMP_LOOP)
+				break;
 
 			--mb->pos;
 
