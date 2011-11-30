@@ -266,6 +266,10 @@ static bool request_handler(const struct sip_msg *msg, void *arg)
 		return true;
 	}
 	else if (!pl_strcmp(&msg->met, "REFER")) {
+
+		if (!pl_isset(&msg->to.tag))
+			return false;
+
 		refer_handler(sock, msg);
 		return true;
 	}

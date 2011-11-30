@@ -5,20 +5,29 @@
  */
 
 struct sipevent_sock;
-struct sipsub;
 
 int sipevent_listen(struct sipevent_sock **sockp, struct sip *sip,
 		    uint32_t htsize_not, uint32_t htsize_sub,
 		    sip_msg_h *subh, void *arg);
 
+
+struct sipsub;
+
 int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
-		       const char *uri, const char *from_name,
+		       bool retry, const char *uri, const char *from_name,
 		       const char *from_uri, const char *event,
 		       uint32_t expires, const char *cuser,
 		       const char *routev[], uint32_t routec,
 		       sip_auth_h *authh, void *aarg, bool aref,
 		       sip_resp_h *resph, sip_msg_h *noth, void *arg,
 		       const char *fmt, ...);
+int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
+		   const char *uri, const char *from_name,
+		   const char *from_uri, const char *cuser,
+		   const char *routev[], uint32_t routec,
+		   sip_auth_h *authh, void *aarg, bool aref,
+		   sip_resp_h *resph, sip_msg_h *noth, void *arg,
+		   const char *fmt, ...);
 
 
 struct sipevent_event {

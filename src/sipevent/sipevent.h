@@ -46,6 +46,8 @@ struct sipsub {
 	uint32_t routec;
 	bool subscribed;
 	bool terminated;
+	bool refer;
+	bool retry;
 };
 
 

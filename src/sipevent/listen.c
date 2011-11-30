@@ -84,16 +84,19 @@ static void notify_handler(struct sipevent_sock *sock,
 	const struct sip_hdr *hdr;
 	struct sipevent_event se;
 	struct sipsub *sub;
+	bool indialog;
 
 	sub = sipsub_find(sock, msg, true);
 	if (!sub) {
 
 		sub = sipsub_find(sock, msg, false);
-		if (!sub || sub->subscribed) {
+		if (!sub) {
 			(void)sip_reply(sip, msg,
 					481, "Subsctiption Does Not Exist");
 			return;
 		}
+
+		indialog = false;
 	}
 	else {
 		if (!sip_dialog_rseq_valid(sub->dlg, msg)) {
@@ -102,6 +105,8 @@ static void notify_handler(struct sipevent_sock *sock,
 		}
 
 		(void)sip_dialog_update(sub->dlg, msg);
+
+		indialog = true;
 	}
 
 	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
@@ -114,10 +119,9 @@ static void notify_handler(struct sipevent_sock *sock,
 
 	hdr = sip_msg_hdr(msg, SIP_HDR_SUBSCRIPTION_STATE);
 
-	if (sub->subscribed && hdr &&
-	    !sipevent_substate_decode(&ss, &hdr->val)) {
+	if (indialog && hdr && !sipevent_substate_decode(&ss, &hdr->val)) {
 
-		re_printf("substate: %s (%u secs) [%r]\n",
+		re_printf("dialog substate: %s (%u secs) [%r]\n",
 			  sipevent_substate_name(ss.state),
 			  ss.expires, &ss.params);
 
@@ -142,7 +146,10 @@ static void notify_handler(struct sipevent_sock *sock,
 			sub->dlg = mem_deref(sub->dlg);
 			hash_unlink(&sub->he);
 
-			sipevent_resubscribe(sub, 0);
+			if (sub->retry)
+				sipevent_resubscribe(sub, 0);
+			else
+				tmr_cancel(&sub->tmr);
 			break;
 		}
 	}

@@ -173,6 +173,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			(void)sip_dialog_update(sub->dlg, msg);
 		}
 
+		sub->refer = false;
 		sub->failc = 0;
 
 		if (pl_isset(&msg->expires))
@@ -238,8 +239,10 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			mem_deref(sub);
 	}
 	else {
-		re_printf("will re-subscribe in %u ms...\n", wait);
-		tmr_start(&sub->tmr, wait, tmr_handler, sub);
+		if (sub->retry || sub->subscribed) {
+			re_printf("will re-subscribe in %u ms...\n", wait);
+			tmr_start(&sub->tmr, wait, tmr_handler, sub);
+		}
 		sub->resph(err, msg, sub->arg);
 	}
 }
@@ -264,50 +267,40 @@ static int request(struct sipsub *sub, bool reset_ls)
 	if (reset_ls)
 		sip_loopstate_reset(&sub->ls);
 
-	return sip_drequestf(&sub->req, sub->sip, true, "SUBSCRIBE", sub->dlg,
-			     0, sub->auth, send_handler, response_handler, sub,
-			     "Event: %s\r\n"
-			     "Expires: %u\r\n"
-			     "%s"
-			     "Content-Length: 0\r\n"
-			     "\r\n",
-			     sub->event,
-			     sub->expires,
-			     sub->hdrs);
+	if (sub->refer) {
+
+		return sip_drequestf(&sub->req, sub->sip, true, "REFER",
+				     sub->dlg, 0, sub->auth,
+				     send_handler, response_handler, sub,
+				     "%s"
+				     "Content-Length: 0\r\n"
+				     "\r\n",
+				     sub->hdrs);
+	}
+	else {
+		return sip_drequestf(&sub->req, sub->sip, true, "SUBSCRIBE",
+				     sub->dlg, 0, sub->auth,
+				     send_handler, response_handler, sub,
+				     "Event: %s\r\n"
+				     "Expires: %u\r\n"
+				     "%s"
+				     "Content-Length: 0\r\n"
+				     "\r\n",
+				     sub->event,
+				     sub->expires,
+				     sub->hdrs);
+	}
 }
 
 
-/**
- * Allocate a SIP subscriber client
- *
- * @param subp      Pointer to allocated SIP subscriber client
- * @param sock      SIP Event socket
- * @param uri       SIP Request URI
- * @param from_name SIP From-header Name (optional)
- * @param from_uri  SIP From-header URI
- * @param event     SIP Event to subscribe to
- * @param expires   Subscription expires value
- * @param cuser     Contact username
- * @param routev    Optional route vector
- * @param routec    Number of routes
- * @param authh     Authentication handler
- * @param aarg      Authentication handler argument
- * @param aref      True to ref argument
- * @param resph     SUBSCRIBE response handler
- * @param noth      Notify handler
- * @param arg       Response handler argument
- * @param fmt       Formatted strings with extra SIP Headers
- *
- * @return 0 if success, otherwise errorcode
- */
-int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
-		       const char *uri, const char *from_name,
-		       const char *from_uri, const char *event,
-		       uint32_t expires, const char *cuser,
-		       const char *routev[], uint32_t routec,
-		       sip_auth_h *authh, void *aarg, bool aref,
-		       sip_resp_h *resph, sip_msg_h *noth, void *arg,
-		       const char *fmt, ...)
+static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
+			bool refer, bool retry, const char *uri,
+			const char *from_name, const char *from_uri,
+			const char *event, uint32_t expires, const char *cuser,
+			const char *routev[], uint32_t routec,
+			sip_auth_h *authh, void *aarg, bool aref,
+			sip_resp_h *resph, sip_msg_h *noth, void *arg,
+			const char *fmt, va_list ap)
 {
 	struct sipsub *sub;
 	int err;
@@ -377,16 +370,13 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 
 	/* Custom SIP headers */
 	if (fmt) {
-		va_list ap;
-
-		va_start(ap, fmt);
 		err = re_vsdprintf(&sub->hdrs, fmt, ap);
-		va_end(ap);
-
 		if (err)
 			goto out;
 	}
 
+	sub->refer   = refer;
+	sub->retry   = retry;
 	sub->sock    = mem_ref(sock);
 	sub->sip     = mem_ref(sock->sip);
 	sub->expires = expires;
@@ -403,6 +393,94 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		mem_deref(sub);
 	else
 		*subp = sub;
+
+	return err;
+}
+
+
+/**
+ * Allocate a SIP subscriber client
+ *
+ * @param subp      Pointer to allocated SIP subscriber client
+ * @param sock      SIP Event socket
+ * @param retry     Re-subscribe if subscription terminates
+ * @param uri       SIP Request URI
+ * @param from_name SIP From-header Name (optional)
+ * @param from_uri  SIP From-header URI
+ * @param event     SIP Event to subscribe to
+ * @param expires   Subscription expires value
+ * @param cuser     Contact username
+ * @param routev    Optional route vector
+ * @param routec    Number of routes
+ * @param authh     Authentication handler
+ * @param aarg      Authentication handler argument
+ * @param aref      True to ref argument
+ * @param resph     SUBSCRIBE response handler
+ * @param noth      Notify handler
+ * @param arg       Response handler argument
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
+		       bool retry, const char *uri, const char *from_name,
+		       const char *from_uri, const char *event,
+		       uint32_t expires, const char *cuser,
+		       const char *routev[], uint32_t routec,
+		       sip_auth_h *authh, void *aarg, bool aref,
+		       sip_resp_h *resph, sip_msg_h *noth, void *arg,
+		       const char *fmt, ...)
+{
+	va_list ap;
+	int err;
+
+	va_start(ap, fmt);
+	err = sipsub_alloc(subp, sock, false, retry, uri, from_name, from_uri,
+			   event, expires, cuser, routev, routec, authh, aarg,
+			   aref, resph, noth, arg, fmt, ap);
+	va_end(ap);
+
+	return err;
+}
+
+
+/**
+ * Allocate a SIP refer client
+ *
+ * @param subp      Pointer to allocated SIP subscriber client
+ * @param sock      SIP Event socket
+ * @param uri       SIP Request URI
+ * @param from_name SIP From-header Name (optional)
+ * @param from_uri  SIP From-header URI
+ * @param cuser     Contact username
+ * @param routev    Optional route vector
+ * @param routec    Number of routes
+ * @param authh     Authentication handler
+ * @param aarg      Authentication handler argument
+ * @param aref      True to ref argument
+ * @param resph     SUBSCRIBE response handler
+ * @param noth      Notify handler
+ * @param arg       Response handler argument
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
+		   const char *uri, const char *from_name,
+		   const char *from_uri, const char *cuser,
+		   const char *routev[], uint32_t routec,
+		   sip_auth_h *authh, void *aarg, bool aref,
+		   sip_resp_h *resph, sip_msg_h *noth, void *arg,
+		   const char *fmt, ...)
+{
+	va_list ap;
+	int err;
+
+	va_start(ap, fmt);
+	err = sipsub_alloc(subp, sock, true, false, uri, from_name, from_uri,
+			   "refer", DEFAULT_EXPIRES, cuser, routev, routec,
+			   authh, aarg, aref, resph, noth, arg, fmt, ap);
+	va_end(ap);
 
 	return err;
 }
