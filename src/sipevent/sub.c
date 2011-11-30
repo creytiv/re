@@ -1,5 +1,5 @@
 /**
- * @file sub.c  SIP Subscription
+ * @file sub.c  SIP Event Subscriber
  *
  * Copyright (C) 2010 Creytiv.com
  */
@@ -15,6 +15,7 @@
 #include <re_tmr.h>
 #include <re_sip.h>
 #include <re_sipevent.h>
+#include "sipevent.h"
 
 
 enum {
@@ -22,34 +23,24 @@ enum {
 };
 
 
-/** Defines a SIP subscriber client */
-struct sipsub {
-	struct sip_loopstate ls;
-	struct tmr tmr;
-	struct sip *sip;
-	struct sip_request *req;
-	struct sip_dialog *dlg;
-	struct sip_auth *auth;
-	char *event;
-	char *cuser;
-	char *hdrs;
-	sip_resp_h *resph;
-	void *arg;
-	uint32_t expires;
-	uint32_t failc;
-	bool subscribed;
-	bool terminated;
-};
-
-
 static int request(struct sipsub *sub, bool reset_ls);
 
 
-static void dummy_handler(int err, const struct sip_msg *msg, void *arg)
+static void internal_response_handler(int err, const struct sip_msg *msg,
+				      void *arg)
 {
 	(void)err;
 	(void)msg;
 	(void)arg;
+}
+
+
+static bool internal_notify_handler(const struct sip_msg *msg, void *arg)
+{
+	(void)msg;
+	(void)arg;
+
+	return false;
 }
 
 
@@ -61,7 +52,8 @@ static void destructor(void *arg)
 
 	if (!sub->terminated) {
 
-		sub->resph = dummy_handler;
+		sub->resph = internal_response_handler;
+		sub->noth  = internal_notify_handler;
 		sub->terminated = true;
 
 		if (sub->req) {
@@ -75,12 +67,27 @@ static void destructor(void *arg)
 		}
 	}
 
+	if (sub->routev) {
+
+		uint32_t i;
+
+		for (i=0; i<sub->routec; i++)
+			mem_deref(sub->routev[i]);
+
+		mem_deref(sub->routev);
+	}
+
+	hash_unlink(&sub->he);
 	mem_deref(sub->dlg);
 	mem_deref(sub->auth);
+	mem_deref(sub->uri);
+	mem_deref(sub->from_name);
+	mem_deref(sub->from_uri);
 	mem_deref(sub->event);
 	mem_deref(sub->cuser);
-	mem_deref(sub->sip);
 	mem_deref(sub->hdrs);
+	mem_deref(sub->sock);
+	mem_deref(sub->sip);
 }
 
 
@@ -95,11 +102,40 @@ static void tmr_handler(void *arg)
 	struct sipsub *sub = arg;
 	int err;
 
+	if (!sub->dlg) {
+
+		err = sip_dialog_alloc(&sub->dlg, sub->uri, sub->uri,
+				       sub->from_name, sub->from_uri,
+				       (const char **)sub->routev,
+				       sub->routec);
+		if (err)
+			goto out;
+
+		hash_append(sub->sock->ht_sub,
+			    hash_joaat_str(sip_dialog_callid(sub->dlg)),
+			    &sub->he, sub);
+	}
+
 	err = request(sub, true);
+	if (err)
+		goto out;
+
+ out:
 	if (err) {
 		tmr_start(&sub->tmr, failwait(++sub->failc), tmr_handler, sub);
 		sub->resph(err, NULL, sub->arg);
 	}
+}
+
+
+void sipevent_resubscribe(struct sipsub *sub, uint32_t wait)
+{
+	if (!wait)
+		wait = failwait(++sub->failc);
+
+	re_printf("will re-subscribe in %u ms\n", wait);
+
+	tmr_start(&sub->tmr, wait, tmr_handler, sub);
 }
 
 
@@ -121,8 +157,24 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	}
 	else if (msg->scode < 300) {
 
-		sub->subscribed = true;
-		sub->failc      = 0;
+		if (!sub->subscribed) {
+
+			err = sip_dialog_create(sub->dlg, msg);
+			if (err) {
+				sub->dlg = mem_deref(sub->dlg);
+				hash_unlink(&sub->he);
+				sub->failc++;
+				goto out;
+			}
+
+			sub->subscribed = true;
+		}
+		else {
+			// todo: check
+			(void)sip_dialog_update(sub->dlg, msg);
+		}
+
+		sub->failc = 0;
 
 		if (pl_isset(&msg->expires))
 			wait = pl_u32(&msg->expires);
@@ -167,6 +219,13 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 				break;
 
 			return;
+
+		case 481:
+			// todo: test
+			sub->subscribed = false;
+			sub->dlg = mem_deref(sub->dlg);
+			hash_unlink(&sub->he);
+			break;
 		}
 
 		++sub->failc;
@@ -181,6 +240,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			mem_deref(sub);
 	}
 	else {
+		re_printf("will re-subscribe in %u ms...\n", wait);
 		tmr_start(&sub->tmr, wait, tmr_handler, sub);
 		sub->resph(err, msg, sub->arg);
 	}
@@ -223,7 +283,7 @@ static int request(struct sipsub *sub, bool reset_ls)
  * Allocate a SIP subscriber client
  *
  * @param subp      Pointer to allocated SIP subscriber client
- * @param sip       SIP Stack instance
+ * @param sock      SIP Event socket
  * @param uri       SIP Request URI
  * @param from_name SIP From-header Name (optional)
  * @param from_uri  SIP From-header URI
@@ -235,24 +295,26 @@ static int request(struct sipsub *sub, bool reset_ls)
  * @param authh     Authentication handler
  * @param aarg      Authentication handler argument
  * @param aref      True to ref argument
- * @param resph     Response handler
+ * @param resph     SUBSCRIBE response handler
+ * @param noth      Notify handler
  * @param arg       Response handler argument
  * @param fmt       Formatted strings with extra SIP Headers
  *
  * @return 0 if success, otherwise errorcode
  */
-int sipevent_subscribe(struct sipsub **subp, struct sip *sip, const char *uri,
-		       const char *from_name, const char *from_uri,
-		       const char *event, uint32_t expires, const char *cuser,
+int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
+		       const char *uri, const char *from_name,
+		       const char *from_uri, const char *event,
+		       uint32_t expires, const char *cuser,
 		       const char *routev[], uint32_t routec,
 		       sip_auth_h *authh, void *aarg, bool aref,
-		       sip_resp_h *resph, void *arg,
+		       sip_resp_h *resph, sip_msg_h *noth, void *arg,
 		       const char *fmt, ...)
 {
 	struct sipsub *sub;
 	int err;
 
-	if (!subp || !sip || !uri || !from_uri || !event || !expires || !cuser)
+	if (!subp || !sock || !uri || !from_uri || !event || !expires ||!cuser)
 		return EINVAL;
 
 	sub = mem_zalloc(sizeof(*sub), destructor);
@@ -264,9 +326,48 @@ int sipevent_subscribe(struct sipsub **subp, struct sip *sip, const char *uri,
 	if (err)
 		goto out;
 
+	hash_append(sock->ht_sub,
+		    hash_joaat_str(sip_dialog_callid(sub->dlg)),
+		    &sub->he, sub);
+
 	err = sip_auth_alloc(&sub->auth, authh, aarg, aref);
 	if (err)
 		goto out;
+
+	err = str_dup(&sub->uri, uri);
+	if (err)
+		goto out;
+
+	err = str_dup(&sub->from_uri, from_uri);
+	if (err)
+		goto out;
+
+	if (from_name) {
+
+		err = str_dup(&sub->from_name, from_name);
+		if (err)
+			goto out;
+	}
+
+	sub->routec = routec;
+
+	if (routec > 0) {
+
+		uint32_t i;
+
+		sub->routev = mem_zalloc(sizeof(*sub->routev) * routec, NULL);
+		if (!sub->routev) {
+			err = ENOMEM;
+			goto out;
+		}
+
+		for (i=0; i<routec; i++) {
+
+			err = str_dup(&sub->routev[i], routev[i]);
+			if (err)
+				goto out;
+		}
+	}
 
 	err = str_dup(&sub->event, event);
 	if (err)
@@ -288,9 +389,11 @@ int sipevent_subscribe(struct sipsub **subp, struct sip *sip, const char *uri,
 			goto out;
 	}
 
-	sub->sip     = mem_ref(sip);
+	sub->sock    = mem_ref(sock);
+	sub->sip     = mem_ref(sock->sip);
 	sub->expires = expires;
-	sub->resph   = resph ? resph : dummy_handler;
+	sub->resph   = resph ? resph : internal_response_handler;
+	sub->noth    = noth  ? noth  : internal_notify_handler;
 	sub->arg     = arg;
 
 	err = request(sub, true);
