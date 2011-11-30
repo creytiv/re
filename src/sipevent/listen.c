@@ -92,7 +92,7 @@ static void notify_handler(struct sipevent_sock *sock,
 		sub = sipsub_find(sock, msg, false);
 		if (!sub) {
 			(void)sip_reply(sip, msg,
-					481, "Subsctiption Does Not Exist");
+					481, "Subscription Does Not Exist");
 			return;
 		}
 
