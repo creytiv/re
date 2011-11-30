@@ -220,7 +220,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			return;
 
 		case 481:
-			// todo: test
 			sub->subscribed = false;
 			sub->dlg = mem_deref(sub->dlg);
 			hash_unlink(&sub->he);
