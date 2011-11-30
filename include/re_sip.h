@@ -136,12 +136,12 @@ enum {
 
 
 struct sip_via {
-	struct pl transp;
 	struct pl sentby;
 	struct sa addr;
 	struct pl params;
 	struct pl branch;
 	struct pl val;
+	enum sip_transp tp;
 };
 
 struct sip_addr {
@@ -231,19 +231,23 @@ typedef void(sip_keepalive_h)(int err, void *arg);
 int  sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 	       uint32_t stsz, uint32_t tcsz, const char *software,
 	       sip_exit_h *exith, void *arg);
-int  sip_transp_add(struct sip *sip, enum sip_transp tp,
-		    const struct sa *laddr, ...);
-void sip_transp_flush(struct sip *sip);
-bool sip_transp_isladdr(const struct sip *sip, enum sip_transp tp,
-			const struct sa *laddr);
 void sip_close(struct sip *sip, bool force);
 int  sip_listen(struct sip_lsnr **lsnrp, struct sip *sip, bool req,
 		sip_msg_h *msgh, void *arg);
 int  sip_debug(struct re_printf *pf, const struct sip *sip);
 int  sip_send(struct sip *sip, void *sock, enum sip_transp tp,
 	      const struct sa *dst, struct mbuf *mb);
+
+
+/* transport */
+int  sip_transp_add(struct sip *sip, enum sip_transp tp,
+		    const struct sa *laddr, ...);
+void sip_transp_flush(struct sip *sip);
+bool sip_transp_isladdr(const struct sip *sip, enum sip_transp tp,
+			const struct sa *laddr);
 const char *sip_transp_name(enum sip_transp tp);
 const char *sip_transp_param(enum sip_transp tp);
+uint16_t sip_transp_port(enum sip_transp tp, uint16_t port);
 
 
 /* request */

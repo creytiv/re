@@ -120,6 +120,7 @@ SOURCE        daemon.c
 SOURCE        endian.c
 SOURCE        rand.c
 SOURCE        sys.c
+SOURCE        symbian\sleep.cpp
 
 SOURCEPATH    ..\..\src\telev
 SOURCE        telev.c

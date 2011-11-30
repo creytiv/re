@@ -28,7 +28,7 @@ static int decode_hostport(const struct pl *hostport, struct pl *host,
 
 int sip_via_decode(struct sip_via *via, const struct pl *pl)
 {
-	struct pl host, port;
+	struct pl transp, host, port;
 	int err;
 
 	if (!via || !pl)
@@ -37,10 +37,19 @@ int sip_via_decode(struct sip_via *via, const struct pl *pl)
 	err = re_regex(pl->p, pl->l,
 		       "SIP[  \t\r\n]*/[ \t\r\n]*2.0[ \t\r\n]*/[ \t\r\n]*"
 		       "[A-Z]+[ \t\r\n]*[^; \t\r\n]+[ \t\r\b]*[^]*",
-		       NULL, NULL, NULL, NULL, &via->transp,
+		       NULL, NULL, NULL, NULL, &transp,
 		       NULL, &via->sentby, NULL, &via->params);
 	if (err)
 		return err;
+
+	if (!pl_strcmp(&transp, "TCP"))
+		via->tp = SIP_TRANSP_TCP;
+	else if (!pl_strcmp(&transp, "TLS"))
+		via->tp = SIP_TRANSP_TLS;
+	else if (!pl_strcmp(&transp, "UDP"))
+		via->tp = SIP_TRANSP_UDP;
+	else
+		via->tp = SIP_TRANSP_NONE;
 
 	err = decode_hostport(&via->sentby, &host, &port);
 	if (err)

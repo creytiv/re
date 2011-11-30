@@ -74,7 +74,6 @@ int  sip_transp_laddr(struct sip *sip, struct sa *laddr, enum sip_transp tp,
 bool sip_transp_supported(struct sip *sip, enum sip_transp tp, int af);
 const char *sip_transp_srvid(enum sip_transp tp);
 bool sip_transp_reliable(enum sip_transp tp);
-uint16_t sip_transp_port(enum sip_transp tp, uint16_t port);
 int  sip_transp_debug(struct re_printf *pf, const struct sip *sip);
 
 
