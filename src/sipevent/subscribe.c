@@ -1,5 +1,5 @@
 /**
- * @file sub.c  SIP Event Subscriber
+ * @file sub.c  SIP Event Subscribe
  *
  * Copyright (C) 2010 Creytiv.com
  */
