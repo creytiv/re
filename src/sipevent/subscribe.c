@@ -148,6 +148,13 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	wait = failwait(sub->failc + 1);
 
 	if (err || sip_request_loops(&sub->ls, msg->scode)) {
+
+		if (err == ETIMEDOUT) {
+			sub->subscribed = false;
+			sub->dlg = mem_deref(sub->dlg);
+			hash_unlink(&sub->he);
+		}
+
 		sub->failc++;
 		goto out;
 	}
@@ -207,6 +214,13 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			sip_auth_reset(sub->auth);
 			break;
 
+		case 408:
+		case 481:
+			sub->subscribed = false;
+			sub->dlg = mem_deref(sub->dlg);
+			hash_unlink(&sub->he);
+			break;
+
 		case 423:
 			minexp = sip_msg_hdr(msg, SIP_HDR_MIN_EXPIRES);
 			if (!minexp || !pl_u32(&minexp->val) || !sub->expires)
@@ -219,12 +233,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 				break;
 
 			return;
-
-		case 481:
-			sub->subscribed = false;
-			sub->dlg = mem_deref(sub->dlg);
-			hash_unlink(&sub->he);
-			break;
 		}
 
 		++sub->failc;
