@@ -100,7 +100,6 @@ static void notify_handler(struct sipevent_sock *sock,
 			return;
 		}
 
-		// todo: check
 		(void)sip_dialog_update(sub->dlg, msg);
 	}
 
@@ -172,7 +171,6 @@ static void subscribe_handler(struct sipevent_sock *sock,
 		return;
 	}
 
-	// todo: check
 	(void)sip_dialog_update(not->dlg, msg);
 
 	// ...

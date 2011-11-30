@@ -170,7 +170,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			sub->subscribed = true;
 		}
 		else {
-			// todo: check
 			(void)sip_dialog_update(sub->dlg, msg);
 		}
 
