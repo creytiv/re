@@ -5,5 +5,5 @@
 #
 
 SRCS	+= sipevent/listen.c
-SRCS	+= sipevent/subscribe.c
 SRCS	+= sipevent/msg.c
+SRCS	+= sipevent/subscribe.c
