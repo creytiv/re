@@ -13,6 +13,22 @@
 #include <re_sipevent.h>
 
 
+int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl)
+{
+	int err;
+
+	if (!se || !pl)
+		return EINVAL;
+
+	err = re_regex(pl->p, pl->l, "[^; \t\r\n]+[ \t\r\n]*[^]*",
+		       &se->event, NULL, &se->params);
+	if (err)
+		return EBADMSG;
+
+	return 0;
+}
+
+
 int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 {
 	struct pl state, expires;
@@ -26,7 +42,6 @@ int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 	if (err)
 		return EBADMSG;
 
-	// todo: check case-sensitiveness
 	if (!pl_strcasecmp(&state, "active"))
 		ss->state = SIPEVENT_ACTIVE;
 	else if (!pl_strcasecmp(&state, "terminated"))

@@ -21,6 +21,11 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       const char *fmt, ...);
 
 
+struct sipevent_event {
+	struct pl event;
+	struct pl params;
+};
+
 enum sipevent_subst {
 	SIPEVENT_ACTIVE = 0,
 	SIPEVENT_TERMINATED,
@@ -32,6 +37,7 @@ struct sipevent_substate {
 	uint32_t expires;
 };
 
+int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl);
 int sipevent_substate_decode(struct sipevent_substate *ss,
 			     const struct pl *pl);
 const char *sipevent_substate_name(enum sipevent_subst state);

@@ -82,6 +82,7 @@ static void notify_handler(struct sipevent_sock *sock,
 	struct sipevent_substate ss;
 	struct sip *sip = sock->sip;
 	const struct sip_hdr *hdr;
+	struct sipevent_event se;
 	struct sipsub *sub;
 
 	sub = sipsub_find(sock, msg, true);
@@ -105,8 +106,8 @@ static void notify_handler(struct sipevent_sock *sock,
 
 	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
 
-	// todo: check case sensitiveness, header syntax and status code
-	if (!hdr || pl_strcmp(&hdr->val, sub->event)) {
+	if (!hdr || sipevent_event_decode(&se, &hdr->val) ||
+	    pl_strcasecmp(&se.event, sub->event)) {
 		(void)sip_reply(sip, msg, 489, "Bad Event");
 		return;
 	}
@@ -173,7 +174,7 @@ static void subscribe_handler(struct sipevent_sock *sock,
 
 	(void)sip_dialog_update(not->dlg, msg);
 
-	// ...
+	/* todo: implement notifier */
 }
 
 
