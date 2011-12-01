@@ -128,7 +128,9 @@ static void notify_handler(struct sipevent_sock *sock,
 		switch (ss.state) {
 
 		case SIPEVENT_ACTIVE:
-			if (sub->req || sub->terminated)
+			sub->subscribed = true;
+
+			if (sub->terminated)
 				break;
 
 			sipevent_resubscribe(sub, ss.expires * 900);

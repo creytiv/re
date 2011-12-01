@@ -412,6 +412,12 @@ const char *sip_dialog_callid(const struct sip_dialog *dlg)
 }
 
 
+bool sip_dialog_established(const struct sip_dialog *dlg)
+{
+	return dlg && dlg->rtag;
+}
+
+
 bool sip_dialog_cmp(const struct sip_dialog *dlg, const struct sip_msg *msg)
 {
 	if (!dlg || !msg)
@@ -440,9 +446,6 @@ bool sip_dialog_cmp_half(const struct sip_dialog *dlg,
 		return false;
 
 	if (pl_strcmp(msg->req ? &msg->to.tag : &msg->from.tag, dlg->ltag))
-		return false;
-
-	if (dlg->rtag)
 		return false;
 
 	return true;

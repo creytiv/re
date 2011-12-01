@@ -91,7 +91,7 @@ static void destructor(void *arg)
 }
 
 
-static uint32_t failwait(uint32_t failc)
+static uint64_t failwait(uint32_t failc)
 {
 	return min(1800, (30 * (1<<min(failc, 6)))) * (500 + rand_u16() % 501);
 }
@@ -101,6 +101,9 @@ static void tmr_handler(void *arg)
 {
 	struct sipsub *sub = arg;
 	int err;
+
+	if (sub->req)
+		return;
 
 	if (!sub->dlg) {
 
@@ -128,12 +131,12 @@ static void tmr_handler(void *arg)
 }
 
 
-void sipevent_resubscribe(struct sipsub *sub, uint32_t wait)
+void sipevent_resubscribe(struct sipsub *sub, uint64_t wait)
 {
 	if (!wait)
 		wait = failwait(++sub->failc);
 
-	re_printf("will re-subscribe in %u ms\n", wait);
+	re_printf("will re-subscribe in %llu ms\n", wait);
 
 	tmr_start(&sub->tmr, wait, tmr_handler, sub);
 }
@@ -143,7 +146,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 {
 	const struct sip_hdr *minexp;
 	struct sipsub *sub = arg;
-	uint32_t wait;
+	uint64_t wait;
 
 	wait = failwait(sub->failc + 1);
 
@@ -164,7 +167,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	}
 	else if (msg->scode < 300) {
 
-		if (!sub->subscribed) {
+		if (!sip_dialog_established(sub->dlg)) {
 
 			err = sip_dialog_create(sub->dlg, msg);
 			if (err) {
@@ -173,22 +176,21 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 				sub->failc++;
 				goto out;
 			}
-
-			sub->subscribed = true;
 		}
 		else {
 			(void)sip_dialog_update(sub->dlg, msg);
 		}
 
+		if (sub->refer && tmr_isrunning(&sub->tmr))
+			wait = tmr_get_expire(&sub->tmr);
+		else if (pl_isset(&msg->expires))
+			wait = pl_u32(&msg->expires) * 900;
+		else
+			wait = sub->expires * 900;
+
+		sub->subscribed = true;
 		sub->refer = false;
 		sub->failc = 0;
-
-		if (pl_isset(&msg->expires))
-			wait = pl_u32(&msg->expires);
-		else
-			wait = DEFAULT_EXPIRES;
-
-		wait *= 900;
 	}
 	else {
 		if (sub->terminated && !sub->subscribed)
@@ -248,9 +250,13 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	}
 	else {
 		if (sub->retry || sub->subscribed) {
-			re_printf("will re-subscribe in %u ms...\n", wait);
+			re_printf("will re-subscribe in %llu ms...\n", wait);
 			tmr_start(&sub->tmr, wait, tmr_handler, sub);
 		}
+		else {
+			tmr_cancel(&sub->tmr);
+		}
+
 		sub->resph(err, msg, sub->arg);
 	}
 }

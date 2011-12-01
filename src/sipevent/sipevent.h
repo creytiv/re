@@ -51,4 +51,4 @@ struct sipsub {
 };
 
 
-void sipevent_resubscribe(struct sipsub *sub, uint32_t wait);
+void sipevent_resubscribe(struct sipsub *sub, uint64_t wait);
