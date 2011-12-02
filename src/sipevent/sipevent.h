@@ -5,6 +5,8 @@
  */
 
 
+/* Listener Socket */
+
 struct sipevent_sock {
 	struct sip_lsnr *lsnr;
 	struct hash *ht_not;
@@ -15,12 +17,16 @@ struct sipevent_sock {
 };
 
 
+/* Notifier */
+
 struct sipnot {
 	struct le he;
 	struct sip_dialog *dlg;
 	bool terminated;
 };
 
+
+/* Subscriber */
 
 struct sipsub {
 	struct le he;
@@ -31,24 +37,18 @@ struct sipsub {
 	struct sip_dialog *dlg;
 	struct sip_auth *auth;
 	struct sip *sip;
-	char *uri;
-	char *from_name;
-	char *from_uri;
-	char **routev;
 	char *event;
 	char *cuser;
 	char *hdrs;
-	sip_resp_h *resph;
-	sip_msg_h *noth;
+	sipevent_notify_h *notifyh;
+	sipevent_close_h *closeh;
 	void *arg;
 	uint32_t expires;
 	uint32_t failc;
-	uint32_t routec;
 	bool subscribed;
 	bool terminated;
 	bool refer;
-	bool retry;
 };
 
-
-void sipevent_resubscribe(struct sipsub *sub, uint64_t wait);
+void sipsub_reschedule(struct sipsub *sub, uint64_t wait);
+void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg);

@@ -4,6 +4,9 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
+
+/* Listener Socket */
+
 struct sipevent_sock;
 
 int sipevent_listen(struct sipevent_sock **sockp, struct sip *sip,
@@ -11,24 +14,32 @@ int sipevent_listen(struct sipevent_sock **sockp, struct sip *sip,
 		    sip_msg_h *subh, void *arg);
 
 
+/* Subscriber */
+
+typedef void (sipevent_notify_h)(struct sip *sip, const struct sip_msg *msg,
+				 void *arg);
+typedef void (sipevent_close_h)(int err, const struct sip_msg *msg, void *arg);
+
 struct sipsub;
 
 int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
-		       bool retry, const char *uri, const char *from_name,
+		       const char *uri, const char *from_name,
 		       const char *from_uri, const char *event,
 		       uint32_t expires, const char *cuser,
 		       const char *routev[], uint32_t routec,
 		       sip_auth_h *authh, void *aarg, bool aref,
-		       sip_resp_h *resph, sip_msg_h *noth, void *arg,
-		       const char *fmt, ...);
+		       sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+		       void *arg, const char *fmt, ...);
 int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 		   const char *uri, const char *from_name,
 		   const char *from_uri, const char *cuser,
 		   const char *routev[], uint32_t routec,
 		   sip_auth_h *authh, void *aarg, bool aref,
-		   sip_resp_h *resph, sip_msg_h *noth, void *arg,
-		   const char *fmt, ...);
+		   sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+		   void *arg, const char *fmt, ...);
 
+
+/* Message Components */
 
 struct sipevent_event {
 	struct pl event;
@@ -37,13 +48,15 @@ struct sipevent_event {
 
 enum sipevent_subst {
 	SIPEVENT_ACTIVE = 0,
+	SIPEVENT_PENDING,
 	SIPEVENT_TERMINATED,
 };
 
 struct sipevent_substate {
 	enum sipevent_subst state;
 	struct pl params;
-	uint32_t expires;
+	struct pl expires;
+	struct pl reason;
 };
 
 int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl);

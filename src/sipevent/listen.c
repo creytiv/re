@@ -79,18 +79,33 @@ static struct sipsub *sipsub_find(struct sipevent_sock *sock,
 static void notify_handler(struct sipevent_sock *sock,
 			   const struct sip_msg *msg)
 {
-	struct sipevent_substate ss;
+	struct sipevent_substate state;
+	struct sipevent_event event;
 	struct sip *sip = sock->sip;
 	const struct sip_hdr *hdr;
-	struct sipevent_event se;
 	struct sipsub *sub;
+	uint32_t nrefs;
 	bool indialog;
+
+	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
+	if (!hdr || sipevent_event_decode(&event, &hdr->val)) {
+		(void)sip_reply(sip, msg, 400, "Bad Event Header");
+		return;
+	}
+
+	hdr = sip_msg_hdr(msg, SIP_HDR_SUBSCRIPTION_STATE);
+	if (!hdr || sipevent_substate_decode(&state, &hdr->val)) {
+		(void)sip_reply(sip, msg, 400,"Bad Subscription-State Header");
+		return;
+	}
 
 	sub = sipsub_find(sock, msg, true);
 	if (!sub) {
 
+		/* hack: while we are waiting for proper fork handling */
+
 		sub = sipsub_find(sock, msg, false);
-		if (!sub) {
+		if (!sub || sip_dialog_established(sub->dlg)) {
 			(void)sip_reply(sip, msg,
 					481, "Subscription Does Not Exist");
 			return;
@@ -100,7 +115,7 @@ static void notify_handler(struct sipevent_sock *sock,
 	}
 	else {
 		if (!sip_dialog_rseq_valid(sub->dlg, msg)) {
-			(void)sip_reply(sip, msg, 500,"Server Internal Error");
+			(void)sip_reply(sip, msg, 500, "Bad Sequence");
 			return;
 		}
 
@@ -109,58 +124,46 @@ static void notify_handler(struct sipevent_sock *sock,
 		indialog = true;
 	}
 
-	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
-
-	if (!hdr || sipevent_event_decode(&se, &hdr->val) ||
-	    pl_strcasecmp(&se.event, sub->event)) {
+	if (pl_strcasecmp(&event.event, sub->event)) {
 		(void)sip_reply(sip, msg, 489, "Bad Event");
 		return;
 	}
 
-	hdr = sip_msg_hdr(msg, SIP_HDR_SUBSCRIPTION_STATE);
-
-	if (indialog && hdr && !sipevent_substate_decode(&ss, &hdr->val)) {
-
-		re_printf("dialog substate: %s (%u secs) [%r]\n",
-			  sipevent_substate_name(ss.state),
-			  ss.expires, &ss.params);
-
-		switch (ss.state) {
-
-		case SIPEVENT_ACTIVE:
-			sub->subscribed = true;
-
-			if (sub->terminated)
-				break;
-
-			sipevent_resubscribe(sub, ss.expires * 900);
-			break;
-
-		case SIPEVENT_TERMINATED:
-			sub->req = mem_deref(sub->req);  /* forget request */
-
-			if (sub->terminated) {
-				mem_deref(sub);
-				goto reply;
-			}
-
-			sub->subscribed = false;
-			sub->dlg = mem_deref(sub->dlg);
-			hash_unlink(&sub->he);
-
-			if (sub->retry)
-				sipevent_resubscribe(sub, 0);
-			else
-				tmr_cancel(&sub->tmr);
-			break;
-		}
+	/* hack: while we are waiting for proper fork handling */
+	if (!indialog) {
+		sub->notifyh(sip, msg, sub->arg);
+		return;
 	}
 
-	if (sub->noth(msg, sub->arg))
+	re_printf("notify: %s (%r)\n", sipevent_substate_name(state.state),
+		  &state.params);
+
+	switch (state.state) {
+
+	case SIPEVENT_ACTIVE:
+	case SIPEVENT_PENDING:
+		sub->subscribed = true;
+
+		if (!sub->terminated && pl_isset(&state.expires))
+			sipsub_reschedule(sub, pl_u32(&state.expires) * 900);
+		break;
+
+	case SIPEVENT_TERMINATED:
+		sub->subscribed = false;
+		break;
+	}
+
+	mem_ref(sub);
+	sub->notifyh(sip, msg, sub->arg);
+	nrefs = mem_nrefs(sub);
+	mem_deref(sub);
+
+	/* check if subscription was deref'd from notify handler */
+	if (nrefs == 1)
 		return;
 
- reply:
-	(void)sip_treply(NULL, sip, msg, 200, "OK");
+	if (!sub->terminated && state.state == SIPEVENT_TERMINATED)
+		sipsub_terminate(sub, 0, msg);
 }
 
 
@@ -177,7 +180,7 @@ static void subscribe_handler(struct sipevent_sock *sock,
 	}
 
 	if (!sip_dialog_rseq_valid(not->dlg, msg)) {
-		(void)sip_reply(sip, msg, 500, "Server Internal Error");
+		(void)sip_reply(sip, msg, 500, "Bad Sequence");
 		return;
 	}
 

@@ -31,7 +31,7 @@ int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl)
 
 int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 {
-	struct pl state, expires;
+	struct pl state, param;
 	int err;
 
 	if (!ss || !pl)
@@ -44,15 +44,22 @@ int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 
 	if (!pl_strcasecmp(&state, "active"))
 		ss->state = SIPEVENT_ACTIVE;
+	else if (!pl_strcasecmp(&state, "pending"))
+		ss->state = SIPEVENT_PENDING;
 	else if (!pl_strcasecmp(&state, "terminated"))
 		ss->state = SIPEVENT_TERMINATED;
 	else
 		ss->state = -1;
 
-	if (!sip_param_decode(&ss->params, "expires", &expires))
-		ss->expires = pl_u32(&expires);
+	if (!sip_param_decode(&ss->params, "expires", &param))
+		ss->expires = param;
 	else
-		ss->expires = 0;
+		ss->expires = pl_null;
+
+	if (!sip_param_decode(&ss->params, "reason", &param))
+		ss->reason = param;
+	else
+		ss->reason = pl_null;
 
 	return 0;
 }
@@ -63,6 +70,7 @@ const char *sipevent_substate_name(enum sipevent_subst state)
 	switch (state) {
 
 	case SIPEVENT_ACTIVE:     return "active";
+	case SIPEVENT_PENDING:    return "pending";
 	case SIPEVENT_TERMINATED: return "terminated";
 	default:                  return "???";
 	}
