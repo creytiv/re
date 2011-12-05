@@ -55,6 +55,14 @@ static enum ice_transp transp_resolve(const struct pl *transp)
 }
 
 
+/**
+ * Encode SDP candidate attribute
+ *
+ * @param pf    Print function
+ * @param cand  Candidate to encode
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int ice_cand_encode(struct re_printf *pf, const struct cand *cand)
 {
 	int err;
@@ -75,6 +83,13 @@ int ice_cand_encode(struct re_printf *pf, const struct cand *cand)
 }
 
 
+/**
+ * Check if remote candidates are available
+ *
+ * @param icem ICE Media object
+ *
+ * @return True if available, otherwise false
+ */
 bool ice_remotecands_avail(const struct icem *icem)
 {
 	if (!icem)
@@ -85,7 +100,14 @@ bool ice_remotecands_avail(const struct icem *icem)
 }
 
 
-/* "remote-candidates" Attribute */
+/**
+ * Encode the SDP "remote-candidates" Attribute
+ *
+ * @param pf   Print function
+ * @param icem ICE Media object
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int ice_remotecands_encode(struct re_printf *pf, const struct icem *icem)
 {
 	struct le *le;
@@ -234,6 +256,15 @@ static int cand_decode(struct icem *icem, const char *val)
 }
 
 
+/**
+ * Decode SDP session attributes
+ *
+ * @param ice   ICE Session
+ * @param name  Name of the SDP attribute
+ * @param value Value of the SDP attribute (optional)
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int ice_sdp_decode(struct ice *ice, const char *name, const char *value)
 {
 	if (!ice)
@@ -256,6 +287,15 @@ int ice_sdp_decode(struct ice *ice, const char *name, const char *value)
 }
 
 
+/**
+ * Decode SDP media attributes
+ *
+ * @param icem  ICE Media object
+ * @param name  Name of the SDP attribute
+ * @param value Value of the SDP attribute (optional)
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_sdp_decode(struct icem *icem, const char *name, const char *value)
 {
 	if (!icem)

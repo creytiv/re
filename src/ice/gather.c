@@ -215,6 +215,14 @@ static int start_gathering(struct icem *icem, const struct sa *stun_srv,
 }
 
 
+/**
+ * Gather Server Reflexive candidates using STUN Server
+ *
+ * @param icem      ICE Media object
+ * @param stun_srv  STUN Server network address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_gather_srflx(struct icem *icem, const struct sa *stun_srv)
 {
 	if (!icem || !stun_srv)
@@ -224,6 +232,16 @@ int icem_gather_srflx(struct icem *icem, const struct sa *stun_srv)
 }
 
 
+/**
+ * Gather Relayed and Server Reflexive candidates using TURN Server
+ *
+ * @param icem      ICE Media object
+ * @param stun_srv  TURN Server network address
+ * @param username  TURN Server username
+ * @param password  TURN Server password
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_gather_relay(struct icem *icem, const struct sa *stun_srv,
 		      const char *username, const char *password)
 {

@@ -53,6 +53,15 @@ static void ice_destructor(void *arg)
 }
 
 
+/**
+ * Allocate a new ICE Session
+ *
+ * @param icep    Pointer to allocated ICE Session object
+ * @param mode    ICE Mode; Full-mode or Lite-mode
+ * @param offerer True if we are SDP offerer, otherwise false
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer)
 {
 	struct ice *ice;
@@ -81,12 +90,25 @@ int ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer)
 }
 
 
+/**
+ * Get the ICE Configuration
+ *
+ * @param ice ICE Session
+ *
+ * @return ICE Configuration
+ */
 struct ice_conf *ice_conf(struct ice *ice)
 {
 	return ice ? &ice->conf : NULL;
 }
 
 
+/**
+ * Set the offerer flag on the ICE Session
+ *
+ * @param ice     ICE Session
+ * @param offerer True if offerer, otherwise false
+ */
 void ice_set_offerer(struct ice *ice, bool offerer)
 {
 	if (!ice)
@@ -96,6 +118,13 @@ void ice_set_offerer(struct ice *ice, bool offerer)
 }
 
 
+/**
+ * Start the Connectivity checks on the ICE Session
+ *
+ * @param ice ICE Session
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int ice_conncheck_start(struct ice *ice)
 {
 	struct le *le;
@@ -111,6 +140,14 @@ int ice_conncheck_start(struct ice *ice)
 }
 
 
+/**
+ * Print debug information for the ICE Session
+ *
+ * @param pf  Print function for debug output
+ * @param ice ICE Session
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int ice_debug(struct re_printf *pf, const struct ice *ice)
 {
 	struct le *le;
@@ -133,18 +170,39 @@ int ice_debug(struct re_printf *pf, const struct ice *ice)
 }
 
 
+/**
+ * Get the list of ICE Media objects (struct icem) for the ICE Session
+ *
+ * @param ice ICE Session
+ *
+ * @return List of ICE Media objects
+ */
 struct list *ice_medialist(const struct ice *ice)
 {
 	return ice ? (struct list *)&ice->ml : NULL;
 }
 
 
+/**
+ * Get the local Username fragment for the ICE Session
+ *
+ * @param ice ICE Session
+ *
+ * @return Local Username-fragment
+ */
 const char *ice_ufrag(const struct ice *ice)
 {
 	return ice ? ice->lufrag : NULL;
 }
 
 
+/**
+ * Get the local password for the ICE Session
+ *
+ * @param ice ICE Session
+ *
+ * @return Local password
+ */
 const char *ice_pwd(const struct ice *ice)
 {
 	return ice ? ice->lpwd : NULL;

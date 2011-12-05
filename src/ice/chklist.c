@@ -138,6 +138,10 @@ static void candpair_set_states(struct icem *icem)
  *   the agent forms candidate pairs, computes a candidate pair priority,
  *   orders the pairs by priority, prunes them, and sets their states.
  *   These steps are described in this section.
+ *
+ * @param icem ICE Media object
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int icem_checklist_form(struct icem *icem)
 {
@@ -270,6 +274,14 @@ void icem_checklist_update(struct icem *icem)
 }
 
 
+/**
+ * Get the Local address of the Selected Candidate pair, if available
+ *
+ * @param icem   ICE Media object
+ * @param compid Component ID
+ *
+ * @return Local address if available, otherwise NULL
+ */
 const struct sa *icem_selected_laddr(const struct icem *icem, uint8_t compid)
 {
 	const struct icem_comp *comp = icem_comp_find(icem, compid);
