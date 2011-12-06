@@ -53,7 +53,8 @@ static bool sub_cmp_half_handler(struct le *le, void *arg)
 	const struct sip_msg *msg = arg;
 	struct sipsub *sub = le->data;
 
-	return sip_dialog_cmp_half(sub->dlg, msg);
+	return sip_dialog_cmp_half(sub->dlg, msg) &&
+		!sip_dialog_established(sub->dlg);
 }
 
 
@@ -66,8 +67,8 @@ static struct sipnot *sipnot_find(struct sipevent_sock *sock,
 }
 
 
-static struct sipsub *sipsub_find(struct sipevent_sock *sock,
-				  const struct sip_msg *msg, bool full)
+struct sipsub *sipsub_find(struct sipevent_sock *sock,
+			   const struct sip_msg *msg, bool full)
 {
 	return list_ledata(hash_lookup(sock->ht_sub,
 				       hash_joaat_pl(&msg->callid), full ?
@@ -85,7 +86,7 @@ static void notify_handler(struct sipevent_sock *sock,
 	const struct sip_hdr *hdr;
 	struct sipsub *sub;
 	uint32_t nrefs;
-	bool indialog;
+	int err;
 
 	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
 	if (!hdr || sipevent_event_decode(&event, &hdr->val)) {
@@ -101,17 +102,36 @@ static void notify_handler(struct sipevent_sock *sock,
 
 	sub = sipsub_find(sock, msg, true);
 	if (!sub) {
-
-		/* hack: while we are waiting for proper fork handling */
-
 		sub = sipsub_find(sock, msg, false);
-		if (!sub || sip_dialog_established(sub->dlg)) {
+		if (!sub) {
 			(void)sip_reply(sip, msg,
 					481, "Subscription Does Not Exist");
 			return;
 		}
 
-		indialog = false;
+		if (sub->forkh) {
+
+			struct sipsub *fsub;
+
+			err = sub->forkh(&fsub, sub, msg, sub->arg);
+			if (err) {
+				(void)sip_reply(sip, msg, 500, strerror(err));
+				return;
+			}
+
+			re_printf("*** new subscription forked from NOTIFY\n");
+
+			sub = fsub;
+		}
+		else {
+			err = sip_dialog_create(sub->dlg, msg);
+			if (err) {
+				(void)sip_reply(sip, msg, 500, strerror(err));
+				return;
+			}
+
+			re_printf("*** dialog established from NOTIFY\n");
+		}
 	}
 	else {
 		if (!sip_dialog_rseq_valid(sub->dlg, msg)) {
@@ -120,18 +140,10 @@ static void notify_handler(struct sipevent_sock *sock,
 		}
 
 		(void)sip_dialog_update(sub->dlg, msg);
-
-		indialog = true;
 	}
 
 	if (pl_strcasecmp(&event.event, sub->event)) {
 		(void)sip_reply(sip, msg, 489, "Bad Event");
-		return;
-	}
-
-	/* hack: while we are waiting for proper fork handling */
-	if (!indialog) {
-		sub->notifyh(sip, msg, sub->arg);
 		return;
 	}
 

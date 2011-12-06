@@ -50,6 +50,7 @@ static void internal_close_handler(int err, const struct sip_msg *msg,
 static bool terminate(struct sipsub *sub)
 {
 	sub->terminated = true;
+	sub->forkh      = NULL;
 	sub->notifyh    = internal_notify_handler;
 	sub->closeh     = internal_close_handler;
 
@@ -84,6 +85,7 @@ static void destructor(void *arg)
 	mem_deref(sub->dlg);
 	mem_deref(sub->auth);
 	mem_deref(sub->event);
+	mem_deref(sub->refer_to);
 	mem_deref(sub->cuser);
 	mem_deref(sub->hdrs);
 	mem_deref(sub->sock);
@@ -154,25 +156,49 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 
 		uint32_t wait;
 
-		if (!sip_dialog_established(sub->dlg)) {
+		if (sub->forkh) {
+
+			struct sipsub *fsub;
+
+			fsub = sipsub_find(sub->sock, msg, true);
+			if (!fsub) {
+
+				err = sub->forkh(&fsub, sub, msg, sub->arg);
+				if (err)
+					return;
+
+				re_printf("*** new subscription forked\n");
+			}
+			else {
+				(void)sip_dialog_update(fsub->dlg, msg);
+			}
+
+			sub = fsub;
+		}
+		else if (!sip_dialog_established(sub->dlg)) {
 
 			err = sip_dialog_create(sub->dlg, msg);
 			if (err) {
 				sub->subscribed = false;
 				goto out;
 			}
+
+			re_printf("*** dialog established\n");
 		}
 		else {
+			/* Ignore 2xx responses for other dialogs
+			 * if forking is disabled */
+			if (!sip_dialog_cmp(sub->dlg, msg))
+				return;
+
 			(void)sip_dialog_update(sub->dlg, msg);
 		}
 
 		sub->subscribed = true;
 		sub->failc = 0;
 
-		if (sub->terminated) {
-			sub->refer = false;
+		if (sub->terminated)
 			goto out;
-		}
 
 		if (sub->refer) {
 			sub->refer = false;
@@ -231,6 +257,8 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	}
 
  out:
+	sub->refer = false;
+
 	if (!sub->expires) {
 		mem_deref(sub);
 	}
@@ -271,9 +299,11 @@ static int request(struct sipsub *sub, bool reset_ls)
 		return sip_drequestf(&sub->req, sub->sip, true, "REFER",
 				     sub->dlg, 0, sub->auth,
 				     send_handler, response_handler, sub,
+				     "Refer-To: %s\r\n"
 				     "%s"
 				     "Content-Length: 0\r\n"
 				     "\r\n",
+				     sub->refer_to,
 				     sub->hdrs);
 	}
 	else {
@@ -295,16 +325,21 @@ static int request(struct sipsub *sub, bool reset_ls)
 static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 			bool refer, const char *uri,
 			const char *from_name, const char *from_uri,
-			const char *event, uint32_t expires, const char *cuser,
+			const char *event, uint32_t expires,
+			const char *refer_to, const char *cuser,
 			const char *routev[], uint32_t routec,
 			sip_auth_h *authh, void *aarg, bool aref,
-			sipevent_notify_h *notifyh, sipevent_close_h *closeh,
-			void *arg, const char *fmt, va_list ap)
+			sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
+			sipevent_close_h *closeh, void *arg,
+			const char *fmt, va_list ap)
 {
 	struct sipsub *sub;
 	int err;
 
 	if (!subp || !sock || !uri || !from_uri || !event || !expires ||!cuser)
+		return EINVAL;
+
+	if (refer && !refer_to)
 		return EINVAL;
 
 	sub = mem_zalloc(sizeof(*sub), destructor);
@@ -328,6 +363,12 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 	if (err)
 		goto out;
 
+	if (refer_to) {
+		err = str_dup(&sub->refer_to, refer_to);
+		if (err)
+			goto out;
+	}
+
 	err = str_dup(&sub->cuser, cuser);
 	if (err)
 		goto out;
@@ -343,6 +384,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 	sub->sock    = mem_ref(sock);
 	sub->sip     = mem_ref(sock->sip);
 	sub->expires = expires;
+	sub->forkh   = forkh;
 	sub->notifyh = notifyh ? notifyh : internal_notify_handler;
 	sub->closeh  = closeh  ? closeh  : internal_close_handler;
 	sub->arg     = arg;
@@ -390,16 +432,18 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       uint32_t expires, const char *cuser,
 		       const char *routev[], uint32_t routec,
 		       sip_auth_h *authh, void *aarg, bool aref,
-		       sipevent_notify_h *notifyh, sipevent_close_h *closeh,
-		       void *arg, const char *fmt, ...)
+		       sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
+		       sipevent_close_h *closeh, void *arg,
+		       const char *fmt, ...)
 {
 	va_list ap;
 	int err;
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, false, uri, from_name, from_uri,
-			   event, expires, cuser, routev, routec, authh, aarg,
-			   aref, notifyh, closeh, arg, fmt, ap);
+			   event, expires, NULL, cuser,
+			   routev, routec, authh, aarg, aref, forkh, notifyh,
+			   closeh, arg, fmt, ap);
 	va_end(ap);
 
 	return err;
@@ -429,20 +473,72 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
  */
 int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 		   const char *uri, const char *from_name,
-		   const char *from_uri, const char *cuser,
-		   const char *routev[], uint32_t routec,
+		   const char *from_uri, const char *refer_to,
+		   const char *cuser, const char *routev[], uint32_t routec,
 		   sip_auth_h *authh, void *aarg, bool aref,
-		   sipevent_notify_h *notifyh, sipevent_close_h *closeh,
-		   void *arg, const char *fmt, ...)
+		   sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
+		   sipevent_close_h *closeh, void *arg,
+		   const char *fmt, ...)
 {
 	va_list ap;
 	int err;
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, true, uri, from_name, from_uri,
-			   "refer", DEFAULT_EXPIRES, cuser, routev, routec,
-			   authh, aarg, aref, notifyh, closeh, arg, fmt, ap);
+			   "refer", DEFAULT_EXPIRES, refer_to, cuser,
+			   routev, routec, authh, aarg, aref, forkh, notifyh,
+			   closeh, arg, fmt, ap);
 	va_end(ap);
+
+	return err;
+}
+
+
+int sipevent_fork(struct sipsub **subp, struct sipsub *osub,
+		  const struct sip_msg *msg,
+		  sip_auth_h *authh, void *aarg, bool aref,
+		  sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+		  void *arg)
+{
+	struct sipsub *sub;
+	int err;
+
+	if (!subp || !osub || !msg)
+		return EINVAL;
+
+	sub = mem_zalloc(sizeof(*sub), destructor);
+	if (!sub)
+		return ENOMEM;
+
+	err = sip_dialog_fork(&sub->dlg, osub->dlg, msg);
+	if (err)
+		goto out;
+
+	hash_append(osub->sock->ht_sub,
+		    hash_joaat_str(sip_dialog_callid(sub->dlg)),
+		    &sub->he, sub);
+
+	err = sip_auth_alloc(&sub->auth, authh, aarg, aref);
+	if (err)
+		goto out;
+
+	sub->event   = mem_ref(osub->event);
+	sub->cuser   = mem_ref(osub->cuser);
+	sub->hdrs    = mem_ref(osub->hdrs);
+	sub->refer   = osub->refer;
+	sub->sock    = mem_ref(osub->sock);
+	sub->sip     = mem_ref(osub->sip);
+	sub->expires = osub->expires;
+	sub->forkh   = NULL;
+	sub->notifyh = notifyh ? notifyh : internal_notify_handler;
+	sub->closeh  = closeh  ? closeh  : internal_close_handler;
+	sub->arg     = arg;
+
+ out:
+	if (err)
+		mem_deref(sub);
+	else
+		*subp = sub;
 
 	return err;
 }

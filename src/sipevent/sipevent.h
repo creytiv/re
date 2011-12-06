@@ -38,8 +38,10 @@ struct sipsub {
 	struct sip_auth *auth;
 	struct sip *sip;
 	char *event;
+	char *refer_to;
 	char *cuser;
 	char *hdrs;
+	sipevent_fork_h *forkh;
 	sipevent_notify_h *notifyh;
 	sipevent_close_h *closeh;
 	void *arg;
@@ -50,5 +52,7 @@ struct sipsub {
 	bool refer;
 };
 
+struct sipsub *sipsub_find(struct sipevent_sock *sock,
+			   const struct sip_msg *msg, bool full);
 void sipsub_reschedule(struct sipsub *sub, uint64_t wait);
 void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg);
