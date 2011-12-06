@@ -1,6 +1,8 @@
 /**
  * @file sha1.c SHA-1 in C
+ */
 
+/*
 By Steve Reid <sreid@sea-to-sky.net>
 100% Public Domain
 
@@ -213,8 +215,9 @@ void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)
 	size_t i, j;
 
 	j = (context->count[0] >> 3) & 63;
-	if ((context->count[0] += len << 3) < (len << 3)) context->count[1]++;
-	context->count[1] += (len >> 29);
+	if ((context->count[0] += (uint32_t)(len << 3)) < (len << 3))
+		context->count[1]++;
+	context->count[1] += (uint32_t)(len >> 29);
 	if ((j + len) > 63) {
 		memcpy(&context->buffer[j], data, (i = 64-j));
 		SHA1_Transform(context->state, context->buffer);
