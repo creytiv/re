@@ -482,11 +482,19 @@ ifneq ($(HAVE_SYSLOG),)
 CFLAGS  += -DHAVE_SYSLOG
 endif
 
+HAVE_INET_NTOP := 1
+
 CFLAGS  += -DHAVE_FORK
+
+ifneq ($(HAVE_INET_NTOP),)
 CFLAGS  += -DHAVE_INET_NTOP
+endif
 CFLAGS  += -DHAVE_PWD_H
 ifneq ($(OS),darwin)
 CFLAGS  += -DHAVE_POLL	# Darwin: poll() does not support devices
+HAVE_INET_PTON := 1
+endif
+ifneq ($(HAVE_INET_PTON),)
 CFLAGS  += -DHAVE_INET_PTON
 endif
 CFLAGS  += -DHAVE_SELECT -DHAVE_SELECT_H
