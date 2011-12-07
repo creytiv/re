@@ -83,7 +83,8 @@ int bfcp_msg_encode(struct mbuf *mb, enum bfcp_prim prim, uint32_t confid,
 }
 
 
-int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb)
+int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb,
+		    const struct sa *src)
 {
 	struct bfcp_msg *msg;
 	size_t start, extra;
@@ -117,6 +118,9 @@ int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb)
 		list_append(&msg->attrl, &attr->le, attr);
 	}
 
+	if (src)
+		msg->src = *src;
+
  out:
 	if (err)
 		mem_deref(msg);
@@ -129,7 +133,7 @@ int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb)
 
 static bool attr_match(const struct bfcp_attr *attr, void *arg)
 {
-	return attr->type == *(uint8_t *)arg;
+	return attr->type == *(enum bfcp_attrib *)arg;
 }
 
 
@@ -242,15 +246,6 @@ const char *bfcp_prim_name(enum bfcp_prim prim)
 	case BFCP_ERROR:                  return "Error";
 	default:                          return "???";
 	}
-}
-
-
-void bfcp_msg_set_src(struct bfcp_msg *msg, const struct sa *src)
-{
-	if (!msg || !src)
-		return;
-
-	msg->src = *src;
 }
 
 

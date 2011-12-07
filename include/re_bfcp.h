@@ -185,7 +185,8 @@ int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
 		     uint32_t attrc, va_list ap);
 int bfcp_msg_encode(struct mbuf *mb, enum bfcp_prim prim, uint32_t confid,
 		    uint16_t tid, uint16_t userid, uint32_t attrc, ...);
-int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb);
+int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb,
+		    const struct sa *src);
 struct bfcp_attr *bfcp_msg_attr(const struct bfcp_msg *msg,
 				enum bfcp_attrib type);
 struct bfcp_attr *bfcp_msg_attr_apply(const struct bfcp_msg *msg,
@@ -195,7 +196,6 @@ enum bfcp_prim bfcp_msg_prim(const struct bfcp_msg *msg);
 uint32_t bfcp_msg_confid(const struct bfcp_msg *msg);
 uint16_t bfcp_msg_tid(const struct bfcp_msg *msg);
 uint16_t bfcp_msg_userid(const struct bfcp_msg *msg);
-void bfcp_msg_set_src(struct bfcp_msg *msg, const struct sa *src);
 const struct sa *bfcp_msg_src(const struct bfcp_msg *msg);
 
 

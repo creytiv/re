@@ -126,7 +126,7 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 
 		pos = conn->mbrx->pos;
 
-		err = bfcp_msg_decode(&msg, conn->mbrx);
+		err = bfcp_msg_decode(&msg, conn->mbrx, &conn->paddr);
 		if (err) {
 			if (err == ENODATA) {
 				conn->mbrx->pos = pos;
@@ -134,8 +134,6 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 			}
 			break;
 		}
-
-		bfcp_msg_set_src(msg, &conn->paddr);
 
 		ct = bfcp_ctrans_find(conn->bs, bfcp_msg_tid(msg));
 		if (ct) {
