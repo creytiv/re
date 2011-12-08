@@ -335,7 +335,7 @@ static int request(struct sipsub *sub, bool reset_ls)
 
 
 static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
-			bool refer, const char *uri,
+			bool refer, struct sip_dialog *dlg, const char *uri,
 			const char *from_name, const char *from_uri,
 			const char *event, const char *id, uint32_t expires,
 			const char *refer_to, const char *cuser,
@@ -348,7 +348,10 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 	struct sipsub *sub;
 	int err;
 
-	if (!subp || !sock || !uri || !from_uri || !event || !expires ||!cuser)
+	if (!subp || !sock || !event || !expires ||!cuser)
+		return EINVAL;
+
+	if (!dlg && (!uri || !from_uri))
 		return EINVAL;
 
 	if (refer && !refer_to)
@@ -358,10 +361,15 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 	if (!sub)
 		return ENOMEM;
 
-	err = sip_dialog_alloc(&sub->dlg, uri, uri, from_name, from_uri,
-			       routev, routec);
-	if (err)
-		goto out;
+	if (dlg) {
+		sub->dlg = mem_ref(dlg);
+	}
+	else {
+		err = sip_dialog_alloc(&sub->dlg, uri, uri, from_name,
+				       from_uri, routev, routec);
+		if (err)
+			goto out;
+	}
 
 	hash_append(sock->ht_sub,
 		    hash_joaat_str(sip_dialog_callid(sub->dlg)),
@@ -439,7 +447,8 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
  * @param authh     Authentication handler
  * @param aarg      Authentication handler argument
  * @param aref      True to ref argument
- * @param noth      Notify handler
+ * @param forkh     Fork handler
+ * @param notifyh   Notify handler
  * @param closeh    Close handler
  * @param arg       Response handler argument
  * @param fmt       Formatted strings with extra SIP Headers
@@ -460,9 +469,50 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 	int err;
 
 	va_start(ap, fmt);
-	err = sipsub_alloc(subp, sock, false, uri, from_name, from_uri,
+	err = sipsub_alloc(subp, sock, false, NULL, uri, from_name, from_uri,
 			   event, id, expires, NULL, cuser,
 			   routev, routec, authh, aarg, aref, forkh, notifyh,
+			   closeh, arg, fmt, ap);
+	va_end(ap);
+
+	return err;
+}
+
+
+/**
+ * Allocate a SIP subscriber client using an existing dialog
+ *
+ * @param subp      Pointer to allocated SIP subscriber client
+ * @param sock      SIP Event socket
+ * @param dlg       Established SIP Dialog
+ * @param event     SIP Event to subscribe to
+ * @param id        SIP Event ID
+ * @param expires   Subscription expires value
+ * @param cuser     Contact username
+ * @param authh     Authentication handler
+ * @param aarg      Authentication handler argument
+ * @param aref      True to ref argument
+ * @param noth      Notify handler
+ * @param closeh    Close handler
+ * @param arg       Response handler argument
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
+			struct sip_dialog *dlg, const char *event,
+			const char *id, uint32_t expires, const char *cuser,
+			sip_auth_h *authh, void *aarg, bool aref,
+			sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+			void *arg, const char *fmt, ...)
+{
+	va_list ap;
+	int err;
+
+	va_start(ap, fmt);
+	err = sipsub_alloc(subp, sock, false, dlg, NULL, NULL, NULL,
+			   event, id, expires, NULL, cuser,
+			   NULL, 0, authh, aarg, aref, NULL, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);
 
@@ -478,13 +528,15 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
  * @param uri       SIP Request URI
  * @param from_name SIP From-header Name (optional)
  * @param from_uri  SIP From-header URI
+ * @param refer_to  Refer-To address
  * @param cuser     Contact username
  * @param routev    Optional route vector
  * @param routec    Number of routes
  * @param authh     Authentication handler
  * @param aarg      Authentication handler argument
  * @param aref      True to ref argument
- * @param noth      Notify handler
+ * @param forkh     Fork handler
+ * @param notifyh   Notify handler
  * @param closeh    Close handler
  * @param arg       Response handler argument
  * @param fmt       Formatted strings with extra SIP Headers
@@ -504,9 +556,48 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 	int err;
 
 	va_start(ap, fmt);
-	err = sipsub_alloc(subp, sock, true, uri, from_name, from_uri,
+	err = sipsub_alloc(subp, sock, true, NULL, uri, from_name, from_uri,
 			   "refer", NULL, DEFAULT_EXPIRES, refer_to, cuser,
 			   routev, routec, authh, aarg, aref, forkh, notifyh,
+			   closeh, arg, fmt, ap);
+	va_end(ap);
+
+	return err;
+}
+
+
+/**
+ * Allocate a SIP refer client using an existing dialog
+ *
+ * @param subp      Pointer to allocated SIP subscriber client
+ * @param sock      SIP Event socket
+ * @param dlg       Established SIP Dialog
+ * @param refer_to  Refer-To address
+ * @param cuser     Contact username
+ * @param authh     Authentication handler
+ * @param aarg      Authentication handler argument
+ * @param aref      True to ref argument
+ * @param notifyh   Notify handler
+ * @param closeh    Close handler
+ * @param arg       Response handler argument
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sipevent_drefer(struct sipsub **subp, struct sipevent_sock *sock,
+		    struct sip_dialog *dlg, const char *refer_to,
+		    const char *cuser,
+		    sip_auth_h *authh, void *aarg, bool aref,
+		    sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+		    void *arg, const char *fmt, ...)
+{
+	va_list ap;
+	int err;
+
+	va_start(ap, fmt);
+	err = sipsub_alloc(subp, sock, true, dlg, NULL, NULL, NULL,
+			   "refer", NULL, DEFAULT_EXPIRES, refer_to, cuser,
+			   NULL, 0, authh, aarg, aref, NULL, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);
 

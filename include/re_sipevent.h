@@ -34,6 +34,13 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
 		       sipevent_close_h *closeh, void *arg,
 		       const char *fmt, ...);
+int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
+			struct sip_dialog *dlg, const char *event,
+			const char *id, uint32_t expires, const char *cuser,
+			sip_auth_h *authh, void *aarg, bool aref,
+			sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+			void *arg, const char *fmt, ...);
+
 int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 		   const char *uri, const char *from_name,
 		   const char *from_uri, const char *refer_to,
@@ -42,6 +49,13 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 		   sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
 		   sipevent_close_h *closeh, void *arg,
 		   const char *fmt, ...);
+int sipevent_drefer(struct sipsub **subp, struct sipevent_sock *sock,
+		    struct sip_dialog *dlg, const char *refer_to,
+		    const char *cuser,
+		    sip_auth_h *authh, void *aarg, bool aref,
+		    sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+		    void *arg, const char *fmt, ...);
+
 int sipevent_fork(struct sipsub **subp, struct sipsub *osub,
 		  const struct sip_msg *msg,
 		  sip_auth_h *authh, void *aarg, bool aref,
