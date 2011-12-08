@@ -15,6 +15,7 @@
 
 int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl)
 {
+	struct pl param;
 	int err;
 
 	if (!se || !pl)
@@ -24,6 +25,11 @@ int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl)
 		       &se->event, NULL, &se->params);
 	if (err)
 		return EBADMSG;
+
+	if (!sip_param_decode(&se->params, "id", &param))
+		se->id = param;
+	else
+		se->id = pl_null;
 
 	return 0;
 }

@@ -85,6 +85,7 @@ static void destructor(void *arg)
 	mem_deref(sub->dlg);
 	mem_deref(sub->auth);
 	mem_deref(sub->event);
+	mem_deref(sub->id);
 	mem_deref(sub->refer_to);
 	mem_deref(sub->cuser);
 	mem_deref(sub->hdrs);
@@ -160,7 +161,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 
 			struct sipsub *fsub;
 
-			fsub = sipsub_find(sub->sock, msg, true);
+			fsub = sipsub_find(sub->sock, msg, NULL, true);
 			if (!fsub) {
 
 				err = sub->forkh(&fsub, sub, msg, sub->arg);
@@ -286,6 +287,15 @@ static int send_handler(enum sip_transp tp, const struct sa *src,
 }
 
 
+static int print_event(struct re_printf *pf, const struct sipsub *sub)
+{
+	if (sub->id)
+		return re_hprintf(pf, "%s;id=%s", sub->event, sub->id);
+	else
+		return re_hprintf(pf, "%s", sub->event);
+}
+
+
 static int request(struct sipsub *sub, bool reset_ls)
 {
 	if (sub->terminated)
@@ -310,12 +320,12 @@ static int request(struct sipsub *sub, bool reset_ls)
 		return sip_drequestf(&sub->req, sub->sip, true, "SUBSCRIBE",
 				     sub->dlg, 0, sub->auth,
 				     send_handler, response_handler, sub,
-				     "Event: %s\r\n"
+				     "Event: %H\r\n"
 				     "Expires: %u\r\n"
 				     "%s"
 				     "Content-Length: 0\r\n"
 				     "\r\n",
-				     sub->event,
+				     print_event, sub,
 				     sub->expires,
 				     sub->hdrs);
 	}
@@ -325,7 +335,7 @@ static int request(struct sipsub *sub, bool reset_ls)
 static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 			bool refer, const char *uri,
 			const char *from_name, const char *from_uri,
-			const char *event, uint32_t expires,
+			const char *event, const char *id, uint32_t expires,
 			const char *refer_to, const char *cuser,
 			const char *routev[], uint32_t routec,
 			sip_auth_h *authh, void *aarg, bool aref,
@@ -362,6 +372,12 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 	err = str_dup(&sub->event, event);
 	if (err)
 		goto out;
+
+	if (id) {
+		err = str_dup(&sub->id, id);
+		if (err)
+			goto out;
+	}
 
 	if (refer_to) {
 		err = str_dup(&sub->refer_to, refer_to);
@@ -412,6 +428,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
  * @param from_name SIP From-header Name (optional)
  * @param from_uri  SIP From-header URI
  * @param event     SIP Event to subscribe to
+ * @param id        SIP Event ID
  * @param expires   Subscription expires value
  * @param cuser     Contact username
  * @param routev    Optional route vector
@@ -428,7 +445,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
  */
 int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       const char *uri, const char *from_name,
-		       const char *from_uri, const char *event,
+		       const char *from_uri, const char *event, const char *id,
 		       uint32_t expires, const char *cuser,
 		       const char *routev[], uint32_t routec,
 		       sip_auth_h *authh, void *aarg, bool aref,
@@ -441,7 +458,7 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, false, uri, from_name, from_uri,
-			   event, expires, NULL, cuser,
+			   event, id, expires, NULL, cuser,
 			   routev, routec, authh, aarg, aref, forkh, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);
@@ -485,7 +502,7 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, true, uri, from_name, from_uri,
-			   "refer", DEFAULT_EXPIRES, refer_to, cuser,
+			   "refer", NULL, DEFAULT_EXPIRES, refer_to, cuser,
 			   routev, routec, authh, aarg, aref, forkh, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);
@@ -523,6 +540,7 @@ int sipevent_fork(struct sipsub **subp, struct sipsub *osub,
 		goto out;
 
 	sub->event   = mem_ref(osub->event);
+	sub->id      = mem_ref(osub->id);
 	sub->cuser   = mem_ref(osub->cuser);
 	sub->hdrs    = mem_ref(osub->hdrs);
 	sub->refer   = osub->refer;

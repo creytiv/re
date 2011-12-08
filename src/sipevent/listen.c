@@ -18,6 +18,12 @@
 #include "sipevent.h"
 
 
+struct subcmp {
+	const struct sipevent_event *evt;
+	const struct sip_msg *msg;
+};
+
+
 static void destructor(void *arg)
 {
 	struct sipevent_sock *sock = arg;
@@ -27,6 +33,25 @@ static void destructor(void *arg)
 	hash_flush(sock->ht_sub);
 	mem_deref(sock->ht_not);
 	mem_deref(sock->ht_sub);
+}
+
+
+static bool event_cmp(const struct sipevent_event *evt,
+		      const char *event, const char *id)
+{
+	if (pl_strcmp(&evt->event, event))
+		return false;
+
+	if (!pl_isset(&evt->id) && !id)
+		return true;
+
+	if (!pl_isset(&evt->id) || !id)
+		return false;
+
+	if (pl_strcmp(&evt->id, id))
+		return false;
+
+	return true;
 }
 
 
@@ -41,20 +66,22 @@ static bool not_cmp_handler(struct le *le, void *arg)
 
 static bool sub_cmp_handler(struct le *le, void *arg)
 {
-	const struct sip_msg *msg = arg;
+	const struct subcmp *cmp = arg;
 	struct sipsub *sub = le->data;
 
-	return sip_dialog_cmp(sub->dlg, msg);
+	return sip_dialog_cmp(sub->dlg, cmp->msg) &&
+		(!cmp->evt || event_cmp(cmp->evt, sub->event, sub->id));
 }
 
 
 static bool sub_cmp_half_handler(struct le *le, void *arg)
 {
-	const struct sip_msg *msg = arg;
+	const struct subcmp *cmp = arg;
 	struct sipsub *sub = le->data;
 
-	return sip_dialog_cmp_half(sub->dlg, msg) &&
-		!sip_dialog_established(sub->dlg);
+	return sip_dialog_cmp_half(sub->dlg, cmp->msg) &&
+		!sip_dialog_established(sub->dlg) &&
+		(!cmp->evt || event_cmp(cmp->evt, sub->event, sub->id));
 }
 
 
@@ -68,12 +95,18 @@ static struct sipnot *sipnot_find(struct sipevent_sock *sock,
 
 
 struct sipsub *sipsub_find(struct sipevent_sock *sock,
-			   const struct sip_msg *msg, bool full)
+			   const struct sip_msg *msg,
+			   const struct sipevent_event *evt, bool full)
 {
+	struct subcmp cmp;
+
+	cmp.msg = msg;
+	cmp.evt = evt;
+
 	return list_ledata(hash_lookup(sock->ht_sub,
 				       hash_joaat_pl(&msg->callid), full ?
 				       sub_cmp_handler : sub_cmp_half_handler,
-				       (void *)msg));
+				       &cmp));
 }
 
 
@@ -100,9 +133,9 @@ static void notify_handler(struct sipevent_sock *sock,
 		return;
 	}
 
-	sub = sipsub_find(sock, msg, true);
+	sub = sipsub_find(sock, msg, &event, true);
 	if (!sub) {
-		sub = sipsub_find(sock, msg, false);
+		sub = sipsub_find(sock, msg, &event, false);
 		if (!sub) {
 			(void)sip_reply(sip, msg,
 					481, "Subscription Does Not Exist");
@@ -140,11 +173,6 @@ static void notify_handler(struct sipevent_sock *sock,
 		}
 
 		(void)sip_dialog_update(sub->dlg, msg);
-	}
-
-	if (pl_strcasecmp(&event.event, sub->event)) {
-		(void)sip_reply(sip, msg, 489, "Bad Event");
-		return;
 	}
 
 	re_printf("notify: %s (%r)\n", sipevent_substate_name(state.state),

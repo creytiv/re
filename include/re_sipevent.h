@@ -27,7 +27,7 @@ typedef void (sipevent_close_h)(int err, const struct sip_msg *msg, void *arg);
 
 int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       const char *uri, const char *from_name,
-		       const char *from_uri, const char *event,
+		       const char *from_uri, const char *event, const char *id,
 		       uint32_t expires, const char *cuser,
 		       const char *routev[], uint32_t routec,
 		       sip_auth_h *authh, void *aarg, bool aref,
@@ -54,6 +54,7 @@ int sipevent_fork(struct sipsub **subp, struct sipsub *osub,
 struct sipevent_event {
 	struct pl event;
 	struct pl params;
+	struct pl id;
 };
 
 enum sipevent_subst {
