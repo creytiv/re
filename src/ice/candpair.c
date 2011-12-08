@@ -260,6 +260,9 @@ bool icem_candpair_iscompleted(const struct candpair *cp)
 /**
  * Compare local and remote candidates of two candidate pairs
  *
+ * @param cp1  First Candidate pair
+ * @param cp2  Second Candidate pair
+ *
  * @return true if match
  */
 bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2)
@@ -274,6 +277,12 @@ bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2)
 /**
  * Find the highest-priority candidate-pair in a given list, with
  * optional match parameters
+ *
+ * @param lst    List of candidate pairs
+ * @param lcand  Local candidate (optional)
+ * @param rcand  Remote candidate (optional)
+ *
+ * @return Matching candidate pair if found, otherwise NULL
  *
  * note: assume list is sorted by priority
  */

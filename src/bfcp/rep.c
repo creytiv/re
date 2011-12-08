@@ -14,6 +14,16 @@
 #include "bfcp.h"
 
 
+/**
+ * Send BFCP reply
+ *
+ * @param sock   BFCP socket
+ * @param req    BFCP request to reply to
+ * @param prim   BFCP primitive
+ * @param attrc  Number of attributes
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_reply(struct bfcp_sock *sock, const struct bfcp_msg *req,
 	       enum bfcp_prim prim, uint32_t attrc, ...)
 {
@@ -48,6 +58,15 @@ int bfcp_reply(struct bfcp_sock *sock, const struct bfcp_msg *req,
 }
 
 
+/**
+ * Send BFCP error reply
+ *
+ * @param sock   BFCP socket
+ * @param req    BFCP request to reply to
+ * @param code   BFCP Error code
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_ereply(struct bfcp_sock *sock, const struct bfcp_msg *req,
 		enum bfcp_err code, ...)
 {

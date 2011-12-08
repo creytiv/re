@@ -4,16 +4,20 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
+
+/** ICE mode */
 enum ice_mode {
 	ICE_MODE_FULL,
 	ICE_MODE_LITE
 };
 
+/** ICE Component ID */
 enum ice_compid {
 	ICE_COMPID_RTP  = 1,
 	ICE_COMPID_RTCP = 2
 };
 
+/** ICE Nomination */
 enum ice_nomination {
 	ICE_NOMINATION_REGULAR = 0,
 	ICE_NOMINATION_AGGRESSIVE

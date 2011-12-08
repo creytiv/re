@@ -96,7 +96,12 @@ void ice_switch_local_role(struct ice *ice)
 /**
  * Remove duplicate elements from list, preserving order
  *
- * note:    O (n ^ 2)
+ * @param list  Linked list
+ * @param uh    Unique handler (return object to remove)
+ *
+ * @return Number of elements removed
+ *
+ * @note:    O (n ^ 2)
  */
 uint32_t ice_list_unique(struct list *list, list_unique_h *uh)
 {

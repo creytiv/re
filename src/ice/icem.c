@@ -38,6 +38,19 @@ static void icem_destructor(void *data)
 }
 
 
+/**
+ * Add a new ICE Media object to the ICE Session
+ *
+ * @param icemp  Pointer to allocated ICE Media object
+ * @param ice    ICE Session
+ * @param proto  Transport protocol
+ * @param layer  Protocol stack layer
+ * @param gh     Gather handler
+ * @param chkh   Connectivity check handler
+ * @param arg    Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 	       ice_gather_h *gh, ice_connchk_h *chkh, void *arg)
 {
@@ -95,6 +108,12 @@ int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 }
 
 
+/**
+ * Set the name of the ICE Media object, used for debugging
+ *
+ * @param icem  ICE Media object
+ * @param name  Media name
+ */
 void icem_set_name(struct icem *icem, const char *name)
 {
 	if (!icem)
@@ -104,6 +123,15 @@ void icem_set_name(struct icem *icem, const char *name)
 }
 
 
+/**
+ * Add a new component to the ICE Media object
+ *
+ * @param icem    ICE Media object
+ * @param compid  Component ID
+ * @param sock    Application protocol socket
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_comp_add(struct icem *icem, uint8_t compid, void *sock)
 {
 	struct icem_comp *comp;
@@ -125,6 +153,17 @@ int icem_comp_add(struct icem *icem, uint8_t compid, void *sock)
 }
 
 
+/**
+ * Add a new candidate to the ICE Media object
+ *
+ * @param icem    ICE Media object
+ * @param compid  Component ID
+ * @param lprio   Local priority
+ * @param ifname  Name of the network interface
+ * @param addr    Local network address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_cand_add(struct icem *icem, uint8_t compid, uint16_t lprio,
 		  const char *ifname, const struct sa *addr)
 {
@@ -159,6 +198,14 @@ void icem_cand_redund_elim(struct icem *icem)
 }
 
 
+/**
+ * Get the Default Candidate
+ *
+ * @param icem   ICE Media object
+ * @param compid Component ID
+ *
+ * @return Default Candidate address if set, otherwise NULL
+ */
 const struct sa *icem_cand_default(struct icem *icem, uint8_t compid)
 {
 	const struct icem_comp *comp = icem_comp_find(icem, compid);
@@ -202,6 +249,15 @@ bool icem_verify_support(struct icem *icem, uint8_t compid,
 }
 
 
+/**
+ * Add a TURN Channel for the selected remote address
+ *
+ * @param icem   ICE Media object
+ * @param compid Component ID
+ * @param raddr  Remote network address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr)
 {
 	struct icem_comp *comp;
@@ -240,6 +296,11 @@ static void purge_relayed(struct icem *icem, struct icem_comp *comp)
 }
 
 
+/**
+ * Update the ICE Media object
+ *
+ * @param icem ICE Media object
+ */
 void icem_update(struct icem *icem)
 {
 	struct le *le;
@@ -261,12 +322,27 @@ void icem_update(struct icem *icem)
 }
 
 
+/**
+ * Get the ICE Mismatch flag of the ICE Media object
+ *
+ * @param icem ICE Media object
+ *
+ * @return True if ICE mismatch, otherwise false
+ */
 bool icem_mismatch(const struct icem *icem)
 {
 	return icem ? icem->mismatch : true;
 }
 
 
+/**
+ * Print debug information for the ICE Media
+ *
+ * @param pf   Print function for debug output
+ * @param icem ICE Media object
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int icem_debug(struct re_printf *pf, const struct icem *icem)
 {
 	struct le *le;
@@ -303,6 +379,13 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 }
 
 
+/**
+ * Get the list of Local Candidates (struct cand)
+ *
+ * @param icem ICE Media object
+ *
+ * @return List of Local Candidates
+ */
 struct list *icem_lcandl(const struct icem *icem)
 {
 	return icem ? (struct list *)&icem->lcandl : NULL;

@@ -107,6 +107,21 @@ struct bfcp_ctrans *bfcp_ctrans_find(struct bfcp_sock *sock, uint16_t tid)
 }
 
 
+/**
+ * Send a BFCP request with variable number of attributes
+ *
+ * @param ctp     Pointer to allocated transaction (optional)
+ * @param sock    BFCP socket
+ * @param dst     Destination network address
+ * @param prim    BFCP primitive
+ * @param confid  Conference ID
+ * @param userid  User ID
+ * @param resph   Response handler (optional)
+ * @param arg     Handler argument
+ * @param attrc   Number of BFCP attributes
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_request(struct bfcp_ctrans **ctp, struct bfcp_sock *sock,
 		 const struct sa *dst,
 		 enum bfcp_prim prim, uint32_t confid, uint16_t userid,

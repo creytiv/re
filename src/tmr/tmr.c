@@ -49,6 +49,15 @@ static bool inspos_handler(struct le *le, void *arg)
 }
 
 
+static bool inspos_handler_0(struct le *le, void *arg)
+{
+	struct tmr *tmr = le->data;
+	const uint64_t now = *(uint64_t *)arg;
+
+	return tmr->jfs > now;
+}
+
+
 #if TMR_DEBUG
 static void call_handler(tmr_h *th, void *arg)
 {
@@ -233,12 +242,23 @@ void tmr_start(struct tmr *tmr, uint64_t delay, tmr_h *th, void *arg)
 
 	tmr->jfs = delay + tmr_jiffies();
 
-	le = list_apply(tmrl, false, inspos_handler, &tmr->jfs);
-	if (le) {
-		list_insert_after(tmrl, le, &tmr->le, tmr);
+	if (delay == 0) {
+		le = list_apply(tmrl, true, inspos_handler_0, &tmr->jfs);
+		if (le) {
+			list_insert_before(tmrl, le, &tmr->le, tmr);
+		}
+		else {
+			list_append(tmrl, &tmr->le, tmr);
+		}
 	}
 	else {
-		list_prepend(tmrl, &tmr->le, tmr);
+		le = list_apply(tmrl, false, inspos_handler, &tmr->jfs);
+		if (le) {
+			list_insert_after(tmrl, le, &tmr->le, tmr);
+		}
+		else {
+			list_prepend(tmrl, &tmr->le, tmr);
+		}
 	}
 
 #ifdef HAVE_ACTSCHED

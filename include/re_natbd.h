@@ -79,8 +79,9 @@ int nat_filtering_start(struct nat_filtering *nf);
  * Binding Lifetime Discovery
  */
 
-/** Defines the NAT lifetime interval */
 struct nat_lifetime;
+
+/** Defines the NAT lifetime interval */
 struct nat_lifetime_interval {
 	uint32_t min;  /**< Minimum lifetime interval in [seconds] */
 	uint32_t cur;  /**< Current lifetime interval in [seconds] */

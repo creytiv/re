@@ -16,6 +16,13 @@
 #include "bfcp.h"
 
 
+/**
+ * Check if BFCP transport is reliable
+ *
+ * @param tp BFCP transport
+ *
+ * @return True if reliable, false if un-reliable
+ */
 bool bfcp_transp_reliable(enum bfcp_transp tp)
 {
 	switch (tp) {
@@ -27,6 +34,13 @@ bool bfcp_transp_reliable(enum bfcp_transp tp)
 }
 
 
+/**
+ * Get the BFCP Transport protocol, suitable for SDP
+ *
+ * @param tp BFCP transport
+ *
+ * @return String with BFCP transport protocol
+ */
 const char *bfcp_transp_proto(enum bfcp_transp tp)
 {
 	switch (tp) {
