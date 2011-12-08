@@ -306,6 +306,8 @@ static int request(struct sipsub *sub, bool reset_ls)
 
 	if (sub->refer) {
 
+		sub->refer_cseq = sip_dialog_lseq(sub->dlg);
+
 		return sip_drequestf(&sub->req, sub->sip, true, "REFER",
 				     sub->dlg, 0, sub->auth,
 				     send_handler, response_handler, sub,
@@ -396,6 +398,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 			goto out;
 	}
 
+	sub->refer_cseq = -1;
 	sub->refer   = refer;
 	sub->sock    = mem_ref(sock);
 	sub->sip     = mem_ref(sock->sip);

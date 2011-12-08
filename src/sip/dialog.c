@@ -511,6 +511,12 @@ const char *sip_dialog_callid(const struct sip_dialog *dlg)
 }
 
 
+uint32_t sip_dialog_lseq(const struct sip_dialog *dlg)
+{
+	return dlg ? dlg->lseq : 0;
+}
+
+
 bool sip_dialog_established(const struct sip_dialog *dlg)
 {
 	return dlg && dlg->rtag;

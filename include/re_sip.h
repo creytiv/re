@@ -306,6 +306,7 @@ int  sip_dialog_fork(struct sip_dialog **dlgp, struct sip_dialog *odlg,
 int  sip_dialog_update(struct sip_dialog *dlg, const struct sip_msg *msg);
 bool sip_dialog_rseq_valid(struct sip_dialog *dlg, const struct sip_msg *msg);
 const char *sip_dialog_callid(const struct sip_dialog *dlg);
+uint32_t sip_dialog_lseq(const struct sip_dialog *dlg);
 bool sip_dialog_established(const struct sip_dialog *dlg);
 bool sip_dialog_cmp(const struct sip_dialog *dlg, const struct sip_msg *msg);
 bool sip_dialog_cmp_half(const struct sip_dialog *dlg,

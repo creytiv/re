@@ -37,7 +37,8 @@ static void destructor(void *arg)
 
 
 static bool event_cmp(const struct sipevent_event *evt,
-		      const char *event, const char *id)
+		      const char *event, const char *id,
+		      int32_t refer_cseq)
 {
 	if (pl_strcmp(&evt->event, event))
 		return false;
@@ -45,8 +46,15 @@ static bool event_cmp(const struct sipevent_event *evt,
 	if (!pl_isset(&evt->id) && !id)
 		return true;
 
-	if (!pl_isset(&evt->id) || !id)
+	if (!pl_isset(&evt->id))
 		return false;
+
+	if (!id) {
+		if (refer_cseq >= 0 && (int32_t)pl_u32(&evt->id) == refer_cseq)
+			return true;
+
+		return false;
+	}
 
 	if (pl_strcmp(&evt->id, id))
 		return false;
@@ -70,7 +78,8 @@ static bool sub_cmp_handler(struct le *le, void *arg)
 	struct sipsub *sub = le->data;
 
 	return sip_dialog_cmp(sub->dlg, cmp->msg) &&
-		(!cmp->evt || event_cmp(cmp->evt, sub->event, sub->id));
+		(!cmp->evt || event_cmp(cmp->evt, sub->event, sub->id,
+					sub->refer_cseq));
 }
 
 
@@ -81,7 +90,8 @@ static bool sub_cmp_half_handler(struct le *le, void *arg)
 
 	return sip_dialog_cmp_half(sub->dlg, cmp->msg) &&
 		!sip_dialog_established(sub->dlg) &&
-		(!cmp->evt || event_cmp(cmp->evt, sub->event, sub->id));
+		(!cmp->evt || event_cmp(cmp->evt, sub->event, sub->id,
+					sub->refer_cseq));
 }
 
 
@@ -173,6 +183,15 @@ static void notify_handler(struct sipevent_sock *sock,
 		}
 
 		(void)sip_dialog_update(sub->dlg, msg);
+	}
+
+	if (sub->refer_cseq >= 0 && !sub->id && pl_isset(&event.id)) {
+
+		err = pl_strdup(&sub->id, &event.id);
+		if (err) {
+			(void)sip_treply(NULL, sip, msg, 500, strerror(err));
+			return;
+		}
 	}
 
 	re_printf("notify: %s (%r)\n", sipevent_substate_name(state.state),

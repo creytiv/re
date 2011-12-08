@@ -46,6 +46,7 @@ struct sipsub {
 	sipevent_notify_h *notifyh;
 	sipevent_close_h *closeh;
 	void *arg;
+	int32_t refer_cseq;
 	uint32_t expires;
 	uint32_t failc;
 	bool subscribed;
