@@ -535,6 +535,13 @@ int bfcp_attr_decode(struct bfcp_attr **attrp, struct mbuf *mb)
 }
 
 
+/**
+ * Get the BFCP attribute name
+ *
+ * @param attr BFCP attribute
+ *
+ * @return String with BFCP attribute name
+ */
 const char *bfcp_attr_name(enum bfcp_attrib attr)
 {
 	switch (attr) {
@@ -738,6 +745,13 @@ bool bfcp_attr_isgrouped(enum bfcp_attrib attr)
 }
 
 
+/**
+ * Get the BFCP Error code name
+ *
+ * @param code BFCP Error code
+ *
+ * @return String with error code
+ */
 const char *bfcp_errcode_name(enum bfcp_err code)
 {
 	switch (code) {

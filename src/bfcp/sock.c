@@ -215,6 +215,18 @@ static struct bfcp_conn *findconn(const struct bfcp_sock *bs,
 }
 
 
+/**
+ * Listen on a BFCP socket
+ *
+ * @param sockp   Pointer to allocated BFCP socket object
+ * @param transp  BFCP transport
+ * @param tls     TLS context, used for secure transport (optional)
+ * @param laddr   Local network address (optional)
+ * @param msgh    BFCP message handler (optional)
+ * @param arg     Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_listen(struct bfcp_sock **sockp, enum bfcp_transp transp,
 		struct tls *tls, const struct sa *laddr,
 		bfcp_msg_h *msgh, void *arg)

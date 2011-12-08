@@ -29,6 +29,19 @@ static void destructor(void *arg)
 }
 
 
+/**
+ * Encode a BFCP message with variable arguments
+ *
+ * @param mb      Mbuf to encode into
+ * @param prim    BFCP Primitive
+ * @param confid  Conference ID
+ * @param tid     Transaction ID
+ * @param userid  User ID
+ * @param attrc   Number of attributes
+ * @param ap      Variable argument of attributes
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
 		     uint32_t confid, uint16_t tid, uint16_t userid,
 		     uint32_t attrc, va_list ap)
@@ -69,6 +82,18 @@ int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
 }
 
 
+/**
+ * Encode a BFCP message
+ *
+ * @param mb      Mbuf to encode into
+ * @param prim    BFCP Primitive
+ * @param confid  Conference ID
+ * @param tid     Transaction ID
+ * @param userid  User ID
+ * @param attrc   Number of attributes
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_msg_encode(struct mbuf *mb, enum bfcp_prim prim, uint32_t confid,
 		    uint16_t tid, uint16_t userid, uint32_t attrc, ...)
 {
@@ -83,6 +108,15 @@ int bfcp_msg_encode(struct mbuf *mb, enum bfcp_prim prim, uint32_t confid,
 }
 
 
+/**
+ * Decode a BFCP message from a buffer
+ *
+ * @param msgp Pointer to allocated and decoded BFCP message
+ * @param mb   Mbuf to decode from
+ * @param src  Source network address (optional)
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb,
 		    const struct sa *src)
 {
@@ -137,6 +171,14 @@ static bool attr_match(const struct bfcp_attr *attr, void *arg)
 }
 
 
+/**
+ * Get a BFCP attribute from a BFCP message
+ *
+ * @param msg  BFCP message
+ * @param type Attribute type
+ *
+ * @return Matching BFCP attribute if found, otherwise NULL
+ */
 struct bfcp_attr *bfcp_msg_attr(const struct bfcp_msg *msg,
 				enum bfcp_attrib type)
 {
@@ -144,6 +186,15 @@ struct bfcp_attr *bfcp_msg_attr(const struct bfcp_msg *msg,
 }
 
 
+/**
+ * Apply a function handler to all attributes in a BFCP message
+ *
+ * @param msg  BFCP message
+ * @param h    Handler
+ * @param arg  Handler argument
+ *
+ * @return BFCP attribute returned by handler, or NULL
+ */
 struct bfcp_attr *bfcp_msg_attr_apply(const struct bfcp_msg *msg,
 				      bfcp_attr_h *h, void *arg)
 {
@@ -170,6 +221,14 @@ static bool attr_print(const struct bfcp_attr *attr, void *arg)
 }
 
 
+/**
+ * Print a BFCP message
+ *
+ * @param pf  Print function
+ * @param msg BFCP message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int bfcp_msg_print(struct re_printf *pf, const struct bfcp_msg *msg)
 {
 	int err;
@@ -187,30 +246,65 @@ int bfcp_msg_print(struct re_printf *pf, const struct bfcp_msg *msg)
 }
 
 
+/**
+ * Get the BFCP primitive of a BFCP message
+ *
+ * @param msg BFCP message
+ *
+ * @return The BFCP primitive
+ */
 enum bfcp_prim bfcp_msg_prim(const struct bfcp_msg *msg)
 {
 	return msg ? msg->hdr.prim : 0;
 }
 
 
+/**
+ * Get the Conference ID of a BFCP message
+ *
+ * @param msg BFCP message
+ *
+ * @return The Conference ID
+ */
 uint32_t bfcp_msg_confid(const struct bfcp_msg *msg)
 {
 	return msg ? msg->hdr.confid : 0;
 }
 
 
+/**
+ * Get the Transaction ID of a BFCP message
+ *
+ * @param msg BFCP message
+ *
+ * @return The Transaction ID
+ */
 uint16_t bfcp_msg_tid(const struct bfcp_msg *msg)
 {
 	return msg ? msg->hdr.tid : 0;
 }
 
 
+/**
+ * Get the User ID of a BFCP message
+ *
+ * @param msg BFCP message
+ *
+ * @return The User ID
+ */
 uint16_t bfcp_msg_userid(const struct bfcp_msg *msg)
 {
 	return msg ? msg->hdr.userid : 0;
 }
 
 
+/**
+ * Get the BFCP Request status name
+ *
+ * @param rstat Request status
+ *
+ * @return String with BFCP Request status name
+ */
 const char *bfcp_reqstat_name(enum bfcp_rstat rstat)
 {
 	switch (rstat) {
@@ -227,6 +321,13 @@ const char *bfcp_reqstat_name(enum bfcp_rstat rstat)
 }
 
 
+/**
+ * Get the BFCP primitive name
+ *
+ * @param prim BFCP primitive
+ *
+ * @return String with BFCP primitive name
+ */
 const char *bfcp_prim_name(enum bfcp_prim prim)
 {
 	switch (prim) {
@@ -249,6 +350,13 @@ const char *bfcp_prim_name(enum bfcp_prim prim)
 }
 
 
+/**
+ * Get the source network address of a BFCP message
+ *
+ * @param msg BFCP message
+ *
+ * @return Source network address
+ */
 const struct sa *bfcp_msg_src(const struct bfcp_msg *msg)
 {
 	return msg ? &msg->src : NULL;

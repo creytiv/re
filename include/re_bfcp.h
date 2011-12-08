@@ -5,6 +5,7 @@
  */
 
 
+/** BFCP Version */
 enum {BFCP_VERSION = 1};
 
 /** BFCP Primitives */
@@ -71,6 +72,7 @@ enum bfcp_err {
 	BFCP_ERR_USE_TLS                = 9
 };
 
+/** BFCP Priority */
 enum bfcp_prio {
 	BFCP_PRIO_LOWEST  = 0,
 	BFCP_PRIO_LOW     = 1,
@@ -79,51 +81,60 @@ enum bfcp_prio {
 	BFCP_PRIO_HIGHEST = 4
 };
 
+/** BFCP Request status */
 struct bfcp_reqstat {
 	enum bfcp_rstat stat;
 	uint8_t qpos;
 };
 
+/** BFCP Error code */
 struct bfcp_errcode {
 	enum bfcp_err code;
 	uint8_t *details;  /* optional */
 	size_t len;
 };
 
+/** BFCP supported attributes */
 struct bfcp_supattr {
 	enum bfcp_attrib *attrv;
 	size_t attrc;
 };
 
+/** BFCP supported primitives */
 struct bfcp_supprim {
 	enum bfcp_prim *primv;
 	size_t primc;
 };
 
+/** BFCP overall request status */
 struct bfcp_overall_reqstat {
 	uint16_t freqid;
 	struct bfcp_reqstat reqstat;
 	char *statinfo;
 };
 
+/** BFCP beneficiary information */
 struct bfcp_beneficiary_info {
 	uint16_t bfid;
 	char *dname;
 	char *uri;
 };
 
+/** BFCP requested by information */
 struct bfcp_reqby_info {
 	uint16_t rbid;
 	char *dname;
 	char *uri;
 };
 
+/** BFCP floor request status */
 struct bfcp_floor_reqstat {
 	uint16_t floorid;
 	struct bfcp_reqstat reqstat;
 	char *statinfo;
 };
 
+/** BFCP floor request info */
 struct bfcp_floor_reqinfo {
 	uint16_t freqid;
 	struct bfcp_overall_reqstat ors;
@@ -135,6 +146,7 @@ struct bfcp_floor_reqinfo {
 	char *ppi;
 };
 
+/** BFCP Attribute */
 struct bfcp_attr {
 	struct le le;
 	enum bfcp_attrib type;
@@ -168,6 +180,7 @@ struct bfcp_attr {
 	} v;
 };
 
+/** BFCP Transport */
 enum bfcp_transp {
 	BFCP_TRANSP_TCP  = 0,
 	BFCP_TRANSP_TLS  = 1
@@ -178,6 +191,14 @@ enum bfcp_transp {
 
 struct bfcp_msg;
 
+/**
+ * Defines the BFCP attribute handler
+ *
+ * @param attr BFCP attribute
+ * @param arg  Handler argument
+ *
+ * @return True to stop processing, false to continue
+ */
 typedef bool (bfcp_attr_h)(const struct bfcp_attr *attr, void *arg);
 
 int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
@@ -219,7 +240,21 @@ struct tls;
 struct bfcp_sock;
 struct bfcp_ctrans;
 
+/**
+ * Defines the BFCP message handler
+ *
+ * @param msg BFCP message
+ * @param arg Handler argument
+ */
 typedef void (bfcp_msg_h)(const struct bfcp_msg *msg, void *arg);
+
+/**
+ * Defines the BFCP response handler
+ *
+ * @param err Error code
+ * @param msg BFCP message
+ * @param arg Handler argument
+ */
 typedef void (bfcp_resp_h)(int err, const struct bfcp_msg *msg, void *arg);
 
 
