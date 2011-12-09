@@ -187,11 +187,7 @@ static void notify_handler(struct sipevent_sock *sock,
 
 	if (sub->refer_cseq >= 0 && !sub->id && pl_isset(&event.id)) {
 
-		err = pl_strdup(&sub->id, &event.id);
-		if (err) {
-			(void)sip_treply(NULL, sip, msg, 500, strerror(err));
-			return;
-		}
+		(void)pl_strdup(&sub->id, &event.id);
 	}
 
 	re_printf("notify: %s (%r)\n", sipevent_substate_name(state.state),
