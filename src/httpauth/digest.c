@@ -97,6 +97,14 @@ static int digest_decode(const struct pl *hval, digest_decode_h *dech,
 }
 
 
+/**
+ * Decode a Digest challenge
+ *
+ * @param chall Digest challenge object to decode into
+ * @param hval  Header value to decode from
+ *
+ * @return 0 if successfully decoded, otherwise errorcode
+ */
 int httpauth_digest_challenge_decode(struct httpauth_digest_chall *chall,
 				     const struct pl *hval)
 {
@@ -118,6 +126,14 @@ int httpauth_digest_challenge_decode(struct httpauth_digest_chall *chall,
 }
 
 
+/**
+ * Decode a Digest response
+ *
+ * @param resp Digest response object to decode into
+ * @param hval Header value to decode from
+ *
+ * @return 0 if successfully decoded, otherwise errorcode
+ */
 int httpauth_digest_response_decode(struct httpauth_digest_resp *resp,
 				    const struct pl *hval)
 {
@@ -143,7 +159,16 @@ int httpauth_digest_response_decode(struct httpauth_digest_resp *resp,
 }
 
 
-int httpauth_digest_response_auth(struct httpauth_digest_resp *resp,
+/**
+ * Authenticate a digest response
+ *
+ * @param resp   Digest response
+ * @param method Request method
+ * @param ha1    HA1 value from MD5(username:realm:password)
+ *
+ * @return 0 if successfully authenticated, otherwise errorcode
+ */
+int httpauth_digest_response_auth(const struct httpauth_digest_resp *resp,
 				  const struct pl *method, const uint8_t *ha1)
 {
 	uint8_t ha2[MD5_SIZE], digest[MD5_SIZE], response[MD5_SIZE];
