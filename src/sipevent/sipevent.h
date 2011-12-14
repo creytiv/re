@@ -4,6 +4,10 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
+enum {
+	DEFAULT_EXPIRES = 3600,
+};
+
 
 /* Listener Socket */
 
@@ -21,9 +25,33 @@ struct sipevent_sock {
 
 struct sipnot {
 	struct le he;
+	struct sip_loopstate ls;
+	struct tmr tmr;
+	struct sipevent_sock *sock;
+	struct sip_request *req;
 	struct sip_dialog *dlg;
+	struct sip_auth *auth;
+	struct sip *sip;
+	struct mbuf *mb;
+	char *event;
+	char *id;
+	char *cuser;
+	char *hdrs;
+	char *ctype;
+	sipevent_close_h *closeh;
+	void *arg;
+	uint32_t expires_max;
+	enum sipevent_reason reason;
+	bool notify_pending;
+	bool subscribed;
 	bool terminated;
+	bool termsent;
 };
+
+void sipnot_refresh(struct sipnot *not, uint32_t expires);
+int  sipnot_notify(struct sipnot *not);
+int  sipnot_reply(struct sipnot *not, const struct sip_msg *msg,
+		  uint16_t scode, const char *reason);
 
 
 /* Subscriber */

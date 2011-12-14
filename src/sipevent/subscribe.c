@@ -20,7 +20,6 @@
 
 
 enum {
-	DEFAULT_EXPIRES = 3600,
 	RESUB_FAIL_WAIT = 60000,
 	RESUB_FAILC_MAX = 7,
 };
@@ -348,7 +347,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 	struct sipsub *sub;
 	int err;
 
-	if (!subp || !sock || !event || !expires ||!cuser)
+	if (!subp || !sock || !event || !expires || !cuser)
 		return EINVAL;
 
 	if (!dlg && (!uri || !from_uri))

@@ -81,3 +81,14 @@ const char *sipevent_substate_name(enum sipevent_subst state)
 	default:                  return "???";
 	}
 }
+
+
+const char *sipevent_reason_name(enum sipevent_reason reason)
+{
+	switch (reason) {
+
+	case SIPEVENT_TIMEOUT:    return "timeout";
+	case SIPEVENT_NORESOURCE: return "noresource";
+	default:                  return "???";
+	}
+}

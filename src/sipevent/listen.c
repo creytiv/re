@@ -65,10 +65,11 @@ static bool event_cmp(const struct sipevent_event *evt,
 
 static bool not_cmp_handler(struct le *le, void *arg)
 {
-	const struct sip_msg *msg = arg;
+	const struct subcmp *cmp = arg;
 	struct sipnot *not = le->data;
 
-	return sip_dialog_cmp(not->dlg, msg);
+	return sip_dialog_cmp(not->dlg, cmp->msg) &&
+		event_cmp(cmp->evt, not->event, not->id, -1);
 }
 
 
@@ -96,11 +97,17 @@ static bool sub_cmp_half_handler(struct le *le, void *arg)
 
 
 static struct sipnot *sipnot_find(struct sipevent_sock *sock,
-				   const struct sip_msg *msg)
+				  const struct sip_msg *msg,
+				  const struct sipevent_event *evt)
 {
+	struct subcmp cmp;
+
+	cmp.msg = msg;
+	cmp.evt = evt;
+
 	return list_ledata(hash_lookup(sock->ht_not,
 				       hash_joaat_pl(&msg->callid),
-				       not_cmp_handler, (void *)msg));
+				       not_cmp_handler, &cmp));
 }
 
 
@@ -229,10 +236,19 @@ static void notify_handler(struct sipevent_sock *sock,
 static void subscribe_handler(struct sipevent_sock *sock,
 			      const struct sip_msg *msg)
 {
+	struct sipevent_event event;
 	struct sip *sip = sock->sip;
+	const struct sip_hdr *hdr;
 	struct sipnot *not;
+	uint32_t expires;
 
-	not = sipnot_find(sock, msg);
+	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
+	if (!hdr || sipevent_event_decode(&event, &hdr->val)) {
+		(void)sip_reply(sip, msg, 400, "Bad Event Header");
+		return;
+	}
+
+	not = sipnot_find(sock, msg, &event);
 	if (!not || not->terminated) {
 		(void)sip_reply(sip, msg, 481, "Subscription Does Not Exist");
 		return;
@@ -245,7 +261,18 @@ static void subscribe_handler(struct sipevent_sock *sock,
 
 	(void)sip_dialog_update(not->dlg, msg);
 
-	/* todo: implement notifier */
+	if (pl_isset(&msg->expires))
+		expires = pl_u32(&msg->expires);
+	else
+		expires = DEFAULT_EXPIRES;
+
+	sipnot_refresh(not, expires);
+
+	(void)sipnot_reply(not, msg, 200, "OK");
+
+	if (expires > 0) {
+		(void)sipnot_notify(not);
+	}
 }
 
 
