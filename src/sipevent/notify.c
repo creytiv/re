@@ -400,20 +400,29 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 }
 
 
-int sipevent_notify(struct sipnot *not, struct mbuf *mb)
+int sipevent_notify(struct sipnot *not, struct mbuf *mb, bool term,
+		    enum sipevent_reason reason)
 {
 	if (!not || not->terminated)
 		return EINVAL;
 
-	mem_deref(not->mb);
-	not->mb = mem_ref(mb);
+	if (mb || !term) {
+		mem_deref(not->mb);
+		not->mb = mem_ref(mb);
+	}
+
+	if (term) {
+		tmr_cancel(&not->tmr);
+		(void)terminate(not, reason);
+		return 0;
+	}
 
 	return sipnot_notify(not);
 }
 
 
-int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
-		     const char *fmt, ...)
+int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp, bool term,
+		     enum sipevent_reason reason, const char *fmt, ...)
 {
 	struct mbuf *mb;
 	va_list ap;
@@ -423,7 +432,7 @@ int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
 		return EINVAL;
 
 	if (mbp && *mbp)
-		return sipevent_notify(not, *mbp);
+		return sipevent_notify(not, *mbp, term, reason);
 
 	mb = mbuf_alloc(1024);
 	if (!mb)
@@ -437,7 +446,7 @@ int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
 
 	mb->pos = 0;
 
-	err = sipevent_notify(not, mb);
+	err = sipevent_notify(not, mb, term, reason);
 	if (err)
 		goto out;
 

@@ -78,7 +78,7 @@ const char *sipevent_substate_name(enum sipevent_subst state)
 	case SIPEVENT_ACTIVE:     return "active";
 	case SIPEVENT_PENDING:    return "pending";
 	case SIPEVENT_TERMINATED: return "terminated";
-	default:                  return "???";
+	default:                  return "unknown";
 	}
 }
 
@@ -87,8 +87,12 @@ const char *sipevent_reason_name(enum sipevent_reason reason)
 {
 	switch (reason) {
 
-	case SIPEVENT_TIMEOUT:    return "timeout";
-	case SIPEVENT_NORESOURCE: return "noresource";
-	default:                  return "???";
+	case SIPEVENT_DEACTIVATED: return "deactivated";
+	case SIPEVENT_PROBATION:   return "probation";
+	case SIPEVENT_REJECTED:    return "rejected";
+	case SIPEVENT_TIMEOUT:     return "timeout";
+	case SIPEVENT_GIVEUP:      return "giveup";
+	case SIPEVENT_NORESOURCE:  return "noresource";
+	default:                   return "unknown";
 	}
 }

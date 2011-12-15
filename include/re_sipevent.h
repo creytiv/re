@@ -20,7 +20,11 @@ enum sipevent_subst {
 };
 
 enum sipevent_reason {
-	SIPEVENT_TIMEOUT = 0,
+	SIPEVENT_DEACTIVATED = 0,
+	SIPEVENT_PROBATION,
+	SIPEVENT_REJECTED,
+	SIPEVENT_TIMEOUT,
+	SIPEVENT_GIVEUP,
 	SIPEVENT_NORESOURCE,
 };
 
@@ -60,9 +64,10 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 		    uint32_t expires_max, const char *cuser, const char *ctype,
 		    sip_auth_h *authh, void *aarg, bool aref,
 		    sipevent_close_h *closeh, void *arg, const char *fmt, ...);
-int sipevent_notify(struct sipnot *not, struct mbuf *mb);
-int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
-		     const char *fmt, ...);
+int sipevent_notify(struct sipnot *not, struct mbuf *mb, bool term,
+		    enum sipevent_reason reason);
+int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp, bool term,
+		     enum sipevent_reason reason, const char *fmt, ...);
 
 
 /* Subscriber */
