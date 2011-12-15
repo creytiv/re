@@ -173,6 +173,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		sipnot_terminate(not, err, msg, -1);
 	}
 	else if (not->notify_pending) {
+		re_printf("sending queued request\n");
 		(void)notify_request(not, true);
 	}
 }
@@ -260,6 +261,7 @@ static int notify_request(struct sipnot *not, bool reset_ls)
 int sipnot_notify(struct sipnot *not)
 {
 	if (not->req) {
+		re_printf("waiting for previous request to complete\n");
 		not->notify_pending = true;
 		return 0;
 	}
@@ -409,7 +411,8 @@ int sipevent_notify(struct sipnot *not, struct mbuf *mb)
 }
 
 
-int sipevent_notifyf(struct sipnot *not, const char *fmt, ...)
+int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
+		     const char *fmt, ...)
 {
 	struct mbuf *mb;
 	va_list ap;
@@ -417,6 +420,9 @@ int sipevent_notifyf(struct sipnot *not, const char *fmt, ...)
 
 	if (!not || not->terminated || !fmt)
 		return EINVAL;
+
+	if (mbp && *mbp)
+		return sipevent_notify(not, *mbp);
 
 	mb = mbuf_alloc(1024);
 	if (!mb)
@@ -435,7 +441,10 @@ int sipevent_notifyf(struct sipnot *not, const char *fmt, ...)
 		goto out;
 
  out:
-	mem_deref(mb);
+	if (err || !mbp)
+		mem_deref(mb);
+	else
+		*mbp = mb;
 
 	return err;
 }
