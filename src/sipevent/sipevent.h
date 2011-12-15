@@ -4,11 +4,6 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
-enum {
-	DEFAULT_EXPIRES = 3600,
-};
-
-
 /* Listener Socket */
 
 struct sipevent_sock {
@@ -40,6 +35,7 @@ struct sipnot {
 	char *ctype;
 	sipevent_close_h *closeh;
 	void *arg;
+	uint32_t expires_dfl;
 	uint32_t expires_max;
 	enum sipevent_reason reason;
 	bool notify_pending;

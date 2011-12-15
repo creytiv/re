@@ -264,7 +264,7 @@ static void subscribe_handler(struct sipevent_sock *sock,
 	if (pl_isset(&msg->expires))
 		expires = pl_u32(&msg->expires);
 	else
-		expires = DEFAULT_EXPIRES;
+		expires = not->expires_dfl;
 
 	sipnot_refresh(not, expires);
 

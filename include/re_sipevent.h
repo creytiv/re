@@ -56,12 +56,13 @@ typedef void (sipevent_close_h)(int err, const struct sip_msg *msg, void *arg);
 int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 		    const struct sip_msg *msg, struct sip_dialog *dlg,
 		    const struct sipevent_event *event,
-		    uint16_t scode, const char *reason, uint32_t expires_max,
-		    const char *cuser, const char *ctype,
+		    uint16_t scode, const char *reason, uint32_t expires_dfl,
+		    uint32_t expires_max, const char *cuser, const char *ctype,
 		    sip_auth_h *authh, void *aarg, bool aref,
 		    sipevent_close_h *closeh, void *arg, const char *fmt, ...);
 int sipevent_notify(struct sipnot *not, struct mbuf *mb);
-int sipevent_notifyf(struct sipnot *not, const char *fmt, ...);
+int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
+		     const char *fmt, ...);
 
 
 /* Subscriber */
