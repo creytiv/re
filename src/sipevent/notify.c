@@ -390,6 +390,7 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 	not->expires_min = expires_min;
 	not->expires_dfl = expires_dfl;
 	not->expires_max = expires_max;
+	not->substate = SIPEVENT_PENDING;
 	not->sock   = mem_ref(sock);
 	not->sip    = mem_ref(sock->sip);
 	not->closeh = closeh ? closeh : internal_close_handler;
