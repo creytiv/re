@@ -127,8 +127,16 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	else
 		re_printf("notify reply: %u %r\n", msg->scode, &msg->reason);
 
-	if (err || sip_request_loops(&not->ls, msg->scode))
+	if (err) {
+		if (err == ETIMEDOUT)
+			not->subscribed = false;
 		goto out;
+	}
+
+	if (sip_request_loops(&not->ls, msg->scode)) {
+		not->subscribed = false;
+		goto out;
+	}
 
 	if (msg->scode < 200) {
 		return;
@@ -153,15 +161,9 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 				break;
 
 			return;
-
-		case 403:
-			sip_auth_reset(not->auth);
-			break;
-
-		case 481:
-			not->subscribed = false;
-			break;
 		}
+
+		not->subscribed = false;
 	}
 
  out:
