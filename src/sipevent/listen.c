@@ -192,11 +192,13 @@ static void notify_handler(struct sipevent_sock *sock,
 		(void)sip_dialog_update(sub->dlg, msg);
 	}
 
-	(void)sip_treply(NULL, sip, msg, 200, "OK");
-
 	if (sub->refer_cseq >= 0 && !sub->id && pl_isset(&event.id)) {
 
-		(void)pl_strdup(&sub->id, &event.id);
+		err = pl_strdup(&sub->id, &event.id);
+		if (err) {
+			(void)sip_treply(NULL, sip, msg, 500, strerror(err));
+			return;
+		}
 	}
 
 	re_printf("notify: %s (%r)\n", sipevent_substate_name(state.state),
@@ -217,11 +219,8 @@ static void notify_handler(struct sipevent_sock *sock,
 		break;
 	}
 
-	if (sub->terminated)
-		return;
-
 	mem_ref(sub);
-	sub->notifyh(msg, sub->arg);
+	sub->notifyh(sip, msg, sub->arg);
 	nrefs = mem_nrefs(sub);
 	mem_deref(sub);
 

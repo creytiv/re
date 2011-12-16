@@ -29,10 +29,12 @@ enum {
 static int request(struct sipsub *sub, bool reset_ls);
 
 
-static void internal_notify_handler(const struct sip_msg *msg, void *arg)
+static void internal_notify_handler(struct sip *sip, const struct sip_msg *msg,
+				    void *arg)
 {
-	(void)msg;
 	(void)arg;
+
+	(void)sip_treply(NULL, sip, msg, 200, "OK");
 }
 
 
