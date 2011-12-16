@@ -77,8 +77,7 @@ struct sipsub;
 
 typedef int  (sipevent_fork_h)(struct sipsub **subp, struct sipsub *osub,
 			       const struct sip_msg *msg, void *arg);
-typedef void (sipevent_notify_h)(struct sip *sip, const struct sip_msg *msg,
-				 void *arg);
+typedef void (sipevent_notify_h)(const struct sip_msg *msg, void *arg);
 
 int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       const char *uri, const char *from_name,
