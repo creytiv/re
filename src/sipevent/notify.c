@@ -215,7 +215,9 @@ static int print_substate(struct re_printf *pf, const struct sipnot *not)
 
 		expires = (uint32_t)(tmr_get_expire(&not->tmr) / 1000);
 
-		return re_hprintf(pf, "active;expires=%u", expires);
+		return re_hprintf(pf, "%s;expires=%u",
+				  not->mb ? "active" : "pending",
+				  expires);
 	}
 }
 
