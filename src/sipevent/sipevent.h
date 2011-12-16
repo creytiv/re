@@ -38,6 +38,8 @@ struct sipnot {
 	uint32_t expires_min;
 	uint32_t expires_dfl;
 	uint32_t expires_max;
+	uint32_t retry_after;
+	enum sipevent_subst substate;
 	enum sipevent_reason reason;
 	bool notify_pending;
 	bool subscribed;

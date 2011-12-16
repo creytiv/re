@@ -206,19 +206,28 @@ static int print_event(struct re_printf *pf, const struct sipnot *not)
 
 static int print_substate(struct re_printf *pf, const struct sipnot *not)
 {
+	int err;
+
 	if (not->terminated) {
-		return re_hprintf(pf, "terminated;reason=%s",
-				  sipevent_reason_name(not->reason));
+
+		err = re_hprintf(pf, "terminated;reason=%s",
+				 sipevent_reason_name(not->reason));
+
+		if (not->retry_after)
+			err |= re_hprintf(pf, ";retry-after=%u",
+					  not->retry_after);
 	}
 	else {
 		uint32_t expires;
 
 		expires = (uint32_t)(tmr_get_expire(&not->tmr) / 1000);
 
-		return re_hprintf(pf, "%s;expires=%u",
-				  not->mb ? "active" : "pending",
-				  expires);
+		err = re_hprintf(pf, "%s;expires=%u",
+				 sipevent_substate_name(not->substate),
+				 expires);
 	}
+
+	return err;
 }
 
 
@@ -409,29 +418,40 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 }
 
 
-int sipevent_notify(struct sipnot *not, struct mbuf *mb, bool term,
-		    enum sipevent_reason reason)
+int sipevent_notify(struct sipnot *not, struct mbuf *mb,
+		    enum sipevent_subst state, enum sipevent_reason reason,
+		    uint32_t retry_after)
 {
 	if (!not || not->terminated)
 		return EINVAL;
 
-	if (mb || !term) {
+	if (mb || state != SIPEVENT_TERMINATED) {
 		mem_deref(not->mb);
 		not->mb = mem_ref(mb);
 	}
 
-	if (term) {
+	switch (state) {
+
+	case SIPEVENT_ACTIVE:
+	case SIPEVENT_PENDING:
+		not->substate = state;
+		return sipnot_notify(not);
+
+	case SIPEVENT_TERMINATED:
 		tmr_cancel(&not->tmr);
+		not->retry_after = retry_after;
 		(void)terminate(not, reason);
 		return 0;
-	}
 
-	return sipnot_notify(not);
+	default:
+		return EINVAL;
+	}
 }
 
 
-int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp, bool term,
-		     enum sipevent_reason reason, const char *fmt, ...)
+int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
+		     enum sipevent_subst state, enum sipevent_reason reason,
+		     uint32_t retry_after, const char *fmt, ...)
 {
 	struct mbuf *mb;
 	va_list ap;
@@ -441,7 +461,7 @@ int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp, bool term,
 		return EINVAL;
 
 	if (mbp && *mbp)
-		return sipevent_notify(not, *mbp, term, reason);
+		return sipevent_notify(not, *mbp, state, reason, retry_after);
 
 	mb = mbuf_alloc(1024);
 	if (!mb)
@@ -455,7 +475,7 @@ int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp, bool term,
 
 	mb->pos = 0;
 
-	err = sipevent_notify(not, mb, term, reason);
+	err = sipevent_notify(not, mb, state, reason, retry_after);
 	if (err)
 		goto out;
 
