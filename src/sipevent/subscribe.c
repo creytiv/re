@@ -99,7 +99,7 @@ static void tmr_handler(void *arg)
 	struct sipsub *sub = arg;
 	int err;
 
-	if (sub->req)
+	if (sub->req || sub->terminated)
 		return;
 
 	err = request(sub, true);

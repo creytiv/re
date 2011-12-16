@@ -99,6 +99,9 @@ static void tmr_handler(void *arg)
 {
 	struct sipnot *not = arg;
 
+	if (not->terminated)
+		return;
+
 	re_printf("subscription expired\n");
 
 	sipnot_terminate(not, ETIMEDOUT, NULL, SIPEVENT_TIMEOUT);
