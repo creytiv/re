@@ -217,6 +217,9 @@ static void notify_handler(struct sipevent_sock *sock,
 		break;
 	}
 
+	if (sub->terminated)
+		return;
+
 	mem_ref(sub);
 	sub->notifyh(msg, sub->arg);
 	nrefs = mem_nrefs(sub);
