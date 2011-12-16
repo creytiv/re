@@ -63,9 +63,9 @@ struct sipsub {
 	struct sip *sip;
 	char *event;
 	char *id;
-	char *refer_to;
 	char *cuser;
 	char *hdrs;
+	char *refer_hdrs;
 	sipevent_fork_h *forkh;
 	sipevent_notify_h *notifyh;
 	sipevent_close_h *closeh;

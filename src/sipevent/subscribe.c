@@ -86,9 +86,9 @@ static void destructor(void *arg)
 	mem_deref(sub->auth);
 	mem_deref(sub->event);
 	mem_deref(sub->id);
-	mem_deref(sub->refer_to);
 	mem_deref(sub->cuser);
 	mem_deref(sub->hdrs);
+	mem_deref(sub->refer_hdrs);
 	mem_deref(sub->sock);
 	mem_deref(sub->sip);
 }
@@ -311,12 +311,10 @@ static int request(struct sipsub *sub, bool reset_ls)
 		return sip_drequestf(&sub->req, sub->sip, true, "REFER",
 				     sub->dlg, 0, sub->auth,
 				     send_handler, response_handler, sub,
-				     "Refer-To: %s\r\n"
 				     "%s"
 				     "Content-Length: 0\r\n"
 				     "\r\n",
-				     sub->refer_to,
-				     sub->hdrs);
+				     sub->refer_hdrs);
 	}
 	else {
 		return sip_drequestf(&sub->req, sub->sip, true, "SUBSCRIBE",
@@ -338,7 +336,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 			bool refer, struct sip_dialog *dlg, const char *uri,
 			const char *from_name, const char *from_uri,
 			const char *event, const char *id, uint32_t expires,
-			const char *refer_to, const char *cuser,
+			const char *cuser,
 			const char *routev[], uint32_t routec,
 			sip_auth_h *authh, void *aarg, bool aref,
 			sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
@@ -352,9 +350,6 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 		return EINVAL;
 
 	if (!dlg && (!uri || !from_uri))
-		return EINVAL;
-
-	if (refer && !refer_to)
 		return EINVAL;
 
 	sub = mem_zalloc(sizeof(*sub), destructor);
@@ -389,19 +384,13 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 			goto out;
 	}
 
-	if (refer_to) {
-		err = str_dup(&sub->refer_to, refer_to);
-		if (err)
-			goto out;
-	}
-
 	err = str_dup(&sub->cuser, cuser);
 	if (err)
 		goto out;
 
-	/* Custom SIP headers */
 	if (fmt) {
-		err = re_vsdprintf(&sub->hdrs, fmt, ap);
+		err = re_vsdprintf(refer ? &sub->refer_hdrs : &sub->hdrs,
+				   fmt, ap);
 		if (err)
 			goto out;
 	}
@@ -470,7 +459,7 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, false, NULL, uri, from_name, from_uri,
-			   event, id, expires, NULL, cuser,
+			   event, id, expires, cuser,
 			   routev, routec, authh, aarg, aref, forkh, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);
@@ -511,7 +500,7 @@ int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, false, dlg, NULL, NULL, NULL,
-			   event, id, expires, NULL, cuser,
+			   event, id, expires, cuser,
 			   NULL, 0, authh, aarg, aref, NULL, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);
@@ -528,7 +517,6 @@ int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
  * @param uri       SIP Request URI
  * @param from_name SIP From-header Name (optional)
  * @param from_uri  SIP From-header URI
- * @param refer_to  Refer-To address
  * @param cuser     Contact username
  * @param routev    Optional route vector
  * @param routec    Number of routes
@@ -545,8 +533,8 @@ int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
  */
 int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 		   const char *uri, const char *from_name,
-		   const char *from_uri, const char *refer_to,
-		   const char *cuser, const char *routev[], uint32_t routec,
+		   const char *from_uri, const char *cuser,
+		   const char *routev[], uint32_t routec,
 		   sip_auth_h *authh, void *aarg, bool aref,
 		   sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
 		   sipevent_close_h *closeh, void *arg,
@@ -557,7 +545,7 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, true, NULL, uri, from_name, from_uri,
-			   "refer", NULL, DEFAULT_EXPIRES, refer_to, cuser,
+			   "refer", NULL, DEFAULT_EXPIRES, cuser,
 			   routev, routec, authh, aarg, aref, forkh, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);
@@ -572,7 +560,6 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
  * @param subp      Pointer to allocated SIP subscriber client
  * @param sock      SIP Event socket
  * @param dlg       Established SIP Dialog
- * @param refer_to  Refer-To address
  * @param cuser     Contact username
  * @param authh     Authentication handler
  * @param aarg      Authentication handler argument
@@ -585,8 +572,7 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
  * @return 0 if success, otherwise errorcode
  */
 int sipevent_drefer(struct sipsub **subp, struct sipevent_sock *sock,
-		    struct sip_dialog *dlg, const char *refer_to,
-		    const char *cuser,
+		    struct sip_dialog *dlg, const char *cuser,
 		    sip_auth_h *authh, void *aarg, bool aref,
 		    sipevent_notify_h *notifyh, sipevent_close_h *closeh,
 		    void *arg, const char *fmt, ...)
@@ -596,7 +582,7 @@ int sipevent_drefer(struct sipsub **subp, struct sipevent_sock *sock,
 
 	va_start(ap, fmt);
 	err = sipsub_alloc(subp, sock, true, dlg, NULL, NULL, NULL,
-			   "refer", NULL, DEFAULT_EXPIRES, refer_to, cuser,
+			   "refer", NULL, DEFAULT_EXPIRES, cuser,
 			   NULL, 0, authh, aarg, aref, NULL, notifyh,
 			   closeh, arg, fmt, ap);
 	va_end(ap);

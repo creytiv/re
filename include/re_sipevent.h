@@ -97,15 +97,14 @@ int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
 
 int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 		   const char *uri, const char *from_name,
-		   const char *from_uri, const char *refer_to,
-		   const char *cuser, const char *routev[], uint32_t routec,
+		   const char *from_uri, const char *cuser,
+		   const char *routev[], uint32_t routec,
 		   sip_auth_h *authh, void *aarg, bool aref,
 		   sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
 		   sipevent_close_h *closeh, void *arg,
 		   const char *fmt, ...);
 int sipevent_drefer(struct sipsub **subp, struct sipevent_sock *sock,
-		    struct sip_dialog *dlg, const char *refer_to,
-		    const char *cuser,
+		    struct sip_dialog *dlg, const char *cuser,
 		    sip_auth_h *authh, void *aarg, bool aref,
 		    sipevent_notify_h *notifyh, sipevent_close_h *closeh,
 		    void *arg, const char *fmt, ...);
