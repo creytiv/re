@@ -293,8 +293,9 @@ int sipnot_reply(struct sipnot *not, const struct sip_msg *msg,
 int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 		    const struct sip_msg *msg, struct sip_dialog *dlg,
 		    const struct sipevent_event *event,
-		    uint16_t scode, const char *reason, uint32_t expires_dfl,
-		    uint32_t expires_max, const char *cuser, const char *ctype,
+		    uint16_t scode, const char *reason, uint32_t expires_min,
+		    uint32_t expires_dfl, uint32_t expires_max,
+		    const char *cuser, const char *ctype,
 		    sip_auth_h *authh, void *aarg, bool aref,
 		    sipevent_close_h *closeh, void *arg, const char *fmt, ...)
 {
@@ -303,7 +304,7 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 	int err;
 
 	if (!notp || !sock || !msg || !scode || !reason || !expires_dfl ||
-	    !expires_max || !cuser || !ctype)
+	    !expires_max || !cuser || !ctype || expires_dfl < expires_min)
 		return EINVAL;
 
 	not = mem_zalloc(sizeof(*not), destructor);
@@ -373,6 +374,7 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 			goto out;
 	}
 
+	not->expires_min = expires_min;
 	not->expires_dfl = expires_dfl;
 	not->expires_max = expires_max;
 	not->sock   = mem_ref(sock);

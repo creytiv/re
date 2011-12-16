@@ -254,17 +254,26 @@ static void subscribe_handler(struct sipevent_sock *sock,
 		return;
 	}
 
+	if (pl_isset(&msg->expires))
+		expires = pl_u32(&msg->expires);
+	else
+		expires = not->expires_dfl;
+
+	if (expires > 0 && expires < not->expires_min) {
+		(void)sip_replyf(sip, msg, 423, "Interval Too Brief",
+				 "Min-Expires: %u\r\n"
+				 "Content-Length: 0\r\n"
+				 "\r\n",
+				 not->expires_min);
+		return;
+	}
+
 	if (!sip_dialog_rseq_valid(not->dlg, msg)) {
 		(void)sip_reply(sip, msg, 500, "Bad Sequence");
 		return;
 	}
 
 	(void)sip_dialog_update(not->dlg, msg);
-
-	if (pl_isset(&msg->expires))
-		expires = pl_u32(&msg->expires);
-	else
-		expires = not->expires_dfl;
 
 	sipnot_refresh(not, expires);
 
