@@ -35,6 +35,7 @@ struct sipnot {
 	char *ctype;
 	sipevent_close_h *closeh;
 	void *arg;
+	uint32_t expires;
 	uint32_t expires_min;
 	uint32_t expires_dfl;
 	uint32_t expires_max;

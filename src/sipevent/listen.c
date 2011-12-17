@@ -279,9 +279,7 @@ static void subscribe_handler(struct sipevent_sock *sock,
 
 	(void)sipnot_reply(not, msg, 200, "OK");
 
-	if (expires > 0) {
-		(void)sipnot_notify(not);
-	}
+	(void)sipnot_notify(not);
 }
 
 

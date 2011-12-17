@@ -110,11 +110,11 @@ static void tmr_handler(void *arg)
 
 void sipnot_refresh(struct sipnot *not, uint32_t expires)
 {
-	expires = min(expires, not->expires_max);
+	not->expires = min(expires, not->expires_max);
 
-	re_printf("will expire in %u secs\n", expires);
+	re_printf("will expire in %u secs\n", not->expires);
 
-	tmr_start(&not->tmr, expires * 1000, tmr_handler, not);
+	tmr_start(&not->tmr, not->expires * 1000, tmr_handler, not);
 }
 
 
@@ -276,6 +276,11 @@ static int notify_request(struct sipnot *not, bool reset_ls)
 
 int sipnot_notify(struct sipnot *not)
 {
+	if (not->expires == 0) {
+		re_printf("NOTIFY will be sent at timeout\n");
+		return 0;
+	}
+
 	if (not->req) {
 		re_printf("waiting for previous request to complete\n");
 		not->notify_pending = true;
