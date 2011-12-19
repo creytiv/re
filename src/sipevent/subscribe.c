@@ -39,10 +39,12 @@ static void internal_notify_handler(struct sip *sip, const struct sip_msg *msg,
 
 
 static void internal_close_handler(int err, const struct sip_msg *msg,
+				   const struct sipevent_substate *substate,
 				   void *arg)
 {
 	(void)err;
 	(void)msg;
+	(void)substate;
 	(void)arg;
 }
 
@@ -108,7 +110,7 @@ static void tmr_handler(void *arg)
 			sipsub_reschedule(sub, RESUB_FAIL_WAIT);
 		}
 		else {
-			sipsub_terminate(sub, err, NULL);
+			sipsub_terminate(sub, err, NULL, NULL);
 		}
 	}
 }
@@ -122,7 +124,8 @@ void sipsub_reschedule(struct sipsub *sub, uint64_t wait)
 }
 
 
-void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg)
+void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg,
+		      const struct sipevent_substate *substate)
 {
 	sipevent_close_h *closeh;
 	void *arg;
@@ -133,7 +136,7 @@ void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg)
 	tmr_cancel(&sub->tmr);
 	(void)terminate(sub);
 
-	closeh(err, msg, arg);
+	closeh(err, msg, substate, arg);
 }
 
 
@@ -271,7 +274,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		if (sub->subscribed && ++sub->failc < RESUB_FAILC_MAX)
 			sipsub_reschedule(sub, RESUB_FAIL_WAIT);
 		else
-			sipsub_terminate(sub, err, msg);
+			sipsub_terminate(sub, err, msg, NULL);
 	}
 }
 

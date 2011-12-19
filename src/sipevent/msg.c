@@ -62,10 +62,26 @@ int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 	else
 		ss->expires = pl_null;
 
-	if (!sip_param_decode(&ss->params, "reason", &param))
-		ss->reason = param;
-	else
-		ss->reason = pl_null;
+	if (!sip_param_decode(&ss->params, "reason", &param)) {
+
+		if (!pl_strcasecmp(&param, "deactivated"))
+			ss->reason = SIPEVENT_DEACTIVATED;
+		else if (!pl_strcasecmp(&param, "probation"))
+			ss->reason = SIPEVENT_PROBATION;
+		else if (!pl_strcasecmp(&param, "rejected"))
+			ss->reason = SIPEVENT_REJECTED;
+		else if (!pl_strcasecmp(&param, "timeout"))
+			ss->reason = SIPEVENT_TIMEOUT;
+		else if (!pl_strcasecmp(&param, "giveup"))
+			ss->reason = SIPEVENT_GIVEUP;
+		else if (!pl_strcasecmp(&param, "noresource"))
+			ss->reason = SIPEVENT_NORESOURCE;
+		else
+			ss->reason = -1;
+	}
+	else {
+		ss->reason = -1;
+	}
 
 	return 0;
 }

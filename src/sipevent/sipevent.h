@@ -33,7 +33,7 @@ struct sipnot {
 	char *cuser;
 	char *hdrs;
 	char *ctype;
-	sipevent_close_h *closeh;
+	sip_resp_h *closeh;
 	void *arg;
 	uint32_t expires;
 	uint32_t expires_min;
@@ -86,4 +86,5 @@ struct sipsub *sipsub_find(struct sipevent_sock *sock,
 			   const struct sip_msg *msg,
 			   const struct sipevent_event *evt, bool full);
 void sipsub_reschedule(struct sipsub *sub, uint64_t wait);
-void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg);
+void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg,
+		      const struct sipevent_substate *substate);

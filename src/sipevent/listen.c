@@ -229,7 +229,7 @@ static void notify_handler(struct sipevent_sock *sock,
 		return;
 
 	if (!sub->terminated && state.state == SIPEVENT_TERMINATED)
-		sipsub_terminate(sub, 0, msg);
+		sipsub_terminate(sub, 0, msg, &state);
 }
 
 

@@ -30,9 +30,9 @@ enum sipevent_reason {
 
 struct sipevent_substate {
 	enum sipevent_subst state;
-	struct pl params;
+	enum sipevent_reason reason;
 	struct pl expires;
-	struct pl reason;
+	struct pl params;
 };
 
 int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl);
@@ -55,8 +55,6 @@ int sipevent_listen(struct sipevent_sock **sockp, struct sip *sip,
 
 struct sipnot;
 
-typedef void (sipevent_close_h)(int err, const struct sip_msg *msg, void *arg);
-
 int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 		    const struct sip_msg *msg, struct sip_dialog *dlg,
 		    const struct sipevent_event *event,
@@ -64,7 +62,7 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 		    uint32_t expires_dfl, uint32_t expires_max,
 		    const char *cuser, const char *ctype,
 		    sip_auth_h *authh, void *aarg, bool aref,
-		    sipevent_close_h *closeh, void *arg, const char *fmt, ...);
+		    sip_resp_h *closeh, void *arg, const char *fmt, ...);
 int sipevent_notify(struct sipnot *not, struct mbuf *mb,
 		    enum sipevent_subst state, enum sipevent_reason reason,
 		    uint32_t retry_after);
@@ -81,6 +79,9 @@ typedef int  (sipevent_fork_h)(struct sipsub **subp, struct sipsub *osub,
 			       const struct sip_msg *msg, void *arg);
 typedef void (sipevent_notify_h)(struct sip *sip, const struct sip_msg *msg,
 				 void *arg);
+typedef void (sipevent_close_h)(int err, const struct sip_msg *msg,
+				const struct sipevent_substate *substate,
+				void *arg);
 
 int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       const char *uri, const char *from_name,
