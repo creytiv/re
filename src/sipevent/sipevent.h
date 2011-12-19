@@ -33,7 +33,7 @@ struct sipnot {
 	char *cuser;
 	char *hdrs;
 	char *ctype;
-	sip_resp_h *closeh;
+	sipnot_close_h *closeh;
 	void *arg;
 	uint32_t expires;
 	uint32_t expires_min;
@@ -70,9 +70,9 @@ struct sipsub {
 	char *cuser;
 	char *hdrs;
 	char *refer_hdrs;
-	sipevent_fork_h *forkh;
-	sipevent_notify_h *notifyh;
-	sipevent_close_h *closeh;
+	sipsub_fork_h *forkh;
+	sipsub_notify_h *notifyh;
+	sipsub_close_h *closeh;
 	void *arg;
 	int32_t refer_cseq;
 	uint32_t expires;

@@ -127,7 +127,7 @@ void sipsub_reschedule(struct sipsub *sub, uint64_t wait)
 void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg,
 		      const struct sipevent_substate *substate)
 {
-	sipevent_close_h *closeh;
+	sipsub_close_h *closeh;
 	void *arg;
 
 	closeh = sub->closeh;
@@ -342,8 +342,8 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 			const char *cuser,
 			const char *routev[], uint32_t routec,
 			sip_auth_h *authh, void *aarg, bool aref,
-			sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
-			sipevent_close_h *closeh, void *arg,
+			sipsub_fork_h *forkh, sipsub_notify_h *notifyh,
+			sipsub_close_h *closeh, void *arg,
 			const char *fmt, va_list ap)
 {
 	struct sipsub *sub;
@@ -453,8 +453,8 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
 		       uint32_t expires, const char *cuser,
 		       const char *routev[], uint32_t routec,
 		       sip_auth_h *authh, void *aarg, bool aref,
-		       sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
-		       sipevent_close_h *closeh, void *arg,
+		       sipsub_fork_h *forkh, sipsub_notify_h *notifyh,
+		       sipsub_close_h *closeh, void *arg,
 		       const char *fmt, ...)
 {
 	va_list ap;
@@ -495,7 +495,7 @@ int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
 			struct sip_dialog *dlg, const char *event,
 			const char *id, uint32_t expires, const char *cuser,
 			sip_auth_h *authh, void *aarg, bool aref,
-			sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+			sipsub_notify_h *notifyh, sipsub_close_h *closeh,
 			void *arg, const char *fmt, ...)
 {
 	va_list ap;
@@ -539,8 +539,8 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 		   const char *from_uri, const char *cuser,
 		   const char *routev[], uint32_t routec,
 		   sip_auth_h *authh, void *aarg, bool aref,
-		   sipevent_fork_h *forkh, sipevent_notify_h *notifyh,
-		   sipevent_close_h *closeh, void *arg,
+		   sipsub_fork_h *forkh, sipsub_notify_h *notifyh,
+		   sipsub_close_h *closeh, void *arg,
 		   const char *fmt, ...)
 {
 	va_list ap;
@@ -577,7 +577,7 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
 int sipevent_drefer(struct sipsub **subp, struct sipevent_sock *sock,
 		    struct sip_dialog *dlg, const char *cuser,
 		    sip_auth_h *authh, void *aarg, bool aref,
-		    sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+		    sipsub_notify_h *notifyh, sipsub_close_h *closeh,
 		    void *arg, const char *fmt, ...)
 {
 	va_list ap;
@@ -597,7 +597,7 @@ int sipevent_drefer(struct sipsub **subp, struct sipevent_sock *sock,
 int sipevent_fork(struct sipsub **subp, struct sipsub *osub,
 		  const struct sip_msg *msg,
 		  sip_auth_h *authh, void *aarg, bool aref,
-		  sipevent_notify_h *notifyh, sipevent_close_h *closeh,
+		  sipsub_notify_h *notifyh, sipsub_close_h *closeh,
 		  void *arg)
 {
 	struct sipsub *sub;

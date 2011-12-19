@@ -82,7 +82,7 @@ static void sipnot_terminate(struct sipnot *not, int err,
 			     const struct sip_msg *msg,
 			     enum sipevent_reason reason)
 {
-	sip_resp_h *closeh;
+	sipnot_close_h *closeh;
 	void *arg;
 
 	closeh = not->closeh;
@@ -315,7 +315,7 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 		    uint32_t expires_dfl, uint32_t expires_max,
 		    const char *cuser, const char *ctype,
 		    sip_auth_h *authh, void *aarg, bool aref,
-		    sip_resp_h *closeh, void *arg, const char *fmt, ...)
+		    sipnot_close_h *closeh, void *arg, const char *fmt, ...)
 {
 	struct sipnot *not;
 	uint32_t expires;
