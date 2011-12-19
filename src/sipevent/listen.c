@@ -140,7 +140,7 @@ static void notify_handler(struct sipevent_sock *sock,
 
 	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
 	if (!hdr || sipevent_event_decode(&event, &hdr->val)) {
-		(void)sip_reply(sip, msg, 400, "Bad Event Header");
+		(void)sip_reply(sip, msg, 489, "Bad Event");
 		return;
 	}
 
