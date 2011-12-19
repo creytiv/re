@@ -57,11 +57,6 @@ int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 	else
 		ss->state = -1;
 
-	if (!sip_param_decode(&ss->params, "expires", &param))
-		ss->expires = param;
-	else
-		ss->expires = pl_null;
-
 	if (!sip_param_decode(&ss->params, "reason", &param)) {
 
 		if (!pl_strcasecmp(&param, "deactivated"))
@@ -82,6 +77,16 @@ int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 	else {
 		ss->reason = -1;
 	}
+
+	if (!sip_param_decode(&ss->params, "expires", &param))
+		ss->expires = param;
+	else
+		ss->expires = pl_null;
+
+	if (!sip_param_decode(&ss->params, "retry-after", &param))
+		ss->retry_after = param;
+	else
+		ss->retry_after = pl_null;
 
 	return 0;
 }

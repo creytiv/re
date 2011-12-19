@@ -32,6 +32,7 @@ struct sipevent_substate {
 	enum sipevent_subst state;
 	enum sipevent_reason reason;
 	struct pl expires;
+	struct pl retry_after;
 	struct pl params;
 };
 
