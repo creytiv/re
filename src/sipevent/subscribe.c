@@ -23,6 +23,7 @@ enum {
 	DEFAULT_EXPIRES = 3600,
 	RESUB_FAIL_WAIT = 60000,
 	RESUB_FAILC_MAX = 7,
+	NOTIFY_TIMEOUT  = 10000,
 };
 
 
@@ -56,12 +57,19 @@ static bool terminate(struct sipsub *sub)
 	sub->notifyh    = internal_notify_handler;
 	sub->closeh     = internal_close_handler;
 
+	if (sub->termwait) {
+		mem_ref(sub);
+		return true;
+	}
+
+	tmr_cancel(&sub->tmr);
+
 	if (sub->req) {
 		mem_ref(sub);
 		return true;
 	}
 
-	if (sub->subscribed && !request(sub, true)) {
+	if (sub->expires && sub->subscribed && !request(sub, true)) {
 		mem_ref(sub);
 		return true;
 	}
@@ -74,14 +82,13 @@ static void destructor(void *arg)
 {
 	struct sipsub *sub = arg;
 
-	tmr_cancel(&sub->tmr);
-
 	if (!sub->terminated) {
 
 		if (terminate(sub))
 			return;
 	}
 
+	tmr_cancel(&sub->tmr);
 	hash_unlink(&sub->he);
 	mem_deref(sub->req);
 	mem_deref(sub->dlg);
@@ -93,6 +100,21 @@ static void destructor(void *arg)
 	mem_deref(sub->refer_hdrs);
 	mem_deref(sub->sock);
 	mem_deref(sub->sip);
+}
+
+
+static void notify_timeout_handler(void *arg)
+{
+	struct sipsub *sub = arg;
+
+	re_printf("timeout waiting for NOTIFY\n");
+
+	sub->termwait = false;
+
+	if (sub->terminated)
+		mem_deref(sub);
+	else
+		sipsub_terminate(sub, ETIMEDOUT, NULL, NULL);
 }
 
 
@@ -133,7 +155,6 @@ void sipsub_terminate(struct sipsub *sub, int err, const struct sip_msg *msg,
 	closeh = sub->closeh;
 	arg    = sub->arg;
 
-	tmr_cancel(&sub->tmr);
 	(void)terminate(sub);
 
 	closeh(err, msg, substate, arg);
@@ -198,8 +219,19 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			(void)sip_dialog_update(sub->dlg, msg);
 		}
 
-		sub->subscribed = true;
+		if (!sub->termconf)
+			sub->subscribed = true;
+
 		sub->failc = 0;
+
+		if (!sub->expires && !sub->termconf) {
+
+			re_printf("waiting for last NOTIFY\n");
+			tmr_start(&sub->tmr, NOTIFY_TIMEOUT,
+				  notify_timeout_handler, sub);
+			sub->termwait = true;
+			return;
+		}
 
 		if (sub->terminated)
 			goto out;
@@ -263,11 +295,9 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
  out:
 	sub->refer = false;
 
-	if (!sub->expires) {
-		mem_deref(sub);
-	}
-	else if (sub->terminated) {
-		if (!sub->subscribed || request(sub, true))
+	if (sub->terminated) {
+
+		if (!sub->expires || !sub->subscribed || request(sub, true))
 			mem_deref(sub);
 	}
 	else {
@@ -301,9 +331,6 @@ static int print_event(struct re_printf *pf, const struct sipsub *sub)
 
 static int request(struct sipsub *sub, bool reset_ls)
 {
-	if (sub->terminated)
-		sub->expires = 0;
-
 	if (reset_ls)
 		sip_loopstate_reset(&sub->ls);
 
@@ -320,6 +347,9 @@ static int request(struct sipsub *sub, bool reset_ls)
 				     sub->refer_hdrs);
 	}
 	else {
+		if (sub->terminated)
+			sub->expires = 0;
+
 		return sip_drequestf(&sub->req, sub->sip, true, "SUBSCRIBE",
 				     sub->dlg, 0, sub->auth,
 				     send_handler, response_handler, sub,
@@ -349,7 +379,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 	struct sipsub *sub;
 	int err;
 
-	if (!subp || !sock || !event || !expires || !cuser)
+	if (!subp || !sock || !event || !cuser)
 		return EINVAL;
 
 	if (!dlg && (!uri || !from_uri))
@@ -634,6 +664,12 @@ int sipevent_fork(struct sipsub **subp, struct sipsub *osub,
 	sub->notifyh = notifyh ? notifyh : internal_notify_handler;
 	sub->closeh  = closeh  ? closeh  : internal_close_handler;
 	sub->arg     = arg;
+
+	if (!sub->expires) {
+		tmr_start(&sub->tmr, NOTIFY_TIMEOUT,
+			  notify_timeout_handler, sub);
+		sub->termwait = true;
+	}
 
  out:
 	if (err)

@@ -210,12 +210,14 @@ static void notify_handler(struct sipevent_sock *sock,
 	case SIPEVENT_PENDING:
 		sub->subscribed = true;
 
-		if (!sub->terminated && pl_isset(&state.expires))
+		if (!sub->terminated && !sub->termwait &&
+		    pl_isset(&state.expires))
 			sipsub_reschedule(sub, pl_u32(&state.expires) * 900);
 		break;
 
 	case SIPEVENT_TERMINATED:
 		sub->subscribed = false;
+		sub->termconf = true;
 		break;
 	}
 
@@ -228,8 +230,18 @@ static void notify_handler(struct sipevent_sock *sock,
 	if (nrefs == 1)
 		return;
 
-	if (!sub->terminated && state.state == SIPEVENT_TERMINATED)
-		sipsub_terminate(sub, 0, msg, &state);
+	if (state.state == SIPEVENT_TERMINATED) {
+
+		if (!sub->terminated) {
+			sub->termwait = false;
+			sipsub_terminate(sub, 0, msg, &state);
+		}
+		else if (sub->termwait) {
+			sub->termwait = false;
+			tmr_cancel(&sub->tmr);
+			mem_deref(sub);
+		}
+	}
 }
 
 

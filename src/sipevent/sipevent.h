@@ -79,6 +79,8 @@ struct sipsub {
 	uint32_t failc;
 	bool subscribed;
 	bool terminated;
+	bool termconf;
+	bool termwait;
 	bool refer;
 };
 
