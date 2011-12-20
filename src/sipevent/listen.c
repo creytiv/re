@@ -208,7 +208,8 @@ static void notify_handler(struct sipevent_sock *sock,
 
 	case SIPEVENT_ACTIVE:
 	case SIPEVENT_PENDING:
-		sub->subscribed = true;
+		if (!sub->termconf)
+			sub->subscribed = true;
 
 		if (!sub->terminated && !sub->termwait &&
 		    pl_isset(&state.expires))
