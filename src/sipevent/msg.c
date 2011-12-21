@@ -1,5 +1,5 @@
 /**
- * @file substate.c  SIP Subscription-State header
+ * @file msg.c  SIP event messages
  *
  * Copyright (C) 2010 Creytiv.com
  */

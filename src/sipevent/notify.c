@@ -1,5 +1,5 @@
 /**
- * @file not.c  SIP Event Notify
+ * @file notify.c  SIP Event Notify
  *
  * Copyright (C) 2010 Creytiv.com
  */

@@ -1,5 +1,5 @@
 /**
- * @file sub.c  SIP Event Subscribe
+ * @file subscribe.c  SIP Event Subscribe
  *
  * Copyright (C) 2010 Creytiv.com
  */
@@ -461,7 +461,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
  * @param from_name SIP From-header Name (optional)
  * @param from_uri  SIP From-header URI
  * @param event     SIP Event to subscribe to
- * @param id        SIP Event ID
+ * @param id        SIP Event ID (optional)
  * @param expires   Subscription expires value
  * @param cuser     Contact username
  * @param routev    Optional route vector
@@ -508,7 +508,7 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
  * @param sock      SIP Event socket
  * @param dlg       Established SIP Dialog
  * @param event     SIP Event to subscribe to
- * @param id        SIP Event ID
+ * @param id        SIP Event ID (optional)
  * @param expires   Subscription expires value
  * @param cuser     Contact username
  * @param authh     Authentication handler
