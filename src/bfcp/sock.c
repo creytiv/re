@@ -184,7 +184,7 @@ static void tcp_conn_handler(const struct sa *addr, void *arg)
 
 #ifdef USE_TLS
 		if (bs->transp == BFCP_TRANSP_TLS) {
-			if (tls_start_tcp(&conn->sc, bs->tls, conn->tc))
+			if (tls_start_tcp(&conn->sc, bs->tls, conn->tc, 0))
 				goto error;
 		}
 #endif
@@ -318,7 +318,7 @@ int bfcp_send(struct bfcp_sock *sock, const struct sa *dst, struct mbuf *mb)
 			if (sock->transp == BFCP_TRANSP_TLS) {
 
 				err = tls_start_tcp(&conn->sc, sock->tls,
-						    conn->tc);
+						    conn->tc, 0);
 				if (err)
 					goto out;
 			}

@@ -276,10 +276,10 @@ static bool send_handler(int *err, struct mbuf *mb, void *arg)
 }
 
 
-int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp)
+int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
+		  int layer)
 {
 	struct tls_conn *tc;
-	const int layer = 0;
 	int err;
 
 	if (!ptc || !tls || !tcp)
