@@ -17,7 +17,7 @@ MK	:= mk/re.mk
 include $(MK)
 
 # List of modules
-MODULES += sip sipreg sipsess
+MODULES += sip sipevent sipreg sipsess
 MODULES += uri httpauth
 MODULES += stun turn ice
 MODULES += natbd

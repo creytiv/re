@@ -219,7 +219,6 @@ int sip_dialog_accept(struct sip_dialog **dlgp, const struct sip_msg *msg)
 
 	err |= sip_msg_hdr_apply(msg, true, SIP_HDR_RECORD_ROUTE,
 				 record_route_handler, &renc) ? ENOMEM : 0;
-	dlg->cpos = dlg->mb->pos;
 	err |= mbuf_printf(dlg->mb, "To: %r\r\n", &msg->from.val);
 	err |= mbuf_printf(dlg->mb, "From: %r;tag=%016llx\r\n", &msg->to.val,
 			   msg->tag);
@@ -251,13 +250,14 @@ int sip_dialog_accept(struct sip_dialog **dlgp, const struct sip_msg *msg)
 
 int sip_dialog_create(struct sip_dialog *dlg, const struct sip_msg *msg)
 {
+	char *uri = NULL, *rtag = NULL;
 	const struct sip_hdr *contact;
 	struct route_enc renc;
 	struct sip_addr addr;
 	struct pl pl;
 	int err;
 
-	if (!dlg || dlg->rtag || !msg)
+	if (!dlg || dlg->rtag || !dlg->cpos || !msg)
 		return EINVAL;
 
 	contact = sip_msg_hdr(msg, SIP_HDR_CONTACT);
@@ -268,19 +268,17 @@ int sip_dialog_create(struct sip_dialog *dlg, const struct sip_msg *msg)
 	if (sip_addr_decode(&addr, &contact->val))
 		return EBADMSG;
 
-	dlg->uri = mem_deref(dlg->uri);
-
-	err = pl_strdup(&dlg->uri, &addr.auri);
-	if (err)
-		return err;
-
-	err = pl_strdup(&dlg->rtag, msg->req ? &msg->from.tag : &msg->to.tag);
-	if (err)
-		return err;
-
 	renc.mb = mbuf_alloc(512);
 	if (!renc.mb)
 		return ENOMEM;
+
+	err = pl_strdup(&uri, &addr.auri);
+	if (err)
+		goto out;
+
+	err = pl_strdup(&rtag, msg->req ? &msg->from.tag : &msg->to.tag);
+	if (err)
+		goto out;
 
 	renc.end = 0;
 
@@ -303,6 +301,106 @@ int sip_dialog_create(struct sip_dialog *dlg, const struct sip_msg *msg)
 		pl.p = (const char *)mbuf_buf(renc.mb) + ROUTE_OFFSET;
 		pl.l = renc.end - ROUTE_OFFSET;
 		err = sip_addr_decode(&addr, &pl);
+		if (err)
+			goto out;
+
+		dlg->route = addr.uri;
+	}
+	else {
+		struct uri tmp;
+
+		pl_set_str(&pl, uri);
+		err = uri_decode(&tmp, &pl);
+		if (err)
+			goto out;
+
+		dlg->route = tmp;
+	}
+
+	mem_deref(dlg->mb);
+	mem_deref(dlg->uri);
+
+	dlg->mb   = mem_ref(renc.mb);
+	dlg->rtag = mem_ref(rtag);
+	dlg->uri  = mem_ref(uri);
+	dlg->rseq = msg->req ? msg->cseq.num : 0;
+	dlg->cpos = 0;
+
+ out:
+	mem_deref(renc.mb);
+	mem_deref(rtag);
+	mem_deref(uri);
+
+	return err;
+}
+
+
+int sip_dialog_fork(struct sip_dialog **dlgp, struct sip_dialog *odlg,
+		    const struct sip_msg *msg)
+{
+	const struct sip_hdr *contact;
+	struct sip_dialog *dlg;
+	struct route_enc renc;
+	struct sip_addr addr;
+	struct pl pl;
+	int err;
+
+	if (!dlgp || !odlg || !odlg->cpos || !msg)
+		return EINVAL;
+
+	contact = sip_msg_hdr(msg, SIP_HDR_CONTACT);
+
+	if (!contact || !msg->callid.p)
+		return EBADMSG;
+
+	if (sip_addr_decode(&addr, &contact->val))
+		return EBADMSG;
+
+	dlg = mem_zalloc(sizeof(*dlg), destructor);
+	if (!dlg)
+		return ENOMEM;
+
+	dlg->callid = mem_ref(odlg->callid);
+	dlg->ltag   = mem_ref(odlg->ltag);
+	dlg->lseq   = odlg->lseq;
+	dlg->rseq   = msg->req ? msg->cseq.num : 0;
+
+	err = pl_strdup(&dlg->uri, &addr.auri);
+	if (err)
+		goto out;
+
+	err = pl_strdup(&dlg->rtag, msg->req ? &msg->from.tag : &msg->to.tag);
+	if (err)
+		goto out;
+
+	dlg->mb = mbuf_alloc(512);
+	if (!dlg->mb) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	renc.mb  = dlg->mb;
+	renc.end = 0;
+
+	err |= sip_msg_hdr_apply(msg, msg->req, SIP_HDR_RECORD_ROUTE,
+				 record_route_handler, &renc) ? ENOMEM : 0;
+	err |= mbuf_printf(dlg->mb, "To: %r\r\n",
+			   msg->req ? &msg->from.val : &msg->to.val);
+
+	odlg->mb->pos = odlg->cpos;
+	err |= mbuf_write_mem(dlg->mb, mbuf_buf(odlg->mb),
+			      mbuf_get_left(odlg->mb));
+	odlg->mb->pos = 0;
+
+	if (err)
+		goto out;
+
+	dlg->mb->pos = 0;
+
+	if (renc.end) {
+		pl.p = (const char *)mbuf_buf(dlg->mb) + ROUTE_OFFSET;
+		pl.l = renc.end - ROUTE_OFFSET;
+		err = sip_addr_decode(&addr, &pl);
 		dlg->route = addr.uri;
 	}
 	else {
@@ -310,14 +408,11 @@ int sip_dialog_create(struct sip_dialog *dlg, const struct sip_msg *msg)
 		err = uri_decode(&dlg->route, &pl);
 	}
 
-	if (err)
-		goto out;
-
-	mem_deref(dlg->mb);
-	dlg->mb = mem_ref(renc.mb);
-
  out:
-	mem_deref(renc.mb);
+	if (err)
+		mem_deref(dlg);
+	else
+		*dlgp = dlg;
 
 	return err;
 }
@@ -327,7 +422,6 @@ int sip_dialog_update(struct sip_dialog *dlg, const struct sip_msg *msg)
 {
 	const struct sip_hdr *contact;
 	struct sip_addr addr;
-	struct pl pl;
 	char *uri;
 	int err;
 
@@ -347,10 +441,15 @@ int sip_dialog_update(struct sip_dialog *dlg, const struct sip_msg *msg)
 
 	if (dlg->route.scheme.p == dlg->uri) {
 
+		struct uri tmp;
+		struct pl pl;
+
 		pl_set_str(&pl, uri);
-		err = uri_decode(&dlg->route, &pl);
+		err = uri_decode(&tmp, &pl);
 		if (err)
 			goto out;
+
+		dlg->route = tmp;
 	}
 
 	mem_deref(dlg->uri);
@@ -412,6 +511,18 @@ const char *sip_dialog_callid(const struct sip_dialog *dlg)
 }
 
 
+uint32_t sip_dialog_lseq(const struct sip_dialog *dlg)
+{
+	return dlg ? dlg->lseq : 0;
+}
+
+
+bool sip_dialog_established(const struct sip_dialog *dlg)
+{
+	return dlg && dlg->rtag;
+}
+
+
 bool sip_dialog_cmp(const struct sip_dialog *dlg, const struct sip_msg *msg)
 {
 	if (!dlg || !msg)
@@ -424,6 +535,22 @@ bool sip_dialog_cmp(const struct sip_dialog *dlg, const struct sip_msg *msg)
 		return false;
 
 	if (pl_strcmp(msg->req ? &msg->from.tag : &msg->to.tag, dlg->rtag))
+		return false;
+
+	return true;
+}
+
+
+bool sip_dialog_cmp_half(const struct sip_dialog *dlg,
+			 const struct sip_msg *msg)
+{
+	if (!dlg || !msg)
+		return false;
+
+	if (pl_strcmp(&msg->callid, dlg->callid))
+		return false;
+
+	if (pl_strcmp(msg->req ? &msg->to.tag : &msg->from.tag, dlg->ltag))
 		return false;
 
 	return true;

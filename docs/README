@@ -46,6 +46,7 @@ Modules:
 * sdp       unstable      Session Description Protocol
 * sha       testing       Secure Hash Standard, NIST, FIPS PUB 180-1
 * sip       unstable      Core SIP library
+* sipevent  unstable      SIP Event framework
 * sipreg    testing       SIP register client
 * sipsess   unstable      SIP Sessions
 * stun      unstable      Session Traversal Utilities for NAT (STUN)
@@ -76,9 +77,11 @@ Features:
 * RFC 3261 - SIP: Session Initiation Protocol
 * RFC 3263 - Locating SIP Servers
 * RFC 3264 - An Offer/Answer Model with SDP
+* RFC 3265 - SIP-Specific Event Notification
 * RFC 3327 - SIP Extension Header Field for Registering Non-Adjacent Contacts
 * RFC 3428 - SIP Extension for Instant Messaging
 * RFC 3489 - STUN - Simple Traversal of UDP Through NATs
+* RFC 3515 - The SIP Refer Method
 * RFC 3550 - RTP: A Transport Protocol for Real-Time Applications
 * RFC 3551 - RTP Profile for Audio and Video Conferences with Minimal Control
 * RFC 3555 - MIME Type Registration of RTP Payload Formats
