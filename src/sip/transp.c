@@ -510,7 +510,7 @@ static void tcp_connect_handler(const struct sa *paddr, void *arg)
 
 #ifdef USE_TLS
 	if (transp->tls) {
-		err = tls_start_tcp(&conn->sc, transp->tls, conn->tc);
+		err = tls_start_tcp(&conn->sc, transp->tls, conn->tc, 0);
 		if (err)
 			goto out;
 	}
@@ -570,7 +570,7 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 			goto out;
 		}
 
-		err = tls_start_tcp(&conn->sc, transp->tls, conn->tc);
+		err = tls_start_tcp(&conn->sc, transp->tls, conn->tc, 0);
 		if (err)
 			goto out;
 	}

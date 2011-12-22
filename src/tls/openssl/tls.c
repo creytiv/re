@@ -49,7 +49,10 @@ static void destructor(void *data)
 {
 	struct tls *tls = data;
 
-	SSL_CTX_free(tls->ctx);
+	if (tls->ctx)
+		SSL_CTX_free(tls->ctx);
+
+	mem_deref(tls->pass);
 
 	if (--tlsg.tlsc == 0) {
 		DEBUG_INFO("error strings freed\n");
@@ -76,10 +79,11 @@ static int password_cb(char *buf, int size, int rwflag, void *userdata)
 }
 
 
-int tls_alloc(struct tls **tlsp, const char *keyfile, const char *pwd)
+int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
+	      const char *pwd)
 {
-	int r, err = ENOMEM;
 	struct tls *tls;
+	int r, err;
 
 	if (!tlsp)
 		return EINVAL;
@@ -103,20 +107,44 @@ int tls_alloc(struct tls **tlsp, const char *keyfile, const char *pwd)
 		SSL_load_error_strings();
 	}
 
-	tls->ctx = SSL_CTX_new(SSLv23_method());
-	if (!tls->ctx)
+	switch (method) {
+
+	case TLS_METHOD_SSLV23:
+		tls->ctx = SSL_CTX_new(SSLv23_method());
+		break;
+
+#ifdef USE_OPENSSL_DTLS
+	case TLS_METHOD_DTLSV1:
+		tls->ctx = SSL_CTX_new(DTLSv1_method());
+		break;
+#endif
+
+	default:
+		DEBUG_WARNING("tls method %d not supported\n", method);
+		err = ENOSYS;
 		goto out;
+	}
+
+	if (!tls->ctx) {
+		err = ENOMEM;
+		goto out;
+	}
 
 #if (OPENSSL_VERSION_NUMBER < 0x00905100L)
 	SSL_CTX_set_verify_depth(tls->ctx, 1);
 #endif
 
+	if (method == TLS_METHOD_DTLSV1) {
+		SSL_CTX_set_read_ahead(tls->ctx, 1);
+	}
+
 	/* Load our keys and certificates */
 	if (keyfile) {
-		err = EINVAL;
-
 		if (pwd) {
-			tls->pass = pwd;
+			err = str_dup(&tls->pass, pwd);
+			if (err)
+				goto out;
+
 			SSL_CTX_set_default_passwd_cb(tls->ctx, password_cb);
 			SSL_CTX_set_default_passwd_cb_userdata(tls->ctx, tls);
 		}
@@ -125,6 +153,7 @@ int tls_alloc(struct tls **tlsp, const char *keyfile, const char *pwd)
 		if (r <= 0) {
 			DEBUG_WARNING("Can't read certificate file: %s (%d)\n",
 				      keyfile, r);
+			err = EINVAL;
 			goto out;
 		}
 
@@ -133,6 +162,7 @@ int tls_alloc(struct tls **tlsp, const char *keyfile, const char *pwd)
 		if (r <= 0) {
 			DEBUG_WARNING("Can't read key file: %s (%d)\n",
 				      keyfile, r);
+			err = EINVAL;
 			goto out;
 		}
 	}

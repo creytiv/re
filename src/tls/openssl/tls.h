@@ -7,5 +7,5 @@
 
 struct tls {
 	SSL_CTX *ctx;
-	const char *pass;  /* password for private key */
+	char *pass;  /* password for private key */
 };
