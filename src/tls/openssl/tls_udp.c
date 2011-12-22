@@ -117,7 +117,7 @@ static struct bio_method_st bio_udp_send = {
 };
 
 
-#ifdef DTLS_CTRL_HANDLE_TIMEOUT
+#if defined (DTLS_CTRL_HANDLE_TIMEOUT) && defined(DTLS_CTRL_GET_TIMEOUT)
 static void timeout(void *arg)
 {
 	struct tls_conn *tc = arg;
@@ -130,7 +130,7 @@ static void timeout(void *arg)
 
 static void check_timer(struct tls_conn *tc)
 {
-#ifdef DTLS_CTRL_GET_TIMEOUT
+#if defined (DTLS_CTRL_HANDLE_TIMEOUT) && defined (DTLS_CTRL_GET_TIMEOUT)
 	struct timeval tv = {0, 0};
 
 	if (DTLSv1_get_timeout(tc->ssl, &tv)) {
