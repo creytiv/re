@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h> // todo: remove
 #include <re_types.h>
 #include <re_mem.h>
 #include <re_mbuf.h>
@@ -107,8 +106,6 @@ static void notify_timeout_handler(void *arg)
 {
 	struct sipsub *sub = arg;
 
-	re_printf("timeout waiting for NOTIFY\n");
-
 	sub->termwait = false;
 
 	if (sub->terminated)
@@ -140,8 +137,6 @@ static void tmr_handler(void *arg)
 
 void sipsub_reschedule(struct sipsub *sub, uint64_t wait)
 {
-	re_printf("will re-subscribe in %llu secs\n", wait/1000);
-
 	tmr_start(&sub->tmr, wait, tmr_handler, sub);
 }
 
@@ -166,11 +161,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	const struct sip_hdr *minexp;
 	struct sipsub *sub = arg;
 
-	if (err)
-		re_printf("reply: %s\n", strerror(err));
-	else
-		re_printf("reply: %u %r\n", msg->scode, &msg->reason);
-
 	if (err || sip_request_loops(&sub->ls, msg->scode))
 		goto out;
 
@@ -191,8 +181,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 				err = sub->forkh(&fsub, sub, msg, sub->arg);
 				if (err)
 					return;
-
-				re_printf("*** new subscription forked\n");
 			}
 			else {
 				(void)sip_dialog_update(fsub->dlg, msg);
@@ -207,8 +195,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 				sub->subscribed = false;
 				goto out;
 			}
-
-			re_printf("*** dialog established\n");
 		}
 		else {
 			/* Ignore 2xx responses for other dialogs
@@ -226,7 +212,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 
 		if (!sub->expires && !sub->termconf) {
 
-			re_printf("waiting for last NOTIFY\n");
 			tmr_start(&sub->tmr, NOTIFY_TIMEOUT,
 				  notify_timeout_handler, sub);
 			sub->termwait = true;

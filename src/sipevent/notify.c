@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h> // todo: remove
 #include <re_types.h>
 #include <re_mem.h>
 #include <re_mbuf.h>
@@ -102,8 +101,6 @@ static void tmr_handler(void *arg)
 	if (not->terminated)
 		return;
 
-	re_printf("subscription expired\n");
-
 	sipnot_terminate(not, ETIMEDOUT, NULL, SIPEVENT_TIMEOUT);
 }
 
@@ -112,8 +109,6 @@ void sipnot_refresh(struct sipnot *not, uint32_t expires)
 {
 	not->expires = min(expires, not->expires_max);
 
-	re_printf("will expire in %u secs\n", not->expires);
-
 	tmr_start(&not->tmr, not->expires * 1000, tmr_handler, not);
 }
 
@@ -121,11 +116,6 @@ void sipnot_refresh(struct sipnot *not, uint32_t expires)
 static void response_handler(int err, const struct sip_msg *msg, void *arg)
 {
 	struct sipnot *not = arg;
-
-	if (err)
-		re_printf("notify reply: %s\n", strerror(err));
-	else
-		re_printf("notify reply: %u %r\n", msg->scode, &msg->reason);
 
 	if (err) {
 		if (err == ETIMEDOUT)
@@ -178,7 +168,6 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		sipnot_terminate(not, err, msg, -1);
 	}
 	else if (not->notify_pending) {
-		re_printf("sending queued request\n");
 		(void)notify_request(not, true);
 	}
 }
@@ -277,12 +266,10 @@ static int notify_request(struct sipnot *not, bool reset_ls)
 int sipnot_notify(struct sipnot *not)
 {
 	if (not->expires == 0) {
-		re_printf("NOTIFY will be sent at timeout\n");
 		return 0;
 	}
 
 	if (not->req) {
-		re_printf("waiting for previous request to complete\n");
 		not->notify_pending = true;
 		return 0;
 	}

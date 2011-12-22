@@ -169,8 +169,6 @@ static void notify_handler(struct sipevent_sock *sock,
 				return;
 			}
 
-			re_printf("*** new subscription forked from NOTIFY\n");
-
 			sub = fsub;
 		}
 		else {
@@ -179,8 +177,6 @@ static void notify_handler(struct sipevent_sock *sock,
 				(void)sip_reply(sip, msg, 500, strerror(err));
 				return;
 			}
-
-			re_printf("*** dialog established from NOTIFY\n");
 		}
 	}
 	else {
@@ -200,9 +196,6 @@ static void notify_handler(struct sipevent_sock *sock,
 			return;
 		}
 	}
-
-	re_printf("notify: %s (%r)\n", sipevent_substate_name(state.state),
-		  &state.params);
 
 	switch (state.state) {
 
