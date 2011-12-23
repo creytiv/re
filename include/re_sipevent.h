@@ -66,10 +66,10 @@ int sipevent_accept(struct sipnot **notp, struct sipevent_sock *sock,
 		    const char *cuser, const char *ctype,
 		    sip_auth_h *authh, void *aarg, bool aref,
 		    sipnot_close_h *closeh, void *arg, const char *fmt, ...);
-int sipevent_notify(struct sipnot *not, struct mbuf *mb,
+int sipevent_notify(struct sipnot *sipnot, struct mbuf *mb,
 		    enum sipevent_subst state, enum sipevent_reason reason,
 		    uint32_t retry_after);
-int sipevent_notifyf(struct sipnot *not, struct mbuf **mbp,
+int sipevent_notifyf(struct sipnot *sipnot, struct mbuf **mbp,
 		     enum sipevent_subst state, enum sipevent_reason reason,
 		     uint32_t retry_after, const char *fmt, ...);
 
