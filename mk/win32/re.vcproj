@@ -664,6 +664,22 @@
 				</File>
 			</Filter>
 			<Filter
+				Name="sipevent"
+				Filter="">
+				<File
+					RelativePath="..\..\src\sipevent\listen.c">
+				</File>
+				<File
+					RelativePath="..\..\src\sipevent\msg.c">
+				</File>
+				<File
+					RelativePath="..\..\src\sipevent\notify.c">
+				</File>
+				<File
+					RelativePath="..\..\src\sipevent\subscribe.c">
+				</File>
+			</Filter>
+			<Filter
 				Name="stun"
 				Filter="">
 				<File
