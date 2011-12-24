@@ -1,3 +1,36 @@
+2011-12-25 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.0
+
+	* updated doxygen comments
+
+	* build: add support for CMake (thanks to Stefan Radomski)
+		 clean up OS and ARCH detection
+
+	* dns: fix potential infinite loop in dname decode
+
+	* sip: change struct sip_via transp to enum sip_transp (breaks API)
+	       added sip_transp_isladdr() and sip_transp_port()
+	       added sip_dialog_fork(), sip_dialog_lseq(),
+	       sip_dialog_established(), sip_dialog_cmp_half()
+
+	* sipevent: new module for SIP Event framework (RFC 3265, RFC 3515)
+
+	* sys: add portable sys_usleep() and sys_msleep()
+	
+	* tcp: add tcp_send_helper()
+
+	* tls: add support for DTLSv1 (Datagram TLS)
+	       tls_alloc: add tls_method and layer (breaks API)
+	       tls_tcp: use custom BIO to send data
+
+	* tmr: optimize tmr_start() where delay == 0
+
+	* turn: add stun_msg to turnc handler (breaks API)
+
+	* udp: add udp_send_helper()
+
+
 2011-09-07 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.3.0
