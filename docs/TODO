@@ -4,7 +4,6 @@ TODO
 Version v0.x.y
 
   tmr: scaling using binary heap or hash
-  Add support for SIP SUBSCRIBE/NOTIFY
   Add support for Call-Transfer in SIP Session
 
 -------------------------------------------------------------------------------
