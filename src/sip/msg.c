@@ -20,6 +20,7 @@
 
 enum {
 	HDR_HASH_SIZE = 32,
+	STARTLINE_MAX = 8192,
 };
 
 
@@ -266,7 +267,7 @@ int sip_msg_decode(struct sip_msg **msgp, struct mbuf *mb)
 
 	if (re_regex(p, l, "[^ \t\r\n]+ [^ \t\r\n]+ [^\r\n]*[\r]*[\n]1",
 		     &x, &y, &z, NULL, &e) || x.p != (char *)mbuf_buf(mb))
-		return EBADMSG;
+		return (l > STARTLINE_MAX) ? EBADMSG : ENODATA;
 
 	msg = mem_zalloc(sizeof(*msg), destructor);
 	if (!msg)

@@ -26,6 +26,7 @@ enum {
 	TCP_ACCEPT_TIMEOUT    = 32,
 	TCP_KEEPALIVE_TIMEOUT = 10,
 	TCP_KEEPALIVE_INTVAL  = 120,
+	TCP_BUFSIZE_MAX       = 65536,
 };
 
 
@@ -339,6 +340,11 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 			goto out;
 
 		conn->mb->pos = pos;
+
+		if (mbuf_get_left(conn->mb) > TCP_BUFSIZE_MAX) {
+			err = EOVERFLOW;
+			goto out;
+		}
 	}
 	else {
 		conn->mb = mem_ref(mb);
@@ -414,7 +420,7 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 		sip_recv(conn->sip, msg);
 		mem_deref(msg);
 
-		if (end == conn->mb->end) {
+		if (end <= conn->mb->end) {
 			conn->mb = mem_deref(conn->mb);
 			break;
 		}
