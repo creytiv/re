@@ -29,6 +29,7 @@ enum {
 	TCP_HASH_SIZE = 2,
 	CONN_TIMEOUT = 10 * 1000,
 	IDLE_TIMEOUT = 30 * 1000,
+	SRVC_MAX = 32,
 };
 
 
@@ -80,7 +81,7 @@ struct dnsc {
 	struct hash *ht_query;
 	struct hash *ht_tcpconn;
 	struct udp_sock *us;
-	struct sa *srvv;
+	struct sa srvv[SRVC_MAX];
 	uint32_t srvc;
 };
 
@@ -773,7 +774,6 @@ static void dnsc_destructor(void *data)
 	mem_deref(dnsc->ht_tcpconn);
 	mem_deref(dnsc->ht_query);
 	mem_deref(dnsc->us);
-	mem_deref(dnsc->srvv);
 }
 
 
@@ -831,23 +831,17 @@ int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 
 int dnsc_srv_set(struct dnsc *dnsc, const struct sa *srvv, uint32_t srvc)
 {
-	const size_t sz = srvc * sizeof(*srvv);
-	struct sa *v = NULL;
+	uint32_t i;
 
 	if (!dnsc)
 		return EINVAL;
 
-	if (srvv && srvc) {
-		v = mem_alloc(sz, NULL);
-		if (!v)
-			return ENOMEM;
+	dnsc->srvc = min((uint32_t)ARRAY_SIZE(dnsc->srvv), srvc);
 
-		memcpy(v, srvv, sz);
+	if (srvv) {
+		for (i=0; i<dnsc->srvc; i++)
+			dnsc->srvv[i] = srvv[i];
 	}
-
-	dnsc->srvv = mem_deref(dnsc->srvv);
-	dnsc->srvv = v;
-	dnsc->srvc = srvc;
 
 	return 0;
 }
