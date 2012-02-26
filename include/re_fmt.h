@@ -108,6 +108,18 @@ int  str_dup(char **dst, const char *src);
 int  str_casecmp(const char *s1, const char *s2);
 size_t str_len(const char *s);
 
+/**
+ * Check if string is set
+ *
+ * @param s Zero-terminated string
+ *
+ * @return true if set, false if not set
+ */
+static inline bool str_isset(const char *s)
+{
+	return s && s[0] != '\0';
+}
+
 
 /* time */
 int  fmt_gmtime(struct re_printf *pf, void *ts);
