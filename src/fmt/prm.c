@@ -8,6 +8,36 @@
 
 
 /**
+ * Check if a semicolon separated parameter is present
+ *
+ * @param pl    PL string to search
+ * @param pname Parameter name
+ *
+ * @return true if found, false if not found
+ */
+bool fmt_param_exists(const struct pl *pl, const char *pname)
+{
+	struct pl semi, eop;
+	char expr[128];
+
+	if (!pl || !pname)
+		return false;
+
+	(void)re_snprintf(expr, sizeof(expr),
+			  "[;]*[ \t\r\n]*%s[ \t\r\n;=]*",
+			  pname);
+
+	if (re_regex(pl->p, pl->l, expr, &semi, NULL, &eop))
+		return false;
+
+	if (!eop.l && eop.p < pl->p + pl->l)
+		return false;
+
+	return semi.l > 0 || pl->p == semi.p;
+}
+
+
+/**
  * Fetch a semicolon separated parameter from a PL string
  *
  * @param pl    PL string to search
@@ -18,14 +48,20 @@
  */
 bool fmt_param_get(const struct pl *pl, const char *pname, struct pl *val)
 {
+	struct pl semi;
 	char expr[128];
 
-	if (!pl)
+	if (!pl || !pname)
 		return false;
 
-	(void)re_snprintf(expr, sizeof(expr), "%s[=]*[^;]*", pname);
+	(void)re_snprintf(expr, sizeof(expr),
+			  "[;]*[ \t\r\n]*%s[ \t\r\n]*=[ \t\r\n]*[~ \t\r\n;]+",
+			  pname);
 
-	return 0 == re_regex(pl->p, pl->l, expr, NULL, val);
+	if (re_regex(pl->p, pl->l, expr, &semi, NULL, NULL, NULL, val))
+		return false;
+
+	return semi.l > 0 || pl->p == semi.p;
 }
 
 
@@ -38,21 +74,23 @@ bool fmt_param_get(const struct pl *pl, const char *pname, struct pl *val)
  */
 void fmt_param_apply(const struct pl *pl, fmt_param_h *ph, void *arg)
 {
-	size_t i;
+	struct pl prmv, prm, semi, name, val;
 
 	if (!pl || !ph)
 		return;
 
-	for (i=0; i<pl->l; ) {
-		struct pl lws, name, eq, val, s;
+	prmv = *pl;
 
-		lws.l = eq.l = s.l = val.l = 0;
-		if (re_regex(&pl->p[i], pl->l - i, "[ ]*[^;=]+[=]*[^;]*[;]*",
-			     &lws, &name, &eq, &val, &s))
+	while (!re_regex(prmv.p, prmv.l, "[ \t\r\n]*[~;]+[;]*",
+			 NULL, &prm, &semi)) {
+
+		pl_advance(&prmv, semi.p + semi.l - prmv.p);
+
+		if (re_regex(prm.p, prm.l,
+			     "[^ \t\r\n=]+[ \t\r\n]*[=]*[ \t\r\n]*[~ \t\r\n]*",
+			     &name, NULL, NULL, NULL, &val))
 			break;
 
 		ph(&name, &val, arg);
-
-		i += (lws.l + name.l + eq.l + val.l + s.l);
 	}
 }
