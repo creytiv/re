@@ -76,7 +76,7 @@ int      mbuf_debug(struct re_printf *pf, const struct mbuf *mb);
  */
 static inline uint8_t *mbuf_buf(const struct mbuf *mb)
 {
-	return mb ? mb->buf + mb->pos : NULL;
+	return mb ? mb->buf + mb->pos : (uint8_t *)NULL;
 }
 
 
