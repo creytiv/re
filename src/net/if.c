@@ -79,7 +79,7 @@ static bool if_getaddr_handler(const char *ifname,
 	struct ifentry *ife = arg;
 
 	/* Match name of interface? */
-	if (str_len(ife->ifname) && 0 != str_casecmp(ife->ifname, ifname))
+	if (str_isset(ife->ifname) && 0 != str_casecmp(ife->ifname, ifname))
 		return false;
 
 	if (!sa_isset(sa, SA_ADDR))

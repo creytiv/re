@@ -393,7 +393,7 @@ static int media_encode(const struct sdp_media *m, struct mbuf *mb, bool offer)
 
 		const struct sdp_format *fmt = le->data;
 
-		if (!fmt->sup || !str_len(fmt->name))
+		if (!fmt->sup || !str_isset(fmt->name))
 			continue;
 
 		err |= mbuf_printf(mb, "a=rtpmap:%s %s/%u",
@@ -404,7 +404,7 @@ static int media_encode(const struct sdp_media *m, struct mbuf *mb, bool offer)
 
 		err |= mbuf_printf(mb, "\r\n");
 
-		if (str_len(fmt->params))
+		if (str_isset(fmt->params))
 			err |= mbuf_printf(mb, "a=fmtp:%s %s\r\n",
 					   fmt->id, fmt->params);
 	}

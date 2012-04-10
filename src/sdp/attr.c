@@ -68,7 +68,7 @@ int sdp_attr_addv(struct list *lst, const char *name, const char *val,
 
 	err = str_dup(&attr->name, name);
 
-	if (str_len(val) > 0)
+	if (str_isset(val))
 		err |= re_vsdprintf(&attr->val, val, ap);
 
 	if (err)

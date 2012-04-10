@@ -266,7 +266,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 	}
 	if (pl_strcmp(&lu, ice->lufrag))
 		goto unauth;
-	if (str_len(icem->rufrag) && pl_strcmp(&ru, icem->rufrag))
+	if (str_isset(icem->rufrag) && pl_strcmp(&ru, icem->rufrag))
 		goto unauth;
 
 	attr = stun_msg_attr(req, STUN_ATTR_CONTROLLED);
