@@ -373,6 +373,14 @@ int tls_start_udp(struct tls_sock **tsp, struct tls *tls, struct udp_sock *us,
 }
 
 
+/**
+ * Get the TLS Connection for a given peer
+ *
+ * @param ts   TLS Socket
+ * @param peer Network address of peer
+ *
+ * @return TLS Connection if found, NULL if not found
+ */
 struct tls_conn *tls_udp_conn(const struct tls_sock *ts, const struct sa *peer)
 {
 	if (!ts)

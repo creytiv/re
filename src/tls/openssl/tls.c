@@ -79,6 +79,16 @@ static int password_cb(char *buf, int size, int rwflag, void *userdata)
 }
 
 
+/**
+ * Allocate a new TLS context
+ *
+ * @param tlsp    Pointer to allocated TLS context
+ * @param method  TLS method
+ * @param keyfile Optional private key file
+ * @param pwd     Optional password
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	      const char *pwd)
 {
@@ -178,6 +188,14 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 }
 
 
+/**
+ * Set default locations for trusted CA certificates
+ *
+ * @param tls    TLS Context
+ * @param capath Path to CA certificates
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int tls_add_ca(struct tls *tls, const char *capath)
 {
 	if (!tls || !capath)
@@ -193,6 +211,15 @@ int tls_add_ca(struct tls *tls, const char *capath)
 }
 
 
+/**
+ * Verify peer certificate of a TLS connection
+ *
+ * @param tc      TLS Connection
+ * @param cn      Returned common name
+ * @param cn_size Size of cn string
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int tls_verify_cert(struct tls_conn *tc, char *cn, size_t cn_size)
 {
 	X509 *peer;

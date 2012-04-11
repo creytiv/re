@@ -26,6 +26,14 @@ static void destructor(void *arg)
 }
 
 
+/**
+ * Allocate a new SDP Session
+ *
+ * @param sessp Pointer to allocated SDP Session object
+ * @param laddr Local network address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_session_alloc(struct sdp_session **sessp, const struct sa *laddr)
 {
 	struct sdp_session *sess;
@@ -59,6 +67,11 @@ int sdp_session_alloc(struct sdp_session **sessp, const struct sa *laddr)
 }
 
 
+/**
+ * Reset the remote side of an SDP Session
+ *
+ * @param sess SDP Session
+ */
 void sdp_session_rreset(struct sdp_session *sess)
 {
 	int i;
@@ -77,6 +90,12 @@ void sdp_session_rreset(struct sdp_session *sess)
 }
 
 
+/**
+ * Set the local network address of an SDP Session
+ *
+ * @param sess  SDP Session
+ * @param laddr Local network address
+ */
 void sdp_session_set_laddr(struct sdp_session *sess, const struct sa *laddr)
 {
 	if (!sess || !laddr)
@@ -86,6 +105,13 @@ void sdp_session_set_laddr(struct sdp_session *sess, const struct sa *laddr)
 }
 
 
+/**
+ * Set the local bandwidth of an SDP Session
+ *
+ * @param sess SDP Session
+ * @param type Bandwidth type
+ * @param bw   Bandwidth value
+ */
 void sdp_session_set_lbandwidth(struct sdp_session *sess,
 				enum sdp_bandwidth type, int32_t bw)
 {
@@ -96,6 +122,16 @@ void sdp_session_set_lbandwidth(struct sdp_session *sess,
 }
 
 
+/**
+ * Set a local attribute of an SDP Session
+ *
+ * @param sess    SDP Session
+ * @param replace True to replace any existing attributes, false to append
+ * @param name    Attribute name
+ * @param value   Formatted attribute value
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_session_set_lattr(struct sdp_session *sess, bool replace,
 			  const char *name, const char *value, ...)
 {
@@ -116,6 +152,12 @@ int sdp_session_set_lattr(struct sdp_session *sess, bool replace,
 }
 
 
+/**
+ * Delete a local attribute of an SDP Session
+ *
+ * @param sess SDP Session
+ * @param name Attribute name
+ */
 void sdp_session_del_lattr(struct sdp_session *sess, const char *name)
 {
 	if (!sess || !name)
@@ -125,6 +167,14 @@ void sdp_session_del_lattr(struct sdp_session *sess, const char *name)
 }
 
 
+/**
+ * Get the remote bandwidth of an SDP Session
+ *
+ * @param sess SDP Session
+ * @param type Bandwidth type
+ *
+ * @return Bandwidth value
+ */
 int32_t sdp_session_rbandwidth(const struct sdp_session *sess,
 				enum sdp_bandwidth type)
 {
@@ -135,6 +185,14 @@ int32_t sdp_session_rbandwidth(const struct sdp_session *sess,
 }
 
 
+/**
+ * Get a remote attribute of an SDP Session
+ *
+ * @param sess SDP Session
+ * @param name Attribute name
+ *
+ * @return Attribute value if exist, NULL if not exist
+ */
 const char *sdp_session_rattr(const struct sdp_session *sess, const char *name)
 {
 	if (!sess || !name)
@@ -144,6 +202,16 @@ const char *sdp_session_rattr(const struct sdp_session *sess, const char *name)
 }
 
 
+/**
+ * Apply a function handler of all matching remote attributes
+ *
+ * @param sess  SDP Session
+ * @param name  Attribute name
+ * @param attrh Attribute handler
+ * @param arg   Handler argument
+ *
+ * @return Attribute value if match
+ */
 const char *sdp_session_rattr_apply(const struct sdp_session *sess,
 				    const char *name,
 				    sdp_attr_h *attrh, void *arg)
@@ -155,6 +223,14 @@ const char *sdp_session_rattr_apply(const struct sdp_session *sess,
 }
 
 
+/**
+ * Get the list of media-lines from an SDP Session
+ *
+ * @param sess  SDP Session
+ * @param local True for local, False for remote
+ *
+ * @return List of media-lines
+ */
 const struct list *sdp_session_medial(const struct sdp_session *sess,
 				      bool local)
 {
@@ -165,6 +241,14 @@ const struct list *sdp_session_medial(const struct sdp_session *sess,
 }
 
 
+/**
+ * Print SDP Session debug information
+ *
+ * @param pf   Print function for output
+ * @param sess SDP Session
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_session_debug(struct re_printf *pf, const struct sdp_session *sess)
 {
 	struct le *le;

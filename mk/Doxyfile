@@ -91,11 +91,9 @@ EXCLUDE                = test.c \
 			 include/re_bitv.h \
 			 src/md5/md5.h src/md5/md5.c \
 			 src/dns      include/re_dns.h \
-			 src/sdp      include/re_sdp.h \
 			 src/sip/     include/re_sip.h \
 			 src/sipsess/ include/re_sipsess.h \
-			 src/stun     include/re_stun.h \
-			 src/tls      include/re_tls.h
+			 src/stun     include/re_stun.h
 
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = */.svn/*

@@ -30,6 +30,23 @@ static void destructor(void *arg)
 }
 
 
+/**
+ * Add an SDP Format to an SDP Media line
+ *
+ * @param fmtp    Pointer to allocated SDP Format
+ * @param m       SDP Media line
+ * @param prepend True to prepend, False to append
+ * @param id      Format identifier
+ * @param name    Format name
+ * @param srate   Sampling rate
+ * @param ch      Number of channels
+ * @param cmph    Optional format comparison handler
+ * @param data    Opaque data for handler
+ * @param ref     True to mem_ref() data
+ * @param params  Formatted parameters
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_format_add(struct sdp_format **fmtp, struct sdp_media *m,
 		   bool prepend, const char *id, const char *name,
 		   uint32_t srate, uint8_t ch,
@@ -145,6 +162,14 @@ struct sdp_format *sdp_format_find(const struct list *lst, const struct pl *id)
 }
 
 
+/**
+ * Set the parameters of an SDP format
+ *
+ * @param fmt    SDP Format
+ * @param params Formatted parameters
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_format_set_params(struct sdp_format *fmt, const char *params, ...)
 {
 	int err = 0;
@@ -166,6 +191,14 @@ int sdp_format_set_params(struct sdp_format *fmt, const char *params, ...)
 }
 
 
+/**
+ * Compare two SDP Formats
+ *
+ * @param fmt1 First SDP format
+ * @param fmt2 Second SDP format
+ *
+ * @return True if matching, False if not
+ */
 bool sdp_format_cmp(const struct sdp_format *fmt1,
 		    const struct sdp_format *fmt2)
 {
@@ -199,6 +232,14 @@ bool sdp_format_cmp(const struct sdp_format *fmt1,
 }
 
 
+/**
+ * Print SDP Format debug information
+ *
+ * @param pf  Print function for output
+ * @param fmt SDP Format
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_format_debug(struct re_printf *pf, const struct sdp_format *fmt)
 {
 	int err;

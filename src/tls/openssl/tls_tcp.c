@@ -276,6 +276,16 @@ static bool send_handler(int *err, struct mbuf *mb, void *arg)
 }
 
 
+/**
+ * Start TLS on a TCP-connection
+ *
+ * @param ptc   Pointer to allocated TLS connectioon
+ * @param tls   TLS Context
+ * @param tcp   TCP Connection
+ * @param layer Protocol stack layer
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 		  int layer)
 {

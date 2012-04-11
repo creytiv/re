@@ -9,6 +9,7 @@ enum {
 	SDP_VERSION = 0
 };
 
+/** SDP Direction */
 enum sdp_dir {
 	SDP_INACTIVE = 0,
 	SDP_RECVONLY = 1,
@@ -36,6 +37,7 @@ typedef bool(sdp_fmtp_cmp_h)(const char *params1, const char *params2,
 typedef bool(sdp_format_h)(struct sdp_format *fmt, void *arg);
 typedef bool(sdp_attr_h)(const char *name, const char *value, void *arg);
 
+/** SDP Format */
 struct sdp_format {
 	struct le le;
 	char *id;

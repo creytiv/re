@@ -499,7 +499,7 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
  * @param authh     Authentication handler
  * @param aarg      Authentication handler argument
  * @param aref      True to ref argument
- * @param noth      Notify handler
+ * @param notifyh   Notify handler
  * @param closeh    Close handler
  * @param arg       Response handler argument
  * @param fmt       Formatted strings with extra SIP Headers

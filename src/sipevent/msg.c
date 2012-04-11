@@ -1,5 +1,5 @@
 /**
- * @file msg.c  SIP event messages
+ * @file sipevent/msg.c  SIP event messages
  *
  * Copyright (C) 2010 Creytiv.com
  */

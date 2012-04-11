@@ -24,6 +24,13 @@ const char sdp_proto_rtpavp[]  = "RTP/AVP";   /**< RTP Profile          */
 const char sdp_proto_rtpsavp[] = "RTP/SAVP";  /**< Secure RTP Profile   */
 
 
+/**
+ * Get the SDP media direction name
+ *
+ * @param dir Media direction
+ *
+ * @return Name of media direction
+ */
 const char *sdp_dir_name(enum sdp_dir dir)
 {
 	switch (dir) {
@@ -37,6 +44,13 @@ const char *sdp_dir_name(enum sdp_dir dir)
 }
 
 
+/**
+ * Get the SDP bandwidth name
+ *
+ * @param type Bandwidth type
+ *
+ * @return Bandwidth name
+ */
 const char *sdp_bandwidth_name(enum sdp_bandwidth type)
 {
 	switch (type) {

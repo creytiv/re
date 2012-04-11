@@ -67,6 +67,17 @@ static int media_alloc(struct sdp_media **mp, struct list *list)
 }
 
 
+/**
+ * Add a media line to an SDP Session
+ *
+ * @param mp    Pointer to allocated SDP Media line object
+ * @param sess  SDP Session
+ * @param name  Media name
+ * @param port  Port number
+ * @param proto Transport protocol
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_media_add(struct sdp_media **mp, struct sdp_session *sess,
 		  const char *name, uint16_t port, const char *proto)
 {
@@ -97,6 +108,16 @@ int sdp_media_add(struct sdp_media **mp, struct sdp_session *sess,
 }
 
 
+/**
+ * Add a remote SDP media line to an SDP Session
+ *
+ * @param mp    Pointer to allocated SDP Media line object
+ * @param sess  SDP Session
+ * @param name  Media name
+ * @param proto Transport protocol
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_media_radd(struct sdp_media **mp, struct sdp_session *sess,
 		   const struct pl *name, const struct pl *proto)
 {
@@ -124,6 +145,11 @@ int sdp_media_radd(struct sdp_media **mp, struct sdp_session *sess,
 }
 
 
+/**
+ * Reset the remote part of an SDP Media line
+ *
+ * @param m SDP Media line
+ */
 void sdp_media_rreset(struct sdp_media *m)
 {
 	int i;
@@ -144,6 +170,15 @@ void sdp_media_rreset(struct sdp_media *m)
 }
 
 
+/**
+ * Find an SDP Media line from name and transport protocol
+ *
+ * @param sess  SDP Session
+ * @param name  Media name
+ * @param proto Transport protocol
+ *
+ * @return Matching media line if found, NULL if not found
+ */
 struct sdp_media *sdp_media_find(const struct sdp_session *sess,
 				 const struct pl *name,
 				 const struct pl *proto)
@@ -170,6 +205,12 @@ struct sdp_media *sdp_media_find(const struct sdp_session *sess,
 }
 
 
+/**
+ * Align the locate/remote formats of an SDP Media line
+ *
+ * @param m     SDP Media line
+ * @param offer True if SDP Offer, False if SDP Answer
+ */
 void sdp_media_align_formats(struct sdp_media *m, bool offer)
 {
 	struct sdp_format *rfmt, *lfmt;
@@ -244,6 +285,12 @@ void sdp_media_align_formats(struct sdp_media *m, bool offer)
 }
 
 
+/**
+ * Set an SDP Media line to enabled/disabled
+ *
+ * @param m        SDP Media line
+ * @param disabled True for disabled, False for enabled
+ */
 void sdp_media_set_disabled(struct sdp_media *m, bool disabled)
 {
 	if (!m)
@@ -253,6 +300,12 @@ void sdp_media_set_disabled(struct sdp_media *m, bool disabled)
 }
 
 
+/**
+ * Set the local port number of an SDP Media line
+ *
+ * @param m    SDP Media line
+ * @param port Port number
+ */
 void sdp_media_set_lport(struct sdp_media *m, uint16_t port)
 {
 	if (!m)
@@ -262,6 +315,12 @@ void sdp_media_set_lport(struct sdp_media *m, uint16_t port)
 }
 
 
+/**
+ * Set the local network address of an SDP media line
+ *
+ * @param m     SDP Media line
+ * @param laddr Local network address
+ */
 void sdp_media_set_laddr(struct sdp_media *m, const struct sa *laddr)
 {
 	if (!m || !laddr)
@@ -271,6 +330,13 @@ void sdp_media_set_laddr(struct sdp_media *m, const struct sa *laddr)
 }
 
 
+/**
+ * Set a local bandwidth of an SDP Media line
+ *
+ * @param m    SDP Media line
+ * @param type Bandwidth type
+ * @param bw   Bandwidth value
+ */
 void sdp_media_set_lbandwidth(struct sdp_media *m, enum sdp_bandwidth type,
 			      int32_t bw)
 {
@@ -281,6 +347,12 @@ void sdp_media_set_lbandwidth(struct sdp_media *m, enum sdp_bandwidth type,
 }
 
 
+/**
+ * Set the local RTCP port number of an SDP Media line
+ *
+ * @param m    SDP Media line
+ * @param port RTCP Port number
+ */
 void sdp_media_set_lport_rtcp(struct sdp_media *m, uint16_t port)
 {
 	if (!m)
@@ -290,6 +362,12 @@ void sdp_media_set_lport_rtcp(struct sdp_media *m, uint16_t port)
 }
 
 
+/**
+ * Set the local RTCP network address of an SDP media line
+ *
+ * @param m     SDP Media line
+ * @param laddr Local RTCP network address
+ */
 void sdp_media_set_laddr_rtcp(struct sdp_media *m, const struct sa *laddr)
 {
 	if (!m || !laddr)
@@ -299,6 +377,12 @@ void sdp_media_set_laddr_rtcp(struct sdp_media *m, const struct sa *laddr)
 }
 
 
+/**
+ * Set the local direction flag of an SDP Media line
+ *
+ * @param m   SDP Media line
+ * @param dir Media direction flag
+ */
 void sdp_media_set_ldir(struct sdp_media *m, enum sdp_dir dir)
 {
 	if (!m)
@@ -308,6 +392,16 @@ void sdp_media_set_ldir(struct sdp_media *m, enum sdp_dir dir)
 }
 
 
+/**
+ * Set a local attribute of an SDP Media line
+ *
+ * @param m       SDP Media line
+ * @param replace True to replace attribute, False to append
+ * @param name    Attribute name
+ * @param value   Formatted attribute value
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_media_set_lattr(struct sdp_media *m, bool replace,
 			const char *name, const char *value, ...)
 {
@@ -328,6 +422,12 @@ int sdp_media_set_lattr(struct sdp_media *m, bool replace,
 }
 
 
+/**
+ * Delete a local attribute of an SDP Media line
+ *
+ * @param m    SDP Media line
+ * @param name Attribute name
+ */
 void sdp_media_del_lattr(struct sdp_media *m, const char *name)
 {
 	if (!m || !name)
@@ -337,18 +437,38 @@ void sdp_media_del_lattr(struct sdp_media *m, const char *name)
 }
 
 
+/**
+ * Get the remote port number of an SDP Media line
+ *
+ * @param m SDP Media line
+ *
+ * @return Remote port number
+ */
 uint16_t sdp_media_rport(const struct sdp_media *m)
 {
 	return m ? sa_port(&m->raddr) : 0;
 }
 
 
+/**
+ * Get the remote network address of an SDP Media line
+ *
+ * @param m SDP Media line
+ *
+ * @return Remote network address
+ */
 const struct sa *sdp_media_raddr(const struct sdp_media *m)
 {
 	return m ? &m->raddr : NULL;
 }
 
 
+/**
+ * Get the remote RTCP network address of an SDP Media line
+ *
+ * @param m     SDP Media line
+ * @param raddr On return, contains remote RTCP network address
+ */
 void sdp_media_raddr_rtcp(const struct sdp_media *m, struct sa *raddr)
 {
 	if (!m || !raddr)
@@ -370,6 +490,14 @@ void sdp_media_raddr_rtcp(const struct sdp_media *m, struct sa *raddr)
 }
 
 
+/**
+ * Get a remote bandwidth of an SDP Media line
+ *
+ * @param m    SDP Media line
+ * @param type Bandwidth type
+ *
+ * @return Remote bandwidth value
+ */
 int32_t sdp_media_rbandwidth(const struct sdp_media *m,
 			      enum sdp_bandwidth type)
 {
@@ -380,24 +508,53 @@ int32_t sdp_media_rbandwidth(const struct sdp_media *m,
 }
 
 
+/**
+ * Get the local media direction of an SDP Media line
+ *
+ * @param m SDP Media line
+ *
+ * @return Local media direction
+ */
 enum sdp_dir sdp_media_ldir(const struct sdp_media *m)
 {
 	return m ? m->ldir : SDP_INACTIVE;
 }
 
 
+/**
+ * Get the remote media direction of an SDP Media line
+ *
+ * @param m SDP Media line
+ *
+ * @return Remote media direction
+ */
 enum sdp_dir sdp_media_rdir(const struct sdp_media *m)
 {
 	return m ? m->rdir : SDP_INACTIVE;
 }
 
 
+/**
+ * Get the combined media direction of an SDP Media line
+ *
+ * @param m SDP Media line
+ *
+ * @return Combined media direction
+ */
 enum sdp_dir sdp_media_dir(const struct sdp_media *m)
 {
 	return m ? (enum sdp_dir)(m->ldir & m->rdir) : SDP_INACTIVE;
 }
 
 
+/**
+ * Find a local SDP format from a payload type
+ *
+ * @param m  SDP Media line
+ * @param pt Payload type
+ *
+ * @return Local SDP format if found, NULL if not found
+ */
 const struct sdp_format *sdp_media_lformat(const struct sdp_media *m, int pt)
 {
 	struct le *le;
@@ -417,6 +574,14 @@ const struct sdp_format *sdp_media_lformat(const struct sdp_media *m, int pt)
 }
 
 
+/**
+ * Find a remote SDP format from a format name
+ *
+ * @param m    SDP Media line
+ * @param name Format name
+ *
+ * @return Remote SDP format if found, NULL if not found
+ */
 const struct sdp_format *sdp_media_rformat(const struct sdp_media *m,
 					   const char *name)
 {
@@ -442,6 +607,19 @@ const struct sdp_format *sdp_media_rformat(const struct sdp_media *m,
 }
 
 
+/**
+ * Find an SDP Format of an SDP Media line
+ *
+ * @param m     SDP Media line
+ * @param local True if local media, False if remote
+ * @param id    SDP format id
+ * @param pt    Payload type
+ * @param name  Format name
+ * @param srate Sampling rate
+ * @param ch    Number of channels
+ *
+ * @return SDP Format if found, NULL if not found
+ */
 struct sdp_format *sdp_media_format(const struct sdp_media *m,
 				    bool local, const char *id,
 				    int pt, const char *name,
@@ -452,6 +630,21 @@ struct sdp_format *sdp_media_format(const struct sdp_media *m,
 }
 
 
+/**
+ * Apply a function handler to all matching SDP formats
+ *
+ * @param m     SDP Media line
+ * @param local True if local media, False if remote
+ * @param id    SDP format id
+ * @param pt    Payload type
+ * @param name  Format name
+ * @param srate Sampling rate
+ * @param ch    Number of channels
+ * @param fmth  SDP Format handler
+ * @param arg   Handler argument
+ *
+ * @return SDP Format if found, NULL if not found
+ */
 struct sdp_format *sdp_media_format_apply(const struct sdp_media *m,
 					  bool local, const char *id,
 					  int pt, const char *name,
@@ -494,6 +687,14 @@ struct sdp_format *sdp_media_format_apply(const struct sdp_media *m,
 }
 
 
+/**
+ * Get the list of SDP Formats
+ *
+ * @param m     SDP Media line
+ * @param local True if local, False if remote
+ *
+ * @return List of SDP Formats
+ */
 const struct list *sdp_media_format_lst(const struct sdp_media *m, bool local)
 {
 	if (!m)
@@ -503,6 +704,14 @@ const struct list *sdp_media_format_lst(const struct sdp_media *m, bool local)
 }
 
 
+/**
+ * Get a remote attribute from an SDP Media line
+ *
+ * @param m     SDP Media line
+ * @param name  Attribute name
+ *
+ * @return Attribute value, NULL if not found
+ */
 const char *sdp_media_rattr(const struct sdp_media *m, const char *name)
 {
 	if (!m || !name)
@@ -512,6 +721,16 @@ const char *sdp_media_rattr(const struct sdp_media *m, const char *name)
 }
 
 
+/**
+ * Apply a function handler to all matching remote attributes
+ *
+ * @param m     SDP Media line
+ * @param name  Attribute name
+ * @param attrh Attribute handler
+ * @param arg   Handler argument
+ *
+ * @return Attribute value if match
+ */
 const char *sdp_media_rattr_apply(const struct sdp_media *m, const char *name,
 				  sdp_attr_h *attrh, void *arg)
 {
@@ -522,12 +741,27 @@ const char *sdp_media_rattr_apply(const struct sdp_media *m, const char *name,
 }
 
 
+/**
+ * Get the name of an SDP Media line
+ *
+ * @param m SDP Media line
+ *
+ * @return SDP Media line name
+ */
 const char *sdp_media_name(const struct sdp_media *m)
 {
 	return m ? m->name : NULL;
 }
 
 
+/**
+ * Print SDP Media line debug information
+ *
+ * @param pf Print function for output
+ * @param m  SDP Media line
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sdp_media_debug(struct re_printf *pf, const struct sdp_media *m)
 {
 	struct le *le;
