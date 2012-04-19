@@ -564,7 +564,10 @@ int rtcp_stats(struct rtp_sock *rs, uint32_t ssrc, struct rtcp_stats *stats)
 	if (!mbr)
 		return ENOENT;
 
+	lock_read_get(sess->lock);
 	stats->tx.sent = sess->txstat.psent;
+	lock_rel(sess->lock);
+
 	stats->tx.lost = mbr->cum_lost;
 	stats->tx.jit  = mbr->jit;
 
