@@ -1,3 +1,24 @@
+2012-04-21 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.1
+
+	* updated doxygen comments for sdp and tls
+
+	* dns: dnsc_srv_set: copy DNS servers to fixed-size array
+
+	* fmt: added str_isset()
+	       added fmt_param_exists()
+
+	* rtp: fix lock protection of RTCP txstat during read
+
+	* sdp: sdp_media_align_formats: move unsupported codecs to end of list
+
+	* sip: limit startline to max 8192 bytes
+	       limit tcp buffersize to max 65536 bytes
+
+	* tcp: limit the size of the tcp send queue
+
+
 2011-12-25 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.0
