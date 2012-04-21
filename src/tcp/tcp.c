@@ -53,7 +53,8 @@
 
 
 enum {
-	TCP_RXSZ_DEFAULT = 8192
+	TCP_TXQSZ_DEFAULT = 524288,
+	TCP_RXSZ_DEFAULT  = 8192
 };
 
 
@@ -77,6 +78,8 @@ struct tcp_conn {
 	tcp_close_h *closeh;  /**< Connection close handler          */
 	void *arg;            /**< Handler argument                  */
 	size_t rxsz;          /**< Maximum receive chunk size        */
+	size_t txqsz;
+	size_t txqsz_max;
 	bool active;          /**< We are connecting flag            */
 	bool connected;       /**< Connection is connected flag      */
 };
@@ -180,6 +183,9 @@ static int enqueue(struct tcp_conn *tc, struct mbuf *mb, size_t skip)
 	struct tcp_qent *qe;
 	int err;
 
+	if (tc->txqsz >= tc->txqsz_max)
+		return ENOMEM;
+
 	if (!tc->sendq.head && !tc->sendh) {
 
 		err = fd_listen(tc->fdc, FD_READ | FD_WRITE,
@@ -203,6 +209,8 @@ static int enqueue(struct tcp_conn *tc, struct mbuf *mb, size_t skip)
 
 	if (err)
 		mem_deref(qe);
+	else
+		tc->txqsz += qe->mb.end;
 
 	return err;
 }
@@ -236,6 +244,7 @@ static int dequeue(struct tcp_conn *tc)
 		return errno;
 	}
 
+	tc->txqsz  -= n;
 	qe->mb.pos += n;
 
 	if (qe->mb.pos >= qe->mb.end)
@@ -248,6 +257,7 @@ static int dequeue(struct tcp_conn *tc)
 static void conn_close(struct tcp_conn *tc, int err)
 {
 	list_flush(&tc->sendq);
+	tc->txqsz = 0;
 
 	/* Stop polling */
 	if (tc->fdc >= 0) {
@@ -449,6 +459,7 @@ static struct tcp_conn *conn_alloc(tcp_estab_h *eh, tcp_recv_h *rh,
 
 	tc->fdc    = -1;
 	tc->rxsz   = TCP_RXSZ_DEFAULT;
+	tc->txqsz_max = TCP_TXQSZ_DEFAULT;
 	tc->estabh = eh;
 	tc->recvh  = rh;
 	tc->closeh = ch;
@@ -1282,6 +1293,21 @@ void tcp_conn_rxsz_set(struct tcp_conn *tc, size_t rxsz)
 		return;
 
 	tc->rxsz = rxsz;
+}
+
+
+/**
+ * Set the maximum send queue size on a TCP Connection
+ *
+ * @param tc    TCP Connection
+ * @param txqsz Maximum send queue size
+ */
+void tcp_conn_txqsz_set(struct tcp_conn *tc, size_t txqsz)
+{
+	if (!tc)
+		return;
+
+	tc->txqsz_max = txqsz;
 }
 
 
