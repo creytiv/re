@@ -300,7 +300,7 @@ static bool request_handler(const struct sip_msg *msg, void *arg)
 			return true;
 		}
 
-		return sock->subh ? sock->subh(msg, arg) : false;
+		return sock->subh ? sock->subh(msg, sock->arg) : false;
 	}
 	else if (!pl_strcmp(&msg->met, "NOTIFY")) {
 
