@@ -46,61 +46,61 @@ int source_update_seq(struct rtp_source *s, uint16_t seq)
 	const int MAX_MISORDER = 100;
 	const int MIN_SEQUENTIAL = 2;
 
-       /*
-	* Source is not valid until MIN_SEQUENTIAL packets with
-	* sequential sequence numbers have been received.
-	*/
-       if (s->probation) {
+	/*
+	 * Source is not valid until MIN_SEQUENTIAL packets with
+	 * sequential sequence numbers have been received.
+	 */
+	if (s->probation) {
 
-	       /* packet is in sequence */
-	       if (seq == s->max_seq + 1) {
-		       s->probation--;
-		       s->max_seq = seq;
-		       if (s->probation == 0) {
-			       source_init_seq(s, seq);
-			       s->received++;
-			       return 1;
-		       }
-	       }
-	       else {
-		       s->probation = MIN_SEQUENTIAL - 1;
-		       s->max_seq = seq;
-	       }
-	       return 0;
-       }
-       else if (udelta < MAX_DROPOUT) {
+		/* packet is in sequence */
+		if (seq == s->max_seq + 1) {
+			s->probation--;
+			s->max_seq = seq;
+			if (s->probation == 0) {
+				source_init_seq(s, seq);
+				s->received++;
+				return 1;
+			}
+		}
+		else {
+			s->probation = MIN_SEQUENTIAL - 1;
+			s->max_seq = seq;
+		}
+		return 0;
+	}
+	else if (udelta < MAX_DROPOUT) {
 
-	       /* in order, with permissible gap */
-	       if (seq < s->max_seq) {
-		       /*
-			* Sequence number wrapped - count another 64K cycle.
-			*/
-		       s->cycles += RTP_SEQ_MOD;
-	       }
-	       s->max_seq = seq;
-       }
-       else if (udelta <= RTP_SEQ_MOD - MAX_MISORDER) {
+		/* in order, with permissible gap */
+		if (seq < s->max_seq) {
+			/*
+			 * Sequence number wrapped - count another 64K cycle.
+			 */
+			s->cycles += RTP_SEQ_MOD;
+		}
+		s->max_seq = seq;
+	}
+	else if (udelta <= RTP_SEQ_MOD - MAX_MISORDER) {
 
-	       /* the sequence number made a very large jump */
-	       if (seq == s->bad_seq) {
-		       /*
-			* Two sequential packets -- assume that the other side
-			* restarted without telling us so just re-sync
-			* (i.e., pretend this was the first packet).
-			*/
-		       source_init_seq(s, seq);
-	       }
-	       else {
-		       s->bad_seq = (seq + 1) & (RTP_SEQ_MOD-1);
-		       return 0;
-	       }
-       }
-       else {
-	       /* duplicate or reordered packet */
-       }
+		/* the sequence number made a very large jump */
+		if (seq == s->bad_seq) {
+			/*
+			 * Two sequential packets -- assume that the other side
+			 * restarted without telling us so just re-sync
+			 * (i.e., pretend this was the first packet).
+			 */
+			source_init_seq(s, seq);
+		}
+		else {
+			s->bad_seq = (seq + 1) & (RTP_SEQ_MOD-1);
+			return 0;
+		}
+	}
+	else {
+		/* duplicate or reordered packet */
+	}
 
-       s->received++;
-       return 1;
+	s->received++;
+	return 1;
 }
 
 
