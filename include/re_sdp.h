@@ -32,6 +32,8 @@ enum sdp_bandwidth {
 
 struct sdp_format;
 
+typedef int(sdp_fmtp_enc_h)(struct mbuf *mb, const struct sdp_format *fmt,
+			    bool offer, void *data);
 typedef bool(sdp_fmtp_cmp_h)(const char *params1, const char *params2,
 			     void *data);
 typedef bool(sdp_format_h)(struct sdp_format *fmt, void *arg);
@@ -42,7 +44,9 @@ struct sdp_format {
 	struct le le;
 	char *id;
 	char *params;
+	char *rparams;
 	char *name;
+	sdp_fmtp_enc_h *ench;
 	sdp_fmtp_cmp_h *cmph;
 	void *data;
 	bool ref;
@@ -122,7 +126,7 @@ int  sdp_media_debug(struct re_printf *pf, const struct sdp_media *m);
 /* format */
 int  sdp_format_add(struct sdp_format **fmtp, struct sdp_media *m,
 		    bool prepend, const char *id, const char *name,
-		    uint32_t srate, uint8_t ch,
+		    uint32_t srate, uint8_t ch, sdp_fmtp_enc_h *ench,
 		    sdp_fmtp_cmp_h *cmph, void *data, bool ref,
 		    const char *params, ...);
 int  sdp_format_set_params(struct sdp_format *fmt, const char *params, ...);

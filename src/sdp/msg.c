@@ -416,6 +416,8 @@ static int media_encode(const struct sdp_media *m, struct mbuf *mb, bool offer)
 		if (str_isset(fmt->params))
 			err |= mbuf_printf(mb, "a=fmtp:%s %s\r\n",
 					   fmt->id, fmt->params);
+		if (fmt->ench)
+			err |= fmt->ench(mb, fmt, offer, fmt->data);
 	}
 
 	if (sa_isset(&m->laddr_rtcp, SA_ALL))

@@ -223,6 +223,7 @@ void sdp_media_align_formats(struct sdp_media *m, bool offer)
 
 		lfmt = lle->data;
 
+		lfmt->rparams = mem_deref(lfmt->rparams);
 		lfmt->sup = false;
 	}
 
@@ -242,6 +243,9 @@ void sdp_media_align_formats(struct sdp_media *m, bool offer)
 			rfmt->sup = false;
 			continue;
 		}
+
+		mem_deref(lfmt->rparams);
+		lfmt->rparams = mem_ref(rfmt->params);
 
 		lfmt->sup = true;
 		rfmt->sup = true;

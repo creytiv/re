@@ -26,6 +26,7 @@ static void destructor(void *arg)
 
 	mem_deref(fmt->id);
 	mem_deref(fmt->params);
+	mem_deref(fmt->rparams);
 	mem_deref(fmt->name);
 }
 
@@ -49,7 +50,7 @@ static void destructor(void *arg)
  */
 int sdp_format_add(struct sdp_format **fmtp, struct sdp_media *m,
 		   bool prepend, const char *id, const char *name,
-		   uint32_t srate, uint8_t ch,
+		   uint32_t srate, uint8_t ch, sdp_fmtp_enc_h *ench,
 		   sdp_fmtp_cmp_h *cmph, void *data, bool ref,
 		   const char *params, ...)
 {
@@ -98,6 +99,7 @@ int sdp_format_add(struct sdp_format **fmtp, struct sdp_media *m,
 	fmt->pt    = atoi(fmt->id);
 	fmt->srate = srate;
 	fmt->ch    = ch;
+	fmt->ench  = ench;
 	fmt->cmph  = cmph;
 	fmt->data  = ref ? mem_ref(data) : data;
 	fmt->ref   = ref;
