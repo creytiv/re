@@ -4,6 +4,9 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
+#ifndef RE_H__
+#define RE_H__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -51,4 +54,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
