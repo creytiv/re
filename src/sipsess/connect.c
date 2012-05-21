@@ -147,6 +147,34 @@ static int invite(struct sipsess *sess)
 }
 
 
+/**
+ * Connect to a remote SIP useragent
+ *
+ * @param sessp     Pointer to allocated SIP Session
+ * @param sock      SIP Session socket
+ * @param to_uri    To SIP uri
+ * @param from_name From display name
+ * @param from_uri  From SIP uri
+ * @param cuser     Contact username
+ * @param routev    Outbound route vector
+ * @param routec    Outbound route vector count
+ * @param ctype     Session content-type
+ * @param desc      Content description (e.g. SDP)
+ * @param authh     SIP Authentication handler
+ * @param aarg      Authentication handler argument
+ * @param aref      True to mem_ref() aarg
+ * @param offerh    Session offer handler
+ * @param answerh   Session answer handler
+ * @param progrh    Session progress handler
+ * @param estabh    Session established handler
+ * @param infoh     Session info handler
+ * @param referh    Session refer handler
+ * @param closeh    Session close handler
+ * @param arg       Handler argument
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_connect(struct sipsess **sessp, struct sipsess_sock *sock,
 		    const char *to_uri, const char *from_name,
 		    const char *from_uri, const char *cuser,

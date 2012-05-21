@@ -143,6 +143,14 @@ int sipsess_reinvite(struct sipsess *sess, bool reset_ls)
 }
 
 
+/**
+ * Modify an established SIP Session sending Re-INVITE or UPDATE
+ *
+ * @param sess      SIP Session
+ * @param desc      Content description (e.g. SDP)
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_modify(struct sipsess *sess, struct mbuf *desc)
 {
 	if (!sess || sess->st || sess->terminated)

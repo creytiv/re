@@ -33,6 +33,31 @@ static void cancel_handler(void *arg)
 }
 
 
+/**
+ * Accept an incoming SIP Session connection
+ *
+ * @param sessp     Pointer to allocated SIP Session
+ * @param sock      SIP Session socket
+ * @param msg       Incoming SIP message
+ * @param scode     Response status code
+ * @param reason    Response reason phrase
+ * @param cuser     Contact username
+ * @param ctype     Session content-type
+ * @param desc      Content description (e.g. SDP)
+ * @param authh     SIP Authentication handler
+ * @param aarg      Authentication handler argument
+ * @param aref      True to mem_ref() aarg
+ * @param offerh    Session offer handler
+ * @param answerh   Session answer handler
+ * @param estabh    Session established handler
+ * @param infoh     Session info handler
+ * @param referh    Session refer handler
+ * @param closeh    Session close handler
+ * @param arg       Handler argument
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 		   const struct sip_msg *msg, uint16_t scode,
 		   const char *reason, const char *cuser, const char *ctype,
@@ -111,6 +136,17 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 }
 
 
+/**
+ * Send progress response
+ *
+ * @param sess      SIP Session
+ * @param scode     Response status code
+ * @param reason    Response reason phrase
+ * @param desc      Content description (e.g. SDP)
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 		     struct mbuf *desc, const char *fmt, ...)
 {
@@ -146,6 +182,17 @@ int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 }
 
 
+/**
+ * Answer an incoming SIP Session connection
+ *
+ * @param sess      SIP Session
+ * @param scode     Response status code
+ * @param reason    Response reason phrase
+ * @param desc      Content description (e.g. SDP)
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_answer(struct sipsess *sess, uint16_t scode, const char *reason,
 		   struct mbuf *desc, const char *fmt, ...)
 {
@@ -164,6 +211,16 @@ int sipsess_answer(struct sipsess *sess, uint16_t scode, const char *reason,
 }
 
 
+/**
+ * Reject an incoming SIP Session connection
+ *
+ * @param sess      SIP Session
+ * @param scode     Response status code
+ * @param reason    Response reason phrase
+ * @param fmt       Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_reject(struct sipsess *sess, uint16_t scode, const char *reason,
 		   const char *fmt, ...)
 {

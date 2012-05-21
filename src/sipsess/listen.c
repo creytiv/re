@@ -1,5 +1,5 @@
 /**
- * @file listen.c  SIP Session Listen
+ * @file sipsess/listen.c  SIP Session Listen
  *
  * Copyright (C) 2010 Creytiv.com
  */
@@ -294,6 +294,17 @@ static bool response_handler(const struct sip_msg *msg, void *arg)
 }
 
 
+/**
+ * Listen to a SIP Session socket for incoming connections
+ *
+ * @param sockp    Pointer to allocated SIP Session socket
+ * @param sip      SIP Stack instance
+ * @param htsize   Hashtable size
+ * @param connh    Connection handler
+ * @param arg      Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_listen(struct sipsess_sock **sockp, struct sip *sip,
 		   int htsize, sipsess_conn_h *connh, void *arg)
 {
@@ -337,6 +348,11 @@ int sipsess_listen(struct sipsess_sock **sockp, struct sip *sip,
 }
 
 
+/**
+ * Close all SIP Sessions
+ *
+ * @param sock      SIP Session socket
+ */
 void sipsess_close_all(struct sipsess_sock *sock)
 {
 	if (!sock)

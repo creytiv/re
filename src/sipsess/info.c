@@ -87,6 +87,17 @@ static int info_request(struct sipsess_request *req)
 }
 
 
+/**
+ * Send a SIP INFO request in the SIP Session
+ *
+ * @param sess      SIP Session
+ * @param ctype     Content-type
+ * @param body      Content description (e.g. SDP)
+ * @param resph     Response handler
+ * @param arg       Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sipsess_info(struct sipsess *sess, const char *ctype, struct mbuf *body,
 		 sip_resp_h *resph, void *arg)
 {

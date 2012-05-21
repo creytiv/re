@@ -41,6 +41,7 @@ static void destructor(void *arg)
  * @param name    Format name
  * @param srate   Sampling rate
  * @param ch      Number of channels
+ * @param ench    Optional format encode handler
  * @param cmph    Optional format comparison handler
  * @param data    Opaque data for handler
  * @param ref     True to mem_ref() data

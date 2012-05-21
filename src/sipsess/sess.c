@@ -220,7 +220,14 @@ void sipsess_terminate(struct sipsess *sess, int err,
 }
 
 
-struct sip_dialog *sipsess_dialog(struct sipsess *sess)
+/**
+ * Get the SIP dialog from a SIP Session
+ *
+ * @param sess      SIP Session
+ *
+ * @return SIP Dialog object
+ */
+struct sip_dialog *sipsess_dialog(const struct sipsess *sess)
 {
 	return sess ? sess->dlg : NULL;
 }
