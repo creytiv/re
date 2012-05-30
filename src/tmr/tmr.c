@@ -172,31 +172,43 @@ uint64_t tmr_next_timeout(struct list *tmrl)
 }
 
 
+int tmr_status(struct re_printf *pf, void *unused)
+{
+	struct list *tmrl = tmrl_get();
+	struct le *le;
+	uint32_t n;
+	int err;
+
+	(void)unused;
+
+	n = list_count(tmrl);
+	if (!n)
+		return 0;
+
+	err = re_hprintf(pf, "Timers (%u):\n", n);
+
+	for (le = tmrl->head; le; le = le->next) {
+		const struct tmr *tmr = le->data;
+
+		err |= re_hprintf(pf, "  %p: th=%p expire=%llums\n",
+				  tmr, tmr->th,
+				  (unsigned long long)tmr_get_expire(tmr));
+	}
+
+	if (n > 100)
+		err |= re_hprintf(pf, "    (Dumped Timers: %u)\n", n);
+
+	return err;
+}
+
+
 /**
  * Print timer debug info to stderr
  */
 void tmr_debug(void)
 {
-	struct list *tmrl = tmrl_get();
-	struct le *le;
-	uint32_t n;
-
-	n = list_count(tmrl);
-	if (!n)
-		return;
-
-	(void)re_fprintf(stderr, "Timers (%u):\n", n);
-
-	for (le = tmrl->head; le; le = le->next) {
-		const struct tmr *tmr = le->data;
-
-		(void)re_fprintf(stderr, "  %p: th=%p expire=%llums\n",
-				 tmr, tmr->th,
-				 (unsigned long long)tmr_get_expire(tmr));
-	}
-
-	if (n > 100)
-		(void)re_fprintf(stderr, "    (Dumped Timers: %u)\n", n);
+	if (!list_isempty(tmrl_get()))
+		(void)re_fprintf(stderr, "%H", tmr_status, NULL);
 }
 
 
