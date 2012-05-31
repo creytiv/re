@@ -282,6 +282,38 @@ void rtcp_set_srate(struct rtp_sock *rs, uint32_t srate_tx, uint32_t srate_rx)
 }
 
 
+/**
+ * Set the transmit Sampling-rate on an RTCP Session
+ *
+ * @param rs       RTP Socket
+ * @param srate_tx Transmit samplerate
+ */
+void rtcp_set_srate_tx(struct rtp_sock *rs, uint32_t srate_tx)
+{
+	struct rtcp_sess *sess = rtp_rtcp_sess(rs);
+	if (!sess)
+		return;
+
+	sess->srate_tx = srate_tx;
+}
+
+
+/**
+ * Set the receive Sampling-rate on an RTCP Session
+ *
+ * @param rs       RTP Socket
+ * @param srate_rx Receive samplerate
+ */
+void rtcp_set_srate_rx(struct rtp_sock *rs, uint32_t srate_rx)
+{
+	struct rtcp_sess *sess = rtp_rtcp_sess(rs);
+	if (!sess)
+		return;
+
+	sess->srate_rx = srate_rx;
+}
+
+
 int rtcp_enable(struct rtcp_sess *sess, bool enabled, const char *cname)
 {
 	int err;
