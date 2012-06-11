@@ -4,7 +4,7 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #ifdef HAVE_INET_PTON
-#define __USE_BSD 1    /**< Use BSD code */
+#define _BSD_SOURCE 1    /**< Use BSD code */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>

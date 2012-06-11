@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#define _BSD_SOURCE 1
 #include <string.h>
 #include <unistd.h>
 #define __USE_POSIX 1  /**< Use POSIX flag */
