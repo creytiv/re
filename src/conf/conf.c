@@ -148,7 +148,7 @@ int conf_alloc_buf(struct conf **confp, const uint8_t *buf, size_t sz)
  *
  * @return 0 if success, otherwise errorcode
  */
-int conf_get(struct conf *conf, const char *name, struct pl *pl)
+int conf_get(const struct conf *conf, const char *name, struct pl *pl)
 {
 	char expr[512];
 	struct pl spl;
@@ -176,7 +176,7 @@ int conf_get(struct conf *conf, const char *name, struct pl *pl)
  *
  * @return 0 if success, otherwise errorcode
  */
-int conf_get_str(struct conf *conf, const char *name, char *str,
+int conf_get_str(const struct conf *conf, const char *name, char *str,
 		 size_t size)
 {
 	struct pl pl;
@@ -202,7 +202,7 @@ int conf_get_str(struct conf *conf, const char *name, char *str,
  *
  * @return 0 if success, otherwise errorcode
  */
-int conf_get_u32(struct conf *conf, const char *name, uint32_t *num)
+int conf_get_u32(const struct conf *conf, const char *name, uint32_t *num)
 {
 	struct pl pl;
 	int err;
@@ -229,7 +229,7 @@ int conf_get_u32(struct conf *conf, const char *name, uint32_t *num)
  *
  * @return 0 if success, otherwise errorcode
  */
-int conf_get_bool(struct conf *conf, const char *name, bool *val)
+int conf_get_bool(const struct conf *conf, const char *name, bool *val)
 {
 	struct pl pl;
 	int err;
@@ -264,7 +264,8 @@ int conf_get_bool(struct conf *conf, const char *name, bool *val)
  *
  * @return 0 if success, otherwise errorcode
  */
-int conf_apply(struct conf *conf, const char *name, conf_h *ch, void *arg)
+int conf_apply(const struct conf *conf, const char *name,
+	       conf_h *ch, void *arg)
 {
 	char expr[512];
 	struct pl pl, val;
