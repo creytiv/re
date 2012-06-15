@@ -3,10 +3,14 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#include <stdlib.h>
 #include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_sys.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #ifdef HAVE_UNAME
 #include <sys/utsname.h>
 #endif
@@ -177,6 +181,32 @@ const char *sys_libre_version_get(void)
 	return VERSION;
 #else
 	return "?";
+#endif
+}
+
+
+/**
+ * Return the username (login name) for the current user
+ *
+ * @return Username or NULL if not available
+ */
+const char *sys_username(void)
+{
+#ifdef HAVE_PWD_H
+	char *login;
+
+	login = getenv("LOGNAME");
+	if (!login)
+		login = getenv("USER");
+#if defined (HAVE_UNISTD_H) && !defined (__SYMBIAN32__)
+	if (!login) {
+		login = getlogin();
+	}
+#endif
+
+	return str_isset(login) ? login : NULL;
+#else
+	return NULL;
 #endif
 }
 

@@ -55,6 +55,7 @@ int  sys_build_get(struct re_printf *pf, void *unused);
 const char *sys_arch_get(void);
 const char *sys_os_get(void);
 const char *sys_libre_version_get(void);
+const char *sys_username(void);
 int sys_coredump_set(bool enable);
 int sys_daemon(void);
 void sys_usleep(unsigned int us);
@@ -81,3 +82,8 @@ uint64_t rand_u64(void);
 char     rand_char(void);
 void     rand_str(char *str, size_t size);
 void     rand_bytes(uint8_t *p, size_t size);
+
+
+/* File-System */
+int  fs_mkdir(const char *path, uint16_t mode);
+int  fs_gethome(char *path, size_t sz);

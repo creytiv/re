@@ -777,6 +777,9 @@
 					RelativePath="..\..\src\sys\endian.c">
 				</File>
 				<File
+					RelativePath="..\..\src\sys\fs.c">
+				</File>
+				<File
 					RelativePath="..\..\src\sys\rand.c">
 				</File>
 				<File

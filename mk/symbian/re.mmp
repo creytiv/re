@@ -118,6 +118,7 @@ SOURCE        sha1.c
 SOURCEPATH    ..\..\src\sys
 SOURCE        daemon.c
 SOURCE        endian.c
+SOURCE        fs.c
 SOURCE        rand.c
 SOURCE        sys.c
 SOURCE        symbian\sleep.cpp
