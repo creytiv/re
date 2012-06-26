@@ -248,6 +248,14 @@ static inline int hdr_add(struct sip_msg *msg, const struct pl *name,
 }
 
 
+/**
+ * Decode a SIP message
+ *
+ * @param msgp Pointer to allocated SIP Message
+ * @param mb   Buffer containing SIP Message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_msg_decode(struct sip_msg **msgp, struct mbuf *mb)
 {
 	struct pl x, y, z, e, name;
@@ -428,12 +436,31 @@ int sip_msg_decode(struct sip_msg **msgp, struct mbuf *mb)
 }
 
 
+/**
+ * Get a SIP Header from a SIP Message
+ *
+ * @param msg SIP Message
+ * @param id  SIP Header ID
+ *
+ * @return SIP Header if found, NULL if not found
+ */
 const struct sip_hdr *sip_msg_hdr(const struct sip_msg *msg, enum sip_hdrid id)
 {
 	return sip_msg_hdr_apply(msg, true, id, NULL, NULL);
 }
 
 
+/**
+ * Apply a function handler to certain SIP Headers
+ *
+ * @param msg SIP Message
+ * @param fwd True to traverse forwards, false to traverse backwards
+ * @param id  SIP Header ID
+ * @param h   Function handler
+ * @param arg Handler argument
+ *
+ * @return SIP Header if handler returns true, otherwise NULL
+ */
 const struct sip_hdr *sip_msg_hdr_apply(const struct sip_msg *msg,
 					bool fwd, enum sip_hdrid id,
 					sip_hdr_h *h, void *arg)
@@ -464,12 +491,31 @@ const struct sip_hdr *sip_msg_hdr_apply(const struct sip_msg *msg,
 }
 
 
+/**
+ * Get an unknown SIP Header from a SIP Message
+ *
+ * @param msg  SIP Message
+ * @param name Header name
+ *
+ * @return SIP Header if found, NULL if not found
+ */
 const struct sip_hdr *sip_msg_xhdr(const struct sip_msg *msg, const char *name)
 {
 	return sip_msg_xhdr_apply(msg, true, name, NULL, NULL);
 }
 
 
+/**
+ * Apply a function handler to certain unknown SIP Headers
+ *
+ * @param msg  SIP Message
+ * @param fwd  True to traverse forwards, false to traverse backwards
+ * @param name SIP Header name
+ * @param h    Function handler
+ * @param arg  Handler argument
+ *
+ * @return SIP Header if handler returns true, otherwise NULL
+ */
 const struct sip_hdr *sip_msg_xhdr_apply(const struct sip_msg *msg,
 					 bool fwd, const char *name,
 					 sip_hdr_h *h, void *arg)
@@ -516,6 +562,14 @@ static bool count_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
 }
 
 
+/**
+ * Count the number of SIP Headers
+ *
+ * @param msg SIP Message
+ * @param id  SIP Header ID
+ *
+ * @return Number of SIP Headers
+ */
 uint32_t sip_msg_hdr_count(const struct sip_msg *msg, enum sip_hdrid id)
 {
 	uint32_t n = 0;
@@ -526,6 +580,14 @@ uint32_t sip_msg_hdr_count(const struct sip_msg *msg, enum sip_hdrid id)
 }
 
 
+/**
+ * Count the number of unknown SIP Headers
+ *
+ * @param msg  SIP Message
+ * @param name SIP Header name
+ *
+ * @return Number of SIP Headers
+ */
 uint32_t sip_msg_xhdr_count(const struct sip_msg *msg, const char *name)
 {
 	uint32_t n = 0;
@@ -545,6 +607,15 @@ static bool value_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
 }
 
 
+/**
+ * Check if a SIP Header matches a certain value
+ *
+ * @param msg   SIP Message
+ * @param id    SIP Header ID
+ * @param value Header value to check
+ *
+ * @return True if value matches, false if not
+ */
 bool sip_msg_hdr_has_value(const struct sip_msg *msg, enum sip_hdrid id,
 			   const char *value)
 {
@@ -553,6 +624,15 @@ bool sip_msg_hdr_has_value(const struct sip_msg *msg, enum sip_hdrid id,
 }
 
 
+/**
+ * Check if an unknown SIP Header matches a certain value
+ *
+ * @param msg   SIP Message
+ * @param name  SIP Header name
+ * @param value Header value to check
+ *
+ * @return True if value matches, false if not
+ */
 bool sip_msg_xhdr_has_value(const struct sip_msg *msg, const char *name,
 			    const char *value)
 {
@@ -561,6 +641,11 @@ bool sip_msg_xhdr_has_value(const struct sip_msg *msg, const char *name,
 }
 
 
+/**
+ * Print a SIP Message to stdout
+ *
+ * @param msg SIP Message
+ */
 void sip_msg_dump(const struct sip_msg *msg)
 {
 	struct le *le;

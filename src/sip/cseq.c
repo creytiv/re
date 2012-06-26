@@ -12,6 +12,14 @@
 #include <re_sip.h>
 
 
+/**
+ * Decode a pointer-length string into a SIP CSeq header
+ *
+ * @param cseq SIP CSeq header
+ * @param pl   Pointer-length string
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int sip_cseq_decode(struct sip_cseq *cseq, const struct pl *pl)
 {
 	struct pl num;

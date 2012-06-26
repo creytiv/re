@@ -12,6 +12,15 @@
 #include <re_sip.h>
 
 
+/**
+ * Check if a SIP parameter exists
+ *
+ * @param pl   Pointer-length string
+ * @param name SIP Parameter name
+ * @param val  Returned parameter value
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int sip_param_exists(const struct pl *pl, const char *name, struct pl *val)
 {
 	struct pl v1, v2;
@@ -35,6 +44,15 @@ int sip_param_exists(const struct pl *pl, const char *name, struct pl *val)
 }
 
 
+/**
+ * Decode a SIP Parameter
+ *
+ * @param pl   Pointer-length string
+ * @param name SIP Parameter name
+ * @param val  Returned parameter value
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int sip_param_decode(const struct pl *pl, const char *name, struct pl *val)
 {
 	char expr[128];

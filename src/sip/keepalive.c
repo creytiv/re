@@ -55,6 +55,18 @@ uint64_t sip_keepalive_wait(uint32_t interval)
 }
 
 
+/**
+ * Start a keepalive handler on a SIP transport
+ *
+ * @param kap      Pointer to allocated keepalive object
+ * @param sip      SIP Stack instance
+ * @param msg      SIP Message
+ * @param interval Keepalive interval in seconds
+ * @param kah      Keepalive handler
+ * @param arg      Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_keepalive_start(struct sip_keepalive **kap, struct sip *sip,
 			const struct sip_msg *msg, uint32_t interval,
 			sip_keepalive_h *kah, void *arg)

@@ -71,6 +71,19 @@ static void destructor(void *arg)
 }
 
 
+/**
+ * Allocate a SIP Dialog
+ *
+ * @param dlgp      Pointer to allocated SIP Dialog
+ * @param uri       Target URI
+ * @param to_uri    To URI
+ * @param from_name From displayname (optional)
+ * @param from_uri  From URI
+ * @param routev    Route vector
+ * @param routec    Route count
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_dialog_alloc(struct sip_dialog **dlgp,
 		     const char *uri, const char *to_uri,
 		     const char *from_name, const char *from_uri,
@@ -165,6 +178,14 @@ static bool record_route_handler(const struct sip_hdr *hdr,
 }
 
 
+/**
+ * Accept and create a SIP Dialog from an incoming SIP Message
+ *
+ * @param dlgp Pointer to allocated SIP Dialog
+ * @param msg  SIP Message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_dialog_accept(struct sip_dialog **dlgp, const struct sip_msg *msg)
 {
 	const struct sip_hdr *contact;
@@ -248,6 +269,14 @@ int sip_dialog_accept(struct sip_dialog **dlgp, const struct sip_msg *msg)
 }
 
 
+/**
+ * Initialize a SIP Dialog from an incoming SIP Message
+ *
+ * @param dlg SIP Dialog to initialize
+ * @param msg SIP Message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_dialog_create(struct sip_dialog *dlg, const struct sip_msg *msg)
 {
 	char *uri = NULL, *rtag = NULL;
@@ -335,6 +364,15 @@ int sip_dialog_create(struct sip_dialog *dlg, const struct sip_msg *msg)
 }
 
 
+/**
+ * Fork a SIP Dialog from an incoming SIP Message
+ *
+ * @param dlgp Pointer to allocated SIP Dialog
+ * @param odlg Original SIP Dialog
+ * @param msg  SIP Message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_dialog_fork(struct sip_dialog **dlgp, struct sip_dialog *odlg,
 		    const struct sip_msg *msg)
 {
@@ -418,6 +456,14 @@ int sip_dialog_fork(struct sip_dialog **dlgp, struct sip_dialog *odlg,
 }
 
 
+/**
+ * Update an existing SIP Dialog from a SIP Message
+ *
+ * @param dlg SIP Dialog to update
+ * @param msg SIP Message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_dialog_update(struct sip_dialog *dlg, const struct sip_msg *msg)
 {
 	const struct sip_hdr *contact;
@@ -462,6 +508,14 @@ int sip_dialog_update(struct sip_dialog *dlg, const struct sip_msg *msg)
 }
 
 
+/**
+ * Check if a remote sequence number is valid
+ *
+ * @param dlg SIP Dialog
+ * @param msg SIP Message
+ *
+ * @return True if valid, False if invalid
+ */
 bool sip_dialog_rseq_valid(struct sip_dialog *dlg, const struct sip_msg *msg)
 {
 	if (!dlg || !msg || !msg->req)
@@ -505,24 +559,53 @@ const struct uri *sip_dialog_route(const struct sip_dialog *dlg)
 }
 
 
+/**
+ * Get the Call-ID from a SIP Dialog
+ *
+ * @param dlg SIP Dialog
+ *
+ * @return Call-ID string
+ */
 const char *sip_dialog_callid(const struct sip_dialog *dlg)
 {
 	return dlg ? dlg->callid : NULL;
 }
 
 
+/**
+ * Get the local sequence number from a SIP Dialog
+ *
+ * @param dlg SIP Dialog
+ *
+ * @return Local sequence number
+ */
 uint32_t sip_dialog_lseq(const struct sip_dialog *dlg)
 {
 	return dlg ? dlg->lseq : 0;
 }
 
 
+/**
+ * Check if a SIP Dialog is established
+ *
+ * @param dlg SIP Dialog
+ *
+ * @return True if established, False if not
+ */
 bool sip_dialog_established(const struct sip_dialog *dlg)
 {
 	return dlg && dlg->rtag;
 }
 
 
+/**
+ * Compare a SIP Dialog against a SIP Message
+ *
+ * @param dlg SIP Dialog
+ * @param msg SIP Message
+ *
+ * @return True if match, False if no match
+ */
 bool sip_dialog_cmp(const struct sip_dialog *dlg, const struct sip_msg *msg)
 {
 	if (!dlg || !msg)
@@ -541,6 +624,14 @@ bool sip_dialog_cmp(const struct sip_dialog *dlg, const struct sip_msg *msg)
 }
 
 
+/**
+ * Compare a half SIP Dialog against a SIP Message
+ *
+ * @param dlg SIP Dialog
+ * @param msg SIP Message
+ *
+ * @return True if match, False if no match
+ */
 bool sip_dialog_cmp_half(const struct sip_dialog *dlg,
 			 const struct sip_msg *msg)
 {

@@ -66,6 +66,20 @@ static void lsnr_destructor(void *arg)
 }
 
 
+/**
+ * Allocate a SIP stack instance
+ *
+ * @param sipp     Pointer to allocated SIP stack
+ * @param dnsc     DNS Client (optional)
+ * @param ctsz     Size of client transactions hashtable (power of 2)
+ * @param stsz     Size of server transactions hashtable (power of 2)
+ * @param tcsz     Size of SIP transport hashtable (power of 2)
+ * @param software Software identifier
+ * @param exith    SIP-stack exit handler
+ * @param arg      Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 	      uint32_t stsz, uint32_t tcsz, const char *software,
 	      sip_exit_h *exith, void *arg)
@@ -120,6 +134,12 @@ int sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 }
 
 
+/**
+ * Close the SIP stack instance
+ *
+ * @param sip   SIP stack instance
+ * @param force Don't wait for transactions to complete
+ */
 void sip_close(struct sip *sip, bool force)
 {
 	if (!sip)
@@ -136,6 +156,17 @@ void sip_close(struct sip *sip, bool force)
 }
 
 
+/**
+ * Send a SIP message
+ *
+ * @param sip  SIP stack instance
+ * @param sock Optional socket to send from
+ * @param tp   SIP transport
+ * @param dst  Destination network address
+ * @param mb   Buffer containing SIP message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_send(struct sip *sip, void *sock, enum sip_transp tp,
 	     const struct sa *dst, struct mbuf *mb)
 {
@@ -143,6 +174,17 @@ int sip_send(struct sip *sip, void *sock, enum sip_transp tp,
 }
 
 
+/**
+ * Listen for incoming SIP Requests and SIP Responses
+ *
+ * @param lsnrp Pointer to allocated listener
+ * @param sip   SIP stack instance
+ * @param req   True for Request, false for Response
+ * @param msgh  SIP message handler
+ * @param arg   Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_listen(struct sip_lsnr **lsnrp, struct sip *sip, bool req,
 	       sip_msg_h *msgh, void *arg)
 {
@@ -170,6 +212,14 @@ int sip_listen(struct sip_lsnr **lsnrp, struct sip *sip, bool req,
 }
 
 
+/**
+ * Print debug information about the SIP stack
+ *
+ * @param pf  Print function for debug output
+ * @param sip SIP stack instance
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_debug(struct re_printf *pf, const struct sip *sip)
 {
 	int err;

@@ -10,6 +10,7 @@ enum {
 	SIP_PORT_TLS = 5061,
 };
 
+/** SIP Transport */
 enum sip_transp {
 	SIP_TRANSP_NONE = -1,
 	SIP_TRANSP_UDP = 0,
@@ -19,6 +20,7 @@ enum sip_transp {
 };
 
 
+/** SIP Header ID (perfect hash value) */
 enum sip_hdrid {
 	SIP_HDR_ACCEPT                        = 3186,
 	SIP_HDR_ACCEPT_CONTACT                =  232,
@@ -135,6 +137,7 @@ enum {
 };
 
 
+/** SIP Via header */
 struct sip_via {
 	struct pl sentby;
 	struct sa addr;
@@ -144,6 +147,7 @@ struct sip_via {
 	enum sip_transp tp;
 };
 
+/** SIP Address */
 struct sip_addr {
 	struct pl dname;
 	struct pl auri;
@@ -151,6 +155,7 @@ struct sip_addr {
 	struct pl params;
 };
 
+/** SIP Tag address */
 struct sip_taddr {
 	struct pl dname;
 	struct pl auri;
@@ -160,11 +165,13 @@ struct sip_taddr {
 	struct pl val;
 };
 
+/** SIP CSeq header */
 struct sip_cseq {
 	struct pl met;
 	uint32_t num;
 };
 
+/** SIP Header */
 struct sip_hdr {
 	struct le le;
 	struct le he;
@@ -173,6 +180,7 @@ struct sip_hdr {
 	enum sip_hdrid id;
 };
 
+/** SIP Message */
 struct sip_msg {
 	struct sa src;
 	struct sa dst;
@@ -200,6 +208,7 @@ struct sip_msg {
 	bool req;
 };
 
+/** SIP Loop-state */
 struct sip_loopstate {
 	uint32_t failc;
 	uint16_t last_scode;

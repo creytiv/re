@@ -134,6 +134,20 @@ static int vreplyf(struct sip_strans **stp, struct mbuf **mbp, bool trans,
 }
 
 
+/**
+ * Formatted reply using Server Transaction
+ *
+ * @param stp       Pointer to allocated SIP Server Transaction (optional)
+ * @param mbp       Pointer to allocated SIP message buffer (optional)
+ * @param sip       SIP Stack instance
+ * @param msg       Incoming SIP message
+ * @param rec_route True to copy Record-Route headers
+ * @param scode     Response status code
+ * @param reason    Response reason phrase
+ * @param fmt       Formatted SIP message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_treplyf(struct sip_strans **stp, struct mbuf **mbp, struct sip *sip,
 		const struct sip_msg *msg, bool rec_route, uint16_t scode,
 		const char *reason, const char *fmt, ...)
@@ -150,6 +164,17 @@ int sip_treplyf(struct sip_strans **stp, struct mbuf **mbp, struct sip *sip,
 }
 
 
+/**
+ * Reply using Server Transaction
+ *
+ * @param stp    Pointer to allocated SIP Server Transaction (optional)
+ * @param sip    SIP Stack instance
+ * @param msg    Incoming SIP message
+ * @param scode  Response status code
+ * @param reason Response reason phrase
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_treply(struct sip_strans **stp, struct sip *sip,
 	       const struct sip_msg *msg, uint16_t scode, const char *reason)
 {
@@ -157,8 +182,19 @@ int sip_treply(struct sip_strans **stp, struct sip *sip,
 }
 
 
+/**
+ * Stateless formatted reply
+ *
+ * @param sip    SIP Stack instance
+ * @param msg    Incoming SIP message
+ * @param scode  Response status code
+ * @param reason Response reason phrase
+ * @param fmt    Formatted SIP message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_replyf(struct sip *sip, const struct sip_msg *msg, uint16_t scode,
-		const char *reason, const char *fmt, ...)
+	       const char *reason, const char *fmt, ...)
 {
 	va_list ap;
 	int err;
@@ -172,6 +208,16 @@ int sip_replyf(struct sip *sip, const struct sip_msg *msg, uint16_t scode,
 }
 
 
+/**
+ * Stateless reply
+ *
+ * @param sip    SIP Stack instance
+ * @param msg    Incoming SIP message
+ * @param scode  Response status code
+ * @param reason Response reason phrase
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_reply(struct sip *sip, const struct sip_msg *msg, uint16_t scode,
 	      const char *reason)
 {
@@ -179,6 +225,13 @@ int sip_reply(struct sip *sip, const struct sip_msg *msg, uint16_t scode,
 }
 
 
+/**
+ * Get the reply address from a SIP message
+ *
+ * @param addr  Network address, set on return
+ * @param msg   SIP message
+ * @param rport Rport value
+ */
 void sip_reply_addr(struct sa *addr, const struct sip_msg *msg, bool rport)
 {
 	uint16_t port;

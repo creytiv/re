@@ -237,6 +237,17 @@ static bool request_handler(const struct sip_msg *msg, void *arg)
 }
 
 
+/**
+ * Allocate a SIP Server Transaction
+ *
+ * @param stp     Pointer to allocated SIP Server Transaction
+ * @param sip     SIP Stack instance
+ * @param msg     Incoming SIP message
+ * @param cancelh Cancel handler
+ * @param arg     Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_strans_alloc(struct sip_strans **stp, struct sip *sip,
 		     const struct sip_msg *msg, sip_cancel_h *cancelh,
 		     void *arg)
@@ -266,6 +277,18 @@ int sip_strans_alloc(struct sip_strans **stp, struct sip *sip,
 }
 
 
+/**
+ * Reply using a SIP Server Transaction
+ *
+ * @param stp   Pointer to allocated SIP Server Transaction
+ * @param sip   SIP Stack instance
+ * @param msg   Incoming SIP message
+ * @param dst   Destination network address
+ * @param scode Response status code
+ * @param mb    Buffer containing SIP response
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_strans_reply(struct sip_strans **stp, struct sip *sip,
 		     const struct sip_msg *msg, const struct sa *dst,
 		     uint16_t scode, struct mbuf *mb)

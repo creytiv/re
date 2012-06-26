@@ -192,6 +192,14 @@ static bool auth_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
 }
 
 
+/**
+ * Update a SIP authentication state from a SIP message
+ *
+ * @param auth SIP Authentication state
+ * @param msg  SIP Message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_auth_authenticate(struct sip_auth *auth, const struct sip_msg *msg)
 {
 	if (!auth || !msg)
@@ -270,6 +278,16 @@ int sip_auth_encode(struct mbuf *mb, struct sip_auth *auth, const char *met,
 }
 
 
+/**
+ * Allocate a SIP authentication state
+ *
+ * @param authp Pointer to allocated SIP authentication state
+ * @param authh Authentication handler
+ * @param arg   Handler argument
+ * @param ref   True to mem_ref() argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_auth_alloc(struct sip_auth **authp, sip_auth_h *authh,
 		   void *arg, bool ref)
 {
@@ -292,6 +310,11 @@ int sip_auth_alloc(struct sip_auth **authp, sip_auth_h *authh,
 }
 
 
+/**
+ * Reset a SIP authentication state
+ *
+ * @param auth SIP Authentication state
+ */
 void sip_auth_reset(struct sip_auth *auth)
 {
 	if (!auth)

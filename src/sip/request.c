@@ -559,6 +559,24 @@ static int addr_lookup(struct sip_request *req, const char *name)
 }
 
 
+/**
+ * Send a SIP request
+ *
+ * @param reqp     Pointer to allocated SIP request object
+ * @param sip      SIP Stack
+ * @param stateful Stateful client transaction
+ * @param met      SIP Method string
+ * @param metl     Length of SIP Method string
+ * @param uri      Request URI
+ * @param uril     Length of Request URI string
+ * @param route    Next hop route URI
+ * @param mb       Buffer containing SIP request
+ * @param sendh    Send handler
+ * @param resph    Response handler
+ * @param arg      Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 		const char *met, int metl, const char *uri, int uril,
 		const struct uri *route, struct mbuf *mb,
@@ -669,6 +687,23 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 }
 
 
+/**
+ * Send a SIP request with formatted arguments
+ *
+ * @param reqp     Pointer to allocated SIP request object
+ * @param sip      SIP Stack
+ * @param stateful Stateful client transaction
+ * @param met      Null-terminated SIP Method string
+ * @param uri      Null-terminated Request URI string
+ * @param route    Next hop route URI (optional)
+ * @param auth     SIP authentication state
+ * @param sendh    Send handler
+ * @param resph    Response handler
+ * @param arg      Handler argument
+ * @param fmt      Formatted SIP headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_requestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 		 const char *met, const char *uri, const struct uri *route,
 		 struct sip_auth *auth, sip_send_h *sendh, sip_resp_h *resph,
@@ -727,6 +762,23 @@ int sip_requestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 }
 
 
+/**
+ * Send a SIP dialog request with formatted arguments
+ *
+ * @param reqp     Pointer to allocated SIP request object
+ * @param sip      SIP Stack
+ * @param stateful Stateful client transaction
+ * @param met      Null-terminated SIP Method string
+ * @param dlg      SIP Dialog state
+ * @param cseq     CSeq number
+ * @param auth     SIP authentication state
+ * @param sendh    Send handler
+ * @param resph    Response handler
+ * @param arg      Handler argument
+ * @param fmt      Formatted SIP headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sip_drequestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 		  const char *met, struct sip_dialog *dlg, uint32_t cseq,
 		  struct sip_auth *auth, sip_send_h *sendh, sip_resp_h *resph,
@@ -777,6 +829,11 @@ int sip_drequestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 }
 
 
+/**
+ * Cancel a pending SIP Request
+ *
+ * @param req SIP Request
+ */
 void sip_request_cancel(struct sip_request *req)
 {
 	if (!req || req->canceled)
@@ -800,6 +857,14 @@ void sip_request_close(struct sip *sip)
 }
 
 
+/**
+ * Check if a SIP request loops
+ *
+ * @param ls    Loop state
+ * @param scode Status code from SIP response
+ *
+ * @return True if loops, otherwise false
+ */
 bool sip_request_loops(struct sip_loopstate *ls, uint16_t scode)
 {
 	bool loop = false;
@@ -838,6 +903,11 @@ bool sip_request_loops(struct sip_loopstate *ls, uint16_t scode)
 }
 
 
+/**
+ * Reset the loop state
+ *
+ * @param ls Loop state
+ */
 void sip_loopstate_reset(struct sip_loopstate *ls)
 {
 	if (!ls)

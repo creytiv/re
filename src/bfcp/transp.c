@@ -1,5 +1,5 @@
 /**
- * @file transp.c BFCP Transport
+ * @file bfcp/transp.c BFCP Transport
  *
  * Copyright (C) 2010 Creytiv.com
  */

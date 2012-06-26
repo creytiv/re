@@ -26,6 +26,14 @@ static int decode_hostport(const struct pl *hostport, struct pl *host,
 }
 
 
+/**
+ * Decode a pointer-length string into a SIP Via header
+ *
+ * @param via SIP Via header
+ * @param pl  Pointer-length string
+ *
+ * @return 0 for success, otherwise errorcode
+ */
 int sip_via_decode(struct sip_via *via, const struct pl *pl)
 {
 	struct pl transp, host, port;
