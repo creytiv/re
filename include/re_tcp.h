@@ -73,6 +73,7 @@ void tcp_conn_txqsz_set(struct tcp_conn *tc, size_t txqsz);
 int  tcp_conn_local_get(const struct tcp_conn *tc, struct sa *local);
 int  tcp_conn_peer_get(const struct tcp_conn *tc, struct sa *peer);
 int  tcp_conn_fd(const struct tcp_conn *tc);
+size_t tcp_conn_txqsz(const struct tcp_conn *tc);
 
 
 /* High-level API */

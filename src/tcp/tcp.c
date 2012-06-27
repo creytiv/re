@@ -1324,6 +1324,19 @@ int tcp_conn_fd(const struct tcp_conn *tc)
 }
 
 
+/**
+ * Get the current length of the transmit queue on a TCP Connection
+ *
+ * @param tc TCP-Connection
+ *
+ * @return Current transmit queue length, or 0 if errors
+ */
+size_t tcp_conn_txqsz(const struct tcp_conn *tc)
+{
+	return tc ? tc->txqsz : 0;
+}
+
+
 static bool sort_handler(struct le *le1, struct le *le2, void *arg)
 {
 	struct tcp_helper *th1 = le1->data, *th2 = le2->data;
