@@ -66,7 +66,7 @@ int net_sockopt_reuse_set(int fd, bool reuse);
 /* Net interface (if.c) */
 
 /**
- * Defines the interface address handled - called once per interface
+ * Defines the interface address handler - called once per interface
  *
  * @param ifname Name of the interface
  * @param sa     IP address of the interface
