@@ -11,6 +11,7 @@ struct sip {
 	struct list reql;
 	struct hash *ht_ctrans;
 	struct hash *ht_strans;
+	struct hash *ht_strans_mrg;
 	struct hash *ht_conn;
 	struct hash *ht_udpconn;
 	struct dnsc *dnsc;

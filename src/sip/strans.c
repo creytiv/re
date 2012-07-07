@@ -29,6 +29,7 @@ enum state {
 
 struct sip_strans {
 	struct le he;
+	struct le he_mrg;
 	struct tmr tmr;
 	struct tmr tmrg;
 	struct sa dst;
@@ -48,6 +49,7 @@ static void destructor(void *arg)
 	struct sip_strans *st = arg;
 
 	hash_unlink(&st->he);
+	hash_unlink(&st->he_mrg);
 	tmr_cancel(&st->tmr);
 	tmr_cancel(&st->tmrg);
 	mem_deref(st->msg);
@@ -106,6 +108,30 @@ static bool cmp_cancel_handler(struct le *le, void *arg)
 		return false;
 
 	if (!pl_strcmp(&st->msg->cseq.met, "CANCEL"))
+		return false;
+
+	return true;
+}
+
+
+static bool cmp_merge_handler(struct le *le, void *arg)
+{
+	struct sip_strans *st = le->data;
+	const struct sip_msg *msg = arg;
+
+	if (pl_cmp(&st->msg->cseq.met, &msg->cseq.met))
+		return false;
+
+	if (st->msg->cseq.num != msg->cseq.num)
+		return false;
+
+	if (pl_cmp(&st->msg->callid, &msg->callid))
+		return false;
+
+	if (pl_cmp(&st->msg->from.tag, &msg->from.tag))
+		return false;
+
+	if (pl_cmp(&st->msg->ruri, &msg->ruri))
 		return false;
 
 	return true;
@@ -229,6 +255,16 @@ static bool request_handler(const struct sip_msg *msg, void *arg)
 
 		return true;
 	}
+	else if (!pl_isset(&msg->to.tag)) {
+
+		st = list_ledata(hash_lookup(sip->ht_strans_mrg,
+					     hash_joaat_pl(&msg->callid),
+					     cmp_merge_handler, (void *)msg));
+		if (st) {
+			(void)sip_reply(sip, msg, 482, "Loop Detected");
+			return true;
+		}
+	}
 
 	if (!pl_strcmp(&msg->met, "CANCEL"))
 		return cancel_handler(sip, msg);
@@ -263,6 +299,9 @@ int sip_strans_alloc(struct sip_strans **stp, struct sip *sip,
 
 	hash_append(sip->ht_strans, hash_joaat_pl(&msg->via.branch),
 		    &st->he, st);
+
+	hash_append(sip->ht_strans_mrg, hash_joaat_pl(&msg->callid),
+		    &st->he_mrg, st);
 
 	st->invite  = !pl_strcmp(&msg->met, "INVITE");
 	st->msg     = mem_ref((void *)msg);
@@ -364,6 +403,10 @@ int sip_strans_init(struct sip *sip, uint32_t sz)
 	int err;
 
 	err = sip_listen(NULL, sip, true, request_handler, sip);
+	if (err)
+		return err;
+
+	err = hash_alloc(&sip->ht_strans_mrg, sz);
 	if (err)
 		return err;
 

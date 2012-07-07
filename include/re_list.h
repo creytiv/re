@@ -51,6 +51,7 @@ typedef bool (list_sort_h)(struct le *le1, struct le *le2, void *arg);
 
 void list_init(struct list *list);
 void list_flush(struct list *list);
+void list_clear(struct list *list);
 void list_append(struct list *list, struct le *le, void *data);
 void list_prepend(struct list *list, struct le *le, void *data);
 void list_insert_before(struct list *list, struct le *le, struct le *ile,

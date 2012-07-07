@@ -38,7 +38,9 @@ static void destructor(void *arg)
 	mem_deref(sip->ht_ctrans);
 
 	hash_flush(sip->ht_strans);
+	hash_clear(sip->ht_strans_mrg);
 	mem_deref(sip->ht_strans);
+	mem_deref(sip->ht_strans_mrg);
 
 	hash_flush(sip->ht_conn);
 	mem_deref(sip->ht_conn);

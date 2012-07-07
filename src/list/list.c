@@ -56,6 +56,31 @@ void list_flush(struct list *list)
 
 
 /**
+ * Clear a linked list without dereferencing the elements
+ *
+ * @param list Linked list
+ */
+void list_clear(struct list *list)
+{
+	struct le *le;
+
+	if (!list)
+		return;
+
+	le = list->head;
+	while (le) {
+		struct le *next = le->next;
+		le->list = NULL;
+		le->prev = le->next = NULL;
+		le->data = NULL;
+		le = next;
+	}
+
+	list_init(list);
+}
+
+
+/**
  * Append a list element to a linked list
  *
  * @param list  Linked list

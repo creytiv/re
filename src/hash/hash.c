@@ -184,6 +184,23 @@ void hash_flush(struct hash *h)
 
 
 /**
+ * Clear a hashmap without dereferencing the elements
+ *
+ * @param h Hashmap table
+ */
+void hash_clear(struct hash *h)
+{
+	uint32_t i;
+
+	if (!h)
+		return;
+
+	for (i=0; i<h->bsize; i++)
+		list_clear(&h->bucket[i]);
+}
+
+
+/**
  * Calculate a valid hash size from a random size
  *
  * @param size Requested size
