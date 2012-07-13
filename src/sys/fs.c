@@ -22,7 +22,9 @@
 #include <lmaccess.h>
 #undef WIN32_LEAN_AND_MEAN
 #endif
-#include <re.h>
+#include <re_types.h>
+#include <re_fmt.h>
+#include <re_sys.h>
 
 
 /**
