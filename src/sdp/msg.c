@@ -435,6 +435,9 @@ static int media_encode(const struct sdp_media *m, struct mbuf *mb, bool offer)
 	for (le = m->lattrl.head; le; le = le->next)
 		err |= mbuf_printf(mb, "%H", sdp_attr_print, le->data);
 
+	if (m->ench)
+		err |= m->ench(mb, offer, m->arg);
+
 	return err;
 }
 

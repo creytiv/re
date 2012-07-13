@@ -39,6 +39,8 @@ struct sdp_media {
 	int32_t rbwv[SDP_BANDWIDTH_MAX];
 	char *name;
 	char *proto;
+	sdp_media_enc_h *ench;
+	void *arg;
 	enum sdp_dir ldir;
 	enum sdp_dir rdir;
 	bool disabled;

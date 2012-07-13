@@ -290,6 +290,24 @@ void sdp_media_align_formats(struct sdp_media *m, bool offer)
 
 
 /**
+ * Set SDP Media line encode handler
+ *
+ * @param m    SDP Media line
+ * @param ench Encode handler
+ * @param arg  Encode handler argument
+ */
+void sdp_media_set_encode_handler(struct sdp_media *m, sdp_media_enc_h *ench,
+				  void *arg)
+{
+	if (!m)
+		return;
+
+	m->ench = ench;
+	m->arg  = arg;
+}
+
+
+/**
  * Set an SDP Media line to enabled/disabled
  *
  * @param m        SDP Media line

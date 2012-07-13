@@ -32,6 +32,7 @@ enum sdp_bandwidth {
 
 struct sdp_format;
 
+typedef int(sdp_media_enc_h)(struct mbuf *mb, bool offer, void *arg);
 typedef int(sdp_fmtp_enc_h)(struct mbuf *mb, const struct sdp_format *fmt,
 			    bool offer, void *data);
 typedef bool(sdp_fmtp_cmp_h)(const char *params1, const char *params2,
@@ -84,6 +85,8 @@ struct sdp_media;
 
 int  sdp_media_add(struct sdp_media **mp, struct sdp_session *sess,
 		   const char *name, uint16_t port, const char *proto);
+void sdp_media_set_encode_handler(struct sdp_media *m, sdp_media_enc_h *ench,
+				  void *arg);
 void sdp_media_set_disabled(struct sdp_media *m, bool disabled);
 void sdp_media_set_lport(struct sdp_media *m, uint16_t port);
 void sdp_media_set_laddr(struct sdp_media *m, const struct sa *laddr);
