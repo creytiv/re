@@ -221,6 +221,13 @@ int rtcp_msg_print(struct re_printf *pf, const struct rtcp_msg *msg)
 		err |= re_hprintf(pf, " '%s'", msg->r.bye.reason);
 		break;
 
+	case RTCP_APP:
+		err = re_hprintf(pf, "src=%08x '%b' data=%zu",
+				 msg->r.app.src,
+				 msg->r.app.name, sizeof(msg->r.app.name),
+				 msg->r.app.data_len);
+		break;
+
 	case RTCP_FIR:
 		err = re_hprintf(pf, "ssrc=%08x", msg->r.fir.ssrc);
 		break;
@@ -229,6 +236,37 @@ int rtcp_msg_print(struct re_printf *pf, const struct rtcp_msg *msg)
 		err = re_hprintf(pf, "ssrc=%08x fsn=%04x blp=%04x",
 				 msg->r.nack.ssrc, msg->r.nack.fsn,
 				 msg->r.nack.blp);
+		break;
+
+	case RTCP_RTPFB:
+		err = re_hprintf(pf, "pkt=%08x med=%08x n=%u",
+				 msg->r.fb.ssrc_packet,
+				 msg->r.fb.ssrc_media,
+				 msg->r.fb.n);
+		if (msg->hdr.count == RTCP_RTPFB_GNACK) {
+			err |= re_hprintf(pf, " GNACK");
+			for (i=0; i<msg->r.fb.n; i++) {
+				err |= re_hprintf(pf, " {%04x %04x}",
+						  msg->r.fb.fci.gnackv[i].pid,
+						  msg->r.fb.fci.gnackv[i].blp);
+			}
+		}
+		break;
+
+	case RTCP_PSFB:
+		err = re_hprintf(pf, "pkt=%08x med=%08x n=%u",
+				 msg->r.fb.ssrc_packet,
+				 msg->r.fb.ssrc_media,
+				 msg->r.fb.n);
+		if (msg->hdr.count == RTCP_PSFB_SLI) {
+			err |= re_hprintf(pf, " SLI");
+			for (i=0; i<msg->r.fb.n; i++) {
+				err |= re_hprintf(pf, " {%04x %04x %02x}",
+						  msg->r.fb.fci.sliv[i].first,
+						  msg->r.fb.fci.sliv[i].number,
+						  msg->r.fb.fci.sliv[i].picid);
+			}
+		}
 		break;
 
 	default:
