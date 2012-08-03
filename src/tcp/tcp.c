@@ -566,7 +566,7 @@ int tcp_sock_alloc(struct tcp_sock **tsp, const struct sa *local,
 		   tcp_conn_h *ch, void *arg)
 {
 	struct addrinfo hints, *res = NULL, *r;
-	char addr[NET_ADDRSTRLEN] = "";
+	char addr[64] = "";
 	char serv[6] = "0";
 	struct tcp_sock *ts = NULL;
 	int error, err;
@@ -582,10 +582,9 @@ int tcp_sock_alloc(struct tcp_sock **tsp, const struct sa *local,
 	ts->fdc = -1;
 
 	if (local) {
-		err = sa_ntop(local, addr, sizeof(addr));
+		(void)re_snprintf(addr, sizeof(addr), "%H",
+				  sa_print_addr, local);
 		(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(local));
-		if (err)
-			goto out;
 	}
 
 	memset(&hints, 0, sizeof(hints));
@@ -667,7 +666,7 @@ int tcp_sock_alloc(struct tcp_sock **tsp, const struct sa *local,
 int tcp_sock_bind(struct tcp_sock *ts, const struct sa *local)
 {
 	struct addrinfo hints, *res = NULL, *r;
-	char addr[NET_ADDRSTRLEN] = "";
+	char addr[64] = "";
 	char serv[NI_MAXSERV] = "0";
 	int error, err;
 
@@ -675,10 +674,9 @@ int tcp_sock_bind(struct tcp_sock *ts, const struct sa *local)
 		return EINVAL;
 
 	if (local) {
-		err = sa_ntop(local, addr, sizeof(addr));
+		(void)re_snprintf(addr, sizeof(addr), "%H",
+				  sa_print_addr, local);
 		(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(local));
-		if (err)
-			return err;
 	}
 
 	memset(&hints, 0, sizeof(hints));
@@ -829,7 +827,7 @@ int tcp_conn_alloc(struct tcp_conn **tcp,
 {
 	struct tcp_conn *tc;
 	struct addrinfo hints, *res = NULL, *r;
-	char addr[NET_ADDRSTRLEN];
+	char addr[64];
 	char serv[NI_MAXSERV] = "0";
 	int error, err;
 
@@ -847,10 +845,9 @@ int tcp_conn_alloc(struct tcp_conn **tcp,
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	err = sa_ntop(peer, addr, sizeof(addr));
+	(void)re_snprintf(addr, sizeof(addr), "%H",
+			  sa_print_addr, peer);
 	(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(peer));
-	if (err)
-		goto out;
 
 	error = getaddrinfo(addr, serv, &hints, &res);
 	if (error) {
@@ -908,7 +905,7 @@ int tcp_conn_alloc(struct tcp_conn **tcp,
 int tcp_conn_bind(struct tcp_conn *tc, const struct sa *local)
 {
 	struct addrinfo hints, *res = NULL, *r;
-	char addr[NET_ADDRSTRLEN] = "";
+	char addr[64] = "";
 	char serv[NI_MAXSERV] = "0";
 	int error, err;
 
@@ -916,10 +913,9 @@ int tcp_conn_bind(struct tcp_conn *tc, const struct sa *local)
 		return EINVAL;
 
 	if (local) {
-		err = sa_ntop(local, addr, sizeof(addr));
+		(void)re_snprintf(addr, sizeof(addr), "%H",
+				  sa_print_addr, local);
 		(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(local));
-		if (err)
-			return err;
 	}
 
 	memset(&hints, 0, sizeof(hints));
@@ -983,9 +979,9 @@ int tcp_conn_bind(struct tcp_conn *tc, const struct sa *local)
 int tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer)
 {
 	struct addrinfo hints, *res = NULL, *r;
-	char addr[NET_ADDRSTRLEN];
+	char addr[64];
 	char serv[NI_MAXSERV];
-	int error, err;
+	int error, err = 0;
 
 	if (!tc || !sa_isset(peer, SA_ALL))
 		return EINVAL;
@@ -1004,10 +1000,9 @@ int tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	err = sa_ntop(peer, addr, sizeof(addr));
+	(void)re_snprintf(addr, sizeof(addr), "%H",
+			  sa_print_addr, peer);
 	(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(peer));
-	if (err)
-		return err;
 
 	error = getaddrinfo(addr, serv, &hints, &res);
 	if (error) {

@@ -262,7 +262,7 @@ int udp_listen(struct udp_sock **usp, const struct sa *local,
 {
 	struct addrinfo hints, *res = NULL, *r;
 	struct udp_sock *us = NULL;
-	char addr[NET_ADDRSTRLEN];
+	char addr[64];
 	char serv[6] = "0";
 	int af, error, err = 0;
 
@@ -280,10 +280,9 @@ int udp_listen(struct udp_sock **usp, const struct sa *local,
 
 	if (local) {
 		af = sa_af(local);
-		err = sa_ntop(local, addr, sizeof(addr));
+		(void)re_snprintf(addr, sizeof(addr), "%H",
+				  sa_print_addr, local);
 		(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(local));
-		if (err)
-			goto out;
 	}
 	else {
 #ifdef HAVE_INET6

@@ -1,0 +1,39 @@
+/**
+ * @file sa/print.c  Socket Address printing
+ *
+ * Copyright (C) 2010 Creytiv.com
+ */
+#ifdef HAVE_GETIFADDRS
+#include <sys/types.h>
+#include <sys/socket.h>
+#define __USE_MISC 1   /**< Use MISC code */
+#include <net/if.h>
+#endif
+#include <re_types.h>
+#include <re_fmt.h>
+#include <re_sa.h>
+
+
+int sa_print_addr(struct re_printf *pf, const struct sa *sa)
+{
+	int err;
+
+	if (!sa)
+		return 0;
+
+	err = re_hprintf(pf, "%j", sa);
+
+#ifdef HAVE_GETIFADDRS
+	if (sa_af(sa) == AF_INET6 && sa_is_linklocal(sa)) {
+
+		char ifname[IF_NAMESIZE];
+
+		if (!if_indextoname(sa->u.in6.sin6_scope_id, ifname))
+			return errno;
+
+		err |= re_hprintf(pf, "%%%s", ifname);
+	}
+#endif
+
+	return err;
+}
