@@ -175,3 +175,61 @@ int net_if_debug(struct re_printf *pf, void *unused)
 	return err;
 }
 #endif
+
+
+static bool linklocal_handler(const char *ifname, const struct sa *sa,
+			      void *arg)
+{
+	void **argv = arg;
+	int af = *(int *)argv[1];
+
+	if (argv[0] && 0 != str_casecmp(argv[0], ifname))
+		return false;
+
+	if (af != AF_UNSPEC && af != sa_af(sa))
+		return false;
+
+	if (sa_is_linklocal(sa)) {
+		*((struct sa *)argv[2]) = *sa;
+		return true;
+	}
+
+	return false;
+}
+
+
+/**
+ * Get the Link-local address for a specific network interface
+ *
+ * @param ifname Name of the interface
+ * @param af     Address family
+ * @param ip     Returned link-local address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int net_if_getlinklocal(const char *ifname, int af, struct sa *ip)
+{
+	struct sa addr;
+	void *argv[3];
+	int err;
+
+	if (!ip)
+		return EINVAL;
+
+	sa_init(&addr, sa_af(ip));
+
+	argv[0] = (void *)ifname;
+	argv[1] = &af;
+	argv[2] = &addr;
+
+	err = net_if_apply(linklocal_handler, argv);
+	if (err)
+		return err;
+
+	if (!sa_isset(&addr, SA_ADDR))
+		return ENOENT;
+
+	*ip = addr;
+
+	return 0;
+}
