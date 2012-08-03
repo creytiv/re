@@ -147,6 +147,7 @@ static size_t local_ftoa(char *buf, double n, size_t dp)
  *   %J  (struct sa *)           Socket address and port - like 1.2.3.4:1234
  *   %H  (re_printf_h *, void *) Print handler with argument
  *   %v  (char *fmt, va_list *)  Variable argument list
+ *   %m  (int)                   Describe an error code
  * </pre>
  *
  * Reserved for the future:
@@ -309,6 +310,14 @@ int re_vhprintf(const char *fmt, va_list ap, re_vprintf_h *vph, void *arg)
 		case 'l':
 			++lenmod;
 			fm = true;
+			break;
+
+		case 'm':
+			(void)strerror_r(va_arg(ap, int), addr, sizeof(addr));
+			addr[sizeof(addr)-1] = '\0';
+
+			err |= write_padded(addr, strlen(addr), pad, ' ',
+					    plr, NULL, vph, arg);
 			break;
 
 		case 'p':

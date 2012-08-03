@@ -145,90 +145,90 @@ typedef bool _Bool;
 
 /** No data available */
 #ifndef ENODATA
-#define ENODATA 61
+#define ENODATA 200
 #endif
 
 /** Protocol error */
 #ifndef EPROTO
-#define EPROTO 71
+#define EPROTO 201
 #endif
 
 /** Not a data message */
 #ifndef EBADMSG
-#define EBADMSG 74
+#define EBADMSG 202
 #endif
 
 /** Value too large for defined data type */
 #ifndef EOVERFLOW
-#define EOVERFLOW 75
+#define EOVERFLOW 203
 #endif
 
 /** Accessing a corrupted shared library */
 #ifndef ELIBBAD
-#define ELIBBAD 80
+#define ELIBBAD 204
 #endif
 
 /** Destination address required */
 #ifndef EDESTADDRREQ
-#define EDESTADDRREQ 89
+#define EDESTADDRREQ 205
 #endif
 
 /** Protocol not supported */
 #ifndef EPROTONOSUPPORT
-#define EPROTONOSUPPORT 93
+#define EPROTONOSUPPORT 206
 #endif
 
-/** Operation not supported on transport endpoint */
+/** Operation not supported */
 #ifndef ENOTSUP
-#define ENOTSUP 95
+#define ENOTSUP 207
 #endif
 
 /** Address family not supported by protocol */
 #ifndef EAFNOSUPPORT
-#define EAFNOSUPPORT 97
+#define EAFNOSUPPORT 208
 #endif
 
 /** Cannot assign requested address */
 #ifndef EADDRNOTAVAIL
-#define EADDRNOTAVAIL 99
+#define EADDRNOTAVAIL 209
 #endif
 
 /** Software caused connection abort */
 #ifndef ECONNABORTED
-#define ECONNABORTED 103
+#define ECONNABORTED 210
 #endif
 
 /** Connection reset by peer */
 #ifndef ECONNRESET
-#define ECONNRESET 104
+#define ECONNRESET 211
 #endif
 
 /** Transport endpoint is not connected */
 #ifndef ENOTCONN
-#define ENOTCONN 107
+#define ENOTCONN 212
 #endif
 
 /** Connection timed out */
 #ifndef ETIMEDOUT
-#define ETIMEDOUT 110
+#define ETIMEDOUT 213
 #endif
 
 /** Connection refused */
 #ifndef ECONNREFUSED
-#define ECONNREFUSED 111
+#define ECONNREFUSED 214
 #endif
 
 /** Operation already in progress */
 #ifndef EALREADY
-#define EALREADY 114
+#define EALREADY 215
 #endif
 
 /** Operation now in progress */
 #ifndef EINPROGRESS
-#define EINPROGRESS 115
+#define EINPROGRESS 216
 #endif
 
 /** Authentication error */
 #ifndef EAUTH
-#define EAUTH 116
+#define EAUTH 217
 #endif
