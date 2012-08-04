@@ -178,13 +178,14 @@ static void qent_destructor(void *arg)
 }
 
 
-static int enqueue(struct tcp_conn *tc, struct mbuf *mb, size_t skip)
+static int enqueue(struct tcp_conn *tc, struct mbuf *mb)
 {
+	const size_t n = mbuf_get_left(mb);
 	struct tcp_qent *qe;
 	int err;
 
-	if (tc->txqsz >= tc->txqsz_max)
-		return ENOMEM;
+	if (tc->txqsz + n > tc->txqsz_max)
+		return ENOSPC;
 
 	if (!tc->sendq.head && !tc->sendh) {
 
@@ -202,10 +203,8 @@ static int enqueue(struct tcp_conn *tc, struct mbuf *mb, size_t skip)
 
 	mbuf_init(&qe->mb);
 
-	mb->pos += skip;
-	err = mbuf_write_mem(&qe->mb, mbuf_buf(mb), mbuf_get_left(mb));
+	err = mbuf_write_mem(&qe->mb, mbuf_buf(mb), n);
 	qe->mb.pos = 0;
-	mb->pos -= skip;
 
 	if (err)
 		mem_deref(qe);
@@ -1088,17 +1087,17 @@ static int tcp_send_internal(struct tcp_conn *tc, struct mbuf *mb,
 	}
 
 	if (tc->sendq.head)
-		return enqueue(tc, mb, 0);
+		return enqueue(tc, mb);
 
 	n = send(tc->fdc, BUF_CAST mbuf_buf(mb), mb->end - mb->pos, flags);
 	if (n < 0) {
 
 		if (EAGAIN == errno)
-			return enqueue(tc, mb, 0);
+			return enqueue(tc, mb);
 
 #ifdef WIN32
 		if (WSAEWOULDBLOCK == WSAGetLastError())
-			return enqueue(tc, mb, 0);
+			return enqueue(tc, mb);
 #endif
 		err = errno;
 
@@ -1112,8 +1111,14 @@ static int tcp_send_internal(struct tcp_conn *tc, struct mbuf *mb,
 		return err;
 	}
 
-	if ((size_t)n < mb->end - mb->pos)
-		return enqueue(tc, mb, n);
+	if ((size_t)n < mb->end - mb->pos) {
+
+		mb->pos += n;
+		err = enqueue(tc, mb);
+		mb->pos -= n;
+
+		return err;
+	}
 
 	return 0;
 }
