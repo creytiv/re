@@ -1,5 +1,5 @@
 /**
- * @file print.c Formatted printing
+ * @file fmt/print.c Formatted printing
  *
  * Copyright (C) 2010 Creytiv.com
  */

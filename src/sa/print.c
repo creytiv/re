@@ -14,6 +14,14 @@
 #include <re_sa.h>
 
 
+/**
+ * Print a Socket Address including IPv6 scope identifier
+ *
+ * @param pf Print function
+ * @param sa Socket Address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int sa_print_addr(struct re_printf *pf, const struct sa *sa)
 {
 	int err;
