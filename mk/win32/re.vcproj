@@ -475,6 +475,9 @@
 					RelativePath="..\..\src\sa\ntop.c">
 				</File>
 				<File
+					RelativePath="..\..\src\sa\print.c">
+				</File>
+				<File
 					RelativePath="..\..\src\sa\pton.c">
 				</File>
 				<File
