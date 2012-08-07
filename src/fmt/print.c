@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#define _GNU_SOURCE 1
-#define __EXTENSIONS__ 1
 #include <string.h>
 #include <re_types.h>
 #include <re_sa.h>
@@ -315,11 +313,9 @@ int re_vhprintf(const char *fmt, va_list ap, re_vprintf_h *vph, void *arg)
 			break;
 
 		case 'm':
-			(void)strerror_r(va_arg(ap, int), addr, sizeof(addr));
-			addr[sizeof(addr)-1] = '\0';
-
-			err |= write_padded(addr, strlen(addr), pad, ' ',
-					    plr, NULL, vph, arg);
+			str = str_error(va_arg(ap, int), addr, sizeof(addr));
+			err |= write_padded(str, str_len(str), pad,
+					    ' ', plr, NULL, vph, arg);
 			break;
 
 		case 'p':

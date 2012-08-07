@@ -11,4 +11,5 @@ SRCS	+= fmt/print.c
 SRCS	+= fmt/prm.c
 SRCS	+= fmt/regex.c
 SRCS	+= fmt/str.c
+SRCS	+= fmt/str_error.c
 SRCS	+= fmt/time.c
