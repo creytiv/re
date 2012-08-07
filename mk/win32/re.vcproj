@@ -204,6 +204,9 @@
 					RelativePath="..\..\src\fmt\str.c">
 				</File>
 				<File
+					RelativePath="..\..\src\fmt\str_error.c">
+				</File>
+				<File
 					RelativePath="..\..\src\fmt\time.c">
 				</File>
 			</Filter>
@@ -475,7 +478,7 @@
 					RelativePath="..\..\src\sa\ntop.c">
 				</File>
 				<File
-					RelativePath="..\..\src\sa\print.c">
+					RelativePath="..\..\src\sa\printaddr.c">
 				</File>
 				<File
 					RelativePath="..\..\src\sa\pton.c">

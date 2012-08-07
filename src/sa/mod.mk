@@ -5,6 +5,6 @@
 #
 
 SRCS	+= sa/ntop.c
-SRCS	+= sa/print.c
+SRCS	+= sa/printaddr.c
 SRCS	+= sa/pton.c
 SRCS	+= sa/sa.c

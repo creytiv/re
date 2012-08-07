@@ -42,6 +42,7 @@ SOURCE        print.c
 SOURCE        prm.c
 SOURCE        regex.c
 SOURCE        str.c
+SOURCE        str_error.c
 SOURCE        time.c
 
 SOURCEPATH    ..\..\src\hash
@@ -109,7 +110,7 @@ SOURCE        source.c
 
 SOURCEPATH    ..\..\src\sa
 SOURCE        ntop.c
-SOURCE        print.c
+SOURCE        printaddr.c
 SOURCE        pton.c
 SOURCE        sa.c
 

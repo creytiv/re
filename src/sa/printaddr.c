@@ -1,5 +1,5 @@
 /**
- * @file sa/print.c  Socket Address printing
+ * @file sa/printaddr.c  Socket Address printing
  *
  * Copyright (C) 2010 Creytiv.com
  */
