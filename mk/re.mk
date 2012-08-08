@@ -434,6 +434,11 @@ CFLAGS  += -DHAVE_GETIFADDRS
 endif
 endif
 
+HAVE_STRERROR_R	:= 1
+ifneq ($(HAVE_STRERROR_R),)
+CFLAGS += -DHAVE_STRERROR_R
+endif
+
 endif
 
 HAVE_GETOPT     := $(shell [ -f $(SYSROOT)/include/getopt.h ] && echo "1")
