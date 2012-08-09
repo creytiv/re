@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_mbuf.h>
 #include <re_fmt.h>
@@ -70,7 +69,7 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 	struct stun_attr *map, *other;
 
 	if (err) {
-		DEBUG_WARNING("stun_response_handler: (%s)\n", strerror(err));
+		DEBUG_WARNING("stun_response_handler: (%m)\n", err);
 		nm->mh(err, NAT_TYPE_UNKNOWN, nm->arg);
 		return;
 	}
@@ -118,8 +117,7 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 
 		err = mapping_send(nm);
 		if (err) {
-			DEBUG_WARNING("stunc_request_send: (%s)\n",
-				      strerror(err));
+			DEBUG_WARNING("stunc_request_send: (%m)\n", err);
 			nm->mh(err, NAT_TYPE_UNKNOWN, nm->arg);
 		}
 		break;
@@ -138,8 +136,7 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 		sa_set_port(&nm->srv, sa_port(&other->v.other_addr));
 		err = mapping_send(nm);
 		if (err) {
-			DEBUG_WARNING("stunc_request_send: (%s)\n",
-				      strerror(err));
+			DEBUG_WARNING("stunc_request_send: (%m)\n", err);
 			nm->mh(err, NAT_TYPE_UNKNOWN, nm->arg);
 		}
 		break;
@@ -193,8 +190,7 @@ static void udp_recv_handler(const struct sa *src, struct mbuf *mb,
 
 	err = stun_recv(nm->stun, mb);
 	if (err && ENOENT != err) {
-		DEBUG_WARNING("udp_recv_handler: stunc_recv(): (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("udp_recv_handler: stunc_recv(): (%m)\n", err);
 	}
 }
 
@@ -225,8 +221,7 @@ static void tcp_estab_handler(void *arg)
 			   STUN_ATTR_SOFTWARE, stun_software);
 
 	if (err) {
-		DEBUG_WARNING("TCP established: mapping_send (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("TCP established: mapping_send (%m)\n", err);
 		nm->mh(err, NAT_TYPE_UNKNOWN, nm->arg);
 	}
 }
@@ -239,7 +234,7 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 
 	err = stun_recv(nm->stun, mb);
 	if (err && ENOENT != err) {
-		DEBUG_WARNING("stunc recv: %s\n", strerror(err));
+		DEBUG_WARNING("stunc recv: %m\n", err);
 	}
 }
 
@@ -248,7 +243,7 @@ static void tcp_close_handler(int err, void *arg)
 {
 	struct nat_mapping *nm = arg;
 
-	DEBUG_NOTICE("TCP Connection Closed (%s)\n", strerror(err));
+	DEBUG_NOTICE("TCP Connection Closed (%m)\n", err);
 
 	if (err) {
 		nm->mh(err, NAT_TYPE_UNKNOWN, nm->arg);

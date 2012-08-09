@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -82,8 +81,8 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 		/* Test I completed */
 
 		if (err || scode) {
-			DEBUG_WARNING("Test I: stun_response_handler: %s\n",
-				      strerror(err));
+			DEBUG_WARNING("Test I: stun_response_handler: %m\n",
+				      err);
 			nf->fh(err, NAT_TYPE_UNKNOWN, nf->arg);
 			return;
 		}
@@ -107,8 +106,7 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 				   STUN_ATTR_SOFTWARE, stun_software,
 				   STUN_ATTR_CHANGE_REQ, &change_req);
 		if (err) {
-			DEBUG_WARNING("stunc_request_send: (%s)\n",
-				      strerror(err));
+			DEBUG_WARNING("stunc_request_send: (%m)\n", err);
 			nf->fh(err, NAT_TYPE_UNKNOWN, nf->arg);
 		}
 		break;
@@ -146,8 +144,7 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 				   STUN_ATTR_SOFTWARE, stun_software,
 				   STUN_ATTR_CHANGE_REQ, &change_req);
 		if (err) {
-			DEBUG_WARNING("stunc_request_send: (%s)\n",
-				      strerror(err));
+			DEBUG_WARNING("stunc_request_send: (%m)\n", err);
 			nf->fh(err, NAT_TYPE_UNKNOWN, nf->arg);
 		}
 		break;

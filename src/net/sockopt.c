@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -44,8 +43,8 @@ int net_sockopt_blocking_set(int fd, bool blocking)
 
 	if (0 != ioctlsocket(fd, FIONBIO, &noblock)) {
 		err = WSAGetLastError();
-		DEBUG_WARNING("nonblock set: fd=%d err=%d (%s)\n",
-			      fd, err, strerror(err));
+		DEBUG_WARNING("nonblock set: fd=%d err=%d (%m)\n",
+			      fd, err, err);
 	}
 	return err;
 #else
@@ -55,8 +54,7 @@ int net_sockopt_blocking_set(int fd, bool blocking)
 	flags = fcntl(fd, F_GETFL);
 	if (-1 == flags) {
 		err = errno;
-		DEBUG_WARNING("sockopt set: fnctl F_GETFL: (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("sockopt set: fnctl F_GETFL: (%m)\n", err);
 		goto out;
 	}
 
@@ -67,8 +65,8 @@ int net_sockopt_blocking_set(int fd, bool blocking)
 
 	if (-1 == fcntl(fd, F_SETFL, flags)) {
 		err = errno;
-		DEBUG_WARNING("sockopt set: fcntl F_SETFL non-block (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("sockopt set: fcntl F_SETFL non-block (%m)\n",
+			      err);
 	}
 
  out:
@@ -92,7 +90,7 @@ int net_sockopt_reuse_set(int fd, bool reuse)
 #ifdef SO_REUSEADDR
 	if (-1 == setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
 			     BUF_CAST &r, sizeof(r))) {
-		DEBUG_WARNING("SO_REUSEADDR: %s\n", strerror(errno));
+		DEBUG_WARNING("SO_REUSEADDR: %m\n", errno);
 		return errno;
 	}
 #endif
@@ -100,7 +98,7 @@ int net_sockopt_reuse_set(int fd, bool reuse)
 #ifdef SO_REUSEPORT
 	if (-1 == setsockopt(fd, SOL_SOCKET, SO_REUSEPORT,
 			     BUF_CAST &r, sizeof(r))) {
-		DEBUG_WARNING("SO_REUSEPORT: %s\n", strerror(errno));
+		DEBUG_WARNING("SO_REUSEPORT: %m\n", errno);
 		return errno;
 	}
 #endif

@@ -55,7 +55,7 @@ static void mod_destructor(void *data)
 	int err;
 
 	if (me && me->close && (err = me->close())) {
-		DEBUG_NOTICE("close: error (%s)\n", strerror(err));
+		DEBUG_NOTICE("close: error (%m)\n", err);
 	}
 
 	list_unlink(&m->le);

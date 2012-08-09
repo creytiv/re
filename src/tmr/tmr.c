@@ -136,8 +136,7 @@ uint64_t tmr_jiffies(void)
 	struct timeval now;
 
 	if (0 != gettimeofday(&now, NULL)) {
-		DEBUG_WARNING("jiffies: gettimeofday() failed (%s)\n",
-			      strerror(errno));
+		DEBUG_WARNING("jiffies: gettimeofday() failed (%m)\n", errno);
 		return 0;
 	}
 

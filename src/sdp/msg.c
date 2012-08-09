@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -299,8 +298,7 @@ int sdp_decode(struct sdp_session *sess, struct mbuf *mb, bool offer)
 
 #if 0
 			if (err)
-				re_printf("*** %c='%r': %s\n", type, &val,
-					  strerror(err));
+				re_printf("** %c='%r': %m\n", type, &val, err);
 #endif
 
 			type = 0;

@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #define __USE_UNIX98 1
 #include <pthread.h>
 #include <re_types.h>
@@ -33,7 +32,7 @@ static void lock_destructor(void *data)
 
 	int err = pthread_mutex_destroy(&l->m);
 	if (err) {
-		DEBUG_WARNING("pthread_mutex_destroy: %s\n", strerror(err));
+		DEBUG_WARNING("pthread_mutex_destroy: %m\n", err);
 	}
 }
 
@@ -83,7 +82,7 @@ void lock_read_get(struct lock *l)
 {
 	const int err = pthread_mutex_lock(&l->m);
 	if (err) {
-		DEBUG_WARNING("lock_read_get: %s\n", strerror(err));
+		DEBUG_WARNING("lock_read_get: %m\n", err);
 	}
 }
 
@@ -97,7 +96,7 @@ void lock_write_get(struct lock *l)
 {
 	const int err = pthread_mutex_lock(&l->m);
 	if (err) {
-		DEBUG_WARNING("lock_write_get: %s\n", strerror(err));
+		DEBUG_WARNING("lock_write_get: %m\n", err);
 	}
 }
 
@@ -137,6 +136,6 @@ void lock_rel(struct lock *l)
 {
 	const int err = pthread_mutex_unlock(&l->m);
 	if (err) {
-		DEBUG_WARNING("lock_rel: %s\n", strerror(err));
+		DEBUG_WARNING("lock_rel: %m\n", err);
 	}
 }

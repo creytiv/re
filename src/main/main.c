@@ -180,7 +180,7 @@ static inline void re_lock(struct re *re)
 
 	err = pthread_mutex_lock(&re->mutex);
 	if (err) {
-		DEBUG_WARNING("re_lock: %s\n", strerror(err));
+		DEBUG_WARNING("re_lock: %m\n", err);
 	}
 }
 
@@ -191,7 +191,7 @@ static inline void re_unlock(struct re *re)
 
 	err = pthread_mutex_unlock(&re->mutex);
 	if (err) {
-		DEBUG_WARNING("re_unlock: %s\n", strerror(err));
+		DEBUG_WARNING("re_unlock: %m\n", err);
 	}
 }
 
@@ -295,23 +295,23 @@ static int set_epoll_fds(struct re *re, int fd, int flags)
 					err = errno;
 					DEBUG_WARNING("epoll_ctl:"
 						      " EPOLL_CTL_MOD:"
-						      " fd=%d (%s)\n",
-						      fd, strerror(err));
+						      " fd=%d (%m)\n",
+						      fd, err);
 				}
 			}
 			else {
 				err = errno;
 				DEBUG_WARNING("epoll_ctl: EPOLL_CTL_ADD:"
-					      " fd=%d (%s)\n",
-					      fd, strerror(err));
+					      " fd=%d (%m)\n",
+					      fd, err);
 			}
 		}
 	}
 	else {
 		if (-1 == epoll_ctl(re->epfd, EPOLL_CTL_DEL, fd, &event)) {
 			err = errno;
-			DEBUG_INFO("epoll_ctl: EPOLL_CTL_DEL: fd=%d (%s)\n",
-				   fd, strerror(err));
+			DEBUG_INFO("epoll_ctl: EPOLL_CTL_DEL: fd=%d (%m)\n",
+				   fd, err);
 		}
 	}
 
@@ -390,8 +390,8 @@ static int poll_init(struct re *re)
 
 		if (re->epfd <= 0
 		    && -1 == (re->epfd = epoll_create(re->maxfds))) {
-			DEBUG_WARNING("epoll_create: %s (maxfds=%d)\n",
-				      strerror(errno), re->maxfds);
+			DEBUG_WARNING("epoll_create: %m (maxfds=%d)\n",
+				      errno, re->maxfds);
 			return errno;
 		}
 		DEBUG_INFO("init: epoll_create() epfd=%d\n", re->epfd);
@@ -523,8 +523,8 @@ int fd_listen(int fd, int flags, fd_h *fh, void *arg)
 	if (err) {
 		if (flags && fh) {
 			fd_close(fd);
-			DEBUG_WARNING("fd_listen: fd=%d flags=0x%02x (%s)\n",
-				      fd, flags, strerror(err));
+			DEBUG_WARNING("fd_listen: fd=%d flags=0x%02x (%m)\n",
+				      fd, flags, err);
 		}
 	}
 

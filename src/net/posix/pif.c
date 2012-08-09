@@ -107,8 +107,7 @@ int net_if_list(net_ifaddr_h *ifh, void *arg)
 
 	if (0 > (sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP))) {
 		err = errno;
-		DEBUG_WARNING("interface list: socket(): (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("interface list: socket(): (%m)\n", err);
 		goto out;
 	}
 
@@ -117,8 +116,7 @@ int net_if_list(net_ifaddr_h *ifh, void *arg)
 
 	if (0 != ioctl(sockfd, SIOCGIFCONF, &ifc)) {
 		err = errno;
-		DEBUG_WARNING("interface list: ioctl SIOCFIFCONF: %s\n",
-			      strerror(err));
+		DEBUG_WARNING("interface list: ioctl SIOCFIFCONF: %m\n", err);
 		goto out;
 	}
 
@@ -152,8 +150,7 @@ int net_if_list(net_ifaddr_h *ifh, void *arg)
 
 		err = sa_set_sa(&sa, &ifrr.ifr_ifru.ifru_addr);
 		if (err) {
-			DEBUG_WARNING("if_list: sa_set_sa %s\n",
-				      strerror(err));
+			DEBUG_WARNING("if_list: sa_set_sa %m\n", err);
 			break;
 		}
 

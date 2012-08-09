@@ -495,7 +495,7 @@ static void timeout(void *arg)
 
 	err = send_rtcp_report(sess);
 	if (err) {
-		DEBUG_WARNING("Send RTCP report failed: %s\n", strerror(err));
+		DEBUG_WARNING("Send RTCP report failed: %m\n", err);
 	}
 
 	schedule(sess);

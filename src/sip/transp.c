@@ -305,8 +305,7 @@ static void udp_recv_handler(const struct sa *src, struct mbuf *mb, void *arg)
 
 	err = sip_msg_decode(&msg, mb);
 	if (err) {
-		(void)re_fprintf(stderr, "sip: msg decode err: %s\n",
-				 strerror(err));
+		(void)re_fprintf(stderr, "sip: msg decode err: %m\n", err);
 		return;
 	}
 

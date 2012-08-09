@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -67,8 +66,7 @@ static void msg_recv(struct stun *stun, const struct sa *src,
 
 	err = stun_recv(stun, mb);
 	if (err && ENOENT != err) {
-		DEBUG_WARNING("msg_recv: stunc_recv(): (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("msg_recv: stunc_recv(): (%m)\n", err);
 	}
 }
 
@@ -93,7 +91,7 @@ static void stun_response_handler_x(int err, uint16_t scode,
 	(void)reason;
 
 	if (err) {
-		DEBUG_WARNING("stun_response_handler X: %s\n", strerror(err));
+		DEBUG_WARNING("stun_response_handler X: %m\n", err);
 		goto out;
 	}
 
@@ -211,7 +209,7 @@ static void timeout(void *arg)
 	return;
 
  out:
-	DEBUG_WARNING("timeout: (%s)\n", strerror(err));
+	DEBUG_WARNING("timeout: (%m)\n", err);
 
 	nl->lh(err, &nl->interval, nl->arg);
 

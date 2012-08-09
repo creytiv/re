@@ -76,8 +76,8 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 		err = icem_candpair_alloc(&cp, icem, lcand, rcand);
 		if (err) {
 			DEBUG_WARNING("failed to allocate candpair:"
-				      " lcand=%p rcand=%p (%s)\n",
-				      lcand, rcand, strerror(err));
+				      " lcand=%p rcand=%p (%m)\n",
+				      lcand, rcand, err);
 			return;
 		}
 
@@ -159,8 +159,7 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 
 		err = icem_rcand_add_prflx(&rcand, icem, comp->id, prio, src);
 		if (err) {
-			DEBUG_WARNING("icem_rcand_add_prflx: %s\n",
-				      strerror(err));
+			DEBUG_WARNING("icem_rcand_add_prflx: %m\n", err);
 			return;
 		}
 	}

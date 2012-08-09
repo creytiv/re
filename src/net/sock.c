@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mbuf.h>
@@ -27,8 +26,7 @@ static int wsa_init(void)
 
 	err = WSAStartup(wVersionRequested, &wsaData);
 	if (err != 0) {
-		DEBUG_WARNING("Could not load winsock (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("Could not load winsock (%m)\n", err);
 		return err;
 	}
 

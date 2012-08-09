@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -127,8 +126,7 @@ static void handle_success(struct icem *icem, struct candpair *cp,
 		err = icem_lcand_add(icem, cp->lcand,
 				     CAND_TYPE_PRFLX, addr);
 		if (err) {
-			DEBUG_WARNING("failed to add PRFLX: %s\n",
-				      strerror(err));
+			DEBUG_WARNING("failed to add PRFLX: %m\n", err);
 		}
 	}
 
@@ -158,10 +156,10 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 	(void)reason;
 
 #if ICE_TRACE
-	icecomp_printf(cp->comp, "Rx %H <--- %H '%u %s' (%s)\n",
+	icecomp_printf(cp->comp, "Rx %H <--- %H '%u %s' (%m)\n",
 		       icem_cand_print, cp->lcand,
 		       icem_cand_print, cp->rcand,
-		       scode, reason, err ? strerror(err) : "");
+		       scode, reason, err);
 #endif
 
 	if (err) {
@@ -267,7 +265,7 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 		err = turnc_add_chan(cp->comp->turnc, &cp->rcand->addr,
 				     NULL, NULL);
 		if (err) {
-			DEBUG_WARNING("add channel: %s\n", strerror(err));
+			DEBUG_WARNING("add channel: %m\n", err);
 			break;
 		}
 		presz = 4;

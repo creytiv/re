@@ -148,7 +148,7 @@ void mbuf_trim(struct mbuf *mb)
 	/* We shrink - this cannot fail */
 	err = mbuf_resize(mb, mb->end);
 	if (err) {
-		DEBUG_WARNING("trim: resize failed (%s)\n", strerror(err));
+		DEBUG_WARNING("trim: resize failed (%m)\n", err);
 	}
 }
 

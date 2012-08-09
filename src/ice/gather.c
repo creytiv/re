@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -64,8 +63,8 @@ static void stun_resp_handler(int err, uint16_t scode, const char *reason,
 	--icem->nstun;
 
 	if (err || scode > 0) {
-		DEBUG_WARNING("{%s.%u} STUN Request failed: %s\n",
-			      icem->name, comp->id, strerror(err));
+		DEBUG_WARNING("{%s.%u} STUN Request failed: %m\n",
+			      icem->name, comp->id, err);
 		goto out;
 	}
 
@@ -129,8 +128,8 @@ static void turnc_handler(int err, uint16_t scode, const char *reason,
 	}
 
 	if (err) {
-		DEBUG_WARNING("{%s.%u} TURN Client error: %s\n",
-			      icem->name, comp->id, strerror(err));
+		DEBUG_WARNING("{%s.%u} TURN Client error: %m\n",
+			      icem->name, comp->id, err);
 		goto out;
 	}
 

@@ -5,7 +5,6 @@
  */
 #include <es_sock.h>
 #include <in_sock.h>
-#include <string.h>
 
 extern "C" {
 #include <re_types.h>
@@ -617,7 +616,7 @@ void tcp_conn::recv()
 
 void tcp_conn::conn_close(int err)
 {
-	DEBUG_INFO("tcp conn close (%s)\n", strerror(err));
+	DEBUG_INFO("tcp conn close (%m)\n", err);
 
 	/* Stop receiving */
 	if (ctc->receiving) {
@@ -822,7 +821,7 @@ int tcp_conn_alloc(struct tcp_conn **tcp, const struct sa *peer,
 
  out:
 	if (err) {
-		DEBUG_WARNING("conn_alloc: %J (%s)\n", peer, strerror(err));
+		DEBUG_WARNING("conn_alloc: %J (%m)\n", peer, err);
 		mem_deref(tc);
 	}
 	return err;

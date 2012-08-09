@@ -328,16 +328,14 @@ int udp_listen(struct udp_sock **usp, const struct sa *local,
 
 		err = net_sockopt_blocking_set(fd, false);
 		if (err) {
-			DEBUG_WARNING("udp listen: nonblock set: %s\n",
-				      strerror(err));
+			DEBUG_WARNING("udp listen: nonblock set: %m\n", err);
 			(void)close(fd);
 			continue;
 		}
 
 		if (bind(fd, r->ai_addr, SIZ_CAST r->ai_addrlen) < 0) {
 			err = errno;
-			DEBUG_INFO("listen: bind(): %s (%J)\n",
-				   strerror(err), local);
+			DEBUG_INFO("listen: bind(): %m (%J)\n", err, local);
 			(void)close(fd);
 			continue;
 		}
@@ -450,7 +448,7 @@ static int udp_send_internal(struct udp_sock *us, const struct sa *dst,
 	/* Connected socket? */
 	if (us->conn) {
 		if (0 != connect(fd, &dst->u.sa, dst->len)) {
-			DEBUG_WARNING("send: connect: %s\n", strerror(errno));
+			DEBUG_WARNING("send: connect: %m\n", errno);
 			us->conn = false;
 		}
 

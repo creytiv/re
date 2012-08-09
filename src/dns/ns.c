@@ -4,7 +4,6 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #include <stdio.h>
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mbuf.h>
@@ -68,8 +67,7 @@ static int parse_resolv_conf(char *domain, size_t dsize,
 					    &srv)) {
 			err = sa_set(&srvv[i], &srv, DNS_PORT);
 			if (err) {
-				DEBUG_WARNING("sa_set: %r (%s)\n",
-					      &srv, strerror(err));
+				DEBUG_WARNING("sa_set: %r (%m)\n", &srv, err);
 			}
 			++i;
 		}

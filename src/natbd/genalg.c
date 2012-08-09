@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_mbuf.h>
 #include <re_fmt.h>
@@ -149,8 +148,7 @@ int nat_genalg_start(struct nat_genalg *ng)
 			   stun_response_handler, ng, 1,
 			   STUN_ATTR_SOFTWARE, stun_software);
 	if (err) {
-		DEBUG_WARNING("start: stunc_request_send(): (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("start: stunc_request_send(): (%m)\n", err);
 	}
 
 	return err;

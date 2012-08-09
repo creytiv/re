@@ -5,7 +5,6 @@
  */
 #define _GNU_SOURCE 1
 #include <pthread.h>
-#include <string.h>
 #include <re_types.h>
 #include <re_mem.h>
 #include <re_lock.h>
@@ -27,7 +26,7 @@ static void lock_destructor(void *data)
 
 	int err = pthread_rwlock_destroy(&l->lock);
 	if (err) {
-		DEBUG_WARNING("pthread_rwlock_destroy: %s\n", strerror(err));
+		DEBUG_WARNING("pthread_rwlock_destroy: %m\n", err);
 	}
 }
 
@@ -66,7 +65,7 @@ void lock_read_get(struct lock *l)
 
 	err = pthread_rwlock_rdlock(&l->lock);
 	if (err) {
-		DEBUG_WARNING("lock_read_get: %s\n", strerror(err));
+		DEBUG_WARNING("lock_read_get: %m\n", err);
 	}
 }
 
@@ -80,7 +79,7 @@ void lock_write_get(struct lock *l)
 
 	err = pthread_rwlock_wrlock(&l->lock);
 	if (err) {
-		DEBUG_WARNING("lock_write_get: %s\n", strerror(err));
+		DEBUG_WARNING("lock_write_get: %m\n", err);
 	}
 }
 
@@ -110,6 +109,6 @@ void lock_rel(struct lock *l)
 
 	err = pthread_rwlock_unlock(&l->lock);
 	if (err) {
-		DEBUG_WARNING("lock_rel: %s\n", strerror(err));
+		DEBUG_WARNING("lock_rel: %m\n", err);
 	}
 }

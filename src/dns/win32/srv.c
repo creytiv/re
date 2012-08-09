@@ -77,9 +77,8 @@ int get_windns(char *domain, size_t dsize, struct sa *srvv, uint32_t *n)
 		err = sa_set_str(&srvv[i], pIPAddr->IpAddress.String,
 				 DNS_PORT);
 		if (err) {
-			DEBUG_WARNING("sa_set_str: %s (%s)\n",
-				      pIPAddr->IpAddress.String,
-				      strerror(err));
+			DEBUG_WARNING("sa_set_str: %s (%m)\n",
+				      pIPAddr->IpAddress.String, err);
 		}
 		DEBUG_INFO("dns ip %u: %j\n", i, &srvv[i]);
 		++i;

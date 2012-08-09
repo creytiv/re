@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -162,7 +161,7 @@ static void tcp_close_handler(int err, void *arg)
 {
 	struct bfcp_conn *conn = arg;
 
-	(void)re_printf("BFCP connection closed: %s\n", strerror(err));
+	(void)re_printf("BFCP connection closed: %m\n", err);
 
 	mem_deref(conn);
 }

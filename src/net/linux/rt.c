@@ -57,7 +57,7 @@ static int read_sock(int fd, uint8_t *buf, size_t size, int seq, int pid)
 	do {
 		/* Receive response from the kernel */
 		if ((n = recv(fd, buf, size - len, 0)) < 0) {
-			DEBUG_WARNING("SOCK READ: %s\n", strerror(errno));
+			DEBUG_WARNING("SOCK READ: %m\n", errno);
 			return -1;
 		}
 		nlhdr = (struct nlmsghdr *)(void *)buf;
@@ -196,7 +196,7 @@ int net_rt_list(net_rt_h *rth, void *arg)
 
 	/* Create Socket */
 	if ((sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE)) < 0) {
-		DEBUG_WARNING("list: socket(): (%s)\n", strerror(errno));
+		DEBUG_WARNING("list: socket(): (%m)\n", errno);
 		return errno;
 	}
 
@@ -216,16 +216,14 @@ int net_rt_list(net_rt_h *rth, void *arg)
 	/* Send the request */
 	if (send(sock, nlmsg, nlmsg->nlmsg_len, 0) < 0) {
 		err = errno;
-		DEBUG_WARNING("list: write to socket failed (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("list: write to socket failed (%m)\n", err);
 		goto out;
 	}
 
 	/* Read the response */
 	if ((len = read_sock(sock, u.buf, sizeof(u.buf), seq, getpid())) < 0) {
 		err = errno;
-		DEBUG_WARNING("list: read from socket failed (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("list: read from socket failed (%m)\n", err);
 		goto out;
 	}
 

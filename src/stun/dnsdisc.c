@@ -47,7 +47,7 @@ static void resolved(const struct stun_dns *dns, int err)
 	stun_dns_h *dnsh = dns->dnsh;
 	void *dnsh_arg = dns->arg;
 
-	DEBUG_INFO("resolved: %J (%s)\n", &dns->srv, strerror(err));
+	DEBUG_INFO("resolved: %J (%m)\n", &dns->srv, err);
 
 	dnsh(err, &dns->srv, dnsh_arg);
 }
@@ -190,7 +190,7 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 
 	err = a_or_aaaa_query(dns, rr->rdata.srv.target);
 	if (err) {
-		DEBUG_WARNING("SRV: A lookup failed (%s)\n", strerror(err));
+		DEBUG_WARNING("SRV: A lookup failed (%m)\n", err);
 		goto out;
 	}
 
@@ -263,8 +263,8 @@ int stun_server_discover(struct stun_dns **dnsp, struct dnsc *dnsc,
 
 		err = a_or_aaaa_query(dns, domain);
 		if (err) {
-			DEBUG_WARNING("%s: A/AAAA lookup failed (%s)\n",
-				      domain, strerror(err));
+			DEBUG_WARNING("%s: A/AAAA lookup failed (%m)\n",
+				      domain, err);
 			goto out;
 		}
 	}
@@ -278,8 +278,7 @@ int stun_server_discover(struct stun_dns **dnsp, struct dnsc *dnsc,
 		err = dnsc_query(&dns->dq, dnsc, q, DNS_TYPE_SRV, DNS_CLASS_IN,
 				 true, srv_handler, dns);
 		if (err) {
-			DEBUG_WARNING("%s: SRV lookup failed (%s)\n", q,
-				      strerror(err));
+			DEBUG_WARNING("%s: SRV lookup failed (%m)\n", q, err);
 			goto out;
 		}
 	}

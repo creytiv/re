@@ -287,8 +287,7 @@ static void tcp_recv_handler(int flags, void *arg)
 	/* check for any errors */
 	if (-1 == getsockopt(tc->fdc, SOL_SOCKET, SO_ERROR,
 			     BUF_CAST &err, &err_len)) {
-		DEBUG_WARNING("recv handler: getsockopt: (%s)\n",
-			      strerror(errno));
+		DEBUG_WARNING("recv handler: getsockopt: (%m)\n", errno);
 		return;
 	}
 
@@ -298,8 +297,7 @@ static void tcp_recv_handler(int flags, void *arg)
 	}
 #if 0
 	if (EINPROGRESS != err && EALREADY != err) {
-		DEBUG_WARNING("recv handler: Socket error (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("recv handler: Socket error (%m)\n", err);
 		return;
 	}
 #endif
@@ -346,8 +344,7 @@ static void tcp_recv_handler(int flags, void *arg)
 
 		err = fd_listen(tc->fdc, FD_READ, tcp_recv_handler, tc);
 		if (err) {
-			DEBUG_WARNING("recv handler: fd_listen(): %s\n",
-				      strerror(err));
+			DEBUG_WARNING("recv handler: fd_listen(): %m\n", err);
 			conn_close(tc, err);
 			return;
 		}
@@ -383,7 +380,7 @@ static void tcp_recv_handler(int flags, void *arg)
 		return;
 	}
 	else if (n < 0) {
-		DEBUG_WARNING("recv handler: recv(): %s\n", strerror(errno));
+		DEBUG_WARNING("recv handler: recv(): %m\n", errno);
 		goto out;
 	}
 
@@ -476,7 +473,7 @@ static void tcp_sockopt_set(int fd)
 
 	err = setsockopt(fd, SOL_SOCKET, SO_LINGER, BUF_CAST &dl, sizeof(dl));
 	if (err) {
-		DEBUG_WARNING("sockopt: SO_LINGER (%s)\n", strerror(err));
+		DEBUG_WARNING("sockopt: SO_LINGER (%m)\n", err);
 	}
 #else
 	(void)fd;
@@ -537,8 +534,7 @@ static void tcp_conn_handler(int flags, void *arg)
 
 	err = net_sockopt_blocking_set(ts->fdc, false);
 	if (err) {
-		DEBUG_WARNING("conn handler: nonblock set: %s\n",
-			      strerror(err));
+		DEBUG_WARNING("conn handler: nonblock set: %m\n", err);
 		(void)close(ts->fdc);
 		ts->fdc = -1;
 		return;
@@ -622,8 +618,7 @@ int tcp_sock_alloc(struct tcp_sock **tsp, const struct sa *local,
 
 		err = net_sockopt_blocking_set(fd, false);
 		if (err) {
-			DEBUG_WARNING("listen: nonblock set: %s\n",
-				      strerror(err));
+			DEBUG_WARNING("listen: nonblock set: %m\n", err);
 			(void)close(fd);
 			continue;
 		}
@@ -701,8 +696,8 @@ int tcp_sock_bind(struct tcp_sock *ts, const struct sa *local)
 
 		if (bind(ts->fd, r->ai_addr, SIZ_CAST r->ai_addrlen) < 0) {
 			err = errno;
-			DEBUG_WARNING("sock_bind: bind: %s (af=%d, %J)\n",
-				      strerror(err), r->ai_family, local);
+			DEBUG_WARNING("sock_bind: bind: %m (af=%d, %J)\n",
+				      err, r->ai_family, local);
 			continue;
 		}
 
@@ -739,7 +734,7 @@ int tcp_sock_listen(struct tcp_sock *ts, int backlog)
 
 	if (listen(ts->fd, backlog) < 0) {
 		err = errno;
-		DEBUG_WARNING("sock_listen: listen(): %s\n", strerror(err));
+		DEBUG_WARNING("sock_listen: listen(): %m\n", err);
 		return err;
 	}
 
@@ -779,7 +774,7 @@ int tcp_accept(struct tcp_conn **tcp, struct tcp_sock *ts, tcp_estab_h *eh,
 	err = fd_listen(tc->fdc, FD_READ | FD_WRITE | FD_EXCEPT,
 			tcp_recv_handler, tc);
 	if (err) {
-		DEBUG_WARNING("accept: fd_listen(): %s\n", strerror(err));
+		DEBUG_WARNING("accept: fd_listen(): %m\n", err);
 	}
 
 	if (err)
@@ -868,8 +863,7 @@ int tcp_conn_alloc(struct tcp_conn **tcp,
 
 		err = net_sockopt_blocking_set(tc->fdc, false);
 		if (err) {
-			DEBUG_WARNING("connect: nonblock set: %s\n",
-				      strerror(err));
+			DEBUG_WARNING("connect: nonblock set: %m\n", err);
 			(void)close(tc->fdc);
 			tc->fdc = -1;
 			continue;
@@ -945,8 +939,8 @@ int tcp_conn_bind(struct tcp_conn *tc, const struct sa *local)
 			}
 
 			err = errno;
-			DEBUG_WARNING("conn_bind: bind(): %J: %s\n",
-				      local, strerror(err));
+			DEBUG_WARNING("conn_bind: bind(): %J: %m\n",
+				      local, err);
 			continue;
 		}
 
@@ -959,8 +953,7 @@ int tcp_conn_bind(struct tcp_conn *tc, const struct sa *local)
 	freeaddrinfo(res);
 
 	if (err) {
-		DEBUG_WARNING("conn_bind failed: %J (%s)\n", local,
-			      strerror(err));
+		DEBUG_WARNING("conn_bind failed: %J (%m)\n", local, err);
 	}
 
 	return err;
@@ -1039,8 +1032,8 @@ int tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer)
 			if (EINPROGRESS != errno && EALREADY != errno) {
 				tc->fdc = -1;
 				err = errno;
-				DEBUG_INFO("connect: connect() %J: %s\n",
-					   peer, strerror(err));
+				DEBUG_INFO("connect: connect() %J: %m\n",
+					   peer, err);
 			}
 		}
 	}
@@ -1101,8 +1094,7 @@ static int tcp_send_internal(struct tcp_conn *tc, struct mbuf *mb,
 #endif
 		err = errno;
 
-		DEBUG_WARNING("send: write(): %s (fdc=%d)\n", strerror(err),
-			      tc->fdc);
+		DEBUG_WARNING("send: write(): %m (fdc=%d)\n", err, tc->fdc);
 
 #ifdef WIN32
 		DEBUG_WARNING("WIN32 error: %d\n", WSAGetLastError());
@@ -1222,8 +1214,7 @@ int tcp_sock_local_get(const struct tcp_sock *ts, struct sa *local)
 	sa_init(local, AF_UNSPEC);
 
 	if (getsockname(ts->fd, &local->u.sa, &local->len) < 0) {
-		DEBUG_WARNING("local get: getsockname(): %s\n",
-			      strerror(errno));
+		DEBUG_WARNING("local get: getsockname(): %m\n", errno);
 		return errno;
 	}
 
@@ -1247,8 +1238,7 @@ int tcp_conn_local_get(const struct tcp_conn *tc, struct sa *local)
 	sa_init(local, AF_UNSPEC);
 
 	if (getsockname(tc->fdc, &local->u.sa, &local->len) < 0) {
-		DEBUG_WARNING("conn local get: getsockname(): %s\n",
-			      strerror(errno));
+		DEBUG_WARNING("conn local get: getsockname(): %m\n", errno);
 		return errno;
 	}
 
@@ -1272,8 +1262,7 @@ int tcp_conn_peer_get(const struct tcp_conn *tc, struct sa *peer)
 	sa_init(peer, AF_UNSPEC);
 
 	if (getpeername(tc->fdc, &peer->u.sa, &peer->len) < 0) {
-		DEBUG_WARNING("conn peer get: getpeername(): %s\n",
-			      strerror(errno));
+		DEBUG_WARNING("conn peer get: getpeername(): %m\n", errno);
 		return errno;
 	}
 

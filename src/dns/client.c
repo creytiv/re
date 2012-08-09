@@ -403,7 +403,7 @@ static void tcp_close_handler(int err, void *arg)
 {
 	struct tcpconn *tc = arg;
 
-	DEBUG_NOTICE("connection (%J) closed: %s\n", &tc->srv, strerror(err));
+	DEBUG_NOTICE("connection (%J) closed: %m\n", &tc->srv, err);
 	tcpconn_close(tc, err);
 }
 

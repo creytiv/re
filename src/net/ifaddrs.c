@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #define __USE_MISC 1   /**< Use MISC code */
@@ -38,7 +37,7 @@ int net_getifaddrs(net_ifaddr_h *ifh, void *arg)
 		return EINVAL;
 
 	if (0 != getifaddrs(&ifa)) {
-		DEBUG_WARNING("getifaddrs: %s\n", strerror(errno));
+		DEBUG_WARNING("getifaddrs: %m\n", errno);
 		return errno;
 	}
 

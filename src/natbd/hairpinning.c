@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mbuf.h>
@@ -174,7 +173,7 @@ static void stun_response_handler(int err, uint16_t scode, const char *reason,
 	/* Send hairpinning test message */
 	err = hairpin_send(nh, &attr->v.sa);
 	if (err) {
-		DEBUG_WARNING("hairpin_send: (%s)\n", strerror(err));
+		DEBUG_WARNING("hairpin_send: (%m)\n", err);
 	}
 
 	if (err)
@@ -202,7 +201,7 @@ static void tcp_conn_handler(const struct sa *peer, void *arg)
 	err = tcp_accept(&nh->tc2, nh->ts, NULL, tcp_recv_handler2,
 			 tcp_close_handler2, nh);
 	if (err) {
-		DEBUG_WARNING("TCP conn: tcp_accept: %s\n", strerror(err));
+		DEBUG_WARNING("TCP conn: tcp_accept: %m\n", err);
 	}
 }
 
@@ -218,8 +217,7 @@ static void tcp_estab_handler(void *arg)
 
 	err = mapped_send(nh);
 	if (err) {
-		DEBUG_WARNING("TCP established: mapped_send (%s)\n",
-			      strerror(err));
+		DEBUG_WARNING("TCP established: mapped_send (%m)\n", err);
 		nh->hph(err, false, nh->arg);
 	}
 }
@@ -232,7 +230,7 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 
 	err = stun_recv(nh->stun, mb);
 	if (err && ENOENT != err) {
-		DEBUG_WARNING("stun recv: %s\n", strerror(err));
+		DEBUG_WARNING("stun recv: %m\n", err);
 	}
 }
 

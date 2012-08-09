@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_mem.h>
 #include <re_mbuf.h>
@@ -187,6 +186,7 @@ static void reinvite_handler(struct sipsess_sock *sock,
 	struct sip *sip = sock->sip;
 	struct sipsess *sess;
 	struct mbuf *desc;
+	char m[256];
 	int err;
 
 	sess = sipsess_find(sock, msg);
@@ -216,7 +216,7 @@ static void reinvite_handler(struct sipsess_sock *sock,
 
 	err = sess->offerh(&desc, msg, sess->arg);
 	if (err) {
-		(void)sip_reply(sip, msg, 488, strerror(err));
+		(void)sip_reply(sip, msg, 488, str_error(err, m, sizeof(m)));
 		return;
 	}
 

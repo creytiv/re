@@ -386,7 +386,7 @@ int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
 		err |= re_hprintf(pf, " ERTT = %.2fms", cp->ertt / 1000.0);
 
 	if (cp->err)
-		err |= re_hprintf(pf, " (%s)", strerror(cp->err));
+		err |= re_hprintf(pf, " (%m)", cp->err);
 
 	if (cp->scode)
 		err |= re_hprintf(pf, " [%u]", cp->scode);

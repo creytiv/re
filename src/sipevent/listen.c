@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <re_types.h>
 #include <re_mem.h>
 #include <re_mbuf.h>
@@ -136,6 +135,7 @@ static void notify_handler(struct sipevent_sock *sock,
 	const struct sip_hdr *hdr;
 	struct sipsub *sub;
 	uint32_t nrefs;
+	char m[256];
 	int err;
 
 	hdr = sip_msg_hdr(msg, SIP_HDR_EVENT);
@@ -165,7 +165,8 @@ static void notify_handler(struct sipevent_sock *sock,
 
 			err = sub->forkh(&fsub, sub, msg, sub->arg);
 			if (err) {
-				(void)sip_reply(sip, msg, 500, strerror(err));
+				(void)sip_reply(sip, msg, 500,
+						str_error(err, m, sizeof(m)));
 				return;
 			}
 
@@ -174,7 +175,8 @@ static void notify_handler(struct sipevent_sock *sock,
 		else {
 			err = sip_dialog_create(sub->dlg, msg);
 			if (err) {
-				(void)sip_reply(sip, msg, 500, strerror(err));
+				(void)sip_reply(sip, msg, 500,
+						str_error(err, m, sizeof(m)));
 				return;
 			}
 		}
@@ -192,7 +194,8 @@ static void notify_handler(struct sipevent_sock *sock,
 
 		err = pl_strdup(&sub->id, &event.id);
 		if (err) {
-			(void)sip_treply(NULL, sip, msg, 500, strerror(err));
+			(void)sip_treply(NULL, sip, msg, 500,
+					 str_error(err, m, sizeof(m)));
 			return;
 		}
 	}

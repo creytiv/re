@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <string.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <re_types.h>
@@ -46,7 +45,7 @@ bool epoll_check(void)
 
 	epfd = epoll_create(64);
 	if (-1 == epfd) {
-		DEBUG_NOTICE("epoll_create: %s\n", strerror(errno));
+		DEBUG_NOTICE("epoll_create: %m\n", errno);
 		return false;
 	}
 
