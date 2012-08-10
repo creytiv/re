@@ -1,3 +1,47 @@
+2012-08-10 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.2
+
+	* added debian build
+
+	* build: fix building for Ubuntu 12.04
+
+	* re_types: increase ERRNO values
+
+	* fmt: re_printf() add support for %m to print errno description
+	       added str_error()
+	
+	* hash: added hash_clear()
+
+	* list: added list_clear()
+
+	* net: added net_if_getlinklocal()
+
+	* rtp: added rtcp_set_srate_tx/rx()
+	       rtcp_msg_print(): add all types
+
+	* sa: added sa_print_addr()
+
+	* sdp: added media encode handler
+	       sdp_format_add(): added fmtp encode handler (breaks API)
+
+	* sip: handle merged SIP requests (482 Loop Detected)
+	       added doxygen comments
+
+	* sipevent: fix bug in handler argument
+	
+	* sys: added sys_username()
+	       added fs_mkdir() and fs_gethome()
+
+	* tcp: added tcp_conn_txqsz()
+	       fix enqueue buffer size
+	       handle scopeid for IPv6 linklocal
+
+	* tmr: added tmr_status %H handler
+	
+	* udp: handle scopeid for IPv6 linklocal
+	
+	
 2012-04-21 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.1
