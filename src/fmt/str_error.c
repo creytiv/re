@@ -29,7 +29,7 @@ const char *str_error(int errnum, char *buf, size_t sz)
 	buf[0] = '\0';
 #ifdef HAVE_STRERROR_R
 
-#ifdef LINUX
+#ifdef __GLIBC__
 	s = strerror_r(errnum, buf, sz);
 #else
 	(void)strerror_r(errnum, buf, sz);
