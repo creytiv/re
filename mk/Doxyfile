@@ -90,7 +90,6 @@ RECURSIVE              = YES
 EXCLUDE                = test.c \
 			 include/re_bitv.h \
 			 src/md5/md5.h src/md5/md5.c \
-			 src/dns      include/re_dns.h \
 			 src/stun     include/re_stun.h
 
 EXCLUDE_SYMLINKS       = NO
@@ -229,7 +228,7 @@ DIRECTORY_GRAPH        = YES
 DOT_IMAGE_FORMAT       = png
 DOT_PATH               = 
 DOTFILE_DIRS           = 
-DOT_GRAPH_MAX_NODES    = 150
+DOT_GRAPH_MAX_NODES    = 256
 #MAX_DOT_GRAPH_WIDTH    = 1024
 #MAX_DOT_GRAPH_HEIGHT   = 1024
 #MAX_DOT_GRAPH_DEPTH    = 1000

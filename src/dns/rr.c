@@ -57,12 +57,28 @@ static void rr_destructor(void *data)
 }
 
 
+/**
+ * Allocate a new DNS Resource Record (RR)
+ *
+ * @return Newly allocated Resource Record, or NULL if no memory
+ */
 struct dnsrr *dns_rr_alloc(void)
 {
 	return mem_zalloc(sizeof(struct dnsrr), rr_destructor);
 }
 
 
+/**
+ * Encode a DNS Resource Record
+ *
+ * @param mb       Memory buffer to encode into
+ * @param rr       DNS Resource Record
+ * @param ttl_offs TTL Offset
+ * @param ht_dname Domain name hash-table
+ * @param start    Start position
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 		  struct hash *ht_dname, size_t start)
 {
@@ -159,6 +175,15 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 }
 
 
+/**
+ * Decode a DNS Resource Record (RR) from a memory buffer
+ *
+ * @param mb    Memory buffer to decode from
+ * @param rr    Pointer to allocated Resource Record
+ * @param start Start position
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_rr_decode(struct mbuf *mb, struct dnsrr **rr, size_t start)
 {
 	int err = 0;
@@ -313,6 +338,15 @@ int dns_rr_decode(struct mbuf *mb, struct dnsrr **rr, size_t start)
 }
 
 
+/**
+ * Compare two DNS Resource Records
+ *
+ * @param rr1   First Resource Record
+ * @param rr2   Second Resource Record
+ * @param rdata If true, also compares Resource Record data
+ *
+ * @return True if match, false if not match
+ */
 bool dns_rr_cmp(const struct dnsrr *rr1, const struct dnsrr *rr2, bool rdata)
 {
 	if (!rr1 || !rr2)
@@ -453,6 +487,13 @@ bool dns_rr_cmp(const struct dnsrr *rr1, const struct dnsrr *rr2, bool rdata)
 }
 
 
+/**
+ * Get the DNS Resource Record (RR) name
+ *
+ * @param type DNS Resource Record type
+ *
+ * @return DNS Resource Record name
+ */
 const char *dns_rr_typename(uint16_t type)
 {
 	switch (type) {
@@ -474,6 +515,13 @@ const char *dns_rr_typename(uint16_t type)
 }
 
 
+/**
+ * Get the DNS Resource Record (RR) class name
+ *
+ * @param dnsclass DNS Class
+ *
+ * @return DNS Class name
+ */
 const char *dns_rr_classname(uint16_t dnsclass)
 {
 	switch (dnsclass) {
@@ -485,6 +533,14 @@ const char *dns_rr_classname(uint16_t dnsclass)
 }
 
 
+/**
+ * Print a DNS Resource Record
+ *
+ * @param pf Print function
+ * @param rr DNS Resource Record
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_rr_print(struct re_printf *pf, const struct dnsrr *rr)
 {
 	static const size_t w = 24;

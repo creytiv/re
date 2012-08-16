@@ -732,6 +732,20 @@ static int query(struct dns_query **qp, struct dnsc *dnsc, uint8_t opcode,
 }
 
 
+/**
+ * Query a DNS name
+ *
+ * @param qp       Pointer to allocated DNS query
+ * @param dnsc     DNS Client
+ * @param name     DNS name
+ * @param type     DNS Resource Record type
+ * @param dnsclass DNS Class
+ * @param rd       Recursion Desired (RD) flag
+ * @param qh       Query handler
+ * @param arg      Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dnsc_query(struct dns_query **qp, struct dnsc *dnsc, const char *name,
 	       uint16_t type, uint16_t dnsclass,
 	       bool rd, dns_query_h *qh, void *arg)
@@ -744,6 +758,23 @@ int dnsc_query(struct dns_query **qp, struct dnsc *dnsc, const char *name,
 }
 
 
+/**
+ * Query a DNS name SRV record
+ *
+ * @param qp       Pointer to allocated DNS query
+ * @param dnsc     DNS Client
+ * @param name     DNS name
+ * @param type     DNS Resource Record type
+ * @param dnsclass DNS Class
+ * @param proto    Protocol
+ * @param srvv     DNS Nameservers
+ * @param srvc     Number of DNS nameservers
+ * @param rd       Recursion Desired (RD) flag
+ * @param qh       Query handler
+ * @param arg      Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dnsc_query_srv(struct dns_query **qp, struct dnsc *dnsc, const char *name,
 		   uint16_t type, uint16_t dnsclass, int proto,
 		   const struct sa *srvv, const uint32_t *srvc,
@@ -754,6 +785,23 @@ int dnsc_query_srv(struct dns_query **qp, struct dnsc *dnsc, const char *name,
 }
 
 
+/**
+ * Send a DNS query with NOTIFY opcode
+ *
+ * @param qp       Pointer to allocated DNS query
+ * @param dnsc     DNS Client
+ * @param name     DNS name
+ * @param type     DNS Resource Record type
+ * @param dnsclass DNS Class
+ * @param ans_rr   Answer Resource Record
+ * @param proto    Protocol
+ * @param srvv     DNS Nameservers
+ * @param srvc     Number of DNS nameservers
+ * @param qh       Query handler
+ * @param arg      Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dnsc_notify(struct dns_query **qp, struct dnsc *dnsc, const char *name,
 		uint16_t type, uint16_t dnsclass, const struct dnsrr *ans_rr,
 		int proto, const struct sa *srvv, const uint32_t *srvc,
@@ -777,6 +825,16 @@ static void dnsc_destructor(void *data)
 }
 
 
+/**
+ * Allocate a DNS Client
+ *
+ * @param dcpp Pointer to allocated DNS Client
+ * @param conf Optional DNS configuration, NULL for default
+ * @param srvv DNS servers
+ * @param srvc Number of DNS Servers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 	       const struct sa *srvv, uint32_t srvc)
 {
@@ -829,6 +887,15 @@ int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 }
 
 
+/**
+ * Set the DNS Servers on a DNS Client
+ *
+ * @param dnsc DNS Client
+ * @param srvv DNS Nameservers
+ * @param srvc Number of nameservers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dnsc_srv_set(struct dnsc *dnsc, const struct sa *srvv, uint32_t srvc)
 {
 	uint32_t i;

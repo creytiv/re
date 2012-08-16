@@ -1,5 +1,5 @@
 /**
- * @file hdr.c BFCP Message header
+ * @file bfcp/hdr.c BFCP Message header
  *
  * Copyright (C) 2010 Creytiv.com
  */

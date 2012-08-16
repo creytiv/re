@@ -77,6 +77,17 @@ static inline int dname_encode_pointer(struct mbuf *mb, size_t pos)
 }
 
 
+/**
+ * Encode a DNS Domain name into a memory buffer
+ *
+ * @param mb       Memory buffer
+ * @param name     Domain name
+ * @param ht_dname Domain name hashtable
+ * @param start    Start position
+ * @param comp     Enable compression
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_dname_encode(struct mbuf *mb, const char *name,
 		     struct hash *ht_dname, size_t start, bool comp)
 {
@@ -139,6 +150,15 @@ int dns_dname_encode(struct mbuf *mb, const char *name,
 }
 
 
+/**
+ * Decode a DNS domain name from a memory buffer
+ *
+ * @param mb    Memory buffer to decode from
+ * @param name  Pointer to allocated string with domain name
+ * @param start Start position
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_dname_decode(struct mbuf *mb, char **name, size_t start)
 {
 	uint32_t i = 0, loopc = 0;

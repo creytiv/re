@@ -57,6 +57,12 @@ static bool std_sort_handler(struct le *le1, struct le *le2, void *arg)
 }
 
 
+/**
+ * Sort a list of DNS Resource Records
+ *
+ * @param rrl  DNS Resource Record list
+ * @param type DNS Record type
+ */
 void dns_rrlist_sort(struct list *rrl, uint16_t type)
 {
 	list_sort(rrl, std_sort_handler, &type);
@@ -111,6 +117,19 @@ static struct dnsrr *rrlist_apply(struct list *rrl, const char *name,
 }
 
 
+/**
+ * Apply a function handler to a list of DNS Resource Records
+ *
+ * @param rrl      DNS Resource Record list
+ * @param name     If set, filter on domain name
+ * @param type     If not DNS_QTYPE_ANY, filter on record type
+ * @param dnsclass If not DNS_QCLASS_ANY, filter on DNS class
+ * @param recurse  Cname recursion
+ * @param rrlh     Resource record handler
+ * @param arg      Handler argument
+ *
+ * @return Matching Resource Record or NULL
+ */
 struct dnsrr *dns_rrlist_apply(struct list *rrl, const char *name,
 			       uint16_t type, uint16_t dnsclass,
 			       bool recurse, dns_rrlist_h *rrlh, void *arg)
@@ -120,6 +139,20 @@ struct dnsrr *dns_rrlist_apply(struct list *rrl, const char *name,
 }
 
 
+/**
+ * Apply a function handler to a list of DNS Resource Records (two types)
+ *
+ * @param rrl      DNS Resource Record list
+ * @param name     If set, filter on domain name
+ * @param type1    If not DNS_QTYPE_ANY, filter on record type
+ * @param type2    If not DNS_QTYPE_ANY, filter on record type
+ * @param dnsclass If not DNS_QCLASS_ANY, filter on DNS class
+ * @param recurse  Cname recursion
+ * @param rrlh     Resource record handler
+ * @param arg      Handler argument
+ *
+ * @return Matching Resource Record or NULL
+ */
 struct dnsrr *dns_rrlist_apply2(struct list *rrl, const char *name,
 				uint16_t type1, uint16_t type2,
 				uint16_t dnsclass, bool recurse,
@@ -138,6 +171,17 @@ static bool find_handler(struct dnsrr *rr, void *arg)
 }
 
 
+/**
+ * Find a DNS Resource Record in a list
+ *
+ * @param rrl      Resource Record list
+ * @param name     If set, filter on domain name
+ * @param type     If not DNS_QTYPE_ANY, filter on record type
+ * @param dnsclass If not DNS_QCLASS_ANY, filter on DNS class
+ * @param recurse  Cname recursion
+ *
+ * @return Matching Resource Record or NULL
+ */
 struct dnsrr *dns_rrlist_find(struct list *rrl, const char *name,
 			      uint16_t type, uint16_t dnsclass, bool recurse)
 {

@@ -20,8 +20,15 @@
 /**
  * Generic way of fetching Nameserver IP-addresses, using libresolv
  *
+ * @param domain Returned domain name
+ * @param dsize  Size of domain name buffer
+ * @param nsv    Returned nameservers
+ * @param n      Nameservers capacity, actual on return
+ *
  * @note we could use res_getservers() but it is not available on Linux
  * @note only IPv4 is supported
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 {

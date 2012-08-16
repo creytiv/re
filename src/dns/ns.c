@@ -81,6 +81,16 @@ static int parse_resolv_conf(char *domain, size_t dsize,
 }
 
 
+/**
+ * Get the DNS domain and nameservers
+ *
+ * @param domain Returned domain name
+ * @param dsize  Size of domain name buffer
+ * @param srvv   Returned nameservers
+ * @param n      Nameservers capacity, actual on return
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_srv_get(char *domain, size_t dsize, struct sa *srvv, uint32_t *n)
 {
 	int err;

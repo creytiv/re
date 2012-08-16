@@ -11,6 +11,7 @@ enum {
 };
 
 
+/** DNS Opcodes */
 enum {
 	DNS_OPCODE_QUERY  = 0,
 	DNS_OPCODE_IQUERY = 1,
@@ -19,6 +20,7 @@ enum {
 };
 
 
+/** DNS Response codes */
 enum {
 	DNS_RCODE_OK       = 0,
 	DNS_RCODE_FMT_ERR  = 1,
@@ -30,6 +32,7 @@ enum {
 };
 
 
+/** DNS Resource Record types */
 enum {
 	DNS_TYPE_A     = 0x0001,
 	DNS_TYPE_NS    = 0x0002,
@@ -46,12 +49,14 @@ enum {
 };
 
 
+/** DNS Classes */
 enum {
 	DNS_CLASS_IN   = 0x0001,
 	DNS_QCLASS_ANY = 0x00ff
 };
 
 
+/** Defines a DNS Header */
 struct dnshdr {
 	uint16_t id;
 	bool qr;
@@ -69,6 +74,7 @@ struct dnshdr {
 };
 
 
+/** Defines a DNS Resource Record (RR) */
 struct dnsrr {
 	struct le le;
 	struct le le_priv;
@@ -125,9 +131,28 @@ struct dnsrr {
 
 struct hash;
 
+/**
+ * Defines the DNS Query handler
+ *
+ * @param err   0 if success, otherwise errorcode
+ * @param hdr   DNS Header
+ * @param ansl  List of Answer records
+ * @param authl List of Authoritive records
+ * @param addl  List of Additional records
+ * @param arg   Handler argument
+ */
 typedef void(dns_query_h)(int err, const struct dnshdr *hdr,
 			  struct list *ansl, struct list *authl,
 			  struct list *addl, void *arg);
+
+/**
+ * Defines the DNS Resource Record list handler
+ *
+ * @param rr  DNS Resource Record
+ * @param arg Handler argument
+ *
+ * @return True to stop traversing, False to continue
+ */
 typedef bool(dns_rrlist_h)(struct dnsrr *rr, void *arg);
 
 int  dns_hdr_encode(struct mbuf *mb, const struct dnshdr *hdr);
@@ -164,6 +189,7 @@ struct sa;
 struct dnsc;
 struct dns_query;
 
+/** DNS Client configuration */
 struct dnsc_conf {
 	uint32_t query_hash_size;
 	uint32_t tcp_hash_size;

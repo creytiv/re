@@ -12,6 +12,14 @@
 #include <re_dns.h>
 
 
+/**
+ * Encode a DNS character string into a memory buffer
+ *
+ * @param mb  Memory buffer to encode into
+ * @param str Character string
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_cstr_encode(struct mbuf *mb, const char *str)
 {
 	uint8_t len;
@@ -29,6 +37,14 @@ int dns_cstr_encode(struct mbuf *mb, const char *str)
 }
 
 
+/**
+ * Decode a DNS character string from a memory buffer
+ *
+ * @param mb  Memory buffer to decode from
+ * @param str Pointer to allocated character string
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_cstr_decode(struct mbuf *mb, char **str)
 {
 	uint8_t len;

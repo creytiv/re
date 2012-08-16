@@ -22,6 +22,14 @@ enum {
 };
 
 
+/**
+ * Encode a DNS header
+ *
+ * @param mb  Memory buffer to encode header into
+ * @param hdr DNS header
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_hdr_encode(struct mbuf *mb, const struct dnshdr *hdr)
 {
 	uint16_t flags = 0;
@@ -50,6 +58,14 @@ int dns_hdr_encode(struct mbuf *mb, const struct dnshdr *hdr)
 }
 
 
+/**
+ * Decode a DNS header from a memory buffer
+ *
+ * @param mb  Memory buffer to decode header from
+ * @param hdr DNS header (output)
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int dns_hdr_decode(struct mbuf *mb, struct dnshdr *hdr)
 {
 	uint16_t flags = 0;
@@ -78,6 +94,13 @@ int dns_hdr_decode(struct mbuf *mb, struct dnshdr *hdr)
 }
 
 
+/**
+ * Get the string of a DNS opcode
+ *
+ * @param opcode DNS opcode
+ *
+ * @return Opcode string
+ */
 const char *dns_hdr_opcodename(uint8_t opcode)
 {
 	switch (opcode) {
@@ -91,6 +114,13 @@ const char *dns_hdr_opcodename(uint8_t opcode)
 }
 
 
+/**
+ * Get the string of a DNS response code
+ *
+ * @param rcode Response code
+ *
+ * @return Response code string
+ */
 const char *dns_hdr_rcodename(uint8_t rcode)
 {
 	switch (rcode) {
