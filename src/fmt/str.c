@@ -94,6 +94,24 @@ int str_dup(char **dst, const char *src)
  * @return an integer less than, equal to, or greater than zero if s1 is found
  *         respectively, to be less than, to match, or be greater than s2
  */
+int str_cmp(const char *s1, const char *s2)
+{
+	if (!s1 || !s2)
+		return 1;
+
+	return strcmp(s1, s2);
+}
+
+
+/**
+ * Compare two 0-terminated strings, ignoring case
+ *
+ * @param s1 First string
+ * @param s2 Second string
+ *
+ * @return an integer less than, equal to, or greater than zero if s1 is found
+ *         respectively, to be less than, to match, or be greater than s2
+ */
 int str_casecmp(const char *s1, const char *s2)
 {
 	/* Same strings -> equal */
