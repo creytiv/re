@@ -4,12 +4,16 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #ifdef HAVE_INET_PTON
+#ifdef WIN32
+#include <windows.h>
+#else
 #define _BSD_SOURCE 1    /**< Use BSD code */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #define __USE_POSIX 1  /**< Use POSIX code */
 #include <netdb.h>
+#endif /* WIN32 */
 #endif
 #include <string.h>
 #include <re_types.h>

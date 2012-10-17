@@ -4,15 +4,21 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #ifdef HAVE_INET_NTOP
+#ifdef WIN32
+#ifdef _MSC_VER
+#pragma warning (disable: 4090)
+#endif
+#include <windows.h>
+#else
 #define __USE_BSD 1    /**< Use BSD code */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #define __USE_POSIX 1  /**< Use POSIX code */
 #include <netdb.h>
-#else
-#include <string.h>
+#endif /* WIN32 */
 #endif
+#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mbuf.h>
