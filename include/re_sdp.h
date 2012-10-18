@@ -68,6 +68,8 @@ void sdp_session_set_lbandwidth(struct sdp_session *sess,
 int  sdp_session_set_lattr(struct sdp_session *sess, bool replace,
 			   const char *name, const char *value, ...);
 void sdp_session_del_lattr(struct sdp_session *sess, const char *name);
+int32_t sdp_session_lbandwidth(const struct sdp_session *sess,
+			       enum sdp_bandwidth type);
 int32_t sdp_session_rbandwidth(const struct sdp_session *sess,
 			       enum sdp_bandwidth type);
 const char *sdp_session_rattr(const struct sdp_session *sess,

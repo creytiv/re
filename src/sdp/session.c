@@ -168,6 +168,24 @@ void sdp_session_del_lattr(struct sdp_session *sess, const char *name)
 
 
 /**
+ * Get the local bandwidth of an SDP Session
+ *
+ * @param sess SDP Session
+ * @param type Bandwidth type
+ *
+ * @return Bandwidth value
+ */
+int32_t sdp_session_lbandwidth(const struct sdp_session *sess,
+			       enum sdp_bandwidth type)
+{
+	if (!sess || type >= SDP_BANDWIDTH_MAX)
+		return 0;
+
+	return sess->lbwv[type];
+}
+
+
+/**
  * Get the remote bandwidth of an SDP Session
  *
  * @param sess SDP Session
