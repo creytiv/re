@@ -271,7 +271,7 @@ ifeq ($(OS),win32)
 	LFLAGS		+=
 	SH_LFLAGS	+= -shared
 	MOD_LFLAGS	+=
-	APP_LFLAGS	+= -Wl,-E
+	APP_LFLAGS	+= -Wl,--export-all-symbols
 	AR		:= ar
 	AFLAGS		:= cru
 	CROSS_COMPILE	?= $(MACHINE)-
