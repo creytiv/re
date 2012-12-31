@@ -83,7 +83,7 @@ $(BUILD): Makefile $(MK) $(MODMKS)
 
 .PHONY: clean
 clean:
-	@rm -rf $(SHARED) $(STATIC) test.d test.o test $(BUILD)/
+	@rm -rf $(SHARED) $(STATIC) test.d test.o test $(BUILD)
 
 
 install: $(SHARED) $(STATIC)
