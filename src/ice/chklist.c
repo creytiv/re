@@ -211,7 +211,7 @@ static void concluding_ice(struct icem_comp *comp)
 				   CANDPAIR_SUCCEEDED);
 	if (!cp) {
 		DEBUG_WARNING("{%s.%u} conclude: no valid candpair found"
-			      " (validl=%u)\n",
+			      " (validlist=%u)\n",
 			      comp->icem->name, comp->id,
 			      list_count(&comp->icem->validl));
 		return;
@@ -251,7 +251,7 @@ void icem_checklist_update(struct icem *icem)
 
 		if (!icem_candpair_find_compid(&icem->validl, comp->id)) {
 			DEBUG_WARNING("{%s.%u} no valid candidate pair"
-				      " (validl=%u)\n",
+				      " (validlist=%u)\n",
 				      icem->name, comp->id,
 				      list_count(&icem->validl));
 			err = ENOENT;

@@ -282,8 +282,10 @@ int icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr)
 
 static void purge_relayed(struct icem *icem, struct icem_comp *comp)
 {
-	DEBUG_NOTICE("{%s.%u} purge local RELAY candidates\n",
-		     icem->name, comp->id);
+	if (comp->turnc) {
+		DEBUG_NOTICE("{%s.%u} purge local RELAY candidates\n",
+			     icem->name, comp->id);
+	}
 
 	/*
 	 * Purge all Candidate-Pairs where the Local candidate
