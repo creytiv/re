@@ -24,12 +24,10 @@ SOURCE        dll.cpp
 
 SOURCEPATH    ..\..\src\bfcp
 SOURCE        attr.c
-SOURCE        hdr.c
+SOURCE        conn.c
 SOURCE        msg.c
-SOURCE        rep.c
-SOURCE        req.c
-SOURCE        sock.c
-SOURCE        transp.c
+SOURCE        reply.c
+SOURCE        request.c
 
 USERINCLUDE   . ..\..\include
 SYSTEMINCLUDE \epoc32\include

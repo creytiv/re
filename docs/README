@@ -109,6 +109,7 @@ Features:
 * RFC 6156 - TURN Extension for IPv6
 * Symmetric RTP
 * ITU-T G.711 Appendix I and Appendix II
+* draft-ietf-bfcpbis-rfc4582bis-08
 
 
 Supported platforms:

@@ -115,22 +115,16 @@
 					RelativePath="..\..\src\bfcp\attr.c">
 				</File>
 				<File
-					RelativePath="..\..\src\bfcp\hdr.c">
+					RelativePath="..\..\src\bfcp\conn.c">
 				</File>
 				<File
 					RelativePath="..\..\src\bfcp\msg.c">
 				</File>
 				<File
-					RelativePath="..\..\src\bfcp\rep.c">
+					RelativePath="..\..\src\bfcp\reply.c">
 				</File>
 				<File
-					RelativePath="..\..\src\bfcp\req.c">
-				</File>
-				<File
-					RelativePath="..\..\src\bfcp\sock.c">
-				</File>
-				<File
-					RelativePath="..\..\src\bfcp\transp.c">
+					RelativePath="..\..\src\bfcp\request.c">
 				</File>
 			</Filter>
 			<Filter
