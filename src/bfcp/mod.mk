@@ -5,9 +5,7 @@
 #
 
 SRCS	+= bfcp/attr.c
-SRCS	+= bfcp/hdr.c
+SRCS	+= bfcp/conn.c
 SRCS	+= bfcp/msg.c
-SRCS	+= bfcp/rep.c
-SRCS	+= bfcp/req.c
-SRCS	+= bfcp/sock.c
-SRCS	+= bfcp/transp.c
+SRCS	+= bfcp/reply.c
+SRCS	+= bfcp/request.c

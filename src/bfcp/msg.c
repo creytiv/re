@@ -10,14 +10,13 @@
 #include <re_mbuf.h>
 #include <re_list.h>
 #include <re_sa.h>
+#include <re_tmr.h>
 #include <re_bfcp.h>
 #include "bfcp.h"
 
 
-struct bfcp_msg {
-	struct sa src;
-	struct bfcp_hdr hdr;
-	struct list attrl;
+enum {
+	BFCP_HDR_SIZE = 12,
 };
 
 
@@ -29,10 +28,61 @@ static void destructor(void *arg)
 }
 
 
+static int hdr_encode(struct mbuf *mb, uint8_t ver, bool r,
+		      enum bfcp_prim prim, uint16_t len, uint32_t confid,
+		      uint16_t tid, uint16_t userid)
+{
+	int err;
+
+	err  = mbuf_write_u8(mb, (ver << 5) | ((r ? 1 : 0) << 4));
+	err |= mbuf_write_u8(mb, prim);
+	err |= mbuf_write_u16(mb, htons(len));
+	err |= mbuf_write_u32(mb, htonl(confid));
+	err |= mbuf_write_u16(mb, htons(tid));
+	err |= mbuf_write_u16(mb, htons(userid));
+
+	return err;
+}
+
+
+static int hdr_decode(struct bfcp_msg *msg, struct mbuf *mb)
+{
+	uint8_t b;
+
+	if (mbuf_get_left(mb) < BFCP_HDR_SIZE)
+		return ENODATA;
+
+	b = mbuf_read_u8(mb);
+
+	msg->ver    = b >> 5;
+	msg->r      = (b >> 4) & 1;
+	msg->f      = (b >> 3) & 1;
+	msg->prim   = mbuf_read_u8(mb);
+	msg->len    = ntohs(mbuf_read_u16(mb));
+	msg->confid = ntohl(mbuf_read_u32(mb));
+	msg->tid    = ntohs(mbuf_read_u16(mb));
+	msg->userid = ntohs(mbuf_read_u16(mb));
+
+	if (msg->ver != BFCP_VER1 && msg->ver != BFCP_VER2)
+		return EBADMSG;
+
+	/* fragmentation not supported */
+	if (msg->f)
+		return ENOSYS;
+
+	if (mbuf_get_left(mb) < (size_t)(4*msg->len))
+		return ENODATA;
+
+	return 0;
+}
+
+
 /**
  * Encode a BFCP message with variable arguments
  *
  * @param mb      Mbuf to encode into
+ * @param ver     Protocol version
+ * @param r       Transaction responder flag
  * @param prim    BFCP Primitive
  * @param confid  Conference ID
  * @param tid     Transaction ID
@@ -42,14 +92,12 @@ static void destructor(void *arg)
  *
  * @return 0 if success, otherwise errorcode
  */
-int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
+int bfcp_msg_vencode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
 		     uint32_t confid, uint16_t tid, uint16_t userid,
-		     uint32_t attrc, va_list ap)
+		     unsigned attrc, va_list ap)
 {
-	size_t start;
-	uint32_t i;
-	uint16_t len;
-	int err = 0;
+	size_t start, len;
+	int err;
 
 	if (!mb)
 		return EINVAL;
@@ -57,26 +105,16 @@ int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
 	start = mb->pos;
 	mb->pos += BFCP_HDR_SIZE;
 
-	for (i=0; i<attrc; i++) {
-
-		uint16_t type = va_arg(ap, int);
-		const void *v = va_arg(ap, const void *);
-		bool mand = false;
-
-		if (!v)
-			continue;
-
-		err = bfcp_attr_encode(mb, mand, type, v);
-		if (err)
-			return err;
-	}
+	err = bfcp_attrs_vencode(mb, attrc, ap);
+	if (err)
+		return err;
 
 	/* header */
-	len = (mb->pos - start - BFCP_HDR_SIZE) / 4;
+	len = mb->pos - start - BFCP_HDR_SIZE;
 	mb->pos = start;
-	err = bfcp_hdr_encode(mb, prim, len, confid, tid, userid);
-
-	mb->pos = mb->end;
+	err = hdr_encode(mb, ver, r, prim, (uint16_t)(len/4), confid, tid,
+			 userid);
+	mb->pos += len;
 
 	return err;
 }
@@ -86,6 +124,8 @@ int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
  * Encode a BFCP message
  *
  * @param mb      Mbuf to encode into
+ * @param ver     Protocol version
+ * @param r       Transaction responder flag
  * @param prim    BFCP Primitive
  * @param confid  Conference ID
  * @param tid     Transaction ID
@@ -94,14 +134,16 @@ int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
  *
  * @return 0 if success, otherwise errorcode
  */
-int bfcp_msg_encode(struct mbuf *mb, enum bfcp_prim prim, uint32_t confid,
-		    uint16_t tid, uint16_t userid, uint32_t attrc, ...)
+int bfcp_msg_encode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
+		    uint32_t confid, uint16_t tid, uint16_t userid,
+		    unsigned attrc, ...)
 {
 	va_list ap;
 	int err;
 
 	va_start(ap, attrc);
-	err = bfcp_msg_vencode(mb, prim, confid, tid, userid, attrc, ap);
+	err = bfcp_msg_vencode(mb, ver, r, prim, confid, tid, userid,
+			       attrc, ap);
 	va_end(ap);
 
 	return err;
@@ -113,47 +155,33 @@ int bfcp_msg_encode(struct mbuf *mb, enum bfcp_prim prim, uint32_t confid,
  *
  * @param msgp Pointer to allocated and decoded BFCP message
  * @param mb   Mbuf to decode from
- * @param src  Source network address (optional)
  *
  * @return 0 if success, otherwise errorcode
  */
-int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb,
-		    const struct sa *src)
+int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb)
 {
 	struct bfcp_msg *msg;
-	size_t start, extra;
+	size_t start;
 	int err;
 
 	if (!msgp || !mb)
 		return EINVAL;
 
-	start = mb->pos;
-
 	msg = mem_zalloc(sizeof(*msg), destructor);
 	if (!msg)
 		return ENOMEM;
 
-	err = bfcp_hdr_decode(mb, &msg->hdr);
+	start = mb->pos;
+
+	err = hdr_decode(msg, mb);
 	if (err) {
 		mb->pos = start;
 		goto out;
 	}
 
-	extra = mbuf_get_left(mb) - 4*msg->hdr.len;
-
-	while (mbuf_get_left(mb) - extra >= ATTR_HDR_SIZE) {
-
-		struct bfcp_attr *attr;
-
-		err = bfcp_attr_decode(&attr, mb);
-		if (err)
-			break;
-
-		list_append(&msg->attrl, &attr->le, attr);
-	}
-
-	if (src)
-		msg->src = *src;
+	err = bfcp_attrs_decode(&msg->attrl, mb, 4*msg->len, &msg->uma);
+	if (err)
+		goto out;
 
  out:
 	if (err)
@@ -162,12 +190,6 @@ int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb,
 		*msgp = msg;
 
 	return err;
-}
-
-
-static bool attr_match(const struct bfcp_attr *attr, void *arg)
-{
-	return attr->type == *(enum bfcp_attrib *)arg;
 }
 
 
@@ -182,7 +204,10 @@ static bool attr_match(const struct bfcp_attr *attr, void *arg)
 struct bfcp_attr *bfcp_msg_attr(const struct bfcp_msg *msg,
 				enum bfcp_attrib type)
 {
-	return bfcp_msg_attr_apply(msg, attr_match, &type);
+	if (!msg)
+		return NULL;
+
+	return bfcp_attrs_find(&msg->attrl, type);
 }
 
 
@@ -198,26 +223,10 @@ struct bfcp_attr *bfcp_msg_attr(const struct bfcp_msg *msg,
 struct bfcp_attr *bfcp_msg_attr_apply(const struct bfcp_msg *msg,
 				      bfcp_attr_h *h, void *arg)
 {
-	struct le *le = msg ? list_head(&msg->attrl) : NULL;
+	if (!msg)
+		return NULL;
 
-	while (le) {
-		struct bfcp_attr *attr = le->data;
-
-		le = le->next;
-
-		if (h && h(attr, arg))
-			return attr;
-	}
-
-	return NULL;
-}
-
-
-static bool attr_print(const struct bfcp_attr *attr, void *arg)
-{
-	struct re_printf *pf = arg;
-
-	return 0 != bfcp_attr_print(pf, attr);
+	return bfcp_attrs_apply(&msg->attrl, h, arg);
 }
 
 
@@ -236,88 +245,13 @@ int bfcp_msg_print(struct re_printf *pf, const struct bfcp_msg *msg)
 	if (!msg)
 		return 0;
 
-	err = re_hprintf(pf, "%s (len=%u confid=%u tid=%u userid=%u)\n",
-			 bfcp_prim_name(msg->hdr.prim), msg->hdr.len,
-			 msg->hdr.confid, msg->hdr.tid, msg->hdr.userid);
+	err = re_hprintf(pf, "%s (confid=%u tid=%u userid=%u)\n",
+			 bfcp_prim_name(msg->prim), msg->confid,
+			 msg->tid, msg->userid);
 
-	bfcp_msg_attr_apply(msg, attr_print, pf);
+	err |= bfcp_attrs_print(pf, &msg->attrl, 0);
 
 	return err;
-}
-
-
-/**
- * Get the BFCP primitive of a BFCP message
- *
- * @param msg BFCP message
- *
- * @return The BFCP primitive
- */
-enum bfcp_prim bfcp_msg_prim(const struct bfcp_msg *msg)
-{
-	return msg ? msg->hdr.prim : 0;
-}
-
-
-/**
- * Get the Conference ID of a BFCP message
- *
- * @param msg BFCP message
- *
- * @return The Conference ID
- */
-uint32_t bfcp_msg_confid(const struct bfcp_msg *msg)
-{
-	return msg ? msg->hdr.confid : 0;
-}
-
-
-/**
- * Get the Transaction ID of a BFCP message
- *
- * @param msg BFCP message
- *
- * @return The Transaction ID
- */
-uint16_t bfcp_msg_tid(const struct bfcp_msg *msg)
-{
-	return msg ? msg->hdr.tid : 0;
-}
-
-
-/**
- * Get the User ID of a BFCP message
- *
- * @param msg BFCP message
- *
- * @return The User ID
- */
-uint16_t bfcp_msg_userid(const struct bfcp_msg *msg)
-{
-	return msg ? msg->hdr.userid : 0;
-}
-
-
-/**
- * Get the BFCP Request status name
- *
- * @param rstat Request status
- *
- * @return String with BFCP Request status name
- */
-const char *bfcp_reqstat_name(enum bfcp_rstat rstat)
-{
-	switch (rstat) {
-
-	case BFCP_PENDING:    return "Pending";
-	case BFCP_ACCEPTED:   return "Accepted";
-	case BFCP_GRANTED:    return "Granted";
-	case BFCP_DENIED:     return "Denied";
-	case BFCP_CANCELLED:  return "Cancelled";
-	case BFCP_RELEASED:   return "Released";
-	case BFCP_REVOKED:    return "Revoked";
-	default:              return "???";
-	}
 }
 
 
@@ -332,32 +266,23 @@ const char *bfcp_prim_name(enum bfcp_prim prim)
 {
 	switch (prim) {
 
-	case BFCP_FLOOR_REQUEST:          return "FloorRequest";
-	case BFCP_FLOOR_RELEASE:          return "FloorRelease";
-	case BFCP_FLOOR_REQUEST_QUERY:    return "FloorRequestQuery";
-	case BFCP_FLOOR_REQUEST_STAT:     return "FloorRequestStatus";
-	case BFCP_USER_QUERY:             return "UserQuery";
-	case BFCP_USER_STATUS:            return "UserStatus";
-	case BFCP_FLOOR_QUERY:            return "FloorQuery";
-	case BFCP_FLOOR_STATUS:           return "FloorStatus";
-	case BFCP_CHAIR_ACTION:           return "ChairAction";
-	case BFCP_CHAIR_ACTION_ACK:       return "ChairActionAck";
-	case BFCP_HELLO:                  return "Hello";
-	case BFCP_HELLO_ACK:              return "HelloAck";
-	case BFCP_ERROR:                  return "Error";
-	default:                          return "???";
+	case BFCP_FLOOR_REQUEST:        return "FloorRequest";
+	case BFCP_FLOOR_RELEASE:        return "FloorRelease";
+	case BFCP_FLOOR_REQUEST_QUERY:  return "FloorRequestQuery";
+	case BFCP_FLOOR_REQUEST_STATUS: return "FloorRequestStatus";
+	case BFCP_USER_QUERY:           return "UserQuery";
+	case BFCP_USER_STATUS:          return "UserStatus";
+	case BFCP_FLOOR_QUERY:          return "FloorQuery";
+	case BFCP_FLOOR_STATUS:         return "FloorStatus";
+	case BFCP_CHAIR_ACTION:         return "ChairAction";
+	case BFCP_CHAIR_ACTION_ACK:     return "ChairActionAck";
+	case BFCP_HELLO:                return "Hello";
+	case BFCP_HELLO_ACK:            return "HelloAck";
+	case BFCP_ERROR:                return "Error";
+	case BFCP_FLOOR_REQ_STATUS_ACK: return "FloorRequestStatusAck";
+	case BFCP_FLOOR_STATUS_ACK:     return "FloorStatusAck";
+	case BFCP_GOODBYE:              return "Goodbye";
+	case BFCP_GOODBYE_ACK:          return "GoodbyeAck";
+	default:                        return "???";
 	}
-}
-
-
-/**
- * Get the source network address of a BFCP message
- *
- * @param msg BFCP message
- *
- * @return Source network address
- */
-const struct sa *bfcp_msg_src(const struct bfcp_msg *msg)
-{
-	return msg ? &msg->src : NULL;
 }

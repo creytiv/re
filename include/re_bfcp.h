@@ -5,51 +5,57 @@
  */
 
 
-/** BFCP Version */
-enum {BFCP_VERSION = 1};
-
 /** BFCP Primitives */
 enum bfcp_prim {
-	BFCP_FLOOR_REQUEST          =  1,
-	BFCP_FLOOR_RELEASE          =  2,
-	BFCP_FLOOR_REQUEST_QUERY    =  3,
-	BFCP_FLOOR_REQUEST_STAT     =  4,
-	BFCP_USER_QUERY             =  5,
-	BFCP_USER_STATUS            =  6,
-	BFCP_FLOOR_QUERY            =  7,
-	BFCP_FLOOR_STATUS           =  8,
-	BFCP_CHAIR_ACTION           =  9,
-	BFCP_CHAIR_ACTION_ACK       = 10,
-	BFCP_HELLO                  = 11,
-	BFCP_HELLO_ACK              = 12,
-	BFCP_ERROR                  = 13,
+	BFCP_FLOOR_REQUEST        =  1,
+	BFCP_FLOOR_RELEASE        =  2,
+	BFCP_FLOOR_REQUEST_QUERY  =  3,
+	BFCP_FLOOR_REQUEST_STATUS =  4,
+	BFCP_USER_QUERY           =  5,
+	BFCP_USER_STATUS          =  6,
+	BFCP_FLOOR_QUERY          =  7,
+	BFCP_FLOOR_STATUS         =  8,
+	BFCP_CHAIR_ACTION         =  9,
+	BFCP_CHAIR_ACTION_ACK     = 10,
+	BFCP_HELLO                = 11,
+	BFCP_HELLO_ACK            = 12,
+	BFCP_ERROR                = 13,
+	BFCP_FLOOR_REQ_STATUS_ACK = 14,
+	BFCP_FLOOR_STATUS_ACK     = 15,
+	BFCP_GOODBYE              = 16,
+	BFCP_GOODBYE_ACK          = 17,
 };
 
 /** BFCP Attributes */
 enum bfcp_attrib {
-	BFCP_BENEFICIARY_ID            =  1,
-	BFCP_FLOOR_ID                  =  2,
-	BFCP_FLOOR_REQUEST_ID          =  3,
-	BFCP_PRIORITY                  =  4,
-	BFCP_REQUEST_STATUS            =  5,
-	BFCP_ERROR_CODE                =  6,
-	BFCP_ERROR_INFO                =  7,
-	BFCP_PARTICIPANT_PROV_INFO     =  8,
-	BFCP_STATUS_INFO               =  9,
-	BFCP_SUPPORTED_ATTRIBUTES      = 10,
-	BFCP_SUPPORTED_PRIMITIVES      = 11,
-	BFCP_USER_DISPLAY_NAME         = 12,
-	BFCP_USER_URI                  = 13,
+	BFCP_BENEFICIARY_ID     =  1,
+	BFCP_FLOOR_ID           =  2,
+	BFCP_FLOOR_REQUEST_ID   =  3,
+	BFCP_PRIORITY           =  4,
+	BFCP_REQUEST_STATUS     =  5,
+	BFCP_ERROR_CODE         =  6,
+	BFCP_ERROR_INFO         =  7,
+	BFCP_PART_PROV_INFO     =  8,
+	BFCP_STATUS_INFO        =  9,
+	BFCP_SUPPORTED_ATTRS    = 10,
+	BFCP_SUPPORTED_PRIMS    = 11,
+	BFCP_USER_DISP_NAME     = 12,
+	BFCP_USER_URI           = 13,
 	/* grouped: */
-	BFCP_BENEFICIARY_INFO          = 14,
-	BFCP_FLOOR_REQUEST_INFO        = 15,
-	BFCP_REQUESTED_BY_INFO         = 16,
-	BFCP_FLOOR_REQUEST_STATUS      = 17,
-	BFCP_OVERALL_REQUEST_STATUS    = 18,
+	BFCP_BENEFICIARY_INFO   = 14,
+	BFCP_FLOOR_REQ_INFO     = 15,
+	BFCP_REQUESTED_BY_INFO  = 16,
+	BFCP_FLOOR_REQ_STATUS   = 17,
+	BFCP_OVERALL_REQ_STATUS = 18,
+
+	/** Mandatory Attribute */
+	BFCP_MANDATORY          = 1<<7,
+	/** Encode Handler */
+	BFCP_ENCODE_HANDLER     = 1<<8,
 };
 
 /** BFCP Request Status */
-enum bfcp_rstat {
+enum bfcp_reqstat {
 	BFCP_PENDING   = 1,
 	BFCP_ACCEPTED  = 2,
 	BFCP_GRANTED   = 3,
@@ -61,19 +67,24 @@ enum bfcp_rstat {
 
 /** BFCP Error Codes */
 enum bfcp_err {
-	BFCP_ERR_CONF_NOT_EXIST         = 1,
-	BFCP_ERR_USER_NOT_EXIST         = 2,
-	BFCP_ERR_UNKNOWN_PRIM           = 3,
-	BFCP_ERR_UNKNOWN_MAND_ATTR      = 4,
-	BFCP_ERR_UNAUTH_OPERATION       = 5,
-	BFCP_ERR_INVALID_FLOOR_ID       = 6,
-	BFCP_ERR_FLOOR_REQ_ID_NOT_EXIST = 7,
-	BFCP_ERR_MAX_FLOOR_REQ_REACHED  = 8,
-	BFCP_ERR_USE_TLS                = 9
+	BFCP_CONF_NOT_EXIST         = 1,
+	BFCP_USER_NOT_EXIST         = 2,
+	BFCP_UNKNOWN_PRIM           = 3,
+	BFCP_UNKNOWN_MAND_ATTR      = 4,
+	BFCP_UNAUTH_OPERATION       = 5,
+	BFCP_INVALID_FLOOR_ID       = 6,
+	BFCP_FLOOR_REQ_ID_NOT_EXIST = 7,
+	BFCP_MAX_FLOOR_REQ_REACHED  = 8,
+	BFCP_USE_TLS                = 9,
+	BFCP_PARSE_ERROR            = 10,
+	BFCP_USE_DTLS               = 11,
+	BFCP_UNSUPPORTED_VERSION    = 12,
+	BFCP_BAD_LENGTH             = 13,
+	BFCP_GENERIC_ERROR          = 14,
 };
 
 /** BFCP Priority */
-enum bfcp_prio {
+enum bfcp_priority {
 	BFCP_PRIO_LOWEST  = 0,
 	BFCP_PRIO_LOW     = 1,
 	BFCP_PRIO_NORMAL  = 2,
@@ -81,74 +92,40 @@ enum bfcp_prio {
 	BFCP_PRIO_HIGHEST = 4
 };
 
-/** BFCP Request status */
-struct bfcp_reqstat {
-	enum bfcp_rstat stat;
+/** BFCP Transport */
+enum bfcp_transp {
+	BFCP_UDP,
+};
+
+/** BFCP Request Status */
+struct bfcp_reqstatus {
+	enum bfcp_reqstat status;
 	uint8_t qpos;
 };
 
-/** BFCP Error code */
+/** BFCP Error Code */
 struct bfcp_errcode {
 	enum bfcp_err code;
 	uint8_t *details;  /* optional */
 	size_t len;
 };
 
-/** BFCP supported attributes */
+/** BFCP Supported Attributes */
 struct bfcp_supattr {
 	enum bfcp_attrib *attrv;
 	size_t attrc;
 };
 
-/** BFCP supported primitives */
+/** BFCP Supported Primitives */
 struct bfcp_supprim {
 	enum bfcp_prim *primv;
 	size_t primc;
 };
 
-/** BFCP overall request status */
-struct bfcp_overall_reqstat {
-	uint16_t freqid;
-	struct bfcp_reqstat reqstat;
-	char *statinfo;
-};
-
-/** BFCP beneficiary information */
-struct bfcp_beneficiary_info {
-	uint16_t bfid;
-	char *dname;
-	char *uri;
-};
-
-/** BFCP requested by information */
-struct bfcp_reqby_info {
-	uint16_t rbid;
-	char *dname;
-	char *uri;
-};
-
-/** BFCP floor request status */
-struct bfcp_floor_reqstat {
-	uint16_t floorid;
-	struct bfcp_reqstat reqstat;
-	char *statinfo;
-};
-
-/** BFCP floor request info */
-struct bfcp_floor_reqinfo {
-	uint16_t freqid;
-	struct bfcp_overall_reqstat ors;
-	struct bfcp_floor_reqstat *frsv;
-	size_t frsc;
-	struct bfcp_beneficiary_info bfi;
-	struct bfcp_reqby_info rbi;
-	enum bfcp_prio prio;
-	char *ppi;
-};
-
 /** BFCP Attribute */
 struct bfcp_attr {
 	struct le le;
+	struct list attrl;
 	enum bfcp_attrib type;
 	bool mand;
 	union bfcp_union {
@@ -157,39 +134,63 @@ struct bfcp_attr {
 		uint16_t u16;
 
 		/* actual attributes */
-		uint16_t bfid;
+		uint16_t beneficiaryid;
 		uint16_t floorid;
-		uint16_t freqid;
-		enum bfcp_prio prio;
-		struct bfcp_reqstat reqstat;
+		uint16_t floorreqid;
+		enum bfcp_priority priority;
+		struct bfcp_reqstatus reqstatus;
 		struct bfcp_errcode errcode;
 		char *errinfo;
-		char *ppi;
-		char *statinfo;
+		char *partprovinfo;
+		char *statusinfo;
 		struct bfcp_supattr supattr;
 		struct bfcp_supprim supprim;
 		char *userdname;
 		char *useruri;
-
-		/* grouped attributes */
-		struct bfcp_beneficiary_info bfi;
-		struct bfcp_floor_reqinfo fri;
-		struct bfcp_reqby_info rbi;
-		struct bfcp_floor_reqstat frs;
-		struct bfcp_overall_reqstat ors;
+		uint16_t reqbyid;
 	} v;
 };
 
-/** BFCP Transport */
-enum bfcp_transp {
-	BFCP_TRANSP_TCP  = 0,
-	BFCP_TRANSP_TLS  = 1
+/** BFCP unknown attributes */
+struct bfcp_unknown_attr {
+	uint8_t typev[16];
+	size_t typec;
 };
 
+/** BFCP Message */
+struct bfcp_msg {
+	struct bfcp_unknown_attr uma;
+	struct sa src;
+	uint8_t ver;
+	unsigned r:1;
+	unsigned f:1;
+	enum bfcp_prim prim;
+	uint16_t len;
+	uint32_t confid;
+	uint16_t tid;
+	uint16_t userid;
+	struct list attrl;
+};
 
-/* BFCP Message */
+struct bfcp_conn;
 
-struct bfcp_msg;
+
+/**
+ * Defines the BFCP encode handler
+ *
+ * @param mb  Mbuf to encode into
+ * @param arg Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+typedef int (bfcp_encode_h)(struct mbuf *mb, void *arg);
+
+/** BFCP Encode */
+struct bfcp_encode {
+	bfcp_encode_h *ench;
+	void *arg;
+};
+
 
 /**
  * Defines the BFCP attribute handler
@@ -201,52 +202,15 @@ struct bfcp_msg;
  */
 typedef bool (bfcp_attr_h)(const struct bfcp_attr *attr, void *arg);
 
-int bfcp_msg_vencode(struct mbuf *mb, enum bfcp_prim prim,
-		     uint32_t confid, uint16_t tid, uint16_t userid,
-		     uint32_t attrc, va_list ap);
-int bfcp_msg_encode(struct mbuf *mb, enum bfcp_prim prim, uint32_t confid,
-		    uint16_t tid, uint16_t userid, uint32_t attrc, ...);
-int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb,
-		    const struct sa *src);
-struct bfcp_attr *bfcp_msg_attr(const struct bfcp_msg *msg,
-				enum bfcp_attrib type);
-struct bfcp_attr *bfcp_msg_attr_apply(const struct bfcp_msg *msg,
-				      bfcp_attr_h *h, void *arg);
-int bfcp_msg_print(struct re_printf *pf, const struct bfcp_msg *msg);
-enum bfcp_prim bfcp_msg_prim(const struct bfcp_msg *msg);
-uint32_t bfcp_msg_confid(const struct bfcp_msg *msg);
-uint16_t bfcp_msg_tid(const struct bfcp_msg *msg);
-uint16_t bfcp_msg_userid(const struct bfcp_msg *msg);
-const struct sa *bfcp_msg_src(const struct bfcp_msg *msg);
-
-
-/* BFCP supplement */
-
-const char *bfcp_prim_name(enum bfcp_prim prim);
-const char *bfcp_attr_name(enum bfcp_attrib attr);
-const char *bfcp_reqstat_name(enum bfcp_rstat rstat);
-const char *bfcp_errcode_name(enum bfcp_err code);
-
-
-/* BFCP Transport */
-
-bool bfcp_transp_reliable(enum bfcp_transp tp);
-const char *bfcp_transp_proto(enum bfcp_transp tp);
-
-
-/* BFCP Socket */
-
-struct tls;
-struct bfcp_sock;
-struct bfcp_ctrans;
 
 /**
- * Defines the BFCP message handler
+ * Defines the BFCP receive handler
  *
  * @param msg BFCP message
  * @param arg Handler argument
  */
-typedef void (bfcp_msg_h)(const struct bfcp_msg *msg, void *arg);
+typedef void (bfcp_recv_h)(const struct bfcp_msg *msg, void *arg);
+
 
 /**
  * Defines the BFCP response handler
@@ -258,14 +222,56 @@ typedef void (bfcp_msg_h)(const struct bfcp_msg *msg, void *arg);
 typedef void (bfcp_resp_h)(int err, const struct bfcp_msg *msg, void *arg);
 
 
-int bfcp_listen(struct bfcp_sock **sockp, enum bfcp_transp transp,
-		struct tls *tls, const struct sa *laddr,
-		bfcp_msg_h *msgh, void *arg);
-int bfcp_request(struct bfcp_ctrans **ctp, struct bfcp_sock *sock,
-		 const struct sa *dst,
+/* attr */
+int bfcp_attrs_vencode(struct mbuf *mb, unsigned attrc, va_list ap);
+int bfcp_attrs_encode(struct mbuf *mb, unsigned attrc, ...);
+struct bfcp_attr *bfcp_attr_subattr(const struct bfcp_attr *attr,
+				    enum bfcp_attrib type);
+struct bfcp_attr *bfcp_attr_subattr_apply(const struct bfcp_attr *attr,
+					  bfcp_attr_h *h, void *arg);
+int bfcp_attr_print(struct re_printf *pf, const struct bfcp_attr *attr);
+const char *bfcp_attr_name(enum bfcp_attrib type);
+const char *bfcp_reqstatus_name(enum bfcp_reqstat status);
+const char *bfcp_errcode_name(enum bfcp_err code);
+
+
+/* msg */
+int bfcp_msg_vencode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
+		     uint32_t confid, uint16_t tid, uint16_t userid,
+		     unsigned attrc, va_list ap);
+int bfcp_msg_encode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
+		    uint32_t confid, uint16_t tid, uint16_t userid,
+		    unsigned attrc, ...);
+int bfcp_msg_decode(struct bfcp_msg **msgp, struct mbuf *mb);
+struct bfcp_attr *bfcp_msg_attr(const struct bfcp_msg *msg,
+				enum bfcp_attrib type);
+struct bfcp_attr *bfcp_msg_attr_apply(const struct bfcp_msg *msg,
+				      bfcp_attr_h *h, void *arg);
+int bfcp_msg_print(struct re_printf *pf, const struct bfcp_msg *msg);
+const char *bfcp_prim_name(enum bfcp_prim prim);
+
+
+/* conn */
+int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
+		bfcp_recv_h *recvh, void *arg);
+
+
+/* request */
+int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
 		 enum bfcp_prim prim, uint32_t confid, uint16_t userid,
 		 bfcp_resp_h *resph, void *arg, uint32_t attrc, ...);
-int bfcp_reply(struct bfcp_sock *sock, const struct bfcp_msg *req,
+
+
+/* notify */
+int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst,
+		enum bfcp_prim prim, uint32_t confid, uint16_t userid,
+		uint32_t attrc, ...);
+
+
+/* reply */
+int bfcp_reply(struct bfcp_conn *bc, const struct bfcp_msg *req,
 	       enum bfcp_prim prim, uint32_t attrc, ...);
-int bfcp_ereply(struct bfcp_sock *sock, const struct bfcp_msg *req,
-		enum bfcp_err code, ...);
+int bfcp_edreply(struct bfcp_conn *bc, const struct bfcp_msg *req,
+		 enum bfcp_err code, const uint8_t *details, size_t len);
+int bfcp_ereply(struct bfcp_conn *bc, const struct bfcp_msg *req,
+		enum bfcp_err code);
