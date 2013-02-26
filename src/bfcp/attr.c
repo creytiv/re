@@ -51,6 +51,7 @@ static void destructor(void *arg)
 	}
 
 	list_flush(&attr->attrl);
+	list_unlink(&attr->le);
 }
 
 
@@ -530,7 +531,7 @@ int bfcp_attr_print(struct re_printf *pf, const struct bfcp_attr *attr)
 		break;
 
 	case BFCP_ERROR_CODE:
-		err |= re_hprintf(pf, "%u (%s)", v->errcode.code,
+		err |= re_hprintf(pf, "%d (%s)", v->errcode.code,
 				  bfcp_errcode_name(v->errcode.code));
 
 		if (v->errcode.code == BFCP_UNKNOWN_MAND_ATTR) {
@@ -554,7 +555,7 @@ int bfcp_attr_print(struct re_printf *pf, const struct bfcp_attr *attr)
 		break;
 
 	case BFCP_SUPPORTED_ATTRS:
-		err |= re_hprintf(pf, "%u:", v->supattr.attrc);
+		err |= re_hprintf(pf, "%zu:", v->supattr.attrc);
 
 		for (i=0; i<v->supattr.attrc; i++) {
 
@@ -565,7 +566,7 @@ int bfcp_attr_print(struct re_printf *pf, const struct bfcp_attr *attr)
 		break;
 
 	case BFCP_SUPPORTED_PRIMS:
-		err |= re_hprintf(pf, "%u:", v->supprim.primc);
+		err |= re_hprintf(pf, "%zu:", v->supprim.primc);
 
 		for (i=0; i<v->supprim.primc; i++) {
 
