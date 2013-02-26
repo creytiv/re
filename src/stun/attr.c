@@ -45,6 +45,8 @@ static void destructor(void *arg)
 		mem_deref(attr->v.mb.buf);
 		break;
 	}
+
+	list_unlink(&attr->le);
 }
 
 
