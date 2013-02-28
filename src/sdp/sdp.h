@@ -43,6 +43,7 @@ struct sdp_media {
 	void *arg;
 	enum sdp_dir ldir;
 	enum sdp_dir rdir;
+	bool fmt_ignore;
 	bool disabled;
 	int dynpt;
 };

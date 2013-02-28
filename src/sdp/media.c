@@ -26,6 +26,7 @@ static void destructor(void *arg)
 
 	if (m->le.list) {
 		m->disabled = true;
+		m->ench     = NULL;
 		mem_ref(m);
 		return;
 	}
@@ -216,7 +217,7 @@ void sdp_media_align_formats(struct sdp_media *m, bool offer)
 	struct sdp_format *rfmt, *lfmt;
 	struct le *rle, *lle;
 
-	if (!m || m->disabled || !sa_port(&m->raddr))
+	if (!m || m->disabled || !sa_port(&m->raddr) || m->fmt_ignore)
 		return;
 
 	for (lle=m->lfmtl.head; lle; lle=lle->next) {
@@ -304,6 +305,21 @@ void sdp_media_set_encode_handler(struct sdp_media *m, sdp_media_enc_h *ench,
 
 	m->ench = ench;
 	m->arg  = arg;
+}
+
+
+/**
+ * Set an SDP Media line to ignore formats
+ *
+ * @param m          SDP Media line
+ * @param fmt_ignore True for ignore formats, otherwise false
+ */
+void sdp_media_set_fmt_ignore(struct sdp_media *m, bool fmt_ignore)
+{
+	if (!m)
+		return;
+
+	m->fmt_ignore = fmt_ignore;
 }
 
 
