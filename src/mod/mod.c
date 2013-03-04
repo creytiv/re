@@ -74,25 +74,18 @@ static void mod_destructor(void *data)
 struct mod *mod_find(const char *name)
 {
 	struct le *le;
-	size_t len;
+	struct pl x;
 
 	if (!name)
 		return NULL;
 
-	len = strlen(name);
+	if (re_regex(name, strlen(name), "[/]*[^./]+" MOD_EXT, NULL, &x))
+		return NULL;
 
 	for (le = modl.head; le; le = le->next) {
 		struct mod *m = le->data;
-		char expr[128];
 
-		if (0 == str_casecmp(name, m->me->name))
-			return m;
-
-		/* NOTE: comparing 'foo' and 'foo.so' */
-		(void)re_snprintf(expr, sizeof(expr), "%s" MOD_EXT,
-				  m->me->name);
-
-		if (0 == re_regex(name, len, expr))
+		if (0 == pl_strcasecmp(&x, m->me->name))
 			return m;
 	}
 
