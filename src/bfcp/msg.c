@@ -94,7 +94,7 @@ static int hdr_decode(struct bfcp_msg *msg, struct mbuf *mb)
  */
 int bfcp_msg_vencode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
 		     uint32_t confid, uint16_t tid, uint16_t userid,
-		     unsigned attrc, va_list ap)
+		     unsigned attrc, va_list *ap)
 {
 	size_t start, len;
 	int err;
@@ -143,7 +143,7 @@ int bfcp_msg_encode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
 
 	va_start(ap, attrc);
 	err = bfcp_msg_vencode(mb, ver, r, prim, confid, tid, userid,
-			       attrc, ap);
+			       attrc, &ap);
 	va_end(ap);
 
 	return err;

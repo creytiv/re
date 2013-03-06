@@ -223,7 +223,7 @@ typedef void (bfcp_resp_h)(int err, const struct bfcp_msg *msg, void *arg);
 
 
 /* attr */
-int bfcp_attrs_vencode(struct mbuf *mb, unsigned attrc, va_list ap);
+int bfcp_attrs_vencode(struct mbuf *mb, unsigned attrc, va_list *ap);
 int bfcp_attrs_encode(struct mbuf *mb, unsigned attrc, ...);
 struct bfcp_attr *bfcp_attr_subattr(const struct bfcp_attr *attr,
 				    enum bfcp_attrib type);
@@ -238,7 +238,7 @@ const char *bfcp_errcode_name(enum bfcp_err code);
 /* msg */
 int bfcp_msg_vencode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
 		     uint32_t confid, uint16_t tid, uint16_t userid,
-		     unsigned attrc, va_list ap);
+		     unsigned attrc, va_list *ap);
 int bfcp_msg_encode(struct mbuf *mb, uint8_t ver, bool r, enum bfcp_prim prim,
 		    uint32_t confid, uint16_t tid, uint16_t userid,
 		    unsigned attrc, ...);

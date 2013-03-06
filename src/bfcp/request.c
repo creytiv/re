@@ -142,7 +142,7 @@ bool bfcp_handle_response(struct bfcp_conn *bc, const struct bfcp_msg *msg)
 
 int bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst,
 		  enum bfcp_prim prim, uint32_t confid, uint16_t userid,
-		  bfcp_resp_h *resph, void *arg, uint32_t attrc, va_list ap)
+		  bfcp_resp_h *resph, void *arg, uint32_t attrc, va_list *ap)
 {
 	struct bfcp_ctrans *ct;
 	int err;
@@ -220,7 +220,7 @@ int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
 
 	va_start(ap, attrc);
 	err = bfcp_vrequest(bc, dst, prim, confid, userid, resph, arg,
-			    attrc, ap);
+			    attrc, &ap);
 	va_end(ap);
 
 	return err;
@@ -248,7 +248,7 @@ int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst,
 
 	va_start(ap, attrc);
 	err = bfcp_vrequest(bc, dst, prim, confid, userid, NULL, NULL,
-			    attrc, ap);
+			    attrc, &ap);
 	va_end(ap);
 
 	return err;

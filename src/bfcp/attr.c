@@ -148,7 +148,7 @@ static int attr_encode(struct mbuf *mb, bool mand, enum bfcp_attrib type,
  *
  * @return 0 if success, otherwise errorcode
  */
-int bfcp_attrs_vencode(struct mbuf *mb, unsigned attrc, va_list ap)
+int bfcp_attrs_vencode(struct mbuf *mb, unsigned attrc, va_list *ap)
 {
 	unsigned i;
 
@@ -157,9 +157,9 @@ int bfcp_attrs_vencode(struct mbuf *mb, unsigned attrc, va_list ap)
 
 	for (i=0; i<attrc; i++) {
 
-		int  type     = va_arg(ap, int);
-		unsigned subc = va_arg(ap, unsigned);
-		const void *v = va_arg(ap, const void *);
+		int  type     = va_arg(*ap, int);
+		unsigned subc = va_arg(*ap, unsigned);
+		const void *v = va_arg(*ap, const void *);
 		size_t start, len;
 		int err;
 
@@ -221,7 +221,7 @@ int bfcp_attrs_encode(struct mbuf *mb, unsigned attrc, ...)
 	int err;
 
 	va_start(ap, attrc);
-	err = bfcp_attrs_vencode(mb, attrc, ap);
+	err = bfcp_attrs_vencode(mb, attrc, &ap);
 	va_end(ap);
 
 	return err;
