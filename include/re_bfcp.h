@@ -259,18 +259,18 @@ int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
 /* request */
 int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
 		 enum bfcp_prim prim, uint32_t confid, uint16_t userid,
-		 bfcp_resp_h *resph, void *arg, uint32_t attrc, ...);
+		 bfcp_resp_h *resph, void *arg, unsigned attrc, ...);
 
 
 /* notify */
 int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst,
 		enum bfcp_prim prim, uint32_t confid, uint16_t userid,
-		uint32_t attrc, ...);
+		unsigned attrc, ...);
 
 
 /* reply */
 int bfcp_reply(struct bfcp_conn *bc, const struct bfcp_msg *req,
-	       enum bfcp_prim prim, uint32_t attrc, ...);
+	       enum bfcp_prim prim, unsigned attrc, ...);
 int bfcp_edreply(struct bfcp_conn *bc, const struct bfcp_msg *req,
 		 enum bfcp_err code, const uint8_t *details, size_t len);
 int bfcp_ereply(struct bfcp_conn *bc, const struct bfcp_msg *req,

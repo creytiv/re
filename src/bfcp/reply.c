@@ -39,7 +39,7 @@ static void tmr_handler(void *arg)
  * @return 0 if success, otherwise errorcode
  */
 int bfcp_reply(struct bfcp_conn *bc, const struct bfcp_msg *req,
-	       enum bfcp_prim prim, uint32_t attrc, ...)
+	       enum bfcp_prim prim, unsigned attrc, ...)
 {
 	va_list ap;
 	int err;
