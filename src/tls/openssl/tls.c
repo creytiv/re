@@ -251,3 +251,66 @@ int tls_verify_cert(struct tls_conn *tc, char *cn, size_t cn_size)
 
 	return 0;
 }
+
+
+static const EVP_MD *type2evp(const char *type)
+{
+	if (0 == str_casecmp(type, "SHA-1"))
+		return EVP_sha1();
+	else
+		return NULL;
+}
+
+
+int tls_get_local_fingerprint(const struct tls *tls, const char *type,
+			      struct tls_fingerprint *fp)
+{
+	SSL *ssl;
+	X509 *x;
+	int err = 0;
+
+	if (!tls || !fp)
+		return EINVAL;
+
+	ssl = SSL_new(tls->ctx);
+	if (!ssl)
+		return ENOMEM;
+
+	x = SSL_get_certificate(ssl);
+	if (!x) {
+		err = ENOENT;
+		goto out;
+	}
+
+	fp->len = sizeof(fp->md);
+	if (1 != X509_digest(x, type2evp(type), fp->md, &fp->len)) {
+		err = ENOENT;
+		goto out;
+	}
+
+ out:
+	(void)SSL_shutdown(ssl);
+	SSL_free(ssl);
+
+	return err;
+}
+
+
+int tls_get_remote_fingerprint(const struct tls_conn *tc, const char *type,
+			       struct tls_fingerprint *fp)
+{
+	X509 *x;
+
+	if (!tc || !fp)
+		return EINVAL;
+
+	x = SSL_get_peer_certificate(tc->ssl);
+	if (!x)
+		return EPROTO;
+
+	fp->len = sizeof(fp->md);
+	if (1 != X509_digest(x, type2evp(type), fp->md, &fp->len))
+		return ENOENT;
+
+	return 0;
+}
