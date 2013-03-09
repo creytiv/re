@@ -6,7 +6,7 @@
 
 struct mqueue;
 
-typedef void (mqueue_h)(int id, void *data);
+typedef void (mqueue_h)(int id, void *data, void *arg);
 
-int mqueue_alloc(struct mqueue **mqp);
-int mqueue_push(struct mqueue *mq, mqueue_h *h, int id, void *data);
+int mqueue_alloc(struct mqueue **mqp, mqueue_h *h, void *arg);
+int mqueue_push(struct mqueue *mq, int id, void *data);

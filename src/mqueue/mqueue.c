@@ -23,10 +23,11 @@
  */
 struct mqueue {
 	int pfd[2];
+	mqueue_h *h;
+	void *arg;
 };
 
 struct msg {
-	mqueue_h *h;
 	int id;
 	void *data;
 	uint32_t magic;
@@ -71,8 +72,7 @@ static void event_handler(int flags, void *arg)
 		return;
 	}
 
-	if (msg.h)
-		msg.h(msg.id, msg.data);
+	mq->h(msg.id, msg.data, mq->arg);
 }
 
 
@@ -80,20 +80,25 @@ static void event_handler(int flags, void *arg)
  * Allocate a new Message Queue
  *
  * @param mqp Pointer to allocated Message Queue
+ * @param h   Message handler
+ * @param arg Handler argument
  *
  * @return 0 if success, otherwise errorcode
  */
-int mqueue_alloc(struct mqueue **mqp)
+int mqueue_alloc(struct mqueue **mqp, mqueue_h *h, void *arg)
 {
 	struct mqueue *mq;
 	int err = 0;
 
-	if (!mqp)
+	if (!mqp || !h)
 		return EINVAL;
 
 	mq = mem_zalloc(sizeof(*mq), destructor);
 	if (!mq)
 		return ENOMEM;
+
+	mq->h   = h;
+	mq->arg = arg;
 
 	mq->pfd[0] = mq->pfd[1] = -1;
 	if (pipe(mq->pfd) < 0) {
@@ -119,13 +124,12 @@ int mqueue_alloc(struct mqueue **mqp)
  * Push a new message onto the Message Queue
  *
  * @param mq   Message Queue
- * @param h    Message handler
  * @param id   General purpose Identifier
  * @param data Application data
  *
  * @return 0 if success, otherwise errorcode
  */
-int mqueue_push(struct mqueue *mq, mqueue_h *h, int id, void *data)
+int mqueue_push(struct mqueue *mq, int id, void *data)
 {
 	struct msg msg;
 	ssize_t n;
@@ -133,7 +137,6 @@ int mqueue_push(struct mqueue *mq, mqueue_h *h, int id, void *data)
 	if (!mq)
 		return EINVAL;
 
-	msg.h     = h;
 	msg.id    = id;
 	msg.data  = data;
 	msg.magic = MAGIC;
