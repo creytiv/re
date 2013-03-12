@@ -4,12 +4,6 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
-enum {
-	BFCP_VER1 = 1,
-	BFCP_VER2 = 2,
-};
-
-
 struct bfcp_strans {
 	enum bfcp_prim prim;
 	uint32_t confid;
@@ -49,6 +43,6 @@ int bfcp_send(struct bfcp_conn *bc, const struct sa *dst, struct mbuf *mb);
 
 /* request */
 bool bfcp_handle_response(struct bfcp_conn *bc, const struct bfcp_msg *msg);
-int  bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst,
+int  bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst, uint8_t ver,
 		   enum bfcp_prim prim, uint32_t confid, uint16_t userid,
 		   bfcp_resp_h *resph, void *arg, unsigned attrc, va_list *ap);

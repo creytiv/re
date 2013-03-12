@@ -5,6 +5,12 @@
  */
 
 
+/** BFCP Versions */
+enum {
+	BFCP_VER1 = 1,
+	BFCP_VER2 = 2,
+};
+
 /** BFCP Primitives */
 enum bfcp_prim {
 	BFCP_FLOOR_REQUEST        =  1,
@@ -257,13 +263,13 @@ int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
 
 
 /* request */
-int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
+int bfcp_request(struct bfcp_conn *bc, const struct sa *dst, uint8_t ver,
 		 enum bfcp_prim prim, uint32_t confid, uint16_t userid,
 		 bfcp_resp_h *resph, void *arg, unsigned attrc, ...);
 
 
 /* notify */
-int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst,
+int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst, uint8_t ver,
 		enum bfcp_prim prim, uint32_t confid, uint16_t userid,
 		unsigned attrc, ...);
 

@@ -140,7 +140,7 @@ bool bfcp_handle_response(struct bfcp_conn *bc, const struct bfcp_msg *msg)
 }
 
 
-int bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst,
+int bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst, uint8_t ver,
 		  enum bfcp_prim prim, uint32_t confid, uint16_t userid,
 		  bfcp_resp_h *resph, void *arg, unsigned attrc, va_list *ap)
 {
@@ -170,7 +170,7 @@ int bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst,
 		goto out;
 	}
 
-	err = bfcp_msg_vencode(ct->mb, BFCP_VER2, false, prim, confid, ct->tid,
+	err = bfcp_msg_vencode(ct->mb, ver, false, prim, confid, ct->tid,
 			       userid, attrc, ap);
 	if (err)
 		goto out;
@@ -202,6 +202,7 @@ int bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst,
  *
  * @param bc      BFCP connection
  * @param dst     Destination address
+ * @param ver     BFCP Version
  * @param prim    BFCP Primitive
  * @param confid  Conference ID
  * @param userid  User ID
@@ -211,7 +212,7 @@ int bfcp_vrequest(struct bfcp_conn *bc, const struct sa *dst,
  *
  * @return 0 if success, otherwise errorcode
  */
-int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
+int bfcp_request(struct bfcp_conn *bc, const struct sa *dst, uint8_t ver,
 		 enum bfcp_prim prim, uint32_t confid, uint16_t userid,
 		 bfcp_resp_h *resph, void *arg, unsigned attrc, ...)
 {
@@ -219,7 +220,7 @@ int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
 	int err;
 
 	va_start(ap, attrc);
-	err = bfcp_vrequest(bc, dst, prim, confid, userid, resph, arg,
+	err = bfcp_vrequest(bc, dst, ver, prim, confid, userid, resph, arg,
 			    attrc, &ap);
 	va_end(ap);
 
@@ -232,6 +233,7 @@ int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
  *
  * @param bc      BFCP connection
  * @param dst     Destination address
+ * @param ver     BFCP Version
  * @param prim    BFCP Primitive
  * @param confid  Conference ID
  * @param userid  User ID
@@ -239,7 +241,7 @@ int bfcp_request(struct bfcp_conn *bc, const struct sa *dst,
  *
  * @return 0 if success, otherwise errorcode
  */
-int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst,
+int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst, uint8_t ver,
 		enum bfcp_prim prim, uint32_t confid, uint16_t userid,
 		unsigned attrc, ...)
 {
@@ -247,7 +249,7 @@ int bfcp_notify(struct bfcp_conn *bc, const struct sa *dst,
 	int err;
 
 	va_start(ap, attrc);
-	err = bfcp_vrequest(bc, dst, prim, confid, userid, NULL, NULL,
+	err = bfcp_vrequest(bc, dst, ver, prim, confid, userid, NULL, NULL,
 			    attrc, &ap);
 	va_end(ap);
 
