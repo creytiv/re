@@ -260,6 +260,7 @@ const char *bfcp_prim_name(enum bfcp_prim prim);
 /* conn */
 int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
 		bfcp_recv_h *recvh, void *arg);
+void *bfcp_sock(const struct bfcp_conn *bc);
 
 
 /* request */

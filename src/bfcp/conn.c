@@ -146,3 +146,9 @@ int bfcp_send(struct bfcp_conn *bc, const struct sa *dst, struct mbuf *mb)
 		return ENOSYS;
 	}
 }
+
+
+void *bfcp_sock(const struct bfcp_conn *bc)
+{
+	return bc ? bc->us : NULL;
+}
