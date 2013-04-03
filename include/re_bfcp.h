@@ -101,6 +101,7 @@ enum bfcp_priority {
 /** BFCP Transport */
 enum bfcp_transp {
 	BFCP_UDP,
+	BFCP_DTLS,
 };
 
 /** BFCP Request Status */
@@ -178,6 +179,7 @@ struct bfcp_msg {
 	struct list attrl;
 };
 
+struct tls;
 struct bfcp_conn;
 
 
@@ -259,7 +261,7 @@ const char *bfcp_prim_name(enum bfcp_prim prim);
 
 /* conn */
 int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
-		bfcp_recv_h *recvh, void *arg);
+		struct tls *tls, bfcp_recv_h *recvh, void *arg);
 void *bfcp_sock(const struct bfcp_conn *bc);
 
 

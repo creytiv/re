@@ -11,6 +11,7 @@
 #include <re_list.h>
 #include <re_sa.h>
 #include <re_udp.h>
+#include <re_tls.h>
 #include <re_tmr.h>
 #include <re_bfcp.h>
 #include "bfcp.h"
@@ -23,6 +24,7 @@ static void destructor(void *arg)
 	list_flush(&bc->ctransl);
 	tmr_cancel(&bc->tmr1);
 	tmr_cancel(&bc->tmr2);
+	mem_deref(bc->ss);
 	mem_deref(bc->us);
 	mem_deref(bc->mb);
 }
@@ -81,13 +83,14 @@ out:
  * @param bcp   Pointer to BFCP connection
  * @param tp    BFCP Transport type
  * @param laddr Optional listening address/port
+ * @param tls   TLS Context (optional)
  * @param recvh Receive handler
  * @param arg   Receive handler argument
  *
  * @return 0 if success, otherwise errorcode
  */
 int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
-		bfcp_recv_h *recvh, void *arg)
+		struct tls *tls, bfcp_recv_h *recvh, void *arg)
 {
 	struct bfcp_conn *bc;
 	int err;
@@ -106,6 +109,7 @@ int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
 	switch (bc->tp) {
 
 	case BFCP_UDP:
+	case BFCP_DTLS:
 		err = udp_listen(&bc->us, laddr, udp_recv_handler, bc);
 		if (err)
 			goto out;
@@ -120,6 +124,18 @@ int bfcp_listen(struct bfcp_conn **bcp, enum bfcp_transp tp, struct sa *laddr,
 	default:
 		err = ENOSYS;
 		goto out;
+	}
+
+	if (bc->tp == BFCP_DTLS) {
+
+#ifdef USE_OPENSSL_DTLS
+		err = tls_start_udp(&bc->ss, tls, bc->us, 0, 4);
+#else
+		(void)tls;
+		err = ENOSYS;
+#endif
+		if (err)
+			goto out;
 	}
 
  out:
@@ -140,6 +156,7 @@ int bfcp_send(struct bfcp_conn *bc, const struct sa *dst, struct mbuf *mb)
 	switch (bc->tp) {
 
 	case BFCP_UDP:
+	case BFCP_DTLS:
 		return udp_send(bc->us, dst, mb);
 
 	default:
