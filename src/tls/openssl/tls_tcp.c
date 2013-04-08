@@ -23,6 +23,7 @@
 #include <re_dbg.h>
 
 
+/* NOTE: shadow struct defined in tls_*.c */
 struct tls_conn {
 	SSL *ssl;
 	BIO *sbio_out;

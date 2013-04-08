@@ -32,6 +32,7 @@ struct tls_sock {
 	struct tls *tls;
 };
 
+/* NOTE: shadow struct defined in tls_*.c */
 struct tls_conn {
 	SSL *ssl;             /* inheritance */
 	BIO *sbio_out;

@@ -25,6 +25,7 @@
 #include <re_dbg.h>
 
 
+/* NOTE: shadow struct defined in tls_*.c */
 struct tls_conn {
 	SSL *ssl;
 };
@@ -259,40 +260,6 @@ static const EVP_MD *type2evp(const char *type)
 		return EVP_sha1();
 	else
 		return NULL;
-}
-
-
-int tls_get_local_fingerprint(const struct tls *tls, const char *type,
-			      struct tls_fingerprint *fp)
-{
-	SSL *ssl;
-	X509 *x;
-	int err = 0;
-
-	if (!tls || !fp)
-		return EINVAL;
-
-	ssl = SSL_new(tls->ctx);
-	if (!ssl)
-		return ENOMEM;
-
-	x = SSL_get_certificate(ssl);
-	if (!x) {
-		err = ENOENT;
-		goto out;
-	}
-
-	fp->len = sizeof(fp->md);
-	if (1 != X509_digest(x, type2evp(type), fp->md, &fp->len)) {
-		err = ENOENT;
-		goto out;
-	}
-
- out:
-	(void)SSL_shutdown(ssl);
-	SSL_free(ssl);
-
-	return err;
 }
 
 
