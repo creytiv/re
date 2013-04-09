@@ -497,6 +497,9 @@ static void tcp_conn_handler(int flags, void *arg)
 
 	sa_init(&peer, AF_UNSPEC);
 
+	if (ts->fdc >= 0)
+		(void)close(ts->fdc);
+
 	ts->fdc = SOK_CAST accept(ts->fd, &peer.u.sa, &peer.len);
 	if (-1 == ts->fdc) {
 
@@ -605,7 +608,7 @@ int tcp_sock_alloc(struct tcp_sock **tsp, const struct sa *local,
 	for (r = res; r; r = r->ai_next) {
 		int fd = -1;
 
-		if (ts->fd > 0)
+		if (ts->fd >= 0)
 			continue;
 
 		fd = SOK_CAST socket(r->ai_family, SOCK_STREAM, IPPROTO_TCP);
@@ -760,7 +763,7 @@ int tcp_accept(struct tcp_conn **tcp, struct tcp_sock *ts, tcp_estab_h *eh,
 	struct tcp_conn *tc;
 	int err;
 
-	if (!tcp || !ts)
+	if (!tcp || !ts || ts->fdc < 0)
 		return EINVAL;
 
 	tc = conn_alloc(eh, rh, ch, arg);
@@ -796,7 +799,7 @@ void tcp_reject(struct tcp_sock *ts)
 	if (!ts)
 		return;
 
-	if (ts->fdc > 0) {
+	if (ts->fdc >= 0) {
 		(void)close(ts->fdc);
 		ts->fdc = -1;
 	}
@@ -1030,7 +1033,6 @@ int tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer)
 				goto again;
 
 			if (EINPROGRESS != errno && EALREADY != errno) {
-				tc->fdc = -1;
 				err = errno;
 				DEBUG_INFO("connect: connect() %J: %m\n",
 					   peer, err);
@@ -1256,7 +1258,7 @@ int tcp_conn_local_get(const struct tcp_conn *tc, struct sa *local)
  */
 int tcp_conn_peer_get(const struct tcp_conn *tc, struct sa *peer)
 {
-	if (!tc)
+	if (!tc || !peer)
 		return EINVAL;
 
 	sa_init(peer, AF_UNSPEC);
