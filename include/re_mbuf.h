@@ -89,7 +89,7 @@ static inline uint8_t *mbuf_buf(const struct mbuf *mb)
  */
 static inline size_t mbuf_get_left(const struct mbuf *mb)
 {
-	return mb ? (mb->end - mb->pos) : 0;
+	return (mb && (mb->end > mb->pos)) ? (mb->end - mb->pos) : 0;
 }
 
 
@@ -102,7 +102,7 @@ static inline size_t mbuf_get_left(const struct mbuf *mb)
  */
 static inline size_t mbuf_get_space(const struct mbuf *mb)
 {
-	return mb ? (mb->size - mb->pos) : 0;
+	return (mb && (mb->size > mb->pos)) ? (mb->size - mb->pos) : 0;
 }
 
 
