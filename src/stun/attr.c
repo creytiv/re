@@ -422,7 +422,8 @@ void stun_attr_dump(const struct stun_attr *a)
 		break;
 
 	case STUN_ATTR_MSG_INTEGRITY:
-		(void)re_printf("%w", &a->v.msg_integrity, 20);
+		(void)re_printf("%w", a->v.msg_integrity,
+				sizeof(a->v.msg_integrity));
 		break;
 
 	case STUN_ATTR_ERR_CODE:
@@ -446,9 +447,10 @@ void stun_attr_dump(const struct stun_attr *a)
 
 	case STUN_ATTR_DATA:
 	case STUN_ATTR_PADDING:
-		len = mbuf_get_left(&a->v.mb);
-		(void)re_printf("%w%s (%u bytes)", mbuf_buf(&a->v.mb),
-				MIN(len, 16), len > 16 ? "..." : "", len);
+		len = min(mbuf_get_left(&a->v.mb), 16);
+		(void)re_printf("%w%s (%zu bytes)", mbuf_buf(&a->v.mb), len,
+				mbuf_get_left(&a->v.mb) > 16 ? "..." : "",
+				mbuf_get_left(&a->v.mb));
 		break;
 
 	case STUN_ATTR_REQ_ADDR_FAMILY:

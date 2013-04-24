@@ -364,7 +364,7 @@ void stun_msg_dump(const struct stun_msg *msg)
 			stun_method_name(stun_msg_method(msg)),
 			stun_class_name(stun_msg_class(msg)),
 			msg->hdr.len, msg->hdr.cookie,
-			msg->hdr.tid, STUN_TID_SIZE);
+			msg->hdr.tid, sizeof(msg->hdr.tid));
 
 	stun_msg_attr_apply(msg, attr_print, NULL);
 }

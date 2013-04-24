@@ -131,15 +131,15 @@ int sipsess_reinvite(struct sipsess *sess, bool reset_ls)
 			     sess->dlg, 0, sess->auth,
 			     send_handler, reinvite_resp_handler, sess,
 			     "%s%s%s"
-			     "Content-Length: %u\r\n"
+			     "Content-Length: %zu\r\n"
 			     "\r\n"
 			     "%b",
 			     sess->desc ? "Content-Type: " : "",
 			     sess->desc ? sess->ctype : "",
 			     sess->desc ? "\r\n" : "",
-			     sess->desc ? mbuf_get_left(sess->desc) : 0,
+			     sess->desc ? mbuf_get_left(sess->desc) :(size_t)0,
 			     sess->desc ? mbuf_buf(sess->desc) : NULL,
-			     sess->desc ? mbuf_get_left(sess->desc) : 0);
+			     sess->desc ? mbuf_get_left(sess->desc):(size_t)0);
 }
 
 

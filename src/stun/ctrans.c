@@ -332,11 +332,11 @@ static bool debug_handler(struct le *le, void *arg)
 	int err = 0;
 
 	err |= re_hprintf(pf, " method=%s", stun_method_name(ct->met));
-	err |= re_hprintf(pf, " tid=%w", ct->tid, STUN_TID_SIZE);
+	err |= re_hprintf(pf, " tid=%w", ct->tid, sizeof(ct->tid));
 	err |= re_hprintf(pf, " rto=%ums", stun_conf(ct->stun)->rto);
 	err |= re_hprintf(pf, " tmr=%llu", tmr_get_expire(&ct->tmr));
-	err |= re_hprintf(pf, " n=%d", ct->txc);
-	err |= re_hprintf(pf, " interval=%d", ct->ival);
+	err |= re_hprintf(pf, " n=%u", ct->txc);
+	err |= re_hprintf(pf, " interval=%u", ct->ival);
 	err |= re_hprintf(pf, "\n");
 
 	return 0 != err;

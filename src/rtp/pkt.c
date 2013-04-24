@@ -133,7 +133,7 @@ int rtcp_vencode(struct mbuf *mb, enum rtcp_type type, uint32_t count,
 	size_t i, pos;
 	uint16_t len;
 	const uint8_t *data;
-	uint32_t data_len;
+	size_t data_len;
 	const uint32_t *srcv;
 	const char *reason;
 	rtcp_encode_h *ench;
@@ -190,7 +190,7 @@ int rtcp_vencode(struct mbuf *mb, enum rtcp_type type, uint32_t count,
 		err  = mbuf_write_u32(mb, htonl(va_arg(ap, uint32_t)));
 		err |= mbuf_write_mem(mb, va_arg(ap, uint8_t *), 4);
 		data = va_arg(ap, const uint8_t *);
-		data_len = va_arg(ap, uint32_t);
+		data_len = va_arg(ap, size_t);
 		if (data) {
 			if (data_len % 4) {
 				DEBUG_WARNING("not a multiple of 32bits\n");

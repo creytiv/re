@@ -133,17 +133,17 @@ static int invite(struct sipsess *sess)
 			     send_handler, invite_resp_handler, sess,
 			     "%b"
 			     "%s%s%s"
-			     "Content-Length: %u\r\n"
+			     "Content-Length: %zu\r\n"
 			     "\r\n"
 			     "%b",
 			     sess->hdrs ? mbuf_buf(sess->hdrs) : NULL,
-			     sess->hdrs ? mbuf_get_left(sess->hdrs) : 0,
+			     sess->hdrs ? mbuf_get_left(sess->hdrs) :(size_t)0,
 			     sess->desc ? "Content-Type: " : "",
 			     sess->desc ? sess->ctype : "",
 			     sess->desc ? "\r\n" : "",
-			     sess->desc ? mbuf_get_left(sess->desc) : 0,
+			     sess->desc ? mbuf_get_left(sess->desc) :(size_t)0,
 			     sess->desc ? mbuf_buf(sess->desc) : NULL,
-			     sess->desc ? mbuf_get_left(sess->desc) : 0);
+			     sess->desc ? mbuf_get_left(sess->desc):(size_t)0);
 }
 
 

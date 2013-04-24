@@ -206,7 +206,8 @@ int rtcp_msg_print(struct re_printf *pf, const struct rtcp_msg *msg)
 				item = &sdes->itemv[j];
 				err = re_hprintf(pf, " <%s:%b>",
 						 rtcp_sdes_name(item->type),
-						 item->data, item->length);
+						 item->data,
+						 (size_t)item->length);
 			}
 			err |= re_hprintf(pf, "}");
 		}

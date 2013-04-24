@@ -97,7 +97,7 @@ int sipsess_reply_2xx(struct sipsess *sess, const struct sip_msg *msg,
 			  "Contact: <sip:%s@%J%s>\r\n"
 			  "%v"
 			  "%s%s%s"
-			  "Content-Length: %u\r\n"
+			  "Content-Length: %zu\r\n"
 			  "\r\n"
 			  "%b",
 			  sess->cuser, &msg->dst, sip_transp_param(msg->tp),
@@ -105,9 +105,9 @@ int sipsess_reply_2xx(struct sipsess *sess, const struct sip_msg *msg,
 			  desc ? "Content-Type: " : "",
 			  desc ? sess->ctype : "",
 			  desc ? "\r\n" : "",
-			  desc ? mbuf_get_left(desc) : 0,
+			  desc ? mbuf_get_left(desc) : (size_t)0,
 			  desc ? mbuf_buf(desc) : NULL,
-			  desc ? mbuf_get_left(desc) : 0);
+			  desc ? mbuf_get_left(desc) : (size_t)0);
 
 	if (err)
 		goto out;

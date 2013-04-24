@@ -294,7 +294,7 @@ static int request(struct sipreg *reg, bool reset_ls)
 			     reg->regid > 0
 			     ? "Supported: outbound, path\r\n" : "",
 			     reg->hdrs ? mbuf_buf(reg->hdrs) : NULL,
-			     reg->hdrs ? mbuf_get_left(reg->hdrs) : 0);
+			     reg->hdrs ? mbuf_get_left(reg->hdrs) : (size_t)0);
 }
 
 

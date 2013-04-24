@@ -108,7 +108,7 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 				  "Contact: <sip:%s@%J%s>\r\n"
 				  "%v"
 				  "%s%s%s"
-				  "Content-Length: %u\r\n"
+				  "Content-Length: %zu\r\n"
 				  "\r\n"
 				  "%b",
 				  sess->cuser, &msg->dst,
@@ -117,9 +117,9 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 				  desc ? "Content-Type: " : "",
 				  desc ? sess->ctype : "",
 				  desc ? "\r\n" : "",
-				  desc ? mbuf_get_left(desc) : 0,
+				  desc ? mbuf_get_left(desc) : (size_t)0,
 				  desc ? mbuf_buf(desc) : NULL,
-				  desc ? mbuf_get_left(desc) : 0);
+				  desc ? mbuf_get_left(desc) : (size_t)0);
 
 	va_end(ap);
 
@@ -163,7 +163,7 @@ int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 			  "Contact: <sip:%s@%J%s>\r\n"
 			  "%v"
 			  "%s%s%s"
-			  "Content-Length: %u\r\n"
+			  "Content-Length: %zu\r\n"
 			  "\r\n"
 			  "%b",
 			  sess->cuser, &sess->msg->dst,
@@ -172,9 +172,9 @@ int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 			  desc ? "Content-Type: " : "",
 			  desc ? sess->ctype : "",
 			  desc ? "\r\n" : "",
-			  desc ? mbuf_get_left(desc) : 0,
+			  desc ? mbuf_get_left(desc) : (size_t)0,
 			  desc ? mbuf_buf(desc) : NULL,
-			  desc ? mbuf_get_left(desc) : 0);
+			  desc ? mbuf_get_left(desc) : (size_t)0);
 
 	va_end(ap);
 

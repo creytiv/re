@@ -188,7 +188,7 @@ int httpauth_digest_response_auth(const struct httpauth_digest_resp *resp,
 
 	if (pl_isset(&resp->qop))
 		err = md5_printf(digest, "%w:%r:%r:%r:%r:%w",
-				 ha1, MD5_SIZE,
+				 ha1, (size_t)MD5_SIZE,
 				 &resp->nonce,
 				 &resp->nc,
 				 &resp->cnonce,
@@ -196,7 +196,7 @@ int httpauth_digest_response_auth(const struct httpauth_digest_resp *resp,
 				 ha2, sizeof(ha2));
 	else
 		err = md5_printf(digest, "%w:%r:%w",
-				 ha1, MD5_SIZE,
+				 ha1, (size_t)MD5_SIZE,
 				 &resp->nonce,
 				 ha2, sizeof(ha2));
 	if (err)

@@ -78,7 +78,7 @@ static int info_request(struct sipsess_request *req)
 			     req->sess->dlg, 0, req->sess->auth,
 			     NULL, info_resp_handler, req,
 			     "Content-Type: %s\r\n"
-			     "Content-Length: %u\r\n"
+			     "Content-Length: %zu\r\n"
 			     "\r\n"
 			     "%b",
 			     req->ctype,
