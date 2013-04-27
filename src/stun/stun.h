@@ -42,11 +42,6 @@ struct stun {
 	void *arg;
 };
 
-int stun_msg_vencode(struct mbuf *mb, uint16_t method, uint8_t class,
-		     const uint8_t *tid, const struct stun_errcode *ec,
-		     const uint8_t *key, size_t keylen, bool fp,
-		     uint8_t padding, uint32_t attrc, va_list ap);
-
 int stun_hdr_encode(struct mbuf *mb, const struct stun_hdr *hdr);
 int stun_hdr_decode(struct mbuf *mb, struct stun_hdr *hdr);
 
