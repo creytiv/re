@@ -512,6 +512,43 @@ int mbuf_write_pl_skip(struct mbuf *mb, const struct pl *pl,
 
 
 /**
+ * Write n bytes of value 'c' to a memory buffer
+ *
+ * @param mb   Memory buffer
+ * @param c    Value to write
+ * @param n    Number of bytes to write
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int mbuf_fill(struct mbuf *mb, uint8_t c, size_t n)
+{
+	size_t rsize;
+
+	if (!mb || !n)
+		return EINVAL;
+
+	rsize = mb->pos + n;
+
+	if (rsize > mb->size) {
+		const size_t dsize = mb->size ? (mb->size * 2)
+			: DEFAULT_SIZE;
+		int err;
+
+		err = mbuf_resize(mb, MAX(rsize, dsize));
+		if (err)
+			return err;
+	}
+
+	memset(mb->buf + mb->pos, c, n);
+
+	mb->pos += n;
+	mb->end  = MAX(mb->end, mb->pos);
+
+	return 0;
+}
+
+
+/**
  * Debug the memory buffer
  *
  * @param pf Print handler
