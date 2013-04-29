@@ -1,3 +1,32 @@
+2013-04-27 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.3
+
+	* bfcp: added udp
+
+	* dns: added doxygen comments
+
+	* fmt: added str_cmp()
+
+	* mbuf: make mbuf_get_left() and mbuf_get_space() more robust
+
+	* mod: fixed a bug in mod_find()
+
+	* mqueue: move handler to mqueue_alloc()
+
+	* sa: fix building on some Windows platforms
+
+	* sdp: added sdp_session_lbandwidth()
+	       added sdp_media_set_fmt_ignore()
+
+	* stun: make stun_msg_vencode() public
+		unlink element from attribute-list in destructor
+
+	* tcp: make fd handling more robust
+
+	* tls: added tls_get_remote_fingerprint()
+
+
 2012-08-10 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.2
