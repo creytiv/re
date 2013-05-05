@@ -1,4 +1,4 @@
-2013-04-27 Alfred E. Heggestad <aeh@db.org>
+2013-05-05 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.3
 
@@ -9,6 +9,7 @@
 	* fmt: added str_cmp()
 
 	* mbuf: make mbuf_get_left() and mbuf_get_space() more robust
+	        added mbuf_fill()
 
 	* mod: fixed a bug in mod_find()
 
