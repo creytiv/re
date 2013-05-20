@@ -224,7 +224,7 @@ int mod_debug(struct re_printf *pf, void *unused)
 		const struct mod *m = le->data;
 		const struct mod_export *me = m->me;
 
-		err = re_hprintf(pf, " %16s type=%-6s ref=%u\n",
+		err = re_hprintf(pf, " %16s type=%-12s ref=%u\n",
 				 me->name, me->type, mem_nrefs(m));
 	}
 
