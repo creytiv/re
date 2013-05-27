@@ -35,11 +35,10 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 		cp = icem_candpair_find(&icem->checkl, lcand, rcand);
 
 	if (cp) {
-		DEBUG_NOTICE("{%s.%u} triggered_check: found CANDPAIR on"
-			     " checklist in state: %s [%H]\n",
-			     icem->name, cp->comp->id,
-			     ice_candpair_state2name(cp->state),
-			     icem_candpair_debug, cp);
+		icecomp_printf(cp->comp,
+			       "triggered_check: found CandidatePair on"
+			       " checklist in state: %H\n",
+			       icem_candpair_debug, cp);
 
 		switch (cp->state) {
 
@@ -73,6 +72,8 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 		}
 	}
 	else {
+
+#if 0
 		err = icem_candpair_alloc(&cp, icem, lcand, rcand);
 		if (err) {
 			DEBUG_WARNING("failed to allocate candpair:"
@@ -86,108 +87,51 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 		icem_candpair_set_state(cp, CANDPAIR_WAITING);
 
 		(void)icem_conncheck_send(cp, false, true);
+#endif
+
 	}
 }
 
 
-static struct candpair *lookup_candpair(struct icem *icem,
-					const struct cand *rcand)
+static int handle_stun(struct ice *ice, struct icem *icem,
+		       struct icem_comp *comp, const struct sa *src,
+		       uint32_t prio, bool use_cand, bool tunnel)
 {
-	struct candpair *cp;
-
-	cp = icem_candpair_find(&icem->checkl, NULL, rcand);
-	if (cp)
-		return cp;
-
-	cp = icem_candpair_find(&icem->validl, NULL, rcand);
-	if (cp)
-		return cp;
-
-	return NULL;
-}
-
-
-/**
- * Find the highest priority LCAND on the check-list of type HOST/RELAY
- */
-static struct cand *lookup_lcand(struct icem *icem, uint8_t compid)
-{
-	struct le *le;
-
-	for (le = icem->checkl.head; le; le = le->next) {
-		struct candpair *cp = le->data;
-
-		if (cp->lcand->compid != compid)
-			continue;
-
-		switch (cp->lcand->type) {
-
-		case CAND_TYPE_HOST:
-		case CAND_TYPE_RELAY:
-			return cp->lcand;
-
-		default:
-			break;
-		}
-	}
-
-	return NULL;
-}
-
-
-static void handle_stun(struct ice *ice, struct icem *icem,
-			struct icem_comp *comp, const struct sa *src,
-			uint32_t prio, bool use_cand, bool tunnel)
-{
-	struct cand *lcand = NULL, *rcand = NULL;
+	struct cand *lcand = NULL, *rcand;
 	struct candpair *cp = NULL;
 	int err;
 
-	if (icem->state != CHECKLIST_RUNNING) {
-		DEBUG_WARNING("{%s.%u} src=%J Checklist is not running (%s)\n",
-			      icem->name, comp->id, src,
-			      ice_checkl_state2name(icem->state));
-		return;
-	}
-
-	/* 7.2.1.3.  Learning Peer Reflexive Candidates */
 	rcand = icem_cand_find(&icem->rcandl, comp->id, src);
 	if (!rcand) {
-
-		icecomp_printf(comp, "Adding PRFLX remote candidate: %J\n",
-			       src);
-
 		err = icem_rcand_add_prflx(&rcand, icem, comp->id, prio, src);
-		if (err) {
-			DEBUG_WARNING("icem_rcand_add_prflx: %m\n", err);
-			return;
-		}
+		if (err)
+			return err;
 	}
 
-	cp = lookup_candpair(icem, rcand);
+	cp = icem_candpair_find_rcand(icem, rcand);
 	if (cp)
 		lcand = cp->lcand;
-	else {
-		lcand = lookup_lcand(icem, comp->id);
-	}
+	else
+		lcand = icem_lcand_find_checklist(icem, comp->id);
 
 	if (!lcand) {
-		DEBUG_WARNING("{%s.%u} no local candidate (checkl=%u)\n",
+		DEBUG_WARNING("{%s.%u} no local candidate"
+			      " (checklist=%u) (src=%J)\n",
 			      icem->name, comp->id,
-			      list_count(&icem->checkl));
+			      list_count(&icem->checkl), src);
+		return 0;
 	}
 
-	/* 7.2.1.4.  Triggered Checks */
 	if (ICE_MODE_FULL == ice->lmode)
 		triggered_check(icem, lcand, rcand);
 
 	if (!cp) {
-		cp = lookup_candpair(icem, rcand);
-
+		cp = icem_candpair_find_rcand(icem, rcand);
 		if (!cp) {
 			DEBUG_WARNING("{%s.%u} candidate pair not found:"
 				      " source=%J\n",
 				      icem->name, comp->id, src);
+			return 0;
 		}
 	}
 
@@ -204,25 +148,39 @@ static void handle_stun(struct ice *ice, struct icem *icem,
 	/* 7.2.1.5.  Updating the Nominated Flag */
 	if (use_cand) {
 		if (ice->lrole == ROLE_CONTROLLED) {
-			if (cp && cp->state == CANDPAIR_SUCCEEDED) {
-				DEBUG_NOTICE("{%s.%u} setting NOMINATED"
-					     " flag on candpair [%H]\n",
-					     icem->name, comp->id,
-					     icem_candpair_debug, cp);
+			if (cp->state == CANDPAIR_SUCCEEDED) {
 				cp->nominated = true;
+
+				icecomp_printf(comp, "setting NOMINATED"
+					       " flag on candpair [%H]\n",
+					       icem_candpair_debug, cp);
 			}
 		}
 
 		/* Cancel conncheck. Choose Selected Pair */
-		if (cp) {
-			icem_candpair_make_valid(cp);
+		icem_candpair_make_valid(cp);
 
-			if (ice->conf.nom == ICE_NOMINATION_REGULAR) {
-				icem_candpair_cancel(cp);
-				icem_comp_set_selected(comp, cp);
-			}
+		if (ice->conf.nom == ICE_NOMINATION_REGULAR) {
+			icem_candpair_cancel(cp);
+			icem_comp_set_selected(comp, cp);
 		}
 	}
+
+	return 0;
+}
+
+
+static int stunsrv_ereply(struct icem_comp *comp, const struct sa *src,
+			  size_t presz, const struct stun_msg *req,
+			  uint16_t scode, const char *reason)
+{
+	struct icem *icem = comp->icem;
+	struct ice *ice = icem->ice;
+
+	return stun_ereply(icem->proto, comp->sock, src, presz, req,
+			   scode, reason,
+			   (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 1,
+			   STUN_ATTR_SOFTWARE, sw);
 }
 
 
@@ -297,7 +255,10 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 	if (attr)
 		use_cand = true;
 
-	handle_stun(ice, icem, comp, src, prio_prflx, use_cand, presz > 0);
+	err = handle_stun(ice, icem, comp, src, prio_prflx,
+			  use_cand, presz > 0);
+	if (err)
+		goto badmsg;
 
 	return stun_reply(icem->proto, comp->sock, src, presz, req,
 			  (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 2,
@@ -305,20 +266,11 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 			  STUN_ATTR_SOFTWARE, sw);
 
  badmsg:
-	return stun_ereply(icem->proto, comp->sock, src, presz, req,
-			   400, "Bad Request",
-			   (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 1,
-			   STUN_ATTR_SOFTWARE, sw);
+	return stunsrv_ereply(comp, src, presz, req, 400, "Bad Request");
 
  unauth:
-	return stun_ereply(icem->proto, comp->sock, src, presz, req,
-			   401, "Unauthorized",
-			   (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 1,
-			   STUN_ATTR_SOFTWARE, sw);
+	return stunsrv_ereply(comp, src, presz, req, 401, "Unauthorized");
 
  conflict:
-	return stun_ereply(icem->proto, comp->sock, src, presz, req,
-			   487, "Role Conflict",
-			   (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 1,
-			   STUN_ATTR_SOFTWARE, sw);
+	return stunsrv_ereply(comp, src, presz, req, 487, "Role Conflict");
 }

@@ -32,7 +32,6 @@ static void icem_destructor(void *data)
 	list_flush(&icem->checkl);
 	list_flush(&icem->lcandl);
 	list_flush(&icem->rcandl);
-	mem_deref(icem->stun);
 	mem_deref(icem->rufrag);
 	mem_deref(icem->rpwd);
 }
@@ -81,17 +80,6 @@ int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 	icem->gh    = gh;
 	icem->chkh  = chkh;
 	icem->arg   = arg;
-
-	if (ICE_MODE_FULL == ice->lmode) {
-
-		err = stun_alloc(&icem->stun, NULL, NULL, NULL);
-		if (err)
-			goto out;
-
-		/* Update STUN Transport */
-		stun_conf(icem->stun)->rto = ice->conf.rto;
-		stun_conf(icem->stun)->rc = ice->conf.rc;
-	}
 
 	if (err)
 		goto out;
@@ -190,25 +178,27 @@ static void *unique_handler(struct le *le1, struct le *le2)
 /** Eliminating Redundant Candidates */
 void icem_cand_redund_elim(struct icem *icem)
 {
-	uint32_t n = ice_list_unique(&icem->lcandl, unique_handler);
+	uint32_t n;
+
+	n = ice_list_unique(&icem->lcandl, unique_handler);
 	if (n > 0) {
-		DEBUG_NOTICE("%s: redundant candidates eliminated: %u\n",
-			     icem->name, n);
+		icem_printf(icem, "redundant candidates eliminated: %u\n", n);
 	}
 }
 
 
 /**
- * Get the Default Candidate
+ * Get the Default Local Candidate
  *
  * @param icem   ICE Media object
  * @param compid Component ID
  *
- * @return Default Candidate address if set, otherwise NULL
+ * @return Default Local Candidate address if set, otherwise NULL
  */
 const struct sa *icem_cand_default(struct icem *icem, uint8_t compid)
 {
 	const struct icem_comp *comp = icem_comp_find(icem, compid);
+
 	if (!comp || !comp->def_lcand)
 		return NULL;
 
@@ -347,7 +337,6 @@ bool icem_mismatch(const struct icem *icem)
  */
 int icem_debug(struct re_printf *pf, const struct icem *icem)
 {
-	struct le *le;
 	int err = 0;
 
 	if (!icem)
@@ -365,18 +354,6 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 	err |= re_hprintf(pf, " Valid list: %H",
 			  icem_candpairs_debug, &icem->validl);
 
-	for (le = icem->compl.head; le; le = le->next) {
-
-		const struct icem_comp *comp = le->data;
-
-		if (comp->cp_sel) {
-			err |= re_hprintf(pf, " Selected: %H\n",
-					  icem_candpair_debug, comp->cp_sel);
-		}
-	}
-
-	err |= stun_debug(pf, icem->stun);
-
 	return err;
 }
 
@@ -391,4 +368,17 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 struct list *icem_lcandl(const struct icem *icem)
 {
 	return icem ? (struct list *)&icem->lcandl : NULL;
+}
+
+
+void icem_printf(struct icem *icem, const char *fmt, ...)
+{
+	va_list ap;
+
+	if (!icem || !icem->ice->conf.debug)
+		return;
+
+	va_start(ap, fmt);
+	(void)re_printf("{%11s. } %v", icem->name, fmt, &ap);
+	va_end(ap);
 }

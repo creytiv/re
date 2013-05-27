@@ -188,7 +188,14 @@ int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
 	rcand->addr   = *addr;
 
 	err = re_sdprintf(&rcand->foundation, "%08x", rand_u32());
+	if (err)
+		goto out;
 
+	icecomp_printf(icem_comp_find(icem, compid),
+		       "added PeerReflexive remote candidate"
+		       " with priority %u (%J)\n", prio, addr);
+
+ out:
 	if (err)
 		mem_deref(rcand);
 	else if (rcp)
@@ -214,6 +221,34 @@ struct cand *icem_cand_find(const struct list *lst, uint8_t compid,
 			continue;
 
 		return cand;
+	}
+
+	return NULL;
+}
+
+
+/**
+ * Find the highest priority LCAND on the check-list of type HOST/RELAY
+ */
+struct cand *icem_lcand_find_checklist(const struct icem *icem, uint8_t compid)
+{
+	struct le *le;
+
+	for (le = icem->checkl.head; le; le = le->next) {
+		struct candpair *cp = le->data;
+
+		if (cp->lcand->compid != compid)
+			continue;
+
+		switch (cp->lcand->type) {
+
+		case CAND_TYPE_HOST:
+		case CAND_TYPE_RELAY:
+			return cp->lcand;
+
+		default:
+			break;
+		}
 	}
 
 	return NULL;

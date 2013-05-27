@@ -32,6 +32,11 @@ static int candpairs_form(struct icem *icem)
 	if (list_isempty(&icem->lcandl))
 		return ENOENT;
 
+	if (list_isempty(&icem->rcandl)) {
+		DEBUG_WARNING("%s: no remote candidates\n", icem->name);
+		return ENOENT;
+	}
+
 	for (le = icem->lcandl.head; le; le = le->next) {
 
 		struct cand *lcand = le->data;
@@ -47,7 +52,9 @@ static int candpairs_form(struct icem *icem)
 			if (sa_af(&lcand->addr) != sa_af(&rcand->addr))
 				continue;
 
-			err |= icem_candpair_alloc(NULL, icem, lcand, rcand);
+			err = icem_candpair_alloc(NULL, icem, lcand, rcand);
+			if (err)
+				return err;
 		}
 	}
 
@@ -62,9 +69,13 @@ static const struct sa *cand_srflx_addr(const struct cand *c)
 }
 
 
+/* return: NULL to keep, pointer to remove object */
 static void *unique_handler(struct le *le1, struct le *le2)
 {
 	struct candpair *cp1 = le1->data, *cp2 = le2->data;
+
+	if (cp1->comp->id != cp2->comp->id)
+		return NULL;
 
 	if (!sa_cmp(cand_srflx_addr(cp1->lcand),
 		    cand_srflx_addr(cp2->lcand), SA_ALL) ||
@@ -236,9 +247,11 @@ static void concluding_ice(struct icem_comp *comp)
 void icem_checklist_update(struct icem *icem)
 {
 	struct le *le;
+	bool compl;
 	int err = 0;
 
-	if (!iscompleted(icem))
+	compl = iscompleted(icem);
+	if (!compl)
 		return;
 
 	/*
@@ -268,9 +281,10 @@ void icem_checklist_update(struct icem *icem)
 
 	icem->state = err ? CHECKLIST_FAILED : CHECKLIST_COMPLETED;
 
-	if (icem->chkh)
+	if (icem->chkh) {
 		icem->chkh(err, icem->ice->lrole == ROLE_CONTROLLING,
 			   icem->arg);
+	}
 }
 
 

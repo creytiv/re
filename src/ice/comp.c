@@ -27,27 +27,6 @@
 enum {COMPID_MIN = 1, COMPID_MAX = 255};
 
 
-#if 0
-/* for debugging */
-static bool helper_send_handler(int *err, struct sa *dst,
-				struct mbuf *mb, void *arg)
-{
-	struct icem_comp *comp = arg;
-
-	(void)comp;
-	(void)err;
-	(void)dst;
-	(void)mb;
-
-	re_printf("{id=%d} ......... UDP send %u bytes  to  %J via %s\n",
-		  comp->id, mbuf_get_left(mb), dst,
-		  (mb->pos && comp->turnc) ? "tunnel" : "socket");
-
-	return false;
-}
-#endif
-
-
 static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 {
 	struct icem_comp *comp = arg;
@@ -73,7 +52,7 @@ static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 			break;
 
 		default:
-			(void)stun_ctrans_recv(icem->stun, msg, &ua);
+			(void)stun_ctrans_recv(icem->ice->stun, msg, &ua);
 			break;
 		}
 	}
@@ -155,8 +134,7 @@ int icem_comp_alloc(struct icem_comp **cp, struct icem *icem, int id,
 	comp->icem = icem;
 
 	err = udp_register_helper(&comp->uh, sock, icem->layer,
-				  NULL, /*helper_send_handler*/
-				  helper_recv_handler, comp);
+				  NULL, helper_recv_handler, comp);
 	if (err)
 		goto out;
 
@@ -290,6 +268,6 @@ void icecomp_printf(struct icem_comp *comp, const char *fmt, ...)
 		return;
 
 	va_start(ap, fmt);
-	(void)re_printf("{%s.%u} %v", comp->icem->name, comp->id, fmt, &ap);
+	(void)re_printf("{%11s.%u} %v", comp->icem->name, comp->id, fmt, &ap);
 	va_end(ap);
 }

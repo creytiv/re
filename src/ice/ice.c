@@ -50,6 +50,7 @@ static void ice_destructor(void *arg)
 	struct ice *ice = arg;
 
 	list_flush(&ice->ml);
+	mem_deref(ice->stun);
 }
 
 
@@ -65,6 +66,7 @@ static void ice_destructor(void *arg)
 int ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer)
 {
 	struct ice *ice;
+	int err = 0;
 
 	if (!icep)
 		return EINVAL;
@@ -84,9 +86,24 @@ int ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer)
 
 	ice_determine_role(ice, offerer);
 
-	*icep = ice;
+	if (ICE_MODE_FULL == ice->lmode) {
 
-	return 0;
+		err = stun_alloc(&ice->stun, NULL, NULL, NULL);
+		if (err)
+			goto out;
+
+		/* Update STUN Transport */
+		stun_conf(ice->stun)->rto = ice->conf.rto;
+		stun_conf(ice->stun)->rc = ice->conf.rc;
+	}
+
+ out:
+	if (err)
+		mem_deref(ice);
+	else
+		*icep = ice;
+
+	return err;
 }
 
 
@@ -165,6 +182,8 @@ int ice_debug(struct re_printf *pf, const struct ice *ice)
 
 	for (le = ice->ml.head; le; le = le->next)
 		err |= icem_debug(pf, le->data);
+
+	err |= stun_debug(pf, ice->stun);
 
 	return err;
 }

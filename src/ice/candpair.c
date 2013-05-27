@@ -101,7 +101,6 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 	cp->lcand = mem_ref(lcand);
 	cp->rcand = mem_ref(rcand);
 	cp->state = CANDPAIR_FROZEN;
-	cp->ertt  = -1;
 	cp->def   = comp->def_lcand == lcand && comp->def_rcand == rcand;
 
 	candpair_set_pprio(cp);
@@ -136,8 +135,6 @@ int icem_candpair_clone(struct candpair **cpp, struct candpair *cp0,
 	cp->nominated = cp0->nominated;
 	cp->state     = cp0->state;
 	cp->pprio     = cp0->pprio;
-	cp->usec_sent = cp0->usec_sent;
-	cp->ertt      = cp0->ertt;
 	cp->err       = cp0->err;
 	cp->scode     = cp0->scode;
 
@@ -184,9 +181,6 @@ void icem_candpair_make_valid(struct candpair *cp)
 	cp->scode = 0;
 	cp->valid = true;
 
-	if (cp->usec_sent)
-		cp->ertt = (long)(ice_get_usec() - cp->usec_sent);
-
 	icem_candpair_set_state(cp, CANDPAIR_SUCCEEDED);
 
 	list_unlink(&cp->le);
@@ -211,16 +205,17 @@ void icem_candpair_set_state(struct candpair *cp, enum candpair_state state)
 {
 	if (!cp)
 		return;
+	if (cp->state == state || icem_candpair_iscompleted(cp))
+		return;
 
-	if (cp->state != state) {
-		icecomp_printf(cp->comp,
-			       "%5s <---> %5s  FSM:  %10s ===> %-10s\n",
-			       ice_cand_type2name(cp->lcand->type),
-			       ice_cand_type2name(cp->rcand->type),
-			       ice_candpair_state2name(cp->state),
-			       ice_candpair_state2name(state));
-		cp->state = state;
-	}
+	icecomp_printf(cp->comp,
+		       "%5s <---> %5s  FSM:  %10s ===> %-10s\n",
+		       ice_cand_type2name(cp->lcand->type),
+		       ice_cand_type2name(cp->rcand->type),
+		       ice_candpair_state2name(cp->state),
+		       ice_candpair_state2name(state));
+
+	cp->state = state;
 }
 
 
@@ -355,6 +350,26 @@ struct candpair *icem_candpair_find_compid(const struct list *lst,
 }
 
 
+/**
+ * Find a remote candidate in the checklist or validlist
+ */
+struct candpair *icem_candpair_find_rcand(struct icem *icem,
+					  const struct cand *rcand)
+{
+	struct candpair *cp;
+
+	cp = icem_candpair_find(&icem->checkl, NULL, rcand);
+	if (cp)
+		return cp;
+
+	cp = icem_candpair_find(&icem->validl, NULL, rcand);
+	if (cp)
+		return cp;
+
+	return NULL;
+}
+
+
 bool icem_candpair_cmp_fnd(const struct candpair *cp1,
 			   const struct candpair *cp2)
 {
@@ -373,7 +388,7 @@ int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
 	if (!cp)
 		return 0;
 
-	err = re_hprintf(pf, "{%u} %10s {%c%c%c} %28H <---> %28H",
+	err = re_hprintf(pf, "{comp=%u} %10s {%c%c%c} %28H <---> %28H",
 			 cp->lcand->compid,
 			 ice_candpair_state2name(cp->state),
 			 cp->def ? 'D' : ' ',
@@ -381,9 +396,6 @@ int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
 			 cp->nominated ? 'N' : ' ',
 			 icem_cand_print, cp->lcand,
 			 icem_cand_print, cp->rcand);
-
-	if (cp->ertt != -1)
-		err |= re_hprintf(pf, " ERTT = %.2fms", cp->ertt / 1000.0);
 
 	if (cp->err)
 		err |= re_hprintf(pf, " (%m)", cp->err);
@@ -408,8 +420,11 @@ int icem_candpairs_debug(struct re_printf *pf, const struct list *list)
 	for (le = list->head; le && !err; le = le->next) {
 
 		const struct candpair *cp = le->data;
+		bool is_selected = (cp == cp->comp->cp_sel);
 
-		err = re_hprintf(pf, "  %H\n", icem_candpair_debug, cp);
+		err = re_hprintf(pf, "  %c  %H\n",
+				 is_selected ? '*' : ' ',
+				 icem_candpair_debug, cp);
 	}
 
 	return err;

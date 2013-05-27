@@ -21,25 +21,15 @@
 #include <re_dbg.h>
 
 
-/** Enable multiple parallel connectivity checks */
-#define ICE_CONNCHECK_MULTIPLE 0
-
-
 static void pace_next(struct icem *icem)
 {
 	if (icem->state != CHECKLIST_RUNNING)
 		return;
 
-#if 0
-	re_printf("\n");
-	re_printf("---> Pace next check: checklist=%u validlist=%u"
-		  " triggq=%u\n",
-		  list_count(&icem->checkl),
-		  list_count(&icem->validl),
-		  list_count(&icem->triggl));
-#endif
-
 	icem_conncheck_schedule_check(icem);
+
+	if (icem->state == CHECKLIST_FAILED)
+		return;
 
 	icem_checklist_update(icem);
 }
@@ -91,6 +81,8 @@ static struct candpair *construct_valid_pair(struct icem *icem,
 		 * pair is of type 'host' and the implicit pair is 'srflx'
 		 */
 
+		icem_candpair_make_valid(cp);
+
 		cp2 = icem_candpair_find(&icem->validl, lcand, rcand);
 		if (cp2)
 			return cp2;
@@ -100,7 +92,7 @@ static struct candpair *construct_valid_pair(struct icem *icem,
 			return NULL;
 
 		icem_candpair_make_valid(cp2);
-		icem_candpair_failed(cp, EINTR, 0);
+		/*icem_candpair_failed(cp, EINTR, 0);*/
 
 		return cp2;
 	}
@@ -114,25 +106,26 @@ static struct candpair *construct_valid_pair(struct icem *icem,
 
 
 static void handle_success(struct icem *icem, struct candpair *cp,
-			   const struct sa *addr)
+			   const struct sa *laddr)
 {
-	if (!icem_cand_find(&icem->lcandl, cp->lcand->compid, addr)) {
+	if (!icem_cand_find(&icem->lcandl, cp->lcand->compid, laddr)) {
 
 		int err;
 
 		icecomp_printf(cp->comp, "adding local PRFLX Candidate: %J\n",
-			       addr);
+			       laddr);
 
 		err = icem_lcand_add(icem, cp->lcand,
-				     CAND_TYPE_PRFLX, addr);
+				     CAND_TYPE_PRFLX, laddr);
 		if (err) {
 			DEBUG_WARNING("failed to add PRFLX: %m\n", err);
 		}
 	}
 
-	cp = construct_valid_pair(icem, cp, addr, &cp->rcand->addr);
+	cp = construct_valid_pair(icem, cp, laddr, &cp->rcand->addr);
 	if (!cp) {
-		DEBUG_WARNING("no valid pair\n");
+		DEBUG_WARNING("{%s.%u} no valid candidate pair for %J\n",
+			      icem->name, cp->comp->id, laddr);
 		return;
 	}
 
@@ -141,8 +134,10 @@ static void handle_success(struct icem *icem, struct candpair *cp,
 
 	cp->nominated = true;
 
+#if 0
 	/* stop conncheck now -- conclude */
-	icem_conncheck_stop(icem);
+	icem_conncheck_stop(icem, 0);
+#endif
 }
 
 
@@ -251,8 +246,6 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 		DEBUG_WARNING("no remote password!\n");
 	}
 
-	cp->usec_sent = ice_get_usec();
-
 	if (cp->ct_conn) {
 		DEBUG_WARNING("send_req: CONNCHECK already Pending!\n");
 		return EBUSY;
@@ -275,7 +268,7 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 	case CAND_TYPE_SRFLX:
 	case CAND_TYPE_PRFLX:
 		cp->ct_conn = mem_deref(cp->ct_conn);
-		err = stun_request(&cp->ct_conn, icem->stun, icem->proto,
+		err = stun_request(&cp->ct_conn, ice->stun, icem->proto,
 				   cp->comp->sock, &cp->rcand->addr, presz,
 				   STUN_METHOD_BINDING,
 				   (uint8_t *)icem->rpwd, str_len(icem->rpwd),
@@ -284,7 +277,8 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 				   STUN_ATTR_USERNAME, username_buf,
 				   STUN_ATTR_PRIORITY, &prio_prflx,
 				   ctrl_attr, &ice->tiebrk,
-				   STUN_ATTR_USE_CAND, use_cand);
+				   STUN_ATTR_USE_CAND,
+				   use_cand ? &use_cand : 0);
 		break;
 
 	default:
@@ -297,6 +291,20 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 }
 
 
+static void abort_ice(struct icem *icem, int err)
+{
+	icem->state = CHECKLIST_FAILED;
+	tmr_cancel(&icem->tmr_pace);
+
+	if (icem->chkh) {
+		icem->chkh(err, icem->ice->lrole == ROLE_CONTROLLING,
+			   icem->arg);
+	}
+
+	icem->chkh = NULL;
+}
+
+
 static void do_check(struct candpair *cp)
 {
 	int err;
@@ -304,7 +312,10 @@ static void do_check(struct candpair *cp)
 	err = icem_conncheck_send(cp, false, false);
 	if (err) {
 		icem_candpair_failed(cp, err, 0);
-		return;
+
+		if (err == ENOMEM) {
+			abort_ice(cp->icem, err);
+		}
 	}
 }
 
@@ -342,19 +353,15 @@ void icem_conncheck_schedule_check(struct icem *icem)
 
 	/* Terminate the timer for that check list. */
 
+#if 0
 	icem->state = CHECKLIST_COMPLETED;
+#endif
 }
 
 
-static void timeout(void *arg)
+static void pace_timeout(void *arg)
 {
 	struct icem *icem = arg;
-
-#if ICE_CONNCHECK_MULTIPLE
-	if (icem->state == CHECKLIST_RUNNING) {
-		tmr_start(&icem->tmr_pace, 100, timeout, icem);
-	}
-#endif
 
 	pace_next(icem);
 }
@@ -379,12 +386,12 @@ int icem_conncheck_start(struct icem *icem)
 
 	icem->state = CHECKLIST_RUNNING;
 
-	DEBUG_NOTICE("%s: starting connectivity checks"
-		     " with %u candidate pairs\n",
-		     icem->name, list_count(&icem->checkl));
+	icem_printf(icem, "starting connectivity checks"
+		    " with %u candidate pairs\n",
+		    list_count(&icem->checkl));
 
 	/* add some delay, to wait for call to be 'established' */
-	tmr_start(&icem->tmr_pace, 1000, timeout, icem);
+	tmr_start(&icem->tmr_pace, 10, pace_timeout, icem);
 
 	return 0;
 }
@@ -393,28 +400,28 @@ int icem_conncheck_start(struct icem *icem)
 void icem_conncheck_continue(struct icem *icem)
 {
 	if (!tmr_isrunning(&icem->tmr_pace))
-		tmr_start(&icem->tmr_pace, 1, timeout, icem);
+		tmr_start(&icem->tmr_pace, 1, pace_timeout, icem);
 }
 
 
 /**
  * Stop checklist, cancel all connectivity checks
  */
-void icem_conncheck_stop(struct icem *icem)
+void icem_conncheck_stop(struct icem *icem, int err)
 {
 	struct le *le;
 
-	icem->state = CHECKLIST_COMPLETED;
+	icem->state = err ? CHECKLIST_FAILED : CHECKLIST_COMPLETED;
 
 	tmr_cancel(&icem->tmr_pace);
 
 	for (le = icem->checkl.head; le; le = le->next) {
 		struct candpair *cp = le->data;
 
-		icem_candpair_cancel(cp);
-
-		if (cp->state != CANDPAIR_SUCCEEDED)
-			icem_candpair_failed(cp, EINTR, 0);
+		if (!icem_candpair_iscompleted(cp)) {
+			icem_candpair_cancel(cp);
+			icem_candpair_failed(cp, ECANCELED, 0);
+		}
 	}
 
 	icem_checklist_update(icem);

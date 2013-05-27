@@ -64,6 +64,7 @@ int  icem_gather_relay(struct icem *icem, const struct sa *stun_srv,
 bool icem_verify_support(struct icem *icem, uint8_t compid,
 			 const struct sa *raddr);
 int  icem_conncheck_start(struct icem *icem);
+void icem_conncheck_stop(struct icem *icem, int err);
 int  icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr);
 bool icem_mismatch(const struct icem *icem);
 void icem_update(struct icem *icem);

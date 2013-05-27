@@ -64,6 +64,7 @@ struct ice {
 	struct list ml;               /**< Media list (struct icem)         */
 	uint64_t tiebrk;              /**< Tie-break value for roleconflict */
 	struct ice_conf conf;         /**< ICE Configuration                */
+	struct stun *stun;            /**< STUN Transport                   */
 };
 
 /** Defines a media-stream component */
@@ -95,7 +96,6 @@ struct icem {
 	struct list validl;          /**< Valid List of cand pairs (sorted)  */
 	bool mismatch;               /**< ICE mismatch flag                  */
 	struct tmr tmr_pace;         /**< Timer for pacing STUN requests     */
-	struct stun *stun;           /**< STUN Transport                     */
 	int proto;                   /**< Transport protocol                 */
 	int layer;                   /**< Protocol layer                     */
 	enum checkl_state state;     /**< State of the checklist             */
@@ -136,8 +136,6 @@ struct candpair {
 	bool nominated;              /**< Nominated flag                     */
 	enum candpair_state state;   /**< Candidate pair state               */
 	uint64_t pprio;              /**< Pair priority                      */
-	uint64_t usec_sent;          /**< When connectivity request was sent */
-	long ertt;                   /**< Estimated Round-Trip Time in [usec]*/
 	struct stun_ctrans *ct_conn; /**< STUN Transaction for conncheck     */
 	int err;                     /**< Saved error code, if failed        */
 	uint16_t scode;              /**< Saved STUN code, if failed         */
@@ -157,6 +155,8 @@ int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
 			 uint32_t prio, const struct sa *addr);
 struct cand *icem_cand_find(const struct list *lst, uint8_t compid,
 			    const struct sa *addr);
+struct cand *icem_lcand_find_checklist(const struct icem *icem,
+				       uint8_t compid);
 int icem_cands_debug(struct re_printf *pf, const struct list *lst);
 int icem_cand_print(struct re_printf *pf, const struct cand *c);
 
@@ -183,6 +183,8 @@ struct candpair *icem_candpair_find_st(const struct list *lst, uint8_t compid,
 				       enum candpair_state state);
 struct candpair *icem_candpair_find_compid(const struct list *lst,
 					   uint8_t compid);
+struct candpair *icem_candpair_find_rcand(struct icem *icem,
+					  const struct cand *rcand);
 int  icem_candpair_debug(struct re_printf *pf, const struct candpair *cp);
 int  icem_candpairs_debug(struct re_printf *pf, const struct list *list);
 
@@ -194,6 +196,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 
 /* ICE media */
 void icem_cand_redund_elim(struct icem *icem);
+void icem_printf(struct icem *icem, const char *fmt, ...);
 
 
 /* Checklist */
@@ -215,7 +218,6 @@ void icecomp_printf(struct icem_comp *comp, const char *fmt, ...);
 /* conncheck */
 void icem_conncheck_schedule_check(struct icem *icem);
 void icem_conncheck_continue(struct icem *icem);
-void icem_conncheck_stop(struct icem *icem);
 int  icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged);
 
 

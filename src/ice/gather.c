@@ -96,7 +96,7 @@ static int send_binding_request(struct icem *icem, struct icem_comp *comp)
 	if (comp->ct_gath)
 		return EALREADY;
 
-	err = stun_request(&comp->ct_gath, icem->stun, icem->proto,
+	err = stun_request(&comp->ct_gath, icem->ice->stun, icem->proto,
 			   comp->sock, &icem->stun_srv, 0,
 			   STUN_METHOD_BINDING,
 			   NULL, false, 0,
@@ -173,8 +173,8 @@ static int cand_gather_relayed(struct icem *icem, struct icem_comp *comp,
 	if (comp->turnc)
 		return EALREADY;
 
-	err = turnc_alloc(&comp->turnc, stun_conf(icem->stun), icem->proto,
-			  comp->sock, layer, &icem->stun_srv,
+	err = turnc_alloc(&comp->turnc, stun_conf(icem->ice->stun),
+			  icem->proto, comp->sock, layer, &icem->stun_srv,
 			  username, password,
 			  60, turnc_handler, comp);
 	if (err)
@@ -194,6 +194,12 @@ static int start_gathering(struct icem *icem, const struct sa *stun_srv,
 
 	if (icem->ice->lmode != ICE_MODE_FULL)
 		return EINVAL;
+
+	if (list_isempty(&icem->compl)) {
+		DEBUG_WARNING("gathering: no components for"
+			      " mediastream '%s'\n", icem->name);
+		return ENOENT;
+	}
 
 	sa_cpy(&icem->stun_srv, stun_srv);
 
