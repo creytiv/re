@@ -420,7 +420,7 @@ void icem_conncheck_stop(struct icem *icem, int err)
 
 		if (!icem_candpair_iscompleted(cp)) {
 			icem_candpair_cancel(cp);
-			icem_candpair_failed(cp, ECANCELED, 0);
+			icem_candpair_failed(cp, EINTR, 0);
 		}
 	}
 
