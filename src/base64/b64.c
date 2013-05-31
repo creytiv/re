@@ -4,6 +4,7 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #include <re_types.h>
+#include <re_fmt.h>
 #include <re_base64.h>
 
 
@@ -31,7 +32,7 @@ int base64_encode(const uint8_t *in, size_t ilen, char *out, size_t *olen)
 	if (!in || !out || !olen)
 		return EINVAL;
 
-	if (*olen < ilen*4/3)
+	if (*olen < 4 * ((ilen+2)/3))
 		return EOVERFLOW;
 
 	for (; in < in_end; ) {
@@ -59,6 +60,35 @@ int base64_encode(const uint8_t *in, size_t ilen, char *out, size_t *olen)
 	}
 
 	*olen = out - o;
+
+	return 0;
+}
+
+
+int base64_print(struct re_printf *pf, const uint8_t *ptr, size_t len)
+{
+	char buf[256];
+
+	if (!pf || !ptr)
+		return EINVAL;
+
+	while (len > 0) {
+		size_t l, sz = sizeof(buf);
+		int err;
+
+		l = min(len, 3 * (sizeof(buf)/4));
+
+		err = base64_encode(ptr, l, buf, &sz);
+		if (err)
+			return err;
+
+		err = pf->vph(buf, sz, pf->arg);
+		if (err)
+			return err;
+
+		ptr += l;
+		len -= l;
+	}
 
 	return 0;
 }
@@ -102,10 +132,10 @@ int base64_decode(const char *in, size_t ilen, uint8_t *out, size_t *olen)
 	if (!in || !out || !olen)
 		return EINVAL;
 
-	if (*olen < ilen*3/4)
+	if (*olen < 3 * (ilen/4))
 		return EOVERFLOW;
 
-	for (;in < in_end; ) {
+	for (;in+3 < in_end; ) {
 		uint32_t v;
 
 		v  = b64val(*in++) << 18;
