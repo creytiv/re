@@ -1,5 +1,5 @@
 /**
- * @file auth.c  SIP Authentication
+ * @file sip/auth.c  SIP Authentication
  *
  * Copyright (C) 2010 Creytiv.com
  */

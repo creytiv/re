@@ -25,6 +25,7 @@ extern "C" {
 #include "re_crc32.h"
 #include "re_dns.h"
 #include "re_hash.h"
+#include "re_http.h"
 #include "re_httpauth.h"
 #include "re_ice.h"
 #include "re_jbuf.h"
