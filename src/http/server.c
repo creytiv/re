@@ -434,7 +434,7 @@ int http_reply(struct http_conn *conn, uint16_t scode, const char *reason,
 
 
 /**
- * Send an HTTP response with content formating
+ * Send an HTTP response with content formatting
  *
  * @param conn   HTTP connection
  * @param scode  Response status code

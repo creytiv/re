@@ -28,6 +28,7 @@ Modules:
 * fmt       testing       Formatted printing and regular expression
 * hash      testing       Hashmap table
 * hmac      testing       HMAC: Keyed-Hashing for Message Authentication
+* http      unstable      HTTP parser (RFC 2616)
 * httpauth  unstable      HTTP-based Authentication (RFC 2617)
 * ice       unstable      Interactive Connectivity Establishment (ICE)
 * jbuf      testing       Jitter buffer
@@ -71,6 +72,7 @@ Features:
 * RFC 1321 - The MD5 Message-Digest Algorithm
 * RFC 1886 - DNS Extensions to support IP version 6
 * RFC 2032 - RTP Payload Format for H.261 Video Streams
+* RFC 2616 - Hypertext Transfer Protocol -- HTTP/1.1
 * RFC 2617 - HTTP Authentication: Basic and Digest Access Authentication
 * RFC 2782 - A DNS RR for Specifying the Location of Services (DNS SRV)
 * RFC 2915 - The Naming Authority Pointer (NAPTR) DNS Resource Record
