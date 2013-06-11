@@ -127,6 +127,8 @@ static int tls_connect(struct tls_conn *tc)
 	if (r <= 0) {
 		const int ssl_err = SSL_get_error(tc->ssl, r);
 
+		ERR_clear_error();
+
 		switch (ssl_err) {
 
 		case SSL_ERROR_WANT_READ:
@@ -151,6 +153,8 @@ static int tls_accept(struct tls_conn *tc)
 	r = SSL_accept(tc->ssl);
 	if (r <= 0) {
 		const int ssl_err = SSL_get_error(tc->ssl, r);
+
+		ERR_clear_error();
 
 		switch (ssl_err) {
 
@@ -237,6 +241,8 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 		if (n < 0) {
 			const int ssl_err = SSL_get_error(tc->ssl, n);
 
+			ERR_clear_error();
+
 			switch (ssl_err) {
 
 			case SSL_ERROR_WANT_READ:
@@ -270,6 +276,7 @@ static bool send_handler(int *err, struct mbuf *mb, void *arg)
 	r = SSL_write(tc->ssl, mbuf_buf(mb), (int)mbuf_get_left(mb));
 	if (r <= 0) {
 		DEBUG_WARNING("SSL_write: %d\n", SSL_get_error(tc->ssl, r));
+		ERR_clear_error();
 		*err = EPROTO;
 	}
 
