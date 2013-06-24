@@ -18,6 +18,7 @@
 static void destructor(void *arg)
 {
 	struct sdp_media *m = arg;
+	unsigned i;
 
 	list_flush(&m->lfmtl);
 	list_flush(&m->rfmtl);
@@ -30,6 +31,9 @@ static void destructor(void *arg)
 		mem_ref(m);
 		return;
 	}
+
+	for (i=0; i<ARRAY_SIZE(m->protov); i++)
+		mem_deref(m->protov[i]);
 
 	list_unlink(&m->le);
 	mem_deref(m->name);
@@ -172,17 +176,56 @@ void sdp_media_rreset(struct sdp_media *m)
 
 
 /**
+ * Compare media line protocols
+ *
+ * @param m      SDP Media line
+ * @param proto  Transport protocol
+ * @param update Update media protocol if match is found in alternate set
+ *
+ * @return True if matching, False if not
+ */
+bool sdp_media_proto_cmp(struct sdp_media *m, const struct pl *proto,
+			 bool update)
+{
+	unsigned i;
+
+	if (!m || !proto)
+		return false;
+
+	if (!pl_strcmp(proto, m->proto))
+		return true;
+
+	for (i=0; i<ARRAY_SIZE(m->protov); i++) {
+
+		if (!m->protov[i] || pl_strcmp(proto, m->protov[i]))
+			continue;
+
+		if (update) {
+			mem_deref(m->proto);
+			m->proto = mem_ref(m->protov[i]);
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+
+/**
  * Find an SDP Media line from name and transport protocol
  *
  * @param sess  SDP Session
  * @param name  Media name
  * @param proto Transport protocol
+ * @param update_proto Update media transport protocol
  *
  * @return Matching media line if found, NULL if not found
  */
 struct sdp_media *sdp_media_find(const struct sdp_session *sess,
 				 const struct pl *name,
-				 const struct pl *proto)
+				 const struct pl *proto,
+				 bool update_proto)
 {
 	struct le *le;
 
@@ -196,7 +239,7 @@ struct sdp_media *sdp_media_find(const struct sdp_session *sess,
 		if (pl_strcmp(name, m->name))
 			continue;
 
-		if (pl_strcmp(proto, m->proto))
+		if (!sdp_media_proto_cmp(m, proto, update_proto))
 			continue;
 
 		return m;
@@ -287,6 +330,44 @@ void sdp_media_align_formats(struct sdp_media *m, bool offer)
 			}
 		}
 	}
+}
+
+
+/**
+ * Set alternative protocols for an SDP Media line
+ *
+ * @param m      SDP Media line
+ * @param protoc Number of alternative protocols
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sdp_media_set_alt_protos(struct sdp_media *m, unsigned protoc, ...)
+{
+	const char *proto;
+	int err = 0;
+	unsigned i;
+	va_list ap;
+
+	if (!m)
+		return EINVAL;
+
+	va_start(ap, protoc);
+
+	for (i=0; i<ARRAY_SIZE(m->protov); i++) {
+
+		m->protov[i] = mem_deref(m->protov[i]);
+
+		if (i >= protoc)
+			continue;
+
+		proto = va_arg(ap, const char *);
+		if (proto)
+			err |= str_dup(&m->protov[i], proto);
+	}
+
+	va_end(ap);
+
+	return err;
 }
 
 
@@ -472,6 +553,12 @@ void sdp_media_del_lattr(struct sdp_media *m, const char *name)
 		return;
 
 	sdp_attr_del(&m->lattrl, name);
+}
+
+
+const char *sdp_media_proto(const struct sdp_media *m)
+{
+	return m ? m->proto : NULL;
 }
 
 

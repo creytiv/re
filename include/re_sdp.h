@@ -87,6 +87,7 @@ struct sdp_media;
 
 int  sdp_media_add(struct sdp_media **mp, struct sdp_session *sess,
 		   const char *name, uint16_t port, const char *proto);
+int  sdp_media_set_alt_protos(struct sdp_media *m, unsigned protoc, ...);
 void sdp_media_set_encode_handler(struct sdp_media *m, sdp_media_enc_h *ench,
 				  void *arg);
 void sdp_media_set_fmt_ignore(struct sdp_media *m, bool fmt_ignore);
@@ -101,6 +102,7 @@ void sdp_media_set_ldir(struct sdp_media *m, enum sdp_dir dir);
 int  sdp_media_set_lattr(struct sdp_media *m, bool replace,
 			 const char *name, const char *value, ...);
 void sdp_media_del_lattr(struct sdp_media *m, const char *name);
+const char *sdp_media_proto(const struct sdp_media *m);
 uint16_t sdp_media_rport(const struct sdp_media *m);
 const struct sa *sdp_media_raddr(const struct sdp_media *m);
 void sdp_media_raddr_rtcp(const struct sdp_media *m, struct sa *raddr);

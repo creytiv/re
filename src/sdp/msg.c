@@ -181,7 +181,7 @@ static int media_decode(struct sdp_media **mp, struct sdp_session *sess,
 		if (!offer)
 			return EPROTO;
 
-		m = sdp_media_find(sess, &name, &proto);
+		m = sdp_media_find(sess, &name, &proto, true);
 		if (!m) {
 			err = sdp_media_radd(&m, sess, &name, &proto);
 			if (err)
@@ -196,7 +196,7 @@ static int media_decode(struct sdp_media **mp, struct sdp_session *sess,
 		if (pl_strcmp(&name, m->name))
 			return offer ? ENOTSUP : EPROTO;
 
-		if (pl_strcmp(&proto, m->proto))
+		if (!sdp_media_proto_cmp(m, &proto, offer))
 			return ENOTSUP;
 	}
 

@@ -39,6 +39,7 @@ struct sdp_media {
 	int32_t rbwv[SDP_BANDWIDTH_MAX];
 	char *name;
 	char *proto;
+	char *protov[8];
 	sdp_media_enc_h *ench;
 	void *arg;
 	enum sdp_dir ldir;
@@ -57,9 +58,12 @@ void sdp_session_rreset(struct sdp_session *sess);
 int  sdp_media_radd(struct sdp_media **mp, struct sdp_session *sess,
 		    const struct pl *name, const struct pl *proto);
 void sdp_media_rreset(struct sdp_media *m);
+bool sdp_media_proto_cmp(struct sdp_media *m, const struct pl *proto,
+			 bool update);
 struct sdp_media *sdp_media_find(const struct sdp_session *sess,
 				 const struct pl *name,
-				 const struct pl *proto);
+				 const struct pl *proto,
+				 bool update_proto);
 void sdp_media_align_formats(struct sdp_media *m, bool offer);
 
 
