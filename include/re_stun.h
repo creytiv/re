@@ -189,7 +189,7 @@ int  stun_indication(int proto, void *sock, const struct sa *dst, size_t presz,
 		     uint16_t method, const uint8_t *key, size_t keylen,
 		     bool fp, uint32_t attrc, ...);
 
-int  stun_msg_vencode(struct mbuf *mb, uint16_t method, uint8_t class,
+int  stun_msg_vencode(struct mbuf *mb, uint16_t method, uint8_t cls,
 		      const uint8_t *tid, const struct stun_errcode *ec,
 		      const uint8_t *key, size_t keylen, bool fp,
 		      uint8_t padding, uint32_t attrc, va_list ap);
