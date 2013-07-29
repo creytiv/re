@@ -192,8 +192,8 @@ int stun_attr_decode(struct stun_attr **attrp, struct mbuf *mb,
 	if (!attr)
 		return ENOMEM;
 
-	attr->type = htons(mbuf_read_u16(mb));
-	len = htons(mbuf_read_u16(mb));
+	attr->type = ntohs(mbuf_read_u16(mb));
+	len = ntohs(mbuf_read_u16(mb));
 
 	if (mbuf_get_left(mb) < len)
 		goto badmsg;
