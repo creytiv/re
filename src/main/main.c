@@ -105,6 +105,7 @@ struct re {
 
 #ifdef HAVE_PTHREAD
 	pthread_mutex_t mutex;       /**< Mutex for thread synchronization  */
+	pthread_mutex_t *mutexp;     /**< Pointer to active mutex           */
 #endif
 };
 
@@ -130,6 +131,7 @@ static struct re global_re = {
 #else
 	PTHREAD_MUTEX_INITIALIZER,
 #endif
+	&global_re.mutex,
 #endif
 };
 
@@ -178,7 +180,7 @@ static inline void re_lock(struct re *re)
 {
 	int err;
 
-	err = pthread_mutex_lock(&re->mutex);
+	err = pthread_mutex_lock(re->mutexp);
 	if (err) {
 		DEBUG_WARNING("re_lock: %m\n", err);
 	}
@@ -189,7 +191,7 @@ static inline void re_unlock(struct re *re)
 {
 	int err;
 
-	err = pthread_mutex_unlock(&re->mutex);
+	err = pthread_mutex_unlock(re->mutexp);
 	if (err) {
 		DEBUG_WARNING("re_unlock: %m\n", err);
 	}
@@ -977,6 +979,7 @@ int re_thread_init(void)
 
 	memset(re, 0, sizeof(*re));
 	pthread_mutex_init(&re->mutex, NULL);
+	re->mutexp = &re->mutex;
 
 #ifdef HAVE_EPOLL
 	re->epfd = -1;
@@ -1028,6 +1031,23 @@ void re_thread_enter(void)
 void re_thread_leave(void)
 {
 	re_unlock(re_get());
+}
+
+
+/**
+ * Set an external mutex for this thread
+ *
+ * @param mutexp Pointer to external mutex, NULL to use internal
+ */
+void re_set_mutex(void *mutexp)
+{
+#ifdef HAVE_PTHREAD
+	struct re *re = re_get();
+
+	re->mutexp = mutexp ? mutexp : &re->mutex;
+#else
+	(void)mutexp;
+#endif
 }
 
 

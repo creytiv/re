@@ -49,6 +49,8 @@ void re_thread_close(void);
 void re_thread_enter(void);
 void re_thread_leave(void);
 
+void re_set_mutex(void *mutexp);
+
 
 /** Polling methods */
 enum poll_method {
