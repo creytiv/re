@@ -258,6 +258,8 @@ static const EVP_MD *type2evp(const char *type)
 {
 	if (0 == str_casecmp(type, "SHA-1"))
 		return EVP_sha1();
+	else if (0 == str_casecmp(type, "SHA-256"))
+		return EVP_sha256();
 	else
 		return NULL;
 }
