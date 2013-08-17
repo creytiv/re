@@ -224,7 +224,9 @@ ifeq ($(OS),linux)
 endif
 ifeq ($(OS),darwin)
 	CFLAGS		+= -fPIC -dynamic -DDARWIN
+ifneq (,$(findstring Apple, $(CC_LONGVER)))
 	CFLAGS		+= -Wshorten-64-to-32
+endif
 	DFLAGS		:= -MD
 	LFLAGS		+= -fPIC
 	SH_LFLAGS	+= -dynamiclib -dylib
