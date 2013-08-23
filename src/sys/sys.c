@@ -43,8 +43,9 @@ int sys_rel_get(uint32_t *rel, uint32_t *maj, uint32_t *min, uint32_t *patch)
 	if (0 != uname(&u))
 		return errno;
 
-	err = re_regex(u.release, strlen(u.release), "[0-9]+.[0-9]+.[0-9]+",
-		       &pl_mj, &pl_mn, &pl_p);
+	err = re_regex(u.release, strlen(u.release),
+		       "[0-9]+.[0-9]+[.\\-]1[0-9]+",
+		       &pl_mj, &pl_mn, NULL, &pl_p);
 	if (err)
 		return err;
 
