@@ -1,3 +1,27 @@
+2013-08-27 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.4
+
+	* base64: added base64_print()
+
+	* http: added HTTP (Hypertext Transfer Protocol) parser
+
+	* ice: cleanup and minor bug fixes
+
+	* main: added external mutex for re_main() loop
+
+	* sdp: added sdp_media_set_alt_protos()
+	       added sdp_media_proto()
+
+	* stun: make API compatible with C++
+		fix endianess-bug in STUN attributes
+
+	* sys: sys_rel_get() detect new kernels
+
+	* tls: fingerprint: add SHA-256
+	       proper error handling, call ERR_clear_error()
+	
+
 2013-05-05 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.3
