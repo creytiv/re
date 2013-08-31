@@ -274,7 +274,7 @@ int rtp_alloc(struct rtp_sock **rsp)
 
 	sa_init(&rs->rtcp_peer, AF_UNSPEC);
 
-	rs->enc.seq  = rand_u16();
+	rs->enc.seq  = rand_u16() & 0x7fff;
 	rs->enc.ssrc = rand_u32();
 
 	*rsp = rs;
