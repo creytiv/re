@@ -109,8 +109,10 @@ int re_regex(const char *ptr, size_t len, const char *expr, ...)
 			if (!l)
 				break;
 
-			if (tolower(*ep) != tolower(*p))
+			if (tolower(*ep) != tolower(*p)) {
+				va_end(ap);
 				goto again;
+			}
 
 			eesc = false;
 			++p;
@@ -184,8 +186,10 @@ int re_regex(const char *ptr, size_t len, const char *expr, ...)
 				nm    -= 2;
 			}
 
-			if ((nm < nmin) || (nm > nmax))
+			if ((nm < nmin) || (nm > nmax)) {
+				va_end(ap);
 				goto again;
+			}
 
 			if (pl)
 				*pl = lpl;
