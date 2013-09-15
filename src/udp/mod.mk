@@ -5,3 +5,4 @@
 #
 
 SRCS	+= udp/udp.c
+SRCS	+= udp/mcast.c
