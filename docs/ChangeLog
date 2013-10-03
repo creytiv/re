@@ -1,3 +1,16 @@
+2013-10-03 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.5
+
+	* udp: add functions for joining/leaving multicast groups
+
+	* fmt: re_regex() fix va_end robustness
+
+	* rtp: set sequence number in range 0-32767
+
+	* sa: sa_print_addr() fix build when HAVE_INET6 is not set
+
+
 2013-08-27 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.4
