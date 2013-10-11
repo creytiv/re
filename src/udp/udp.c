@@ -63,13 +63,13 @@ enum {
 struct udp_sock {
 	struct list helpers; /**< List of UDP Helpers         */
 	udp_recv_h *rh;      /**< Receive handler             */
+	udp_error_h *eh;     /**< Error handler               */
 	void *arg;           /**< Handler argument            */
 	int fd;              /**< Socket file descriptor      */
 	int fd6;             /**< IPv6 socket file descriptor */
 	bool conn;           /**< Connected socket flag       */
 	size_t rxsz;         /**< Maximum receive chunk size  */
 	size_t rx_presz;     /**< Preallocated rx buffer size */
-	int err;             /**< Cached error code           */
 };
 
 /** Defines a UDP helper */
@@ -195,9 +195,8 @@ static void udp_read(struct udp_sock *us, int fd)
 			goto out;
 		}
 #endif
-
-		/* cache error code */
-		us->err = err;
+		if (us->eh)
+			us->eh(err, us->arg);
 
 		goto out;
 	}
@@ -396,18 +395,33 @@ int udp_listen(struct udp_sock **usp, const struct sa *local,
 
 
 /**
- * Connect a UDP Socket to its peer, so we can receive ICMP messages.
+ * Connect a UDP Socket to a specific peer.
  * When connected, this UDP Socket will only receive data from that peer.
  *
  * @param us   UDP Socket
- * @param conn Connected flag
+ * @param peer Peer network address
+ *
+ * @return 0 if success, otherwise errorcode
  */
-void udp_connect(struct udp_sock *us, bool conn)
+int udp_connect(struct udp_sock *us, const struct sa *peer)
 {
-	if (!us)
-		return;
+	int fd;
 
-	us->conn = conn;
+	if (!us || !peer)
+		return EINVAL;
+
+	/* choose a socket */
+	if (AF_INET6 == sa_af(peer) && -1 != us->fd6)
+		fd = us->fd6;
+	else
+		fd = us->fd;
+
+	if (0 != connect(fd, &peer->u.sa, peer->len))
+		return errno;
+
+	us->conn = true;
+
+	return 0;
 }
 
 
@@ -416,13 +430,6 @@ static int udp_send_internal(struct udp_sock *us, const struct sa *dst,
 {
 	struct sa hdst;
 	int err = 0, fd;
-
-	/* check for error in e.g. connected state */
-	if (us->err) {
-		err = us->err;
-		us->err = 0; /* clear error */
-		return err;
-	}
 
 	/* choose a socket */
 	if (AF_INET6 == sa_af(dst) && -1 != us->fd6)
@@ -447,11 +454,6 @@ static int udp_send_internal(struct udp_sock *us, const struct sa *dst,
 
 	/* Connected socket? */
 	if (us->conn) {
-		if (0 != connect(fd, &dst->u.sa, dst->len)) {
-			DEBUG_WARNING("send: connect: %m\n", errno);
-			us->conn = false;
-		}
-
 		if (send(fd, BUF_CAST mb->buf + mb->pos, mb->end - mb->pos,
 			 0) < 0)
 			return errno;
@@ -639,6 +641,21 @@ void udp_handler_set(struct udp_sock *us, udp_recv_h *rh, void *arg)
 
 	us->rh  = rh ? rh : dummy_udp_recv_handler;
 	us->arg = arg;
+}
+
+
+/**
+ * Set error handler on a UDP Socket
+ *
+ * @param us  UDP Socket
+ * @param eh  Error handler
+ */
+void udp_error_handler_set(struct udp_sock *us, udp_error_h *eh)
+{
+	if (!us)
+		return;
+
+	us->eh = eh;
 }
 
 

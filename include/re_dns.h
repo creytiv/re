@@ -195,7 +195,6 @@ struct dnsc_conf {
 	uint32_t tcp_hash_size;
 	uint32_t conn_timeout;  /* in [ms] */
 	uint32_t idle_timeout;  /* in [ms] */
-	bool udp_conn;
 };
 
 int  dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,

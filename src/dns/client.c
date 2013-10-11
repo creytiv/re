@@ -91,7 +91,6 @@ static const struct dnsc_conf default_conf = {
 	TCP_HASH_SIZE,
 	CONN_TIMEOUT,
 	IDLE_TIMEOUT,
-	false
 };
 
 
@@ -860,14 +859,6 @@ int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 	err = udp_listen(&dnsc->us, NULL, udp_recv_handler, dnsc);
 	if (err)
 		goto out;
-
-	/* Experimental code:
-	 *   Connected UDP sockets will only work if we have one UDP socket
-	 *   per UDP server. Connected UDP socket is used to get ICMP
-	 *   messages for unreachable DNS Servers.
-	 */
-	if (dnsc->conf.udp_conn)
-		udp_connect(dnsc->us, true);
 
 	err = hash_alloc(&dnsc->ht_query, dnsc->conf.query_hash_size);
 	if (err)
