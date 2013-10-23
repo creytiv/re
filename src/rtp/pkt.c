@@ -412,6 +412,10 @@ int rtcp_decode(struct rtcp_msg **msgp, struct mbuf *mb)
 	case RTCP_RTPFB:
 		if (mbuf_get_left(mb) < RTCP_FB_SIZE)
 			goto badmsg;
+
+		if (msg->hdr.length < 2)
+			goto badmsg;
+
 		msg->r.fb.ssrc_packet = ntohl(mbuf_read_u32(mb));
 		msg->r.fb.ssrc_media = ntohl(mbuf_read_u32(mb));
 		msg->r.fb.n = msg->hdr.length - 2;
@@ -422,6 +426,10 @@ int rtcp_decode(struct rtcp_msg **msgp, struct mbuf *mb)
 	case RTCP_PSFB:
 		if (mbuf_get_left(mb) < RTCP_FB_SIZE)
 			goto badmsg;
+
+		if (msg->hdr.length < 2)
+			goto badmsg;
+
 		msg->r.fb.ssrc_packet = ntohl(mbuf_read_u32(mb));
 		msg->r.fb.ssrc_media = ntohl(mbuf_read_u32(mb));
 		msg->r.fb.n = msg->hdr.length - 2;
