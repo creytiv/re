@@ -67,6 +67,7 @@ enum rtcp_rtpfb {
 enum rtcp_psfb {
 	RTCP_PSFB_PLI  = 1,   /**< Picture Loss Indication (PLI) */
 	RTCP_PSFB_SLI  = 2,   /**< Slice Loss Indication (SLI)   */
+	RTCP_PSFB_AFB  = 15,  /**< Application layer Feedback Messages */
 };
 
 /** Reception report block */
@@ -164,6 +165,7 @@ struct rtcp_msg {
 					uint16_t number;
 					uint8_t picid;
 				} *sliv;
+				struct mbuf *afb;
 				void *p;
 			} fci;
 		} fb;

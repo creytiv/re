@@ -268,6 +268,10 @@ int rtcp_msg_print(struct re_printf *pf, const struct rtcp_msg *msg)
 						  msg->r.fb.fci.sliv[i].picid);
 			}
 		}
+		else if (msg->hdr.count == RTCP_PSFB_AFB) {
+			err |= re_hprintf(pf, " AFB %u bytes",
+					  msg->r.fb.n * 4);
+		}
 		break;
 
 	default:
