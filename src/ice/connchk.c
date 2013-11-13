@@ -124,8 +124,8 @@ static void handle_success(struct icem *icem, struct candpair *cp,
 
 	cp = construct_valid_pair(icem, cp, laddr, &cp->rcand->addr);
 	if (!cp) {
-		DEBUG_WARNING("{%s.%u} no valid candidate pair for %J\n",
-			      icem->name, cp->comp->id, laddr);
+		DEBUG_WARNING("{%s} no valid candidate pair for %J\n",
+			      icem->name, laddr);
 		return;
 	}
 

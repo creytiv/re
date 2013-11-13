@@ -127,7 +127,7 @@ static int attr_encode(struct mbuf *mb, bool mand, enum bfcp_attrib type,
 	len = mb->pos - start;
 
 	mb->pos = start;
-	err |= mbuf_write_u8(mb, (type<<1) | (mand&1));
+	err |= mbuf_write_u8(mb, (type<<1) | (mand ? 1 : 0));
 	err |= mbuf_write_u8(mb, len);
 	mb->pos += (len - BFCP_ATTR_HDR_SIZE);
 
