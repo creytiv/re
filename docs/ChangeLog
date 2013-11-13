@@ -1,3 +1,20 @@
+2013-11-12 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.6
+
+	* bfcp: fix bitwise operator for bool (thanks Tomasz Ostrowski)
+
+	* dns: do not connect the UDP socket
+
+	* ice: fix deref of NULL-pointer (thanks Tomasz Ostrowski)
+
+	* rtp: add support for RTCP AFB (Application-layer Feedback)
+	       make RTCP decoding more robust
+
+	* udp: udp_connect() -- add peer address
+	       add udp_error_handler_set()
+
+
 2013-10-03 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.5
