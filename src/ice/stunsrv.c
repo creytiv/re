@@ -147,14 +147,16 @@ static int handle_stun(struct ice *ice, struct icem *icem,
 
 	/* 7.2.1.5.  Updating the Nominated Flag */
 	if (use_cand) {
-		if (ice->lrole == ROLE_CONTROLLED) {
-			if (cp->state == CANDPAIR_SUCCEEDED) {
-				cp->nominated = true;
+		if (ice->lrole == ROLE_CONTROLLED &&
+		    cp->state == CANDPAIR_SUCCEEDED) {
 
+			if (!cp->nominated) {
 				icecomp_printf(comp, "setting NOMINATED"
 					       " flag on candpair [%H]\n",
 					       icem_candpair_debug, cp);
 			}
+
+			cp->nominated = true;
 		}
 
 		/* Cancel conncheck. Choose Selected Pair */
