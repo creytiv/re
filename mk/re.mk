@@ -102,6 +102,17 @@ ifneq (,$(findstring gcc, $(CC_LONGVER)))
 				's/4\.[0-9]/4.x/' )
 endif
 
+ifeq ($(CC_NAME),)
+ifneq (,$(findstring clang, $(CC_LONGVER)))
+	CC_NAME := clang
+	CC_SHORTVER := $(shell echo "$(CC_LONGVER)"|head -n 1| \
+		sed -e 's/.*version \([0-9]\.[0-9]\).*/\1/g' )
+	CC_VER := $(CC) $(CC_SHORTVER)
+	MKDEP := $(CC) -MM
+endif
+endif
+
+ifeq ($(CC_NAME),)
 ifneq (, $(findstring Sun, $(CC_LONGVER)))
 	CC_NAME := suncc
 	CC_SHORTVER := $(shell echo "$(CC_LONGVER)"|head -n 1| \
@@ -109,7 +120,9 @@ ifneq (, $(findstring Sun, $(CC_LONGVER)))
 	CC_VER := $(CC) $(CC_SHORTVER)
 	MKDEP  := $(CC) -xM1
 endif
+endif
 
+ifeq ($(CC_NAME),)
 ifneq (, $(findstring Intel(R) C++ Compiler, $(CC_LONGVER)))
 	# very nice: gcc compatible
 	CC_NAME := icc
@@ -118,6 +131,7 @@ ifneq (, $(findstring Intel(R) C++ Compiler, $(CC_LONGVER)))
 	CC_SHORTVER := $(shell echo "$(CC_FULLVER)" | cut -d. -f1,2 )
 	CC_VER := $(CC) $(CC_FULLVER)
 	MKDEP  := $(CC) -MM
+endif
 endif
 
 
@@ -128,7 +142,7 @@ ifeq (,$(CC_NAME))
 	CC_VER      := unknown
 	MKDEP       := gcc -MM
 $(warning	Unknown compiler $(CC)\; supported compilers: \
-			gcc, sun cc, intel icc )
+			gcc, clang, sun cc, intel icc )
 endif
 
 
@@ -229,7 +243,10 @@ ifneq (,$(findstring Apple, $(CC_LONGVER)))
 endif
 	DFLAGS		:= -MD
 	LFLAGS		+= -fPIC
-	SH_LFLAGS	+= -dynamiclib -dylib
+	SH_LFLAGS	+= -dynamiclib
+ifeq ($(CC_NAME),gcc)
+	SH_LFLAGS	+= -dylib
+endif
 ifneq ($(VERSION),)
 	SH_LFLAGS	+= -current_version $(VERSION)
 	SH_LFLAGS	+= -compatibility_version $(VERSION)
@@ -320,7 +337,7 @@ endif
 
 
 ifeq ($(ARCH),)
-ifeq ($(CC_NAME),gcc)
+ifeq ($(CC_NAME),$(filter $(CC_NAME),gcc clang))
 PREDEF	:= $(shell $(CC) -dM -E -x c $(EXTRA_CFLAGS) $(CFLAGS) /dev/null)
 
 ifneq ($(strip $(filter i386 __i386__ __i386 _M_IX86 __X86__ _X86_, \
