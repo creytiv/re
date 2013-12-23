@@ -11,6 +11,9 @@
 #include <re_sa.h>
 #include <re_dns.h>
 #include "dns.h"
+#ifdef __ANDROID__
+#include <sys/system_properties.h>
+#endif
 
 
 #define DEBUG_MODULE "ns"
@@ -81,6 +84,25 @@ static int parse_resolv_conf(char *domain, size_t dsize,
 }
 
 
+#ifdef __ANDROID__
+static int get_android_dns(struct sa *nsv, uint32_t *n)
+{
+	char value[PROP_VALUE_MAX] = {0};
+
+	if (__system_property_get("net.dns1", value)) {
+		int err = sa_set_str(&nsv[0], value, DNS_PORT);
+		if (err)
+			return err;
+
+		*n = 1;
+		return 0;
+	}
+
+	return ENOENT;
+}
+#endif
+
+
 /**
  * Get the DNS domain and nameservers
  *
@@ -119,6 +141,10 @@ int dns_srv_get(char *domain, size_t dsize, struct sa *srvv, uint32_t *n)
 
 #ifdef __SYMBIAN32__
 	err = get_symbiandns(srvv, n);
+#endif
+
+#ifdef __ANDROID__
+	err = get_android_dns(srvv, n);
 #endif
 
 	return err;
