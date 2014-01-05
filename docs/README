@@ -2,7 +2,7 @@ README
 ------
 
 libre - "Generic library for real-time communications with async IO support"
-Copyright (C) 2010 - 2012 Creytiv.com
+Copyright (C) 2010 - 2014 Creytiv.com
 
 Distributed under BSD license
 
@@ -132,7 +132,7 @@ Supported compilers:
 * gcc (v2.9x to v4.x)
 * gcce
 * ms vc2003 compiler
-* codewarrior
+* clang
 
 
 Feedback:

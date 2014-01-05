@@ -1,3 +1,16 @@
+2014-01-05 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.7
+
+	* build: added support for LLVM clang compiler
+
+	* dns: added support for getting Android nameserver address
+
+	* ice: minor debug tuning
+
+	* sipsess: only send INFO when dialog is established
+	
+
 2013-11-12 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.6
