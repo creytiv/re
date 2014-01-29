@@ -56,6 +56,30 @@ if(UNIX)
 		STRING(REGEX REPLACE "\\\\" "" RE_CFLAGS "${RE_CFLAGS}" )
 	endif()
 
+	if (APPLE)
+		LIST(APPEND RE_SRCS "${RE_SRC_PREFIX}/lock/rwlock.c")
+		
+		# get MacOSX version
+		execute_process(COMMAND /usr/bin/sw_vers -productVersion
+			OUTPUT_VARIABLE MACOSX_VERSION
+			ERROR_VARIABLE MACOSX_VERSION_errors
+			RESULT_VARIABLE MACOSX_VERSION_result
+		OUTPUT_STRIP_TRAILING_WHITESPACE)
+		
+		# build universal binaries
+		set(CMAKE_OSX_ARCHITECTURES "x86_64;i386")
+		
+		if (${MACOSX_VERSION} VERSION_LESS 10.9)
+		  foreach(FLAGS CMAKE_C_FLAGS CMAKE_CXX_FLAGS CMAKE_EXE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS)
+			    set(${FLAGS} "${${FLAGS}} -mmacosx-version-min=10.6 -stdlib=libstdc++")
+		  endforeach()
+		else()
+		  foreach(FLAGS CMAKE_C_FLAGS CMAKE_CXX_FLAGS CMAKE_EXE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS)
+			    set(${FLAGS} "${${FLAGS}} -mmacosx-version-min=10.7 -stdlib=libc++")
+		  endforeach()
+		endif()
+	endif()
+
 	message("libre sources: ${RE_SRCS}")
 	message("libre cflags: ${RE_CFLAGS}")
 	message("libre extra_cflags: ${RE_EXTRA_CFLAGS}")
