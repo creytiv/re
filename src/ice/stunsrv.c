@@ -35,10 +35,6 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 		cp = icem_candpair_find(&icem->checkl, lcand, rcand);
 
 	if (cp) {
-		icecomp_printf(cp->comp,
-			       "triggered_check: found CandidatePair on"
-			       " checklist in state: %H\n",
-			       icem_candpair_debug, cp);
 
 		switch (cp->state) {
 
@@ -93,9 +89,12 @@ static void triggered_check(struct icem *icem, struct cand *lcand,
 }
 
 
-static int handle_stun(struct ice *ice, struct icem *icem,
-		       struct icem_comp *comp, const struct sa *src,
-		       uint32_t prio, bool use_cand, bool tunnel)
+/*
+ * 7.2.1.  Additional Procedures for Full Implementations
+ */
+static int handle_stun_full(struct ice *ice, struct icem *icem,
+			    struct icem_comp *comp, const struct sa *src,
+			    uint32_t prio, bool use_cand, bool tunnel)
 {
 	struct cand *lcand = NULL, *rcand;
 	struct candpair *cp = NULL;
@@ -115,15 +114,14 @@ static int handle_stun(struct ice *ice, struct icem *icem,
 		lcand = icem_lcand_find_checklist(icem, comp->id);
 
 	if (!lcand) {
-		DEBUG_WARNING("{%s.%u} no local candidate"
+		DEBUG_WARNING("{%s.%u} local candidate not found"
 			      " (checklist=%u) (src=%J)\n",
 			      icem->name, comp->id,
 			      list_count(&icem->checkl), src);
 		return 0;
 	}
 
-	if (ICE_MODE_FULL == ice->lmode)
-		triggered_check(icem, lcand, rcand);
+	triggered_check(icem, lcand, rcand);
 
 	if (!cp) {
 		cp = icem_candpair_find_rcand(icem, rcand);
@@ -167,6 +165,50 @@ static int handle_stun(struct ice *ice, struct icem *icem,
 			icem_comp_set_selected(comp, cp);
 		}
 	}
+
+	return 0;
+}
+
+
+/*
+ * 7.2.2.  Additional Procedures for Lite Implementations
+ */
+static int handle_stun_lite(struct icem *icem,
+			    struct icem_comp *comp, const struct sa *src,
+			    bool use_cand)
+{
+	struct cand *lcand, *rcand;
+	struct candpair *cp;
+	int err;
+
+	if (!use_cand)
+		return 0;
+
+	rcand = icem_cand_find(&icem->rcandl, comp->id, src);
+	if (!rcand) {
+		DEBUG_WARNING("lite: could not find remote candidate\n");
+		return 0;
+	}
+
+	/* find the local host candidate with the same component */
+	lcand = icem_cand_find(&icem->lcandl, comp->id, NULL);
+	if (!lcand) {
+		DEBUG_WARNING("lite: could not find local candidate\n");
+		return 0;
+	}
+
+	/* search validlist for existing candpair's */
+	if (icem_candpair_find(&icem->validl, lcand, rcand))
+		return 0;
+
+	err = icem_candpair_alloc(&cp, icem, lcand, rcand);
+	if (err) {
+		DEBUG_WARNING("lite: failed to created candidate pair\n");
+		return err;
+	}
+
+	icem_candpair_make_valid(cp);
+	cp->nominated = true;
 
 	return 0;
 }
@@ -257,8 +299,14 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 	if (attr)
 		use_cand = true;
 
-	err = handle_stun(ice, icem, comp, src, prio_prflx,
-			  use_cand, presz > 0);
+	if (ice->lmode == ICE_MODE_FULL) {
+		err = handle_stun_full(ice, icem, comp, src, prio_prflx,
+				       use_cand, presz > 0);
+	}
+	else {
+		err = handle_stun_lite(icem, comp, src, use_cand);
+	}
+
 	if (err)
 		goto badmsg;
 

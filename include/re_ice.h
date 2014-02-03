@@ -61,6 +61,7 @@ int  icem_cand_add(struct icem *icem, uint8_t compid, uint16_t lprio,
 int  icem_gather_srflx(struct icem *icem, const struct sa *stun_srv);
 int  icem_gather_relay(struct icem *icem, const struct sa *stun_srv,
 		       const char *username, const char *password);
+int  icem_lite_set_default_candidates(struct icem *icem);
 bool icem_verify_support(struct icem *icem, uint8_t compid,
 			 const struct sa *raddr);
 int  icem_conncheck_start(struct icem *icem);
@@ -71,6 +72,9 @@ void icem_update(struct icem *icem);
 int  icem_sdp_decode(struct icem *icem, const char *name, const char *value);
 int  icem_debug(struct re_printf *pf, const struct icem *icem);
 struct list *icem_lcandl(const struct icem *icem);
+struct list *icem_rcandl(const struct icem *icem);
+struct list *icem_checkl(const struct icem *icem);
+struct list *icem_validl(const struct icem *icem);
 const struct sa *icem_cand_default(struct icem *icem, uint8_t compid);
 const struct sa *icem_selected_laddr(const struct icem *icem, uint8_t compid);
 

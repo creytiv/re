@@ -337,6 +337,7 @@ bool icem_mismatch(const struct icem *icem)
  */
 int icem_debug(struct re_printf *pf, const struct icem *icem)
 {
+	struct le *le;
 	int err = 0;
 
 	if (!icem)
@@ -344,11 +345,18 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 
 	err |= re_hprintf(pf, "----- ICE Media <%s> -----\n", icem->name);
 
+	err |= re_hprintf(pf, " Components: (%u)\n", list_count(&icem->compl));
+	for (le = icem->compl.head; le; le = le->next) {
+		struct icem_comp *comp = le->data;
+
+		err |= re_hprintf(pf, "  %H\n", icecomp_debug, comp);
+	}
+
 	err |= re_hprintf(pf, " Local Candidates: %H",
 			  icem_cands_debug, &icem->lcandl);
 	err |= re_hprintf(pf, " Remote Candidates: %H",
 			  icem_cands_debug, &icem->rcandl);
-	err |= re_hprintf(pf, " Check list: [%s]%H",
+	err |= re_hprintf(pf, " Check list: [state=%s]%H",
 			  ice_checkl_state2name(icem->state),
 			  icem_candpairs_debug, &icem->checkl);
 	err |= re_hprintf(pf, " Valid list: %H",
@@ -368,6 +376,69 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 struct list *icem_lcandl(const struct icem *icem)
 {
 	return icem ? (struct list *)&icem->lcandl : NULL;
+}
+
+
+/**
+ * Get the list of Remote Candidates (struct cand)
+ *
+ * @param icem ICE Media object
+ *
+ * @return List of Remote Candidates
+ */
+struct list *icem_rcandl(const struct icem *icem)
+{
+	return icem ? (struct list *)&icem->rcandl : NULL;
+}
+
+
+/**
+ * Get the checklist of Candidate Pairs
+ *
+ * @param icem ICE Media object
+ *
+ * @return Checklist (struct candpair)
+ */
+struct list *icem_checkl(const struct icem *icem)
+{
+	return icem ? (struct list *)&icem->checkl : NULL;
+}
+
+
+/**
+ * Get the list of valid Candidate Pairs
+ *
+ * @param icem ICE Media object
+ *
+ * @return Validlist (struct candpair)
+ */
+struct list *icem_validl(const struct icem *icem)
+{
+	return icem ? (struct list *)&icem->validl : NULL;
+}
+
+
+/**
+ * Set the default local candidates, for ICE-lite mode only
+ *
+ * @param icem ICE Media object
+ */
+int icem_lite_set_default_candidates(struct icem *icem)
+{
+	struct le *le;
+	int err = 0;
+
+	if (icem->ice->lmode != ICE_MODE_LITE)
+		return EINVAL;
+
+	for (le = icem->compl.head; le; le = le->next) {
+
+		struct icem_comp *comp = le->data;
+
+		err |= icem_comp_set_default_cand(comp);
+	}
+
+	return err;
 }
 
 

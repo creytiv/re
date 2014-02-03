@@ -213,6 +213,7 @@ void icem_comp_set_selected(struct icem_comp *comp, struct candpair *cp);
 struct icem_comp *icem_comp_find(const struct icem *icem, uint8_t compid);
 void icem_comp_keepalive(struct icem_comp *comp, bool enable);
 void icecomp_printf(struct icem_comp *comp, const char *fmt, ...);
+int  icecomp_debug(struct re_printf *pf, const struct icem_comp *comp);
 
 
 /* conncheck */
@@ -237,4 +238,3 @@ uint32_t ice_calc_prio(enum cand_type type, uint16_t local, uint8_t compid);
 uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d);
 void ice_switch_local_role(struct ice *ice);
 uint32_t ice_list_unique(struct list *list, list_unique_h *uh);
-uint64_t ice_get_usec(void);

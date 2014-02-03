@@ -141,6 +141,17 @@ static void handle_success(struct icem *icem, struct candpair *cp,
 }
 
 
+#if ICE_TRACE
+static int print_err(struct re_printf *pf, const int *err)
+{
+	if (err && *err)
+		return re_hprintf(pf, " (%m)", *err);
+
+	return 0;
+}
+#endif
+
+
 static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 			       const struct stun_msg *msg, void *arg)
 {
@@ -151,10 +162,10 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 	(void)reason;
 
 #if ICE_TRACE
-	icecomp_printf(cp->comp, "Rx %H <--- %H '%u %s' (%m)\n",
+	icecomp_printf(cp->comp, "Rx %H <--- %H '%u %s'%H\n",
 		       icem_cand_print, cp->lcand,
 		       icem_cand_print, cp->rcand,
-		       scode, reason, err);
+		       scode, reason, print_err, &err);
 #endif
 
 	if (err) {

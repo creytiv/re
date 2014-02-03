@@ -271,3 +271,16 @@ void icecomp_printf(struct icem_comp *comp, const char *fmt, ...)
 	(void)re_printf("{%11s.%u} %v", comp->icem->name, comp->id, fmt, &ap);
 	va_end(ap);
 }
+
+
+int icecomp_debug(struct re_printf *pf, const struct icem_comp *comp)
+{
+	if (!comp)
+		return 0;
+
+	return re_hprintf(pf, "id=%u ldef=%J rdef=%J concluded=%d",
+			  comp->id,
+			  comp->def_lcand ? &comp->def_lcand->addr : NULL,
+			  comp->def_rcand ? &comp->def_rcand->addr : NULL,
+			  comp->concluded);
+}
