@@ -24,6 +24,7 @@
 
 enum {
 	TCP_ACCEPT_TIMEOUT    = 32,
+	TCP_IDLE_TIMEOUT      = 900,
 	TCP_KEEPALIVE_TIMEOUT = 10,
 	TCP_KEEPALIVE_INTVAL  = 120,
 	TCP_BUFSIZE_MAX       = 65536,
@@ -326,9 +327,6 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 	size_t pos;
 	int err = 0;
 
-	if (conn->tmr.th)
-		tmr_cancel(&conn->tmr);
-
 	if (conn->mb) {
 		pos = conn->mb->pos;
 
@@ -358,6 +356,9 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 			break;
 
 		if (!memcmp(mbuf_buf(conn->mb), "\r\n", 2)) {
+
+			tmr_start(&conn->tmr, TCP_IDLE_TIMEOUT * 1000,
+				  conn_tmr_handler, conn);
 
 			conn->mb->pos += 2;
 
@@ -407,6 +408,9 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 			mem_deref(msg);
 			break;
 		}
+
+		tmr_start(&conn->tmr, TCP_IDLE_TIMEOUT * 1000,
+			  conn_tmr_handler, conn);
 
 		end = conn->mb->end;
 
@@ -580,6 +584,8 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 			goto out;
 	}
 #endif
+
+	tmr_start(&conn->tmr, TCP_IDLE_TIMEOUT * 1000, conn_tmr_handler, conn);
 
  enqueue:
 	qent = mem_zalloc(sizeof(*qent), qent_destructor);
