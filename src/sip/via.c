@@ -44,7 +44,7 @@ int sip_via_decode(struct sip_via *via, const struct pl *pl)
 
 	err = re_regex(pl->p, pl->l,
 		       "SIP[  \t\r\n]*/[ \t\r\n]*2.0[ \t\r\n]*/[ \t\r\n]*"
-		       "[A-Z]+[ \t\r\n]*[^; \t\r\n]+[ \t\r\b]*[^]*",
+		       "[A-Z]+[ \t\r\n]*[^; \t\r\n]+[ \t\r\n]*[^]*",
 		       NULL, NULL, NULL, NULL, &transp,
 		       NULL, &via->sentby, NULL, &via->params);
 	if (err)
