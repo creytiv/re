@@ -40,6 +40,7 @@ Modules:
 * mem       stable        Memory referencing
 * mod       testing       Run-time module loading
 * mqueue    testing       Thread-safe message queue
+* msg       unstable      Generic message component library
 * natbd     unstable      NAT Behavior Discovery using STUN
 * net       unstable      Networking routines
 * rtp       testing       Real-time Transport Protocol

@@ -195,10 +195,10 @@ struct sip_msg {
 	struct sip_taddr to;
 	struct sip_taddr from;
 	struct sip_cseq cseq;
+	struct msg_ctype ctyp;
 	struct pl callid;
 	struct pl maxfwd;
 	struct pl expires;
-	struct pl ctype;
 	struct pl clen;
 	struct hash *hdrht;
 	struct mbuf *mb;
@@ -346,8 +346,6 @@ void sip_msg_dump(const struct sip_msg *msg);
 int sip_addr_decode(struct sip_addr *addr, const struct pl *pl);
 int sip_via_decode(struct sip_via *via, const struct pl *pl);
 int sip_cseq_decode(struct sip_cseq *cseq, const struct pl *pl);
-int sip_param_decode(const struct pl *pl, const char *name, struct pl *val);
-int sip_param_exists(const struct pl *pl, const char *name, struct pl *end);
 
 
 /* keepalive */

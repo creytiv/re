@@ -12,6 +12,7 @@
 #include <re_sa.h>
 #include <re_list.h>
 #include <re_fmt.h>
+#include <re_msg.h>
 #include <re_httpauth.h>
 #include <re_http.h>
 

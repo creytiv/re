@@ -18,6 +18,7 @@
 #include <re_stun.h>
 #include <re_tcp.h>
 #include <re_tls.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include "sip.h"
 

@@ -9,6 +9,7 @@
 #include <re_uri.h>
 #include <re_list.h>
 #include <re_sa.h>
+#include <re_msg.h>
 #include <re_sip.h>
 
 

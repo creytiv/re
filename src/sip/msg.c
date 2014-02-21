@@ -14,6 +14,7 @@
 #include <re_fmt.h>
 #include <re_uri.h>
 #include <re_udp.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include "sip.h"
 
@@ -198,7 +199,7 @@ static inline int hdr_add(struct sip_msg *msg, const struct pl *name,
 		if (err)
 			break;
 
-		(void)sip_param_decode(&msg->to.params, "tag", &msg->to.tag);
+		(void)msg_param_decode(&msg->to.params, "tag", &msg->to.tag);
 		msg->to.val = hdr->val;
 		break;
 
@@ -208,7 +209,7 @@ static inline int hdr_add(struct sip_msg *msg, const struct pl *name,
 		if (err)
 			break;
 
-		(void)sip_param_decode(&msg->from.params, "tag",
+		(void)msg_param_decode(&msg->from.params, "tag",
 				       &msg->from.tag);
 		msg->from.val = hdr->val;
 		break;
@@ -226,7 +227,7 @@ static inline int hdr_add(struct sip_msg *msg, const struct pl *name,
 		break;
 
 	case SIP_HDR_CONTENT_TYPE:
-		msg->ctype = hdr->val;
+		err = msg_ctype_decode(&msg->ctyp, &hdr->val);
 		break;
 
 	case SIP_HDR_CONTENT_LENGTH:

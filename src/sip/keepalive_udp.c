@@ -17,6 +17,7 @@
 #include <re_tmr.h>
 #include <re_udp.h>
 #include <re_stun.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include "sip.h"
 

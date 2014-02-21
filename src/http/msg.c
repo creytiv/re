@@ -10,6 +10,7 @@
 #include <re_list.h>
 #include <re_hash.h>
 #include <re_fmt.h>
+#include <re_msg.h>
 #include <re_http.h>
 
 
@@ -94,6 +95,7 @@ static inline int hdr_add(struct http_msg *msg, const struct pl *name,
 			  enum http_hdrid id, const char *p, ssize_t l)
 {
 	struct http_hdr *hdr;
+	int err = 0;
 
 	hdr = mem_zalloc(sizeof(*hdr), hdr_destructor);
 	if (!hdr)
@@ -110,7 +112,7 @@ static inline int hdr_add(struct http_msg *msg, const struct pl *name,
 	switch (id) {
 
 	case HTTP_HDR_CONTENT_TYPE:
-		msg->ctype = hdr->val;
+		err = msg_ctype_decode(&msg->ctyp, &hdr->val);
 		break;
 
 	case HTTP_HDR_CONTENT_LENGTH:
@@ -121,7 +123,10 @@ static inline int hdr_add(struct http_msg *msg, const struct pl *name,
 		break;
 	}
 
-	return 0;
+	if (err)
+		mem_deref(hdr);
+
+	return err;
 }
 
 

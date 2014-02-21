@@ -13,6 +13,7 @@
 #include <re_uri.h>
 #include <re_sys.h>
 #include <re_udp.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include "sip.h"
 
@@ -607,7 +608,7 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 	if (err)
 		goto out;
 
-	if (sip_param_decode(&route->params, "maddr", &pl))
+	if (msg_param_decode(&route->params, "maddr", &pl))
 		pl = route->host;
 
 	err = pl_strdup(&req->host, &pl);
@@ -621,7 +622,7 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 	req->resph = resph;
 	req->arg   = arg;
 
-	if (!sip_param_decode(&route->params, "transport", &pl)) {
+	if (!msg_param_decode(&route->params, "transport", &pl)) {
 
 		if (!pl_strcasecmp(&pl, "udp"))
 			req->tp = SIP_TRANSP_UDP;

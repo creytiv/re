@@ -12,6 +12,7 @@
 #include <re_fmt.h>
 #include <re_uri.h>
 #include <re_tmr.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include <re_sipevent.h>
 #include "sipevent.h"

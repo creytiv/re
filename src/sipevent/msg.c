@@ -9,6 +9,7 @@
 #include <re_uri.h>
 #include <re_list.h>
 #include <re_sa.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include <re_sipevent.h>
 
@@ -26,7 +27,7 @@ int sipevent_event_decode(struct sipevent_event *se, const struct pl *pl)
 	if (err)
 		return EBADMSG;
 
-	if (!sip_param_decode(&se->params, "id", &param))
+	if (!msg_param_decode(&se->params, "id", &param))
 		se->id = param;
 	else
 		se->id = pl_null;
@@ -57,7 +58,7 @@ int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 	else
 		ss->state = -1;
 
-	if (!sip_param_decode(&ss->params, "reason", &param)) {
+	if (!msg_param_decode(&ss->params, "reason", &param)) {
 
 		if (!pl_strcasecmp(&param, "deactivated"))
 			ss->reason = SIPEVENT_DEACTIVATED;
@@ -78,12 +79,12 @@ int sipevent_substate_decode(struct sipevent_substate *ss, const struct pl *pl)
 		ss->reason = -1;
 	}
 
-	if (!sip_param_decode(&ss->params, "expires", &param))
+	if (!msg_param_decode(&ss->params, "expires", &param))
 		ss->expires = param;
 	else
 		ss->expires = pl_null;
 
-	if (!sip_param_decode(&ss->params, "retry-after", &param))
+	if (!msg_param_decode(&ss->params, "retry-after", &param))
 		ss->retry_after = param;
 	else
 		ss->retry_after = pl_null;

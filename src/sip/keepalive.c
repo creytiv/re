@@ -14,6 +14,7 @@
 #include <re_sys.h>
 #include <re_uri.h>
 #include <re_udp.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include "sip.h"
 

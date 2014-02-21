@@ -9,6 +9,7 @@
 #include <re_uri.h>
 #include <re_list.h>
 #include <re_sa.h>
+#include <re_msg.h>
 #include <re_sip.h>
 
 
@@ -72,5 +73,5 @@ int sip_via_decode(struct sip_via *via, const struct pl *pl)
 
 	via->val = *pl;
 
-	return sip_param_decode(&via->params, "branch", &via->branch);
+	return msg_param_decode(&via->params, "branch", &via->branch);
 }

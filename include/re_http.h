@@ -81,7 +81,7 @@ struct http_msg {
 	uint16_t scode;
 	struct pl reason;
 	struct list hdrl;
-	struct pl ctype;
+	struct msg_ctype ctyp;
 	struct mbuf *mb;
 	uint32_t clen;
 };

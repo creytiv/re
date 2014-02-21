@@ -15,6 +15,7 @@
 #include <re_md5.h>
 #include <re_httpauth.h>
 #include <re_udp.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include "sip.h"
 

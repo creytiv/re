@@ -13,6 +13,7 @@
 #include <re_uri.h>
 #include <re_sys.h>
 #include <re_tmr.h>
+#include <re_msg.h>
 #include <re_sip.h>
 #include <re_sipreg.h>
 
@@ -155,7 +156,7 @@ static bool contact_handler(const struct sip_hdr *hdr,
 	if (pl_strcmp(&c.auri, uri))
 		return false;
 
-	if (!sip_param_decode(&c.params, "expires", &pval)) {
+	if (!msg_param_decode(&c.params, "expires", &pval)) {
 	        reg->wait = pl_u32(&pval);
 	}
 	else if (pl_isset(&msg->expires))
