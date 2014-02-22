@@ -589,6 +589,19 @@ const struct sa *sdp_media_raddr(const struct sdp_media *m)
 
 
 /**
+ * Get the local network address of an SDP Media line
+ *
+ * @param m SDP Media line
+ *
+ * @return Local network address
+ */
+const struct sa *sdp_media_laddr(const struct sdp_media *m)
+{
+	return m ? &m->laddr : NULL;
+}
+
+
+/**
  * Get the remote RTCP network address of an SDP Media line
  *
  * @param m     SDP Media line
