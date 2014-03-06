@@ -110,6 +110,20 @@ bool http_msg_xhdr_has_value(const struct http_msg *msg, const char *name,
 int  http_msg_print(struct re_printf *pf, const struct http_msg *msg);
 
 
+/* Client */
+struct http_cli;
+struct http_req;
+struct dnsc;
+
+typedef void (http_resp_h)(int err, const struct http_msg *msg, void *arg);
+typedef void (http_data_h)(struct mbuf *mb, void *arg);
+
+int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc);
+int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
+		 const char *uri, http_resp_h *resph, http_data_h *datah,
+		 void *arg, const char *fmt, ...);
+
+
 /* Server */
 struct http_sock;
 struct http_conn;
