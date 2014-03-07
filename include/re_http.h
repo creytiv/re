@@ -135,6 +135,7 @@ int  http_listen(struct http_sock **sockp, const struct sa *laddr,
 		 http_req_h *reqh, void *arg);
 int  https_listen(struct http_sock **sockp, const struct sa *laddr,
 		  const char *cert, http_req_h *reqh, void *arg);
+struct tcp_sock *http_sock_tcp(struct http_sock *sock);
 const struct sa *http_conn_peer(const struct http_conn *conn);
 struct tcp_conn *http_conn_tcp(struct http_conn *conn);
 struct tls_conn *http_conn_tls(struct http_conn *conn);

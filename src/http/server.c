@@ -320,6 +320,19 @@ int https_listen(struct http_sock **sockp, const struct sa *laddr,
 
 
 /**
+ * Get the TCP socket of an HTTP socket
+ *
+ * @param sock HTTP socket
+ *
+ * @return TCP socket
+ */
+struct tcp_sock *http_sock_tcp(struct http_sock *sock)
+{
+	return sock ? sock->ts : NULL;
+}
+
+
+/**
  * Get the peer address of an HTTP connection
  *
  * @param conn HTTP connection
