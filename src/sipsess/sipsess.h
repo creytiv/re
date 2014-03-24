@@ -20,6 +20,7 @@ struct sipsess {
 	struct sip *sip;
 	char *cuser;
 	char *ctype;
+	char *close_hdrs;
 	struct mbuf *hdrs;
 	struct mbuf *desc;
 	sipsess_offer_h *offerh;

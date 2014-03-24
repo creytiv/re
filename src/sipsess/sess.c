@@ -145,6 +145,7 @@ static void destructor(void *arg)
 	mem_deref(sess->auth);
 	mem_deref(sess->cuser);
 	mem_deref(sess->ctype);
+	mem_deref(sess->close_hdrs);
 	mem_deref(sess->hdrs);
 	mem_deref(sess->desc);
 	mem_deref(sess->sock);
@@ -231,4 +232,33 @@ void sipsess_terminate(struct sipsess *sess, int err,
 struct sip_dialog *sipsess_dialog(const struct sipsess *sess)
 {
 	return sess ? sess->dlg : NULL;
+}
+
+
+/**
+ * Set extra SIP headers for inclusion in Session "close" messages
+ * like BYE and 200 OK. Multiple headers can be included.
+ *
+ * @param sess      SIP Session
+ * @param hdrs      Formatted strings with extra SIP Headers
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sipsess_set_close_headers(struct sipsess *sess, const char *hdrs, ...)
+{
+	int err = 0;
+	va_list ap;
+
+	if (!sess)
+		return EINVAL;
+
+	sess->close_hdrs = mem_deref(sess->close_hdrs);
+
+	if (hdrs) {
+		va_start(ap, hdrs);
+		err = re_vsdprintf(&sess->close_hdrs, hdrs, ap);
+		va_end(ap);
+	}
+
+	return err;
 }

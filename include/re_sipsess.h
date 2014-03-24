@@ -55,5 +55,6 @@ int  sipsess_reject(struct sipsess *sess, uint16_t scode, const char *reason,
 int  sipsess_modify(struct sipsess *sess, struct mbuf *desc);
 int  sipsess_info(struct sipsess *sess, const char *ctype, struct mbuf *body,
 		  sip_resp_h *resph, void *arg);
+int  sipsess_set_close_headers(struct sipsess *sess, const char *hdrs, ...);
 void sipsess_close_all(struct sipsess_sock *sock);
 struct sip_dialog *sipsess_dialog(const struct sipsess *sess);

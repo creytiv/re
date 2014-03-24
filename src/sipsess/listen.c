@@ -123,7 +123,11 @@ static void bye_handler(struct sipsess_sock *sock, const struct sip_msg *msg)
 		return;
 	}
 
-	(void)sip_treply(NULL, sip, msg, 200, "OK");
+	(void)sip_treplyf(NULL, NULL, sip, msg, false, 200, "OK",
+			  "%s"
+			  "Content-Length: 0\r\n"
+			  "\r\n",
+			  sess->close_hdrs);
 
 	sess->peerterm = true;
 
