@@ -13,10 +13,20 @@
 #include <net/if.h>
 
 
+/*
+ * See https://github.com/boundary/libdnet/blob/master/src/route-bsd.c
+ */
+
+#ifdef __APPLE__
+#define RT_MSGHDR_ALIGNMENT sizeof(uint32_t)
+#else
+#define RT_MSGHDR_ALIGNMENT sizeof(unsigned long)
+#endif
+
 #define ROUNDUP(a) \
 	((a) > 0						\
-	 ? (1 + (((size_t)(a) - 1) | (sizeof(long) - 1)))	\
-	 : sizeof(long))
+	 ? (1 + (((size_t)(a) - 1) | (RT_MSGHDR_ALIGNMENT - 1))) \
+	 : RT_MSGHDR_ALIGNMENT)
 
 
 int net_rt_list(net_rt_h *rth, void *arg)
@@ -46,7 +56,7 @@ int net_rt_list(net_rt_h *rth, void *arg)
 	}
 
 	for (p = buf; p<buf+l; p += rt->rtm_msglen) {
-		rt = (struct rt_msghdr *)p;
+		rt = (void *)p;  /* buffer is aligned */
 		sa = (struct sockaddr *)(rt + 1);
 
 		if (rt->rtm_type != RTM_GET)
