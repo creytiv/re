@@ -14,7 +14,7 @@ void hmac_sha1(const uint8_t *k,   /* secret key */
 
 
 enum hmac_hash {
-	HMAC_SHA1
+	HMAC_HASH_SHA1
 };
 
 struct hmac;

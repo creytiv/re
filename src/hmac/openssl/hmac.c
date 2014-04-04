@@ -32,7 +32,7 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 	if (!hmacp || !key || !key_len)
 		return EINVAL;
 
-	if (hash != HMAC_SHA1)
+	if (hash != HMAC_HASH_SHA1)
 		return ENOTSUP;
 
 	hmac = mem_zalloc(sizeof(*hmac), destructor);
