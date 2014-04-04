@@ -758,7 +758,7 @@ SPLINT_OPTIONS += -DHAVE_INET_NTOP -DHAVE_INET_PTON -DHAVE_INET6
 
 # ignore these files for now
 SPLINT_IGNORE  := src/tls/openssl/tls.c src/tls/openssl/tls_tcp.c
-SPLINT_IGNORE  += src/dns/darwin/srv.c
+SPLINT_IGNORE  += src/dns/darwin/srv.c src/aes/openssl/aes.c
 
 SPLINT_SOURCES += $(filter-out $(SPLINT_IGNORE), $(patsubst %,src/%,$(SRCS)))
 

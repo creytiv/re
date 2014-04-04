@@ -20,6 +20,7 @@ extern "C" {
 #include "re_sa.h"
 
 /* Library modules */
+#include "re_aes.h"
 #include "re_base64.h"
 #include "re_bfcp.h"
 #include "re_conf.h"
