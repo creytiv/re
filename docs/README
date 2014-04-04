@@ -19,6 +19,7 @@ Modules:
 
   name:     status:       description:
 
+* aes       unstable      AES (Advanced Encryption Standard)
 * base64    testing       Base-64 encoding/decoding functions
 * bfcp      unstable      The Binary Floor Control Protocol (BFCP)
 * conf      testing       Configuration file parser
