@@ -422,6 +422,8 @@ struct list *icem_validl(const struct icem *icem)
  * Set the default local candidates, for ICE-lite mode only
  *
  * @param icem ICE Media object
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int icem_lite_set_default_candidates(struct icem *icem)
 {

@@ -1,5 +1,5 @@
 /**
- * @file client.c  DNS Client
+ * @file dns/client.c  DNS Client
  *
  * Copyright (C) 2010 Creytiv.com
  */

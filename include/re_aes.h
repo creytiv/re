@@ -9,6 +9,7 @@
 #define AES_BLOCK_SIZE 16
 #endif
 
+/** AES mode */
 enum aes_mode {
 	AES_MODE_CTR  /**< AES Counter mode (CTR) */
 };

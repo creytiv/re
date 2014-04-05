@@ -1,5 +1,5 @@
 /**
- * @file hmac.c  HMAC-SHA1
+ * @file hmac/hmac.c  HMAC-SHA1
  *
  * Copyright (C) 2010 Creytiv.com
  */
