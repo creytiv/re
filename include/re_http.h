@@ -122,6 +122,8 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc);
 int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		 const char *uri, http_resp_h *resph, http_data_h *datah,
 		 void *arg, const char *fmt, ...);
+struct tcp_conn *http_req_tcp(struct http_req *req);
+struct tls_conn *http_req_tls(struct http_req *req);
 
 
 /* Server */

@@ -338,12 +338,14 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		     &scheme, &host, NULL, &port, &path) || scheme.p != uri)
 		return EINVAL;
 
-	if (!pl_strcasecmp(&scheme, "http")) {
+	if (!pl_strcasecmp(&scheme, "http") ||
+	    !pl_strcasecmp(&scheme, "ws")) {
 		secure  = false;
 		defport = 80;
 	}
 #ifdef USE_TLS
-	else if (!pl_strcasecmp(&scheme, "https")) {
+	else if (!pl_strcasecmp(&scheme, "https") ||
+		 !pl_strcasecmp(&scheme, "wss")) {
 		secure  = true;
 		defport = 443;
 	}
@@ -454,4 +456,16 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 		*clip = cli;
 
 	return err;
+}
+
+
+struct tcp_conn *http_req_tcp(struct http_req *req)
+{
+	return req ? req->tc : NULL;
+}
+
+
+struct tls_conn *http_req_tls(struct http_req *req)
+{
+	return req ? req->sc : NULL;
 }
