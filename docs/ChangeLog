@@ -1,3 +1,35 @@
+2014-04-11 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.8
+
+	* build: added support for Apple in cmake
+
+	* debian: update package
+
+	* aes: added AES (Advanced Encryption Standard) wrapper
+
+	* hmac: added a stateful HMAC wrapper
+
+	* http: added a HTTP client
+
+	* ice: minor API improvements
+
+	* msg: added a Generic message component library
+	       (shared by SIP module and HTTP module)
+
+	* sdp: added sdp_media_laddr() to get local transport address
+
+	* sip: change struct sip_msg to use new struct msg_ctype
+	       fixed a bug in parsing of Via headers
+
+	* sipsess: added sipsess_set_close_headers() to set any additional
+		   SIP headers for BYE or BYE-response
+
+	* net: fixed a bug in net_rt_list() for darwin
+
+	* websock: added WebSocket Protocol (RFC 6455)
+
+
 2014-01-05 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.7

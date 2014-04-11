@@ -1,6 +1,6 @@
 %define name     re
-%define ver      0.4.7
-%define rel      3
+%define ver      0.4.8
+%define rel      1
 
 Summary: Generic library for real-time communications with async IO support
 Name: %name
