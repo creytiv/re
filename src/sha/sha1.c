@@ -207,11 +207,12 @@ void SHA1_Init(SHA1_CTX* context)
  * Run your data through this
  *
  * @param context SHA1-Context
- * @param data    Buffer to run SHA1 on
+ * @param p       Buffer to run SHA1 on
  * @param len     Number of bytes
  */
-void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)
+void SHA1_Update(SHA1_CTX* context, const void *p, size_t len)
 {
+	const uint8_t* data = p;
 	size_t i, j;
 
 	j = (context->count[0] >> 3) & 63;
