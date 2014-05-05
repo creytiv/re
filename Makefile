@@ -29,7 +29,7 @@ MODULES += list mbuf hash
 MODULES += fmt tmr main mem dbg sys lock mqueue
 MODULES += mod conf
 MODULES += bfcp
-MODULES += aes
+MODULES += aes srtp
 
 INSTALL := install
 ifeq ($(DESTDIR),)

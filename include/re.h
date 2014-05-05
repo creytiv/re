@@ -48,6 +48,7 @@ extern "C" {
 #include "re_sipsess.h"
 #include "re_stun.h"
 #include "re_natbd.h"
+#include "re_srtp.h"
 #include "re_sys.h"
 #include "re_tcp.h"
 #include "re_telev.h"
