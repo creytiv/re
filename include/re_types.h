@@ -122,6 +122,8 @@ typedef bool _Bool;
 #undef MAX
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
 
+#ifndef __cplusplus
+
 /** Get the minimal value */
 #undef min
 #define min(x,y) MIN(x, y)
@@ -129,6 +131,8 @@ typedef bool _Bool;
 /** Get the maximal value */
 #undef max
 #define max(x,y) MAX(x, y)
+
+#endif
 
 /** Defines a soft breakpoint */
 #if (defined(__i386__) || defined(__x86_64__)) && !defined(__SYMBIAN32__)
