@@ -40,7 +40,10 @@ static void destructor(void *arg)
 	struct tls_conn *tc = arg;
 
 	if (tc->ssl) {
-		(void)SSL_shutdown(tc->ssl);
+		int r = SSL_shutdown(tc->ssl);
+		if (r <= 0)
+			ERR_clear_error();
+
 		SSL_free(tc->ssl);
 	}
 	mem_deref(tc->th);
@@ -238,7 +241,7 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 		}
 
 		n = SSL_read(tc->ssl, mbuf_buf(mb), (int)mbuf_get_space(mb));
-		if (n < 0) {
+		if (n <= 0) {
 			const int ssl_err = SSL_get_error(tc->ssl, n);
 
 			ERR_clear_error();
@@ -255,8 +258,6 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 
 			break;
 		}
-		else if (n == 0)
-			break;
 
 		mb->pos += n;
 	}
@@ -320,6 +321,7 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 	tc->ssl = SSL_new(tls->ctx);
 	if (!tc->ssl) {
 		DEBUG_WARNING("alloc: SSL_new() failed (ctx=%p)\n", tls->ctx);
+		ERR_clear_error();
 		goto out;
 	}
 

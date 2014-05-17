@@ -137,6 +137,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	}
 
 	if (!tls->ctx) {
+		ERR_clear_error();
 		err = ENOMEM;
 		goto out;
 	}
@@ -164,6 +165,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		if (r <= 0) {
 			DEBUG_WARNING("Can't read certificate file: %s (%d)\n",
 				      keyfile, r);
+			ERR_clear_error();
 			err = EINVAL;
 			goto out;
 		}
@@ -173,6 +175,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		if (r <= 0) {
 			DEBUG_WARNING("Can't read key file: %s (%d)\n",
 				      keyfile, r);
+			ERR_clear_error();
 			err = EINVAL;
 			goto out;
 		}
@@ -205,6 +208,7 @@ int tls_add_ca(struct tls *tls, const char *capath)
 	/* Load the CAs we trust */
 	if (!(SSL_CTX_load_verify_locations(tls->ctx, capath, 0))) {
 		DEBUG_WARNING("Can't read CA list: %s\n", capath);
+		ERR_clear_error();
 		return EINVAL;
 	}
 
@@ -224,6 +228,7 @@ int tls_add_ca(struct tls *tls, const char *capath)
 int tls_verify_cert(struct tls_conn *tc, char *cn, size_t cn_size)
 {
 	X509 *peer;
+	int n;
 
 	if (!tc || !cn || !cn_size)
 		return EINVAL;
@@ -239,11 +244,14 @@ int tls_verify_cert(struct tls_conn *tc, char *cn, size_t cn_size)
 	}
 
 	/* Get the common name */
-	X509_NAME_get_text_by_NID(X509_get_subject_name(peer),
-				  NID_commonName, cn, (int)cn_size);
+	n = X509_NAME_get_text_by_NID(X509_get_subject_name(peer),
+				      NID_commonName, cn, (int)cn_size);
+	if (n < 0)
+		cn[0] = '\0';
 
 	/* todo get valid start/end date */
 
+	X509_free(peer);
 
 	if (SSL_get_verify_result(tc->ssl) != X509_V_OK) {
 		DEBUG_WARNING("Certificate doesn't verify\n");
@@ -268,18 +276,25 @@ static const EVP_MD *type2evp(const char *type)
 int tls_get_remote_fingerprint(const struct tls_conn *tc, const char *type,
 			       struct tls_fingerprint *fp)
 {
+	const EVP_MD *evp;
 	X509 *x;
+	int n;
 
 	if (!tc || !fp)
 		return EINVAL;
+
+	evp = type2evp(type);
+	if (!evp)
+		return ENOTSUP;
 
 	x = SSL_get_peer_certificate(tc->ssl);
 	if (!x)
 		return EPROTO;
 
 	fp->len = sizeof(fp->md);
-	if (1 != X509_digest(x, type2evp(type), fp->md, &fp->len))
-		return ENOENT;
+	n = X509_digest(x, evp, fp->md, &fp->len);
 
-	return 0;
+	X509_free(x);
+
+	return (n == 1) ? 0 : ENOENT;
 }
