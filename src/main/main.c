@@ -1005,6 +1005,7 @@ void re_thread_close(void)
 
 	re = pthread_getspecific(pt_key);
 	if (re) {
+		poll_close(re);
 		free(re);
 		pthread_setspecific(pt_key, NULL);
 	}
