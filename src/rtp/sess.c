@@ -563,12 +563,12 @@ void rtcp_sess_rx_rtp(struct rtcp_sess *sess, uint16_t seq, uint32_t ts,
 
 	if (sess->srate_rx) {
 
-		uint32_t ts_arrive;
+		uint64_t ts_arrive;
 
 		/* Convert from wall-clock time to timestamp units */
-		ts_arrive = (uint32_t)(tmr_jiffies()) * sess->srate_rx / 1000;
+		ts_arrive = tmr_jiffies() * sess->srate_rx / 1000;
 
-		source_calc_jitter(mbr->s, ts, ts_arrive);
+		source_calc_jitter(mbr->s, ts, (uint32_t)ts_arrive);
 	}
 
 	mbr->s->rtp_rx_bytes += payload_size;

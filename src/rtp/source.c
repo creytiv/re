@@ -117,10 +117,12 @@ void source_calc_jitter(struct rtp_source *s, uint32_t rtp_ts,
 	const int transit = arrival - rtp_ts;
 	int d = transit - s->transit;
 
-	s->transit = transit;
-
-	if (!s->rtp_rx_bytes)
+	if (!s->transit) {
+		s->transit = transit;
 		return;
+	}
+
+	s->transit = transit;
 
 	if (d < 0)
 		d = -d;
