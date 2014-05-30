@@ -174,8 +174,8 @@ int http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req)
 		}
 	}
 	else {
-		if (re_regex(s.p, s.l, "HTTP/[0-9.]+ [0-9]+ [^]*",
-			     &msg->ver, &scode, &msg->reason) ||
+		if (re_regex(s.p, s.l, "HTTP/[0-9.]+ [0-9]+[ ]*[^]*",
+			     &msg->ver, &scode, NULL, &msg->reason) ||
 		    msg->ver.p != s.p + 5) {
 			err = EBADMSG;
 			goto out;
