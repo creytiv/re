@@ -38,6 +38,7 @@ static void destructor(void *arg)
 	list_unlink(&m->le);
 	mem_deref(m->name);
 	mem_deref(m->proto);
+	mem_deref(m->uproto);
 }
 
 

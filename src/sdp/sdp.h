@@ -40,6 +40,7 @@ struct sdp_media {
 	char *name;
 	char *proto;
 	char *protov[8];
+	char *uproto;           /* unsupported protocol */
 	sdp_media_enc_h *ench;
 	void *arg;
 	enum sdp_dir ldir;

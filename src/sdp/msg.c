@@ -191,13 +191,21 @@ static int media_decode(struct sdp_media **mp, struct sdp_session *sess,
 			list_unlink(&m->le);
 			list_append(&sess->medial, &m->le, m);
 		}
+
+		m->uproto = mem_deref(m->uproto);
 	}
 	else {
 		if (pl_strcmp(&name, m->name))
 			return offer ? ENOTSUP : EPROTO;
 
-		if (!sdp_media_proto_cmp(m, &proto, offer))
-			return ENOTSUP;
+		m->uproto = mem_deref(m->uproto);
+
+		if (!sdp_media_proto_cmp(m, &proto, offer)) {
+
+			err = pl_strdup(&m->uproto, &proto);
+			if (err)
+				return err;
+		}
 	}
 
 	while (!re_regex(fmtv.p, fmtv.l, " [^ ]+", &fmt)) {
@@ -210,7 +218,7 @@ static int media_decode(struct sdp_media **mp, struct sdp_session *sess,
 	}
 
 	m->raddr = sess->raddr;
-	sa_set_port(&m->raddr, pl_u32(&port));
+	sa_set_port(&m->raddr, m->uproto ? 0 : pl_u32(&port));
 
 	m->rdir = sess->rdir;
 
@@ -341,6 +349,7 @@ int sdp_decode(struct sdp_session *sess, struct mbuf *mb, bool offer)
 static int media_encode(const struct sdp_media *m, struct mbuf *mb, bool offer)
 {
 	enum sdp_bandwidth i;
+	const char *proto;
 	int err, supc = 0;
 	bool disabled;
 	struct le *le;
@@ -354,16 +363,23 @@ static int media_encode(const struct sdp_media *m, struct mbuf *mb, bool offer)
 			++supc;
 	}
 
-	if (m->disabled || supc == 0 || (!offer && !sa_port(&m->raddr))) {
+	if (m->uproto && !offer) {
 		disabled = true;
 		port = 0;
+		proto = m->uproto;
+	}
+	else if (m->disabled || supc == 0 || (!offer && !sa_port(&m->raddr))) {
+		disabled = true;
+		port = 0;
+		proto = m->proto;
 	}
 	else {
 		disabled = false;
 		port = sa_port(&m->laddr);
+		proto = m->proto;
 	}
 
-	err = mbuf_printf(mb, "m=%s %u %s", m->name, port, m->proto);
+	err = mbuf_printf(mb, "m=%s %u %s", m->name, port, proto);
 
 	if (disabled) {
 		err |= mbuf_write_str(mb, " 0\r\n");
