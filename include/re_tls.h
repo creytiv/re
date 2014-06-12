@@ -7,7 +7,6 @@
 
 struct tls;
 struct tls_conn;
-struct tls_sock;
 struct tcp_conn;
 struct udp_sock;
 
@@ -18,23 +17,54 @@ enum tls_method {
 	TLS_METHOD_DTLSV1,
 };
 
-struct tls_fingerprint {
-	uint8_t md[64];
-	unsigned int len;
+enum tls_fingerprint {
+	TLS_FINGERPRINT_SHA1,
+	TLS_FINGERPRINT_SHA256,
 };
 
 
 int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	      const char *pwd);
 int tls_add_ca(struct tls *tls, const char *capath);
-int tls_verify_cert(struct tls_conn *tc, char *cn, size_t cn_size);
+int tls_set_selfsigned(struct tls *tls, const char *cn);
+void tls_set_verify_client(struct tls *tls);
+int tls_set_srtp(struct tls *tls, const char *suites);
+int tls_fingerprint(const struct tls *tls, enum tls_fingerprint type,
+		    uint8_t *md, size_t size);
 
-int tls_get_remote_fingerprint(const struct tls_conn *tc, const char *type,
-			       struct tls_fingerprint *fp);
+int tls_peer_fingerprint(const struct tls_conn *tc, enum tls_fingerprint type,
+			 uint8_t *md, size_t size);
+int tls_peer_common_name(const struct tls_conn *tc, char *cn, size_t size);
+int tls_peer_verify(const struct tls_conn *tc);
+int tls_srtp_keyinfo(const struct tls_conn *tc, enum srtp_suite *suite,
+		     uint8_t *cli_key, size_t cli_key_size,
+		     uint8_t *srv_key, size_t srv_key_size);
+
+
+/* TCP */
 
 int tls_start_tcp(struct tls_conn **ptc, struct tls *tls,
 		  struct tcp_conn *tcp, int layer);
-int tls_start_udp(struct tls_sock **tsp, struct tls *tls,
-		  struct udp_sock *us, int layer, uint32_t bsize);
-struct tls_conn *tls_udp_conn(const struct tls_sock *ts,
-			      const struct sa *peer);
+
+
+/* UDP (DTLS) */
+
+typedef void (dtls_conn_h)(const struct sa *peer, void *arg);
+typedef void (dtls_estab_h)(void *arg);
+typedef void (dtls_recv_h)(struct mbuf *mb, void *arg);
+typedef void (dtls_close_h)(int err, void *arg);
+
+struct dtls_sock;
+
+int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
+		struct udp_sock *us, uint32_t htsize, int layer,
+		dtls_conn_h *connh, void *arg);
+int dtls_connect(struct tls_conn **ptc, struct tls *tls,
+		 struct dtls_sock *sock, const struct sa *peer,
+		 dtls_estab_h *estabh, dtls_recv_h *recvh,
+		 dtls_close_h *closeh, void *arg);
+int dtls_accept(struct tls_conn **ptc, struct tls *tls,
+		struct dtls_sock *sock,
+		dtls_estab_h *estabh, dtls_recv_h *recvh,
+		dtls_close_h *closeh, void *arg);
+int dtls_send(struct tls_conn *tc, struct mbuf *mb);

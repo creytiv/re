@@ -13,6 +13,7 @@
 #include <re_main.h>
 #include <re_sa.h>
 #include <re_net.h>
+#include <re_srtp.h>
 #include <re_tcp.h>
 #include <re_tls.h>
 #include "tls.h"
@@ -126,6 +127,8 @@ static int tls_connect(struct tls_conn *tc)
 {
 	int err = 0, r;
 
+	ERR_clear_error();
+
 	r = SSL_connect(tc->ssl);
 	if (r <= 0) {
 		const int ssl_err = SSL_get_error(tc->ssl, r);
@@ -152,6 +155,8 @@ static int tls_connect(struct tls_conn *tc)
 static int tls_accept(struct tls_conn *tc)
 {
 	int err = 0, r;
+
+	ERR_clear_error();
 
 	r = SSL_accept(tc->ssl);
 	if (r <= 0) {
@@ -201,6 +206,7 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 	r = BIO_write(tc->sbio_in, mbuf_buf(mb), (int)mbuf_get_left(mb));
 	if (r <= 0) {
 		DEBUG_WARNING("recv: BIO_write %d\n", r);
+		ERR_clear_error();
 		*err = ENOMEM;
 		return true;
 	}
@@ -240,6 +246,8 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 				return true;
 		}
 
+		ERR_clear_error();
+
 		n = SSL_read(tc->ssl, mbuf_buf(mb), (int)mbuf_get_space(mb));
 		if (n <= 0) {
 			const int ssl_err = SSL_get_error(tc->ssl, n);
@@ -250,6 +258,10 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 
 			case SSL_ERROR_WANT_READ:
 				break;
+
+			case SSL_ERROR_ZERO_RETURN:
+				*err = ECONNRESET;
+				return true;
 
 			default:
 				*err = EPROTO;
@@ -273,6 +285,8 @@ static bool send_handler(int *err, struct mbuf *mb, void *arg)
 {
 	struct tls_conn *tc = arg;
 	int r;
+
+	ERR_clear_error();
 
 	r = SSL_write(tc->ssl, mbuf_buf(mb), (int)mbuf_get_left(mb));
 	if (r <= 0) {
@@ -328,12 +342,14 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 	tc->sbio_in = BIO_new(BIO_s_mem());
 	if (!tc->sbio_in) {
 		DEBUG_WARNING("alloc: BIO_new() failed\n");
+		ERR_clear_error();
 		goto out;
 	}
 
 	tc->sbio_out = BIO_new(&bio_tcp_send);
 	if (!tc->sbio_out) {
 		DEBUG_WARNING("alloc: BIO_new_socket() failed\n");
+		ERR_clear_error();
 		BIO_free(tc->sbio_in);
 		goto out;
 	}

@@ -611,6 +611,8 @@ info:
 	@echo "  LIBRE_INC:     $(LIBRE_INC)"
 	@echo "  LIBRE_SO:      $(LIBRE_SO)"
 	@echo "  USE_OPENSSL:   $(USE_OPENSSL)"
+	@echo "  USE_OPENSSL_DTLS:   $(USE_OPENSSL_DTLS)"
+	@echo "  USE_OPENSSL_SRTP:   $(USE_OPENSSL_SRTP)"
 	@echo "  USE_ZLIB:      $(USE_ZLIB)"
 	@echo "  GCOV:          $(GCOV)"
 	@echo "  GPROF:         $(GPROF)"

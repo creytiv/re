@@ -11,6 +11,7 @@
 #include <re_list.h>
 #include <re_fmt.h>
 #include <re_tmr.h>
+#include <re_srtp.h>
 #include <re_tcp.h>
 #include <re_tls.h>
 #include <re_msg.h>

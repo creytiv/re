@@ -17,7 +17,6 @@ struct bfcp_conn {
 	struct tmr tmr1;
 	struct tmr tmr2;
 	struct udp_sock *us;
-	struct tls_sock *ss;
 	struct mbuf *mb;
 	bfcp_recv_h *recvh;
 	void *arg;

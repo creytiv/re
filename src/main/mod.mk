@@ -11,3 +11,7 @@ SRCS	+= main/method.c
 ifneq ($(HAVE_EPOLL),)
 SRCS	+= main/epoll.c
 endif
+
+ifneq ($(USE_OPENSSL),)
+SRCS    += main/openssl.c
+endif

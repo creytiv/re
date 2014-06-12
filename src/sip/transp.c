@@ -16,6 +16,7 @@
 #include <re_tmr.h>
 #include <re_udp.h>
 #include <re_stun.h>
+#include <re_srtp.h>
 #include <re_tcp.h>
 #include <re_tls.h>
 #include <re_msg.h>

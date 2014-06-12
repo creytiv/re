@@ -60,7 +60,6 @@ int  srtp_derive(uint8_t *out, size_t out_len, uint8_t label,
 void srtp_iv_calc(union vect128 *iv, const union vect128 *k_s,
 		  uint32_t ssrc, uint64_t ix);
 uint64_t srtp_get_index(uint32_t roc, uint16_t s_l, uint16_t seq);
-const char *srtp_suite_name(enum srtp_suite suite);
 
 
 /* Replay protection */

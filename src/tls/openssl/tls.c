@@ -4,7 +4,6 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #include <string.h>
-#include <signal.h>
 #define OPENSSL_NO_KRB5 1
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -15,6 +14,8 @@
 #include <re_main.h>
 #include <re_sa.h>
 #include <re_net.h>
+#include <re_srtp.h>
+#include <re_sys.h>
 #include <re_tcp.h>
 #include <re_tls.h>
 #include "tls.h"
@@ -31,21 +32,6 @@ struct tls_conn {
 };
 
 
-static struct {
-	uint32_t tlsc;
-	bool up;
-} tlsg;
-
-
-#ifdef SIGPIPE
-static void sigpipe_handle(int x)
-{
-	(void)x;
-	(void)signal(SIGPIPE, sigpipe_handle);
-}
-#endif
-
-
 static void destructor(void *data)
 {
 	struct tls *tls = data;
@@ -53,12 +39,10 @@ static void destructor(void *data)
 	if (tls->ctx)
 		SSL_CTX_free(tls->ctx);
 
-	mem_deref(tls->pass);
+	if (tls->cert)
+		X509_free(tls->cert);
 
-	if (--tlsg.tlsc == 0) {
-		DEBUG_INFO("error strings freed\n");
-		ERR_free_strings();
-	}
+	mem_deref(tls->pass);
 }
 
 
@@ -102,21 +86,6 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	tls = mem_zalloc(sizeof(*tls), destructor);
 	if (!tls)
 		return ENOMEM;
-
-	if (!tlsg.up) {
-#ifdef SIGPIPE
-		/* Set up a SIGPIPE handler */
-		(void)signal(SIGPIPE, sigpipe_handle);
-#endif
-
-		SSL_library_init();
-		tlsg.up = true;
-	}
-
-	if (tlsg.tlsc++ == 0) {
-		DEBUG_INFO("error strings loaded\n");
-		SSL_load_error_strings();
-	}
 
 	switch (method) {
 
@@ -217,84 +186,375 @@ int tls_add_ca(struct tls *tls, const char *capath)
 
 
 /**
- * Verify peer certificate of a TLS connection
+ * Generate and set selfsigned certificate on TLS context
  *
- * @param tc      TLS Connection
- * @param cn      Returned common name
- * @param cn_size Size of cn string
+ * @param tls TLS Context
+ * @param cn  Common Name
  *
  * @return 0 if success, otherwise errorcode
  */
-int tls_verify_cert(struct tls_conn *tc, char *cn, size_t cn_size)
+int tls_set_selfsigned(struct tls *tls, const char *cn)
 {
-	X509 *peer;
-	int n;
+	X509_NAME *subj = NULL;
+	EVP_PKEY *key = NULL;
+	X509 *cert = NULL;
+	RSA *rsa = NULL;
+	int r, err = ENOMEM;
 
-	if (!tc || !cn || !cn_size)
+	if (!tls || !cn)
 		return EINVAL;
 
-	/* Check the cert chain. The chain length
-	   is automatically checked by OpenSSL when
-	   we set the verify depth in the ctx */
+	rsa = RSA_generate_key(1024, RSA_F4, NULL, NULL);
+	if (!rsa)
+		goto out;
 
-	peer = SSL_get_peer_certificate(tc->ssl);
-	if (!peer) {
-		DEBUG_WARNING("Unable to get peer certificate\n");
-		return EPROTO;
+	key = EVP_PKEY_new();
+	if (!key)
+		goto out;
+
+	if (!EVP_PKEY_set1_RSA(key, rsa))
+		goto out;
+
+	cert = X509_new();
+	if (!cert)
+		goto out;
+
+	if (!X509_set_version(cert, 2))
+		goto out;
+
+	if (!ASN1_INTEGER_set(X509_get_serialNumber(cert), rand_u32()))
+		goto out;
+
+	subj = X509_NAME_new();
+	if (!subj)
+		goto out;
+
+	if (!X509_NAME_add_entry_by_txt(subj, "CN", MBSTRING_ASC,
+					(unsigned char *)cn,
+					(int)strlen(cn), -1, 0))
+		goto out;
+
+	if (!X509_set_issuer_name(cert, subj) ||
+	    !X509_set_subject_name(cert, subj))
+		goto out;
+
+	if (!X509_gmtime_adj(X509_get_notBefore(cert), -3600*24*365) ||
+	    !X509_gmtime_adj(X509_get_notAfter(cert),   3600*24*365*10))
+		goto out;
+
+	if (!X509_set_pubkey(cert, key))
+		goto out;
+
+	if (!X509_sign(cert, key, EVP_sha1()))
+		goto out;
+
+	r = SSL_CTX_use_certificate(tls->ctx, cert);
+	if (r != 1)
+		goto out;
+
+	r = SSL_CTX_use_PrivateKey(tls->ctx, key);
+	if (r != 1)
+		goto out;
+
+	if (tls->cert)
+		X509_free(tls->cert);
+
+	tls->cert = cert;
+	cert = NULL;
+
+	err = 0;
+
+ out:
+	if (subj)
+		X509_NAME_free(subj);
+
+	if (cert)
+		X509_free(cert);
+
+	if (key)
+		EVP_PKEY_free(key);
+
+	if (rsa)
+		RSA_free(rsa);
+
+	if (err)
+		ERR_clear_error();
+
+	return err;
+}
+
+
+static int verify_handler(int ok, X509_STORE_CTX *ctx)
+{
+	(void)ok;
+	(void)ctx;
+
+	return 1;    /* We trust the certificate from peer */
+}
+
+
+/**
+ * Set TLS server context to request certificate from client
+ *
+ * @param tls    TLS Context
+ */
+void tls_set_verify_client(struct tls *tls)
+{
+	if (!tls)
+		return;
+
+	SSL_CTX_set_verify_depth(tls->ctx, 0);
+	SSL_CTX_set_verify(tls->ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE,
+			   verify_handler);
+}
+
+
+/**
+ * Set SRTP suites on TLS context
+ *
+ * @param tls    TLS Context
+ * @param suites Secure-RTP Profiles
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_srtp(struct tls *tls, const char *suites)
+{
+#ifdef USE_OPENSSL_SRTP
+	if (!tls || !suites)
+		return EINVAL;
+
+	if (0 != SSL_CTX_set_tlsext_use_srtp(tls->ctx, suites)) {
+		ERR_clear_error();
+		return ENOSYS;
 	}
 
-	/* Get the common name */
-	n = X509_NAME_get_text_by_NID(X509_get_subject_name(peer),
-				      NID_commonName, cn, (int)cn_size);
-	if (n < 0)
-		cn[0] = '\0';
+	return 0;
+#else
+	(void)tls;
+	(void)suites;
 
-	/* todo get valid start/end date */
+	return ENOSYS;
+#endif
+}
 
-	X509_free(peer);
 
-	if (SSL_get_verify_result(tc->ssl) != X509_V_OK) {
-		DEBUG_WARNING("Certificate doesn't verify\n");
-		return EPROTO;
+static int cert_fingerprint(X509 *cert, enum tls_fingerprint type,
+			    uint8_t *md, size_t size)
+{
+	unsigned int len = (unsigned int)size;
+	int n;
+
+	switch (type) {
+
+	case TLS_FINGERPRINT_SHA1:
+		if (size < 20)
+			return EOVERFLOW;
+
+		n = X509_digest(cert, EVP_sha1(), md, &len);
+		break;
+
+	case TLS_FINGERPRINT_SHA256:
+		if (size < 32)
+			return EOVERFLOW;
+
+		n = X509_digest(cert, EVP_sha256(), md, &len);
+		break;
+
+	default:
+		return ENOSYS;
+	}
+
+	if (n != 1) {
+		ERR_clear_error();
+		return ENOENT;
 	}
 
 	return 0;
 }
 
 
-static const EVP_MD *type2evp(const char *type)
+/**
+ * Get fingerprint of local certificate
+ *
+ * @param tls  TLS Context
+ * @param type Digest type
+ * @param md   Buffer for fingerprint digest
+ * @param size Buffer size
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_fingerprint(const struct tls *tls, enum tls_fingerprint type,
+		    uint8_t *md, size_t size)
 {
-	if (0 == str_casecmp(type, "SHA-1"))
-		return EVP_sha1();
-	else if (0 == str_casecmp(type, "SHA-256"))
-		return EVP_sha256();
-	else
-		return NULL;
+	if (!tls || !tls->cert || !md)
+		return EINVAL;
+
+	return cert_fingerprint(tls->cert, type, md, size);
 }
 
 
-int tls_get_remote_fingerprint(const struct tls_conn *tc, const char *type,
-			       struct tls_fingerprint *fp)
+/**
+ * Get fingerprint of peer certificate of a TLS connection
+ *
+ * @param tc   TLS Connection
+ * @param type Digest type
+ * @param md   Buffer for fingerprint digest
+ * @param size Buffer size
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_peer_fingerprint(const struct tls_conn *tc, enum tls_fingerprint type,
+			 uint8_t *md, size_t size)
 {
-	const EVP_MD *evp;
-	X509 *x;
-	int n;
+	X509 *cert;
+	int err;
 
-	if (!tc || !fp)
+	if (!tc || !md)
 		return EINVAL;
 
-	evp = type2evp(type);
-	if (!evp)
-		return ENOTSUP;
+	cert = SSL_get_peer_certificate(tc->ssl);
+	if (!cert)
+		return ENOENT;
 
-	x = SSL_get_peer_certificate(tc->ssl);
-	if (!x)
-		return EPROTO;
+	err = cert_fingerprint(cert, type, md, size);
 
-	fp->len = sizeof(fp->md);
-	n = X509_digest(x, evp, fp->md, &fp->len);
+	X509_free(cert);
 
-	X509_free(x);
+	return err;
+}
 
-	return (n == 1) ? 0 : ENOENT;
+
+/**
+ * Get common name of peer certificate of a TLS connection
+ *
+ * @param tc   TLS Connection
+ * @param cn   Returned common name
+ * @param size Size of common name
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_peer_common_name(const struct tls_conn *tc, char *cn, size_t size)
+{
+	X509 *cert;
+	int n;
+
+	if (!tc || !cn || !size)
+		return EINVAL;
+
+	cert = SSL_get_peer_certificate(tc->ssl);
+	if (!cert)
+		return ENOENT;
+
+	n = X509_NAME_get_text_by_NID(X509_get_subject_name(cert),
+				      NID_commonName, cn, (int)size);
+
+	X509_free(cert);
+
+	if (n < 0) {
+		ERR_clear_error();
+		return ENOENT;
+	}
+
+	return 0;
+}
+
+
+/**
+ * Verify peer certificate of a TLS connection
+ *
+ * @param tc TLS Connection
+ *
+ * @return 0 if verified, otherwise errorcode
+ */
+int tls_peer_verify(const struct tls_conn *tc)
+{
+	if (!tc)
+		return EINVAL;
+
+	if (SSL_get_verify_result(tc->ssl) != X509_V_OK)
+		return EAUTH;
+
+	return 0;
+}
+
+
+/**
+ * Get SRTP suite and keying material of a TLS connection
+ *
+ * @param tc           TLS Connection
+ * @param suite        Returned SRTP suite
+ * @param cli_key      Client key
+ * @param cli_key_size Client key size
+ * @param srv_key      Server key
+ * @param srv_key_size Server key size
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_srtp_keyinfo(const struct tls_conn *tc, enum srtp_suite *suite,
+		     uint8_t *cli_key, size_t cli_key_size,
+		     uint8_t *srv_key, size_t srv_key_size)
+{
+#ifdef USE_OPENSSL_SRTP
+	static const char *label = "EXTRACTOR-dtls_srtp";
+	size_t key_size, salt_size, size;
+	SRTP_PROTECTION_PROFILE *sel;
+	uint8_t keymat[256], *p;
+
+	if (!tc || !suite || !cli_key || !srv_key)
+		return EINVAL;
+
+	sel = SSL_get_selected_srtp_profile(tc->ssl);
+	if (!sel)
+		return ENOENT;
+
+	switch (sel->id) {
+
+	case SRTP_AES128_CM_SHA1_80:
+		*suite = SRTP_AES_CM_128_HMAC_SHA1_80;
+		key_size  = 16;
+		salt_size = 14;
+		break;
+
+	case SRTP_AES128_CM_SHA1_32:
+		*suite = SRTP_AES_CM_128_HMAC_SHA1_32;
+		key_size  = 16;
+		salt_size = 14;
+		break;
+
+	default:
+		return ENOSYS;
+	}
+
+	size = key_size + salt_size;
+
+	if (cli_key_size < size || srv_key_size < size)
+		return EOVERFLOW;
+
+	if (sizeof(keymat) < 2*size)
+		return EOVERFLOW;
+
+	if (1 != SSL_export_keying_material(tc->ssl, keymat, 2*size, label,
+					    strlen(label), NULL, 0, 0)) {
+		ERR_clear_error();
+		return ENOENT;
+	}
+
+	p = keymat;
+
+	memcpy(cli_key,            p, key_size);  p += key_size;
+	memcpy(srv_key,            p, key_size);  p += key_size;
+	memcpy(cli_key + key_size, p, salt_size); p += salt_size;
+	memcpy(srv_key + key_size, p, salt_size);
+
+	return 0;
+#else
+	(void)tc;
+	(void)suite;
+	(void)cli_key;
+	(void)cli_key_size;
+	(void)srv_key;
+	(void)srv_key_size;
+
+	return ENOSYS;
+#endif
 }

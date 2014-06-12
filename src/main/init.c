@@ -19,12 +19,32 @@
  */
 int libre_init(void)
 {
+	int err;
+
 #ifdef HAVE_ACTSCHED
 	actsched_init();
 #endif
 	rand_init();
 
-	return net_sock_init();
+#ifdef USE_OPENSSL
+	err = openssl_init();
+	if (err)
+		goto out;
+#endif
+
+	err = net_sock_init();
+	if (err)
+		goto out;
+
+ out:
+	if (err) {
+		net_sock_close();
+#ifdef USE_OPENSSL
+		openssl_close();
+#endif
+	}
+
+	return err;
 }
 
 
@@ -34,4 +54,8 @@ int libre_init(void)
 void libre_close(void)
 {
 	(void)fd_setsize(0);
+	net_sock_close();
+#ifdef USE_OPENSSL
+	openssl_close();
+#endif
 }
