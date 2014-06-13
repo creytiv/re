@@ -6,6 +6,7 @@
 #include <string.h>
 #include <openssl/aes.h>
 #include <openssl/evp.h>
+#include <openssl/err.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -60,8 +61,10 @@ int aes_alloc(struct aes **aesp, enum aes_mode mode,
 	}
 
 	r = EVP_EncryptInit_ex(&st->ctx, cipher, NULL, key, iv);
-	if (!r)
+	if (!r) {
+		ERR_clear_error();
 		err = EPROTO;
+	}
 
  out:
 	if (err)
@@ -75,11 +78,14 @@ int aes_alloc(struct aes **aesp, enum aes_mode mode,
 
 void aes_set_iv(struct aes *aes, const uint8_t iv[AES_BLOCK_SIZE])
 {
-	if (!aes)
+	int r;
+
+	if (!aes || !iv)
 		return;
 
-	if (iv)
-		(void)EVP_EncryptInit_ex(&aes->ctx, NULL, NULL, NULL, iv);
+	r = EVP_EncryptInit_ex(&aes->ctx, NULL, NULL, NULL, iv);
+	if (!r)
+		ERR_clear_error();
 }
 
 
@@ -90,8 +96,10 @@ int aes_encr(struct aes *aes, uint8_t *out, const uint8_t *in, size_t len)
 	if (!aes || !out || !in || !len)
 		return EINVAL;
 
-	if (!EVP_EncryptUpdate(&aes->ctx, out, &c_len, in, (int)len))
+	if (!EVP_EncryptUpdate(&aes->ctx, out, &c_len, in, (int)len)) {
+		ERR_clear_error();
 		return EPROTO;
+	}
 
 	return 0;
 }

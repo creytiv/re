@@ -5,6 +5,7 @@
  */
 
 #include <openssl/hmac.h>
+#include <openssl/err.h>
 #include <re_types.h>
 #include <re_mem.h>
 #include <re_hmac.h>
@@ -42,8 +43,10 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 	HMAC_CTX_init(&hmac->ctx);
 
 #if (OPENSSL_VERSION_NUMBER >= 0x00909000)
-	if (!HMAC_Init_ex(&hmac->ctx, key, (int)key_len, EVP_sha1(), NULL))
+	if (!HMAC_Init_ex(&hmac->ctx, key, (int)key_len, EVP_sha1(), NULL)) {
+		ERR_clear_error();
 		err = EPROTO;
+	}
 #else
 	HMAC_Init_ex(&hmac->ctx, key, (int)key_len, EVP_sha1(), NULL);
 #endif
@@ -68,19 +71,26 @@ int hmac_digest(struct hmac *hmac, uint8_t *md, size_t md_len,
 #if (OPENSSL_VERSION_NUMBER >= 0x00909000)
 	/* the HMAC context must be reset here */
 	if (!HMAC_Init_ex(&hmac->ctx, 0, 0, 0, NULL))
-		return EPROTO;
+		goto error;
 
 	if (!HMAC_Update(&hmac->ctx, data, (int)data_len))
-		return EPROTO;
+		goto error;
 	if (!HMAC_Final(&hmac->ctx, md, &len))
-		return EPROTO;
+		goto error;
+
+	return 0;
+
+ error:
+	ERR_clear_error();
+	return EPROTO;
+
 #else
 	/* the HMAC context must be reset here */
 	HMAC_Init_ex(&hmac->ctx, 0, 0, 0, NULL);
 
 	HMAC_Update(&hmac->ctx, data, (int)data_len);
 	HMAC_Final(&hmac->ctx, md, &len);
-#endif
 
 	return 0;
+#endif
 }
