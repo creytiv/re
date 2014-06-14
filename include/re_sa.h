@@ -30,6 +30,7 @@ struct sa {
 #ifdef HAVE_INET6
 		struct sockaddr_in6 in6;
 #endif
+		uint8_t padding[28];
 	} u;
 	socklen_t len;
 };
