@@ -79,7 +79,9 @@ uint32_t rand_u32(void)
 #ifdef USE_OPENSSL
 	v = 0;
 	if (RAND_bytes((unsigned char *)&v, sizeof(v)) <= 0) {
-		DEBUG_WARNING("RAND_bytes() error: %u\n", ERR_get_error());
+		DEBUG_WARNING("RAND_bytes() error: %i\n",
+			      ERR_GET_REASON(ERR_get_error()));
+		ERR_clear_error();
 	}
 #elif defined(WIN32)
 	v = (rand() << 16) + rand(); /* note: 16-bit rand */
@@ -153,7 +155,9 @@ void rand_bytes(uint8_t *p, size_t size)
 {
 #ifdef USE_OPENSSL
 	if (RAND_bytes(p, (int)size) <= 0) {
-		DEBUG_WARNING("RAND_bytes() error: %u\n", ERR_get_error());
+		DEBUG_WARNING("RAND_bytes() error: %i\n",
+			      ERR_GET_REASON(ERR_get_error()));
+		ERR_clear_error();
 	}
 #else
 	while (size--) {
