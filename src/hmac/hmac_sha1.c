@@ -8,6 +8,7 @@
 #ifdef USE_OPENSSL
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
+#include <openssl/err.h>
 #else
 #include <re_sha.h>
 #endif
@@ -38,8 +39,10 @@ void hmac_sha1(const uint8_t *k,  /* secret key */
 	       size_t   t)
 {
 #ifdef USE_OPENSSL
-	(void)HMAC(EVP_sha1(), k, (int)lk, d, ld, out, NULL);
 	(void)t;
+
+	if (!HMAC(EVP_sha1(), k, (int)lk, d, ld, out, NULL))
+		ERR_clear_error();
 #else
 	SHA_CTX ictx, octx;
 	uint8_t isha[SHA_DIGEST_LENGTH], osha[SHA_DIGEST_LENGTH];
