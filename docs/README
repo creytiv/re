@@ -30,7 +30,7 @@ Modules:
 * hash      testing       Hashmap table
 * hmac      testing       HMAC: Keyed-Hashing for Message Authentication
 * http      unstable      HTTP parser (RFC 2616)
-* httpauth  unstable      HTTP-based Authentication (RFC 2617)
+* httpauth  testing       HTTP-based Authentication (RFC 2617)
 * ice       unstable      Interactive Connectivity Establishment (ICE)
 * jbuf      testing       Jitter buffer
 * list      stable        Sortable doubly-linked list handling
@@ -43,17 +43,17 @@ Modules:
 * mqueue    testing       Thread-safe message queue
 * msg       unstable      Generic message component library
 * natbd     unstable      NAT Behavior Discovery using STUN
-* net       unstable      Networking routines
+* net       testing       Networking routines
 * rtp       testing       Real-time Transport Protocol
 * sa        stable        Socket Address functions
-* sdp       unstable      Session Description Protocol
+* sdp       testing       Session Description Protocol
 * sha       testing       Secure Hash Standard, NIST, FIPS PUB 180-1
-* sip       unstable      Core SIP library
-* sipevent  unstable      SIP Event framework
+* sip       testing       Core SIP library
+* sipevent  testing       SIP Event framework
 * sipreg    testing       SIP register client
-* sipsess   unstable      SIP Sessions
+* sipsess   testing       SIP Sessions
 * srtp      unstable      Secure Real-time Transport Protocol (SRTP)
-* stun      unstable      Session Traversal Utilities for NAT (STUN)
+* stun      testing       Session Traversal Utilities for NAT (STUN)
 * sys       testing       System information
 * tcp       testing       TCP transport
 * telev     testing       Telephony Events (RFC 4733)
