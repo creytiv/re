@@ -25,7 +25,7 @@ static pthread_mutex_t *lockv;
 
 static unsigned long threadid_handler(void)
 {
-#ifdef DARWIN
+#if defined (DARWIN) || defined (FREEBSD)
 	return (unsigned long)(void *)pthread_self();
 #else
 	return (unsigned long)pthread_self();
