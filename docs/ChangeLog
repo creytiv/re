@@ -1,3 +1,36 @@
+2014-06-18 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.9
+
+	* aes: clear openssl error queue in error cases
+
+	* bfcp: disabled support for DTLS-transport
+
+	* hmac: clear openssl error queue in error cases
+
+	* http: make response parsing a bit more robust
+
+	* main: make use of openssl's multi-threading API
+
+	* rtcp: added Round-Trip Time (RTT) field to struct rtcp_stats
+                fix some rounding errors
+
+	* sa: added padding buffer to struct sa union
+
+	* sdp: improved handling of unsupported transport protocols
+	       and sub-sequence offer/answer exchanges
+
+	* srtp: added support for Secure Real-time Transport Protocol (SRTP)
+                (RFC 3711 and RFC 6188)
+
+	* sys: rand -- clear openssl error queue in error cases
+
+	* tls: added support for generating self-signed certificates
+	       added support for the SRTP-extension using openssl
+	       clear openssl error queue in error cases
+	       improved DTLS api
+
+
 2014-04-11 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.8
