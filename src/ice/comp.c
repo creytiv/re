@@ -184,8 +184,8 @@ void icem_comp_set_default_rcand(struct icem_comp *comp, struct cand *rcand)
 	comp->def_rcand = mem_ref(rcand);
 
 	if (comp->turnc) {
-		DEBUG_NOTICE("{%s.%u} Default: Add TURN Channel to peer %J\n",
-			     comp->icem->name, comp->id, &rcand->addr);
+		icecomp_printf(comp, "Add TURN Channel to peer %J\n",
+			       &rcand->addr);
 
 		(void)turnc_add_chan(comp->turnc, &rcand->addr, NULL, NULL);
 	}
