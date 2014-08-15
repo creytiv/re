@@ -166,3 +166,17 @@ extern const char sdp_media_text[];
 
 extern const char sdp_proto_rtpavp[];
 extern const char sdp_proto_rtpsavp[];
+
+
+/* utility functions */
+
+/** RTP Header Extensions, as defined in RFC 5285 */
+struct sdp_extmap {
+	struct pl name;
+	struct pl attrs;
+	enum sdp_dir dir;
+	bool dir_set;
+	uint32_t id;
+};
+
+int sdp_extmap_decode(struct sdp_extmap *ext, const char *val);
