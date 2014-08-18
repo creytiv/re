@@ -42,6 +42,7 @@ typedef void (ice_connchk_h)(int err, bool update, void *arg);
 /* ICE Session */
 int  ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer);
 struct ice_conf *ice_conf(struct ice *ice);
+void ice_set_conf(struct ice *ice, const struct ice_conf *conf);
 void ice_set_offerer(struct ice *ice, bool offerer);
 int  ice_sdp_decode(struct ice *ice, const char *name, const char *value);
 int  ice_conncheck_start(struct ice *ice);

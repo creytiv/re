@@ -120,6 +120,22 @@ struct ice_conf *ice_conf(struct ice *ice)
 }
 
 
+void ice_set_conf(struct ice *ice, const struct ice_conf *conf)
+{
+	if (!ice || !conf)
+		return;
+
+	ice->conf = *conf;
+
+	if (ice->stun) {
+
+		/* Update STUN Transport */
+		stun_conf(ice->stun)->rto = ice->conf.rto;
+		stun_conf(ice->stun)->rc = ice->conf.rc;
+	}
+}
+
+
 /**
  * Set the offerer flag on the ICE Session
  *
