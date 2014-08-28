@@ -147,9 +147,6 @@ int nat_genalg_start(struct nat_genalg *ng)
 			   STUN_METHOD_BINDING, NULL, 0, false,
 			   stun_response_handler, ng, 1,
 			   STUN_ATTR_SOFTWARE, stun_software);
-	if (err) {
-		DEBUG_WARNING("start: stunc_request_send(): (%m)\n", err);
-	}
 
 	return err;
 }
