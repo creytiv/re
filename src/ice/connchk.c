@@ -327,6 +327,9 @@ static void do_check(struct candpair *cp)
 		if (err == ENOMEM) {
 			abort_ice(cp->icem, err);
 		}
+		else {
+			pace_next(cp->icem);
+		}
 	}
 }
 
