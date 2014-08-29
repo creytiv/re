@@ -154,6 +154,48 @@ void mbuf_trim(struct mbuf *mb)
 
 
 /**
+ * Shift mbuf content position
+ *
+ * @param mb    Memory buffer to shift
+ * @param shift Shift offset count
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int mbuf_shift(struct mbuf *mb, ssize_t shift)
+{
+	size_t rsize;
+	uint8_t *p;
+
+	if (!mb)
+		return EINVAL;
+
+	if (((ssize_t)mb->pos + shift) < 0 ||
+	    ((ssize_t)mb->end + shift) < 0)
+		return ERANGE;
+
+	rsize = mb->end + shift;
+
+	if (rsize > mb->size) {
+
+		int err;
+
+		err = mbuf_resize(mb, rsize);
+		if (err)
+			return err;
+	}
+
+	p = mbuf_buf(mb);
+
+	memmove(p + shift, p, mbuf_get_left(mb));
+
+	mb->pos += shift;
+	mb->end += shift;
+
+	return 0;
+}
+
+
+/**
  * Write a block of memory to a memory buffer
  *
  * @param mb   Memory buffer

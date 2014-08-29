@@ -46,6 +46,7 @@ void     mbuf_init(struct mbuf *mb);
 void     mbuf_reset(struct mbuf *mb);
 int      mbuf_resize(struct mbuf *mb, size_t size);
 void     mbuf_trim(struct mbuf *mb);
+int      mbuf_shift(struct mbuf *mb, ssize_t shift);
 int      mbuf_write_mem(struct mbuf *mb, const uint8_t *buf, size_t size);
 int      mbuf_write_u8(struct mbuf *mb, uint8_t v);
 int      mbuf_write_u16(struct mbuf *mb, uint16_t v);
