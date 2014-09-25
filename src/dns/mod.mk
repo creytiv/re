@@ -14,7 +14,7 @@ SRCS	+= dns/rrlist.c
 
 ifneq ($(HAVE_LIBRESOLV),)
 ifeq ($(filter-out netbsd openbsd,$(OS)),)
-SRCS	+= dns/netbsd/srv.c
+SRCS	+= dns/bsd/srv.c
 else
 SRCS	+= dns/res.c
 endif
