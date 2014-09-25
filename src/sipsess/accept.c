@@ -42,7 +42,7 @@ static void cancel_handler(void *arg)
  * @param msg       Incoming SIP message
  * @param scode     Response status code
  * @param reason    Response reason phrase
- * @param cuser     Contact username
+ * @param cuser     Contact username or URI
  * @param ctype     Session content-type
  * @param desc      Content description (e.g. SDP)
  * @param authh     SIP Authentication handler
@@ -103,17 +103,20 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 	if (scode >= 200)
 		err = sipsess_reply_2xx(sess, msg, scode, reason, desc,
 					fmt, &ap);
-	else
+	else {
+		struct sip_contact contact;
+
+		sip_contact_set(&contact, sess->cuser, &msg->dst, msg->tp);
+
 		err = sip_treplyf(&sess->st, NULL, sess->sip,
 				  msg, true, scode, reason,
-				  "Contact: <sip:%s@%J%s>\r\n"
+				  "%H"
 				  "%v"
 				  "%s%s%s"
 				  "Content-Length: %zu\r\n"
 				  "\r\n"
 				  "%b",
-				  sess->cuser, &msg->dst,
-				  sip_transp_param(msg->tp),
+				  sip_contact_print, &contact,
 				  fmt, &ap,
 				  desc ? "Content-Type: " : "",
 				  desc ? sess->ctype : "",
@@ -121,6 +124,7 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 				  desc ? mbuf_get_left(desc) : (size_t)0,
 				  desc ? mbuf_buf(desc) : NULL,
 				  desc ? mbuf_get_left(desc) : (size_t)0);
+	}
 
 	va_end(ap);
 
@@ -151,6 +155,7 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 		     struct mbuf *desc, const char *fmt, ...)
 {
+	struct sip_contact contact;
 	va_list ap;
 	int err;
 
@@ -159,16 +164,17 @@ int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 
 	va_start(ap, fmt);
 
+	sip_contact_set(&contact, sess->cuser, &sess->msg->dst, sess->msg->tp);
+
 	err = sip_treplyf(&sess->st, NULL, sess->sip, sess->msg, true,
 			  scode, reason,
-			  "Contact: <sip:%s@%J%s>\r\n"
+			  "%H"
 			  "%v"
 			  "%s%s%s"
 			  "Content-Length: %zu\r\n"
 			  "\r\n"
 			  "%b",
-			  sess->cuser, &sess->msg->dst,
-			  sip_transp_param(sess->msg->tp),
+			  sip_contact_print, &contact,
 			  fmt, &ap,
 			  desc ? "Content-Type: " : "",
 			  desc ? sess->ctype : "",

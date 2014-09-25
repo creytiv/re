@@ -298,11 +298,13 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 static int send_handler(enum sip_transp tp, const struct sa *src,
 			const struct sa *dst, struct mbuf *mb, void *arg)
 {
+	struct sip_contact contact;
 	struct sipsub *sub = arg;
 	(void)dst;
 
-	return mbuf_printf(mb, "Contact: <sip:%s@%J%s>\r\n",
-                           sub->cuser, src, sip_transp_param(tp));
+	sip_contact_set(&contact, sub->cuser, src, tp);
+
+	return mbuf_printf(mb, "%H", sip_contact_print, &contact);
 }
 
 
@@ -449,7 +451,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
  * @param event     SIP Event to subscribe to
  * @param id        SIP Event ID (optional)
  * @param expires   Subscription expires value
- * @param cuser     Contact username
+ * @param cuser     Contact username or URI
  * @param routev    Optional route vector
  * @param routec    Number of routes
  * @param authh     Authentication handler
@@ -496,7 +498,7 @@ int sipevent_subscribe(struct sipsub **subp, struct sipevent_sock *sock,
  * @param event     SIP Event to subscribe to
  * @param id        SIP Event ID (optional)
  * @param expires   Subscription expires value
- * @param cuser     Contact username
+ * @param cuser     Contact username or URI
  * @param authh     Authentication handler
  * @param aarg      Authentication handler argument
  * @param aref      True to ref argument
@@ -536,7 +538,7 @@ int sipevent_dsubscribe(struct sipsub **subp, struct sipevent_sock *sock,
  * @param uri       SIP Request URI
  * @param from_name SIP From-header Name (optional)
  * @param from_uri  SIP From-header URI
- * @param cuser     Contact username
+ * @param cuser     Contact username or URI
  * @param routev    Optional route vector
  * @param routec    Number of routes
  * @param authh     Authentication handler
@@ -579,7 +581,7 @@ int sipevent_refer(struct sipsub **subp, struct sipevent_sock *sock,
  * @param subp      Pointer to allocated SIP subscriber client
  * @param sock      SIP Event socket
  * @param dlg       Established SIP Dialog
- * @param cuser     Contact username
+ * @param cuser     Contact username or URI
  * @param authh     Authentication handler
  * @param aarg      Authentication handler argument
  * @param aref      True to ref argument

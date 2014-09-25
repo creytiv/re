@@ -6,6 +6,7 @@
 
 SRCS	+= sip/addr.c
 SRCS	+= sip/auth.c
+SRCS	+= sip/contact.c
 SRCS	+= sip/cseq.c
 SRCS	+= sip/ctrans.c
 SRCS	+= sip/dialog.c

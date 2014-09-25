@@ -293,7 +293,7 @@ static int request(struct sipreg *reg, bool reset_ls)
 			     "Content-Length: 0\r\n"
 			     "\r\n",
 			     reg->regid > 0
-			     ? "Supported: outbound, path\r\n" : "",
+			     ? "Supported: gruu, outbound, path\r\n" : "",
 			     reg->hdrs ? mbuf_buf(reg->hdrs) : NULL,
 			     reg->hdrs ? mbuf_get_left(reg->hdrs) : (size_t)0);
 }

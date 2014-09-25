@@ -82,6 +82,7 @@ int sipsess_reply_2xx(struct sipsess *sess, const struct sip_msg *msg,
 		      const char *fmt, va_list *ap)
 {
 	struct sipsess_reply *reply;
+	struct sip_contact contact;
 	int err = ENOMEM;
 
 	reply = mem_zalloc(sizeof(*reply), destructor);
@@ -93,15 +94,17 @@ int sipsess_reply_2xx(struct sipsess *sess, const struct sip_msg *msg,
 	reply->msg  = mem_ref((void *)msg);
 	reply->sess = sess;
 
+	sip_contact_set(&contact, sess->cuser, &msg->dst, msg->tp);
+
 	err = sip_treplyf(&sess->st, &reply->mb, sess->sip,
 			  msg, true, scode, reason,
-			  "Contact: <sip:%s@%J%s>\r\n"
+			  "%H"
 			  "%v"
 			  "%s%s%s"
 			  "Content-Length: %zu\r\n"
 			  "\r\n"
 			  "%b",
-			  sess->cuser, &msg->dst, sip_transp_param(msg->tp),
+			  sip_contact_print, &contact,
 			  fmt, ap,
 			  desc ? "Content-Type: " : "",
 			  desc ? sess->ctype : "",

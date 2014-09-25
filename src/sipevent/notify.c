@@ -177,11 +177,13 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 static int send_handler(enum sip_transp tp, const struct sa *src,
 			const struct sa *dst, struct mbuf *mb, void *arg)
 {
+	struct sip_contact contact;
 	struct sipnot *not = arg;
 	(void)dst;
 
-	return mbuf_printf(mb, "Contact: <sip:%s@%J%s>\r\n",
-                           not->cuser, src, sip_transp_param(tp));
+	sip_contact_set(&contact, not->cuser, src, tp);
+
+	return mbuf_printf(mb, "%H", sip_contact_print, &contact);
 }
 
 
@@ -282,16 +284,19 @@ int sipnot_notify(struct sipnot *not)
 int sipnot_reply(struct sipnot *not, const struct sip_msg *msg,
 		 uint16_t scode, const char *reason)
 {
+	struct sip_contact contact;
 	uint32_t expires;
 
 	expires = (uint32_t)(tmr_get_expire(&not->tmr) / 1000);
 
+	sip_contact_set(&contact, not->cuser, &msg->dst, msg->tp);
+
 	return sip_treplyf(NULL, NULL, not->sip, msg, true, scode, reason,
-			   "Contact: <sip:%s@%J%s>\r\n"
+			   "%H"
 			   "Expires: %u\r\n"
 			   "Content-Length: 0\r\n"
 			   "\r\n",
-			   not->cuser, &msg->dst, sip_transp_param(msg->tp),
+			   sip_contact_print, &contact,
 			   expires);
 }
 

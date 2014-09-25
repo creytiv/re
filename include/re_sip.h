@@ -214,6 +214,13 @@ struct sip_loopstate {
 	uint16_t last_scode;
 };
 
+/** SIP Contact */
+struct sip_contact {
+	const char *uri;
+	const struct sa *addr;
+	enum sip_transp tp;
+};
+
 struct sip;
 struct sip_lsnr;
 struct sip_request;
@@ -301,6 +308,13 @@ int  sip_auth_authenticate(struct sip_auth *auth, const struct sip_msg *msg);
 int  sip_auth_alloc(struct sip_auth **authp, sip_auth_h *authh,
 		    void *arg, bool ref);
 void sip_auth_reset(struct sip_auth *auth);
+
+
+/* contact */
+void sip_contact_set(struct sip_contact *contact, const char *uri,
+		     const struct sa *addr, enum sip_transp tp);
+int  sip_contact_print(struct re_printf *pf,
+		       const struct sip_contact *contact);
 
 
 /* dialog */

@@ -109,11 +109,13 @@ static void reinvite_resp_handler(int err, const struct sip_msg *msg,
 static int send_handler(enum sip_transp tp, const struct sa *src,
 			const struct sa *dst, struct mbuf *mb, void *arg)
 {
+	struct sip_contact contact;
 	struct sipsess *sess = arg;
 	(void)dst;
 
-	return mbuf_printf(mb, "Contact: <sip:%s@%J%s>\r\n",
-			   sess->cuser, src, sip_transp_param(tp));
+	sip_contact_set(&contact, sess->cuser, src, tp);
+
+	return mbuf_printf(mb, "%H", sip_contact_print, &contact);
 }
 
 
