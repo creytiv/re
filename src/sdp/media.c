@@ -861,6 +861,29 @@ const char *sdp_media_rattr(const struct sdp_media *m, const char *name)
 
 
 /**
+ * Get a remote attribute from an SDP Media line or the SDP session
+ *
+ * @param m     SDP Media line
+ * @param sess  SDP Session
+ * @param name  Attribute name
+ *
+ * @return Attribute value, NULL if not found
+ */
+const char *sdp_media_session_rattr(const struct sdp_media *m,
+				    const struct sdp_session *sess,
+				    const char *name)
+{
+	const char *val;
+
+	val = sdp_media_rattr(m, name);
+	if (!val)
+		val = sdp_session_rattr(sess, name);
+
+	return val;
+}
+
+
+/**
  * Apply a function handler to all matching remote attributes
  *
  * @param m     SDP Media line
