@@ -1,5 +1,5 @@
 /**
- * @file netbsd/srv.c  Get DNS Server IP using libresolv
+ * @file bsd/srv.c  Get DNS Server IP using libresolv
  *
  * Copyright (C) 2010 Creytiv.com
  */

@@ -1,5 +1,5 @@
 /**
- * @file util.c  ICE Utilities
+ * @file ice/util.c  ICE Utilities
  *
  * Copyright (C) 2010 Creytiv.com
  */

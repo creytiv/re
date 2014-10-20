@@ -1,3 +1,33 @@
+2014-10-19 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.10
+
+	* dns: added support for using multi-threaded libresolv
+               (thanks to Thomas Klausner)
+	       (thanks to Dmitrij D. Czarkoff for testing on OpenBSD)
+	
+	* dtls: added support for sending DTLS over e.g. TURN
+		(this is done by adding 4 bytes of headroom in the packet)
+
+	* ice: added ice_set_conf()
+	       continue checklist if send fails (thanks to SnakE)
+	
+	* mbuf: added mbuf_shift()
+
+	* sdp: added sdp_media_session_rattr()
+	       added extmap decoding RFC 5285 (thanks to Jose Carlos Pujol)
+
+	* sip: added struct sip_contact and related functions
+
+	* sipevent: added support for URI in contact-user, used for GRUU
+		    (thanks to Juha Heinanen)
+	
+	* sipreg: added "gruu" to list of Supported extensions
+	
+	* sipsess: added support for URI in contact-user, used for GRUU
+		   (thanks to Juha Heinanen)
+
+
 2014-06-18 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.9
