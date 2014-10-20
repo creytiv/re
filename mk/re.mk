@@ -202,7 +202,8 @@ OS        := $(shell uname -s | sed -e s/SunOS/solaris/ | tr "[A-Z]" "[a-z]")
 endif
 
 
-ifneq ($(strip $(filter i386-mingw32 i486-mingw32 i586-mingw32msvc mingw32, \
+ifneq ($(strip $(filter i386-mingw32 i486-mingw32 i586-mingw32msvc \
+	i686-w64-mingw32 mingw32, \
 	$(MACHINE))),)
 	OS   := win32
 ifeq ($(MACHINE), mingw32)
