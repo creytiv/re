@@ -373,6 +373,10 @@ endif
 
 endif
 
+ifneq ($(strip $(filter __arm64__ ,$(PREDEF))),)
+ARCH   := arm64
+endif
+
 ifneq ($(strip $(filter __mips__ __mips, $(PREDEF))),)
 ARCH	:= mips
 endif
