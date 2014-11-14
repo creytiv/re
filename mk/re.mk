@@ -478,7 +478,9 @@ ifneq ($(HAVE_NET_ROUTE_H),)
 CFLAGS  += -DHAVE_NET_ROUTE_H
 endif
 HAVE_SYS_SYSCTL_H := \
-	$(shell [ -f $(SYSROOT)/include/sys/sysctl.h ] && echo "1")
+	$(shell [ -f $(SYSROOT)/include/sys/sysctl.h ] || \
+		[ -f $(SYSROOT)/include/$(MACHINE)/sys/sysctl.h ] \
+		&& echo "1")
 ifneq ($(HAVE_SYS_SYSCTL_H),)
 CFLAGS  += -DHAVE_SYS_SYSCTL_H
 endif
@@ -497,7 +499,9 @@ else
 HAVE_SYSLOG  := $(shell [ -f $(SYSROOT)/include/syslog.h ] && echo "1")
 HAVE_DLFCN_H := $(shell [ -f $(SYSROOT)/include/dlfcn.h ] && echo "1")
 ifneq ($(OS),darwin)
-HAVE_EPOLL   := $(shell [ -f $(SYSROOT)/include/sys/epoll.h ] && echo "1")
+HAVE_EPOLL   := $(shell [ -f $(SYSROOT)/include/sys/epoll.h ] || \
+			[ -f $(SYSROOT)/include/$(MACHINE)/sys/epoll.h ] \
+			&& echo "1")
 endif
 HAVE_LIBRESOLV := $(shell [ -f $(SYSROOT)/include/resolv.h ] && echo "1")
 
