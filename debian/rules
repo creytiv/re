@@ -10,7 +10,7 @@
 #export DH_VERBOSE=1
 
 
-EXTRA_CFLAGS:="$(shell dpkg-buildflags --get CFLAGS)"
+EXTRA_CFLAGS:="$(shell dpkg-buildflags --get CFLAGS | sed -e 's/-O2//')"
 EXTRA_LFLAGS:="$(shell dpkg-buildflags --get LDFLAGS) -Wl,-soname,libre.so"
 
 
