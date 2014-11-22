@@ -70,8 +70,8 @@
 
 enum {
 	MAX_BLOCKING = 100,    /**< Maximum time spent in handler in [ms] */
-#if defined (WIN32) || defined (CYGWIN)
-	DEFAULT_MAXFDS = 8192
+#if defined (FD_SETSIZE)
+	DEFAULT_MAXFDS = FD_SETSIZE
 #else
 	DEFAULT_MAXFDS = 128
 #endif
@@ -906,8 +906,12 @@ int re_debug(struct re_printf *pf, void *unused)
  */
 int poll_method_set(enum poll_method method)
 {
-	struct re *re;
+	struct re *re = re_get();
 	int err;
+
+	err = fd_setsize(DEFAULT_MAXFDS);
+	if (err)
+		return err;
 
 	switch (method) {
 
@@ -917,6 +921,10 @@ int poll_method_set(enum poll_method method)
 #endif
 #ifdef HAVE_SELECT
 	case METHOD_SELECT:
+		if (re->maxfds > FD_SETSIZE) {
+			DEBUG_WARNING("SELECT: maxfds > FD_SETSIZE\n");
+			return EMFILE;
+		}
 		break;
 #endif
 #ifdef HAVE_EPOLL
@@ -935,16 +943,11 @@ int poll_method_set(enum poll_method method)
 		return EINVAL;
 	}
 
-	re = re_get();
 	re->method = method;
 	re->update = true;
 
 	DEBUG_INFO("Setting async I/O polling method to `%s'\n",
 		   poll_method_name(re->method));
-
-	err = fd_setsize(DEFAULT_MAXFDS);
-	if (err)
-		return err;
 
 	err = poll_init(re);
 	if (err)
