@@ -27,6 +27,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	      const char *pwd);
 int tls_add_ca(struct tls *tls, const char *capath);
 int tls_set_selfsigned(struct tls *tls, const char *cn);
+int tls_set_certificate(struct tls *tls, const char *cert, size_t len);
 void tls_set_verify_client(struct tls *tls);
 int tls_set_srtp(struct tls *tls, const char *suites);
 int tls_fingerprint(const struct tls *tls, enum tls_fingerprint type,

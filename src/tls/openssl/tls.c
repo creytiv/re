@@ -284,6 +284,69 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 }
 
 
+/**
+ * Set the certificate and private key on a TLS context
+ *
+ * @param tls TLS Context
+ * @param pem Certificate and private key in PEM format
+ * @param len Length of PEM string
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_certificate(struct tls *tls, const char *pem, size_t len)
+{
+	BIO *bio = NULL, *kbio = NULL;
+	X509 *cert = NULL;
+	RSA *rsa = NULL;
+	int r, err = ENOMEM;
+
+	if (!tls || !pem || !len)
+		return EINVAL;
+
+	bio  = BIO_new_mem_buf((char *)pem, (int)len);
+	kbio = BIO_new_mem_buf((char *)pem, (int)len);
+	if (!bio || !kbio)
+		goto out;
+
+	cert = PEM_read_bio_X509(bio, NULL, 0, NULL);
+	rsa = PEM_read_bio_RSAPrivateKey(kbio, NULL, 0, NULL);
+	if (!cert || !rsa)
+		goto out;
+
+	r = SSL_CTX_use_certificate(tls->ctx, cert);
+	if (r != 1)
+		goto out;
+
+	r = SSL_CTX_use_RSAPrivateKey(tls->ctx, rsa);
+	if (r != 1) {
+		DEBUG_WARNING("set_certificate: use_RSAPrivateKey failed\n");
+		goto out;
+	}
+
+	if (tls->cert)
+		X509_free(tls->cert);
+
+	tls->cert = cert;
+	cert = NULL;
+
+	err = 0;
+
+ out:
+	if (cert)
+		X509_free(cert);
+	if (rsa)
+		RSA_free(rsa);
+	if (bio)
+		BIO_free(bio);
+	if (kbio)
+		BIO_free(kbio);
+	if (err)
+		ERR_clear_error();
+
+	return err;
+}
+
+
 static int verify_handler(int ok, X509_STORE_CTX *ctx)
 {
 	(void)ok;
