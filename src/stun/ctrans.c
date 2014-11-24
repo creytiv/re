@@ -152,6 +152,15 @@ static void tcp_close_handler(int err, void *arg)
 }
 
 
+/**
+ * Handle an incoming STUN message to a Client Transaction
+ *
+ * @param stun STUN instance
+ * @param msg  STUN message
+ * @param ua   Unknown attributes
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_ctrans_recv(struct stun *stun, const struct stun_msg *msg,
 		     const struct stun_unknown_attr *ua)
 {

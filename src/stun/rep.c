@@ -12,6 +12,23 @@
 #include "stun.h"
 
 
+/**
+ * Send a STUN response message
+ *
+ * @param proto   Transport Protocol
+ * @param sock    Socket; UDP (struct udp_sock) or TCP (struct tcp_conn)
+ * @param dst     Destination network address
+ * @param presz   Number of bytes in preamble, if sending over TURN
+ * @param req     Matching STUN request
+ * @param key     Authentication key (optional)
+ * @param keylen  Number of bytes in authentication key
+ * @param fp      Use STUN Fingerprint attribute
+ * @param attrc   Number of attributes to encode (variable arguments)
+ * @param ...     Variable list of attribute-tuples
+ *                Each attribute has 2 arguments, attribute type and value
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_reply(int proto, void *sock, const struct sa *dst, size_t presz,
 	       const struct stun_msg *req, const uint8_t *key,
 	       size_t keylen, bool fp, uint32_t attrc, ...)
@@ -46,6 +63,25 @@ int stun_reply(int proto, void *sock, const struct sa *dst, size_t presz,
 }
 
 
+/**
+ * Send a STUN error response
+ *
+ * @param proto   Transport Protocol
+ * @param sock    Socket; UDP (struct udp_sock) or TCP (struct tcp_conn)
+ * @param dst     Destination network address
+ * @param presz   Number of bytes in preamble, if sending over TURN
+ * @param req     Matching STUN request
+ * @param scode   Status code
+ * @param reason  Reason string
+ * @param key     Authentication key (optional)
+ * @param keylen  Number of bytes in authentication key
+ * @param fp      Use STUN Fingerprint attribute
+ * @param attrc   Number of attributes to encode (variable arguments)
+ * @param ...     Variable list of attribute-tuples
+ *                Each attribute has 2 arguments, attribute type and value
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_ereply(int proto, void *sock, const struct sa *dst, size_t presz,
 		const struct stun_msg *req, uint16_t scode,
 		const char *reason, const uint8_t *key, size_t keylen,

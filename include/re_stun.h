@@ -99,6 +99,7 @@ struct stun_even_port {
 	bool r;
 };
 
+/** Defines a STUN attribute */
 struct stun_attr {
 	struct le le;
 	uint16_t type;
@@ -145,12 +146,13 @@ struct stun_attr {
 };
 
 
+/** STUN Configuration */
 struct stun_conf {
-	uint32_t rto;
-	uint32_t rc;
-	uint32_t rm;
-	uint32_t ti;
-	uint8_t tos;          /**< Type-of-service field   */
+	uint32_t rto;  /**< RTO Retransmission TimeOut [ms]        */
+	uint32_t rc;   /**< Rc Retransmission count (default 7)    */
+	uint32_t rm;   /**< Rm Max retransmissions (default 16)    */
+	uint32_t ti;   /**< Ti Timeout for reliable transport [ms] */
+	uint8_t tos;   /**< Type-of-service field                  */
 };
 
 

@@ -348,6 +348,13 @@ int stun_attr_decode(struct stun_attr **attrp, struct mbuf *mb,
 }
 
 
+/**
+ * Get the name of a STUN attribute
+ *
+ * @param type STUN attribute type
+ *
+ * @return String with attribute name
+ */
 const char *stun_attr_name(uint16_t type)
 {
 	switch (type) {

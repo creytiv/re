@@ -89,8 +89,7 @@ FILE_PATTERNS          = *.c \
 RECURSIVE              = YES
 EXCLUDE                = test.c \
 			 include/re_bitv.h \
-			 src/md5/md5.h src/md5/md5.c \
-			 src/stun     include/re_stun.h
+			 src/md5/md5.h src/md5/md5.c
 
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = */.svn/*

@@ -36,6 +36,16 @@ static void destructor(void *arg)
 }
 
 
+/**
+ * Allocate a new STUN instance
+ *
+ * @param stunp Pointer to allocated STUN instance
+ * @param conf  STUN configuration (optional)
+ * @param indh  STUN Indication handler (optional)
+ * @param arg   STUN Indication handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_alloc(struct stun **stunp, const struct stun_conf *conf,
 	       stun_ind_h *indh, void *arg)
 {
@@ -58,12 +68,29 @@ int stun_alloc(struct stun **stunp, const struct stun_conf *conf,
 }
 
 
+/**
+ * Get STUN configuration object
+ *
+ * @param stun STUN Instance
+ *
+ * @return STUN configuration
+ */
 struct stun_conf *stun_conf(struct stun *stun)
 {
 	return stun ? &stun->conf : NULL;
 }
 
 
+/**
+ * Send a STUN message
+ *
+ * @param proto Transport protocol (IPPROTO_UDP or IPPROTO_TCP)
+ * @param sock  Socket, UDP (struct udp_sock) or TCP (struct tcp_conn)
+ * @param dst   Destination network address (UDP only)
+ * @param mb    Buffer containing the STUN message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_send(int proto, void *sock, const struct sa *dst, struct mbuf *mb)
 {
 	int err;
@@ -90,6 +117,14 @@ int stun_send(int proto, void *sock, const struct sa *dst, struct mbuf *mb)
 }
 
 
+/**
+ * Receive a STUN message
+ *
+ * @param stun STUN Instance
+ * @param mb   Buffer containing STUN message
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_recv(struct stun *stun, struct mbuf *mb)
 {
 	struct stun_unknown_attr ua;
@@ -128,6 +163,14 @@ int stun_recv(struct stun *stun, struct mbuf *mb)
 }
 
 
+/**
+ * Print STUN instance debug information
+ *
+ * @param pf   Print function
+ * @param stun STUN Instance
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_debug(struct re_printf *pf, const struct stun *stun)
 {
 	if (!stun)

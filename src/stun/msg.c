@@ -68,6 +68,12 @@ static void destructor(void *arg)
 /**
  * Decode a buffer to a STUN Message
  *
+ * @param msgpp Pointer to allocation STUN message
+ * @param mb    Buffer containing the raw STUN packet
+ * @param ua    Unknown attributes (optional)
+ *
+ * @return 0 if success, otherwise errorcode
+ *
  * @note `mb' will be referenced
  */
 int stun_msg_decode(struct stun_msg **msgpp, struct mbuf *mb,
@@ -127,36 +133,79 @@ int stun_msg_decode(struct stun_msg **msgpp, struct mbuf *mb,
 }
 
 
+/**
+ * Get the STUN message type
+ *
+ * @param msg STUN Message
+ *
+ * @return STUN Message type
+ */
 uint16_t stun_msg_type(const struct stun_msg *msg)
 {
 	return msg ? msg->hdr.type : 0;
 }
 
 
+/**
+ * Get the STUN message class
+ *
+ * @param msg STUN Message
+ *
+ * @return STUN Message class
+ */
 uint16_t stun_msg_class(const struct stun_msg *msg)
 {
 	return STUN_CLASS(stun_msg_type(msg));
 }
 
 
+/**
+ * Get the STUN message method
+ *
+ * @param msg STUN Message
+ *
+ * @return STUN Message method
+ */
 uint16_t stun_msg_method(const struct stun_msg *msg)
 {
 	return STUN_METHOD(stun_msg_type(msg));
 }
 
 
+/**
+ * Get the STUN message Transaction-ID
+ *
+ * @param msg STUN Message
+ *
+ * @return STUN Message Transaction-ID
+ */
 const uint8_t *stun_msg_tid(const struct stun_msg *msg)
 {
 	return msg ? msg->hdr.tid : NULL;
 }
 
 
+/**
+ * Check if a STUN Message has the magic cookie
+ *
+ * @param msg STUN Message
+ *
+ * @return true if Magic Cookie, otherwise false
+ */
 bool stun_msg_mcookie(const struct stun_msg *msg)
 {
 	return msg && (STUN_MAGIC_COOKIE == msg->hdr.cookie);
 }
 
 
+/**
+ * Lookup a STUN attribute in a STUN message
+ *
+ * @param msg  STUN Message
+ * @param type STUN Attribute type
+ *
+ * @return STUN Attribute if found, otherwise NULL
+ */
 struct stun_attr *stun_msg_attr(const struct stun_msg *msg, uint16_t type)
 {
 	struct le *le = msg ? list_head(&msg->attrl) : NULL;
@@ -174,6 +223,15 @@ struct stun_attr *stun_msg_attr(const struct stun_msg *msg, uint16_t type)
 }
 
 
+/**
+ * Apply a function handler to all STUN attribute
+ *
+ * @param msg  STUN Message
+ * @param h    Attribute handler
+ * @param arg  Handler argument
+ *
+ * @return STUN attribute if handler returned true, otherwise NULL
+ */
 struct stun_attr *stun_msg_attr_apply(const struct stun_msg *msg,
 				      stun_attr_h *h, void *arg)
 {
@@ -192,6 +250,24 @@ struct stun_attr *stun_msg_attr_apply(const struct stun_msg *msg,
 }
 
 
+/**
+ * Encode a STUN message
+ *
+ * @param mb      Buffer to encode message into
+ * @param method  STUN Method
+ * @param class   STUN Method class
+ * @param tid     Transaction ID
+ * @param ec      STUN error code (optional)
+ * @param key     Authentication key (optional)
+ * @param keylen  Number of bytes in authentication key
+ * @param fp      Use STUN Fingerprint attribute
+ * @param padding Padding byte
+ * @param attrc   Number of attributes to encode (variable arguments)
+ * @param ap      Variable list of attribute-tuples
+ *                Each attribute has 2 arguments, attribute type and value
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_msg_vencode(struct mbuf *mb, uint16_t method, uint8_t class,
 		     const uint8_t *tid, const struct stun_errcode *ec,
 		     const uint8_t *key, size_t keylen, bool fp,
@@ -265,6 +341,24 @@ int stun_msg_vencode(struct mbuf *mb, uint16_t method, uint8_t class,
 }
 
 
+/**
+ * Encode a STUN message
+ *
+ * @param mb      Buffer to encode message into
+ * @param method  STUN Method
+ * @param class   STUN Method class
+ * @param tid     Transaction ID
+ * @param ec      STUN error code (optional)
+ * @param key     Authentication key (optional)
+ * @param keylen  Number of bytes in authentication key
+ * @param fp      Use STUN Fingerprint attribute
+ * @param padding Padding byte
+ * @param attrc   Number of attributes to encode (variable arguments)
+ * @param ...     Variable list of attribute-tuples
+ *                Each attribute has 2 arguments, attribute type and value
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int stun_msg_encode(struct mbuf *mb, uint16_t method, uint8_t class,
 		    const uint8_t *tid, const struct stun_errcode *ec,
 		    const uint8_t *key, size_t keylen, bool fp,
@@ -282,6 +376,15 @@ int stun_msg_encode(struct mbuf *mb, uint16_t method, uint8_t class,
 }
 
 
+/**
+ * Verify the Message-Integrity of a STUN message
+ *
+ * @param msg    STUN Message
+ * @param key    Authentication key
+ * @param keylen Number of bytes in authentication key
+ *
+ * @return 0 if verified, otherwise errorcode
+ */
 int stun_msg_chk_mi(const struct stun_msg *msg, const uint8_t *key,
 		    size_t keylen)
 {
@@ -321,6 +424,13 @@ int stun_msg_chk_mi(const struct stun_msg *msg, const uint8_t *key,
 }
 
 
+/**
+ * Check the Fingerprint of a STUN message
+ *
+ * @param msg STUN Message
+ *
+ * @return 0 if fingerprint matches, otherwise errorcode
+ */
 int stun_msg_chk_fingerprint(const struct stun_msg *msg)
 {
 	struct stun_attr *fp;
@@ -355,6 +465,11 @@ static bool attr_print(const struct stun_attr *attr, void *arg)
 }
 
 
+/**
+ * Print a STUN message to STDOUT
+ *
+ * @param msg STUN Message
+ */
 void stun_msg_dump(const struct stun_msg *msg)
 {
 	if (!msg)
