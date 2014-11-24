@@ -43,7 +43,9 @@ static bool inited = false;
  */
 void rand_init(void)
 {
+#ifndef USE_OPENSSL
 	srand((uint32_t) tmr_jiffies());
+#endif
 
 #if RAND_DEBUG
 	inited = true;

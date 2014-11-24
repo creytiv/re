@@ -503,7 +503,9 @@ HAVE_EPOLL   := $(shell [ -f $(SYSROOT)/include/sys/epoll.h ] || \
 			[ -f $(SYSROOT)/include/$(MACHINE)/sys/epoll.h ] \
 			&& echo "1")
 endif
+ifneq ($(OS),openbsd)
 HAVE_LIBRESOLV := $(shell [ -f $(SYSROOT)/include/resolv.h ] && echo "1")
+endif
 
 ifneq ($(HAVE_LIBRESOLV),)
 CFLAGS  += -DHAVE_LIBRESOLV
