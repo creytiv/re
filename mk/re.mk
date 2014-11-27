@@ -36,6 +36,8 @@
 #   MOD_LFLAGS     Linker flags for dynamic modules
 #   MOD_SUFFIX     Suffix for dynamic modules
 #   SH_LFLAGS      Linker flags for shared libraries
+#   USE_TLS        Defined if TLS is available
+#   USE_DTLS       Defined if DTLS is available
 #
 
 
@@ -424,15 +426,37 @@ endif
 USE_OPENSSL := $(shell [ -f $(SYSROOT)/include/openssl/ssl.h ] || \
 	[ -f $(SYSROOT)/local/include/openssl/ssl.h ] || \
 	[ -f $(SYSROOT_ALT)/include/openssl/ssl.h ] && echo "yes")
-USE_ZLIB    := $(shell [ -f $(SYSROOT)/include/zlib.h ] || \
-	[ -f $(SYSROOT)/local/include/zlib.h ] || \
-	[ -f $(SYSROOT_ALT)/include/zlib.h ] && echo "yes")
 
 ifneq ($(USE_OPENSSL),)
 CFLAGS  += -DUSE_OPENSSL -DUSE_TLS
 LIBS    += -lssl -lcrypto
 USE_TLS := yes
+
+USE_OPENSSL_DTLS := $(shell [ -f $(SYSROOT)/include/openssl/dtls1.h ] || \
+	[ -f $(SYSROOT)/local/include/openssl/dtls1.h ] || \
+	[ -f $(SYSROOT_ALT)/include/openssl/dtls1.h ] && echo "yes")
+
+USE_OPENSSL_SRTP := $(shell [ -f $(SYSROOT)/include/openssl/srtp.h ] || \
+	[ -f $(SYSROOT)/local/include/openssl/srtp.h ] || \
+	[ -f $(SYSROOT_ALT)/include/openssl/srtp.h ] && echo "yes")
+
+ifneq ($(USE_OPENSSL_DTLS),)
+CFLAGS  += -DUSE_OPENSSL_DTLS -DUSE_DTLS
+USE_DTLS := yes
 endif
+
+ifneq ($(USE_OPENSSL_SRTP),)
+CFLAGS  += -DUSE_OPENSSL_SRTP -DUSE_DTLS_SRTP
+USE_DTLS_SRTP := yes
+endif
+
+endif
+
+
+USE_ZLIB    := $(shell [ -f $(SYSROOT)/include/zlib.h ] || \
+	[ -f $(SYSROOT)/local/include/zlib.h ] || \
+	[ -f $(SYSROOT_ALT)/include/zlib.h ] && echo "yes")
+
 ifneq ($(USE_ZLIB),)
 CFLAGS  += -DUSE_ZLIB
 LIBS    += -lz
@@ -622,8 +646,9 @@ info:
 	@echo "  LIBRE_INC:     $(LIBRE_INC)"
 	@echo "  LIBRE_SO:      $(LIBRE_SO)"
 	@echo "  USE_OPENSSL:   $(USE_OPENSSL)"
-	@echo "  USE_OPENSSL_DTLS:   $(USE_OPENSSL_DTLS)"
-	@echo "  USE_OPENSSL_SRTP:   $(USE_OPENSSL_SRTP)"
+	@echo "  USE_TLS:       $(USE_TLS)"
+	@echo "  USE_DTLS:      $(USE_DTLS)"
+	@echo "  USE_DTLS_SRTP: $(USE_DTLS_SRTP)"
 	@echo "  USE_ZLIB:      $(USE_ZLIB)"
 	@echo "  GCOV:          $(GCOV)"
 	@echo "  GPROF:         $(GPROF)"
