@@ -5,6 +5,7 @@
  */
 
 
+/** RTP protocol values */
 enum {
 	RTP_VERSION     =  2,  /**< Defines the RTP version we support */
 	RTCP_VERSION    =  2,  /**< Supported RTCP Version             */

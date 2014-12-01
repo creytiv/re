@@ -68,6 +68,7 @@
 #endif
 
 
+/** Main loop values */
 enum {
 	MAX_BLOCKING = 100,    /**< Maximum time spent in handler in [ms] */
 #if defined (FD_SETSIZE)

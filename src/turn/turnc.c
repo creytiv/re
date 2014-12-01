@@ -24,6 +24,7 @@
 #include <re_dbg.h>
 
 
+/** TURN Client protocol values */
 enum {
 	PERM_HASH_SIZE = 16,
 	CHAN_HASH_SIZE = 16,

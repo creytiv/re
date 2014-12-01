@@ -4,6 +4,8 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
+
+/** TURN Protocol values */
 enum {
 	TURN_DEFAULT_LIFETIME = 600,  /**< Default lifetime is 10 minutes */
 	TURN_MAX_LIFETIME     = 3600  /**< Maximum lifetime is 1 hour     */

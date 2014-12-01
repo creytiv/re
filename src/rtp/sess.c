@@ -29,6 +29,7 @@
 #include <re_dbg.h>
 
 
+/** RTP protocol values */
 enum {
 	RTCP_INTERVAL = 5000,  /**< Interval in [ms] between sending reports */
 	MAX_MEMBERS   = 8,

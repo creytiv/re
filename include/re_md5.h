@@ -5,6 +5,7 @@
  */
 
 
+/** MD5 values */
 enum {
 	MD5_SIZE     = 16,             /**< Number of bytes in MD5 hash   */
 	MD5_STR_SIZE = 2*MD5_SIZE + 1  /**< Number of bytes in MD5 string */

@@ -32,7 +32,7 @@
 #define TMR_DEBUG 1  /**< Timer debugging (0 or 1) */
 #endif
 
-
+/** Timer values */
 enum {
 	MAX_BLOCKING = 100   /**< Maximum time spent in handler [ms] */
 };

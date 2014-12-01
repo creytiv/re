@@ -5,6 +5,7 @@
  */
 
 
+/** STUN Protocol values */
 enum {
 	STUN_MAGIC_COOKIE = 0x2112a442 /**< Magic Cookie for 3489bis        */
 };

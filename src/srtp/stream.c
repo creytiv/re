@@ -11,6 +11,7 @@
 #include "srtp.h"
 
 
+/** SRTP protocol values */
 enum {
 	MAX_STREAMS  = 8,  /**< Maximum number of SRTP streams */
 };

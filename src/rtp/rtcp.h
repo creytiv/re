@@ -5,6 +5,7 @@
  */
 
 
+/** RTCP protocol values */
 enum {
 	RTCP_HDR_SIZE  =   4,  /**< Size of common RTCP header   */
 	RTCP_SRC_SIZE  =   4,  /**< Size of Source field         */

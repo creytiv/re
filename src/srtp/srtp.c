@@ -18,6 +18,7 @@
 #include "srtp.h"
 
 
+/** SRTP protocol values */
 enum {
 	MAX_KEYLEN  = 32,  /**< Maximum keylength in bytes     */
 };

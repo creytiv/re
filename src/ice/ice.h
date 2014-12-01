@@ -44,6 +44,7 @@ enum ice_transp {
 	ICE_TRANSP_UDP
 };
 
+/** ICE protocol values */
 enum {
 	ICE_DEFAULT_Tr          =  15, /**< Keepalive interval [s]          */
 	ICE_DEFAULT_Ta_RTP      =  20, /**< Pacing interval RTP [ms]        */

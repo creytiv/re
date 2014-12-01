@@ -5,6 +5,7 @@
  */
 
 
+/** STUN Protocol values */
 enum {
 	STUN_PORT        = 3478,   /**< STUN Port number */
 	STUNS_PORT       = 5349,   /**< STUNS Port number                    */
