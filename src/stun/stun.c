@@ -10,6 +10,8 @@
 #include <re_sa.h>
 #include <re_udp.h>
 #include <re_tcp.h>
+#include <re_srtp.h>
+#include <re_tls.h>
 #include <re_sys.h>
 #include <re_list.h>
 #include <re_stun.h>
@@ -106,6 +108,10 @@ int stun_send(int proto, void *sock, const struct sa *dst, struct mbuf *mb)
 
 	case IPPROTO_TCP:
 		err = tcp_send(sock, mb);
+		break;
+
+	case STUN_TRANSP_DTLS:
+		err = dtls_send(sock, mb);
 		break;
 
 	default:

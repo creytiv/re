@@ -24,6 +24,13 @@ enum stun_af {
 	STUN_AF_IPv6 = 0x02   /**< IPv6 Address Family */
 };
 
+/** STUN Transport */
+enum stun_transp {
+	STUN_TRANSP_UDP = IPPROTO_UDP, /**< UDP-transport (struct udp_sock)  */
+	STUN_TRANSP_TCP = IPPROTO_TCP, /**< TCP-transport (struct tcp_conn)  */
+	STUN_TRANSP_DTLS,              /**< DTLS-transport (struct tls_conn) */
+};
+
 /** STUN Methods */
 enum stun_method {
 	STUN_METHOD_BINDING    = 0x001,

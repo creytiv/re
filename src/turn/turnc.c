@@ -14,6 +14,8 @@
 #include <re_sa.h>
 #include <re_udp.h>
 #include <re_tcp.h>
+#include <re_srtp.h>
+#include <re_tls.h>
 #include <re_stun.h>
 #include <re_turn.h>
 #include "turnc.h"
@@ -533,6 +535,10 @@ int turnc_send(struct turnc *turnc, const struct sa *dst, struct mbuf *mb)
 
 	case IPPROTO_TCP:
 		err = tcp_send(turnc->sock, mb);
+		break;
+
+	case STUN_TRANSP_DTLS:
+		err = dtls_send(turnc->sock, mb);
 		break;
 
 	default:

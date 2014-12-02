@@ -11,6 +11,8 @@
 #include <re_sa.h>
 #include <re_udp.h>
 #include <re_tcp.h>
+#include <re_srtp.h>
+#include <re_tls.h>
 #include <re_list.h>
 #include <re_tmr.h>
 #include <re_md5.h>
@@ -85,7 +87,8 @@ static void timeout_handler(void *arg)
 		goto error;
 
 	ct->mb->pos = ct->pos;
-	err = udp_send(ct->sock, &ct->dst, ct->mb);
+
+	err = stun_send(ct->proto, ct->sock, &ct->dst, ct->mb);
 	if (err)
 		goto error;
 
@@ -290,6 +293,19 @@ int stun_ctrans_request(struct stun_ctrans **ctp, struct stun *stun, int proto,
 		err = tcp_connect((struct tcp_conn **)&ct->sock, dst,
 				  tcp_estab_handler, tcp_recv_handler,
 				  tcp_close_handler, ct);
+		break;
+
+	case STUN_TRANSP_DTLS:
+		if (!sock) {
+			err = EINVAL;
+			break;
+		}
+
+		ct->ival = stun_conf(stun)->rto;
+		tmr_start(&ct->tmr, ct->ival, timeout_handler, ct);
+
+		ct->txc = 1;
+		err = dtls_send(ct->sock, mb);
 		break;
 
 	default:
