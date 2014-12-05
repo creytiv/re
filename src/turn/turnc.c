@@ -119,7 +119,8 @@ static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 		break;
 
 	case 300:
-		if (turnc->proto == IPPROTO_TCP)
+		if (turnc->proto == IPPROTO_TCP ||
+		    turnc->proto == STUN_TRANSP_DTLS)
 			break;
 
 		alt = stun_msg_attr(msg, STUN_ATTR_ALT_SERVER);
