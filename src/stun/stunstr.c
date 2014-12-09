@@ -25,3 +25,22 @@ const char *stun_reason_443 = "Peer Address Family Mismatch";
 const char *stun_reason_486 = "Allocation Quota Reached";
 const char *stun_reason_500 = "Server Error";
 const char *stun_reason_508 = "Insufficient Capacity";
+
+
+/**
+ * Get the name of a given STUN Transport
+ *
+ * @param tp STUN Transport
+ *
+ * @return Name of the corresponding STUN Transport
+ */
+const char *stun_transp_name(enum stun_transp tp)
+{
+	switch (tp) {
+
+	case STUN_TRANSP_UDP:  return "UDP";
+	case STUN_TRANSP_TCP:  return "TCP";
+	case STUN_TRANSP_DTLS: return "DTLS";
+	default:               return "???";
+	}
+}

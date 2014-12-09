@@ -715,3 +715,16 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 
 	return err;
 }
+
+
+/**
+ * Get the underlying UDP socket of a DTLS Socket
+ *
+ * @param sock DTLS Socket
+ *
+ * @return UDP Socket
+ */
+struct udp_sock *dtls_udp_sock(struct dtls_sock *sock)
+{
+	return sock ? sock->us : NULL;
+}

@@ -225,6 +225,7 @@ void stun_msg_dump(const struct stun_msg *msg);
 const char *stun_class_name(uint16_t cls);
 const char *stun_method_name(uint16_t method);
 const char *stun_attr_name(uint16_t type);
+const char *stun_transp_name(enum stun_transp tp);
 
 
 /* DNS Discovery of a STUN Server */
