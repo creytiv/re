@@ -116,6 +116,7 @@ Features:
 * RFC 6156 - TURN Extension for IPv6
 * RFC 6188 - The Use of AES-192 and AES-256 in Secure RTP
 * RFC 6455 - The WebSocket Protocol
+* RFC 7350 - DTLS as Transport for STUN
 * Symmetric RTP
 * ITU-T G.711 Appendix I and Appendix II
 * draft-ietf-bfcpbis-rfc4582bis-08

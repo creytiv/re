@@ -1,3 +1,23 @@
+2014-12-09 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.11
+
+	* build: export USE_TLS and USE_DTLS flags in re.mk makefile
+		 detect sysctl.h and epoll.h for multi-arch platforms
+		 dont use libresolv for openbsd
+
+	* main: check that maxfds is less than FD_SETSIZE (for select method)
+
+	* dtls: added udp-socket accessor and function to set handlers
+
+	* stun: added support for DTLS-transport
+		added doxygen comments
+
+	* tls: added function to set certificate from a string
+
+	* turn: added support for DTLS-transport
+
+
 2014-10-19 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.10
