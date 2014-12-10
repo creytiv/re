@@ -110,9 +110,11 @@ int stun_send(int proto, void *sock, const struct sa *dst, struct mbuf *mb)
 		err = tcp_send(sock, mb);
 		break;
 
+#ifdef USE_DTLS
 	case STUN_TRANSP_DTLS:
 		err = dtls_send(sock, mb);
 		break;
+#endif
 
 	default:
 		err = EPROTONOSUPPORT;

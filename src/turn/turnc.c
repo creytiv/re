@@ -538,9 +538,11 @@ int turnc_send(struct turnc *turnc, const struct sa *dst, struct mbuf *mb)
 		err = tcp_send(turnc->sock, mb);
 		break;
 
+#ifdef USE_DTLS
 	case STUN_TRANSP_DTLS:
 		err = dtls_send(turnc->sock, mb);
 		break;
+#endif
 
 	default:
 		err = EPROTONOSUPPORT;

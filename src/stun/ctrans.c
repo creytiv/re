@@ -295,6 +295,7 @@ int stun_ctrans_request(struct stun_ctrans **ctp, struct stun *stun, int proto,
 				  tcp_close_handler, ct);
 		break;
 
+#ifdef USE_DTLS
 	case STUN_TRANSP_DTLS:
 		if (!sock) {
 			err = EINVAL;
@@ -307,6 +308,7 @@ int stun_ctrans_request(struct stun_ctrans **ctp, struct stun *stun, int proto,
 		ct->txc = 1;
 		err = dtls_send(ct->sock, mb);
 		break;
+#endif
 
 	default:
 		err = EPROTONOSUPPORT;
