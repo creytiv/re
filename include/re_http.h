@@ -66,24 +66,24 @@ enum http_hdrid {
 
 /** HTTP Header */
 struct http_hdr {
-	struct le le;
-	struct pl name;
-	struct pl val;
-	enum http_hdrid id;
+	struct le le;          /**< Linked-list element     */
+	struct pl name;        /**< HTTP Header name        */
+	struct pl val;         /**< HTTP Header value       */
+	enum http_hdrid id;    /**< HTTP Header id (unique) */
 };
 
 /** HTTP Message */
 struct http_msg {
-	struct pl ver;
-	struct pl met;
-	struct pl path;
-	struct pl prm;
-	uint16_t scode;
-	struct pl reason;
-	struct list hdrl;
-	struct msg_ctype ctyp;
-	struct mbuf *mb;
-	uint32_t clen;
+	struct pl ver;         /**< HTTP Version number                    */
+	struct pl met;         /**< Request Method                         */
+	struct pl path;        /**< Request path/resource                  */
+	struct pl prm;         /**< Request parameters                     */
+	uint16_t scode;        /**< Response Status code                   */
+	struct pl reason;      /**< Response Reason phrase                 */
+	struct list hdrl;      /**< List of HTTP headers (struct http_hdr) */
+	struct msg_ctype ctyp; /**< Content-type                           */
+	struct mbuf *mb;       /**< Buffer containing the HTTP message     */
+	uint32_t clen;         /**< Content length                         */
 };
 
 typedef bool(http_hdr_h)(const struct http_hdr *hdr, void *arg);

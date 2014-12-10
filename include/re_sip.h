@@ -173,39 +173,39 @@ struct sip_cseq {
 
 /** SIP Header */
 struct sip_hdr {
-	struct le le;
-	struct le he;
-	struct pl name;
-	struct pl val;
-	enum sip_hdrid id;
+	struct le le;          /**< Linked-list element    */
+	struct le he;          /**< Hash-table element     */
+	struct pl name;        /**< SIP Header name        */
+	struct pl val;         /**< SIP Header value       */
+	enum sip_hdrid id;     /**< SIP Header id (unique) */
 };
 
 /** SIP Message */
 struct sip_msg {
-	struct sa src;
-	struct sa dst;
-	struct pl ver;
-	struct pl met;
-	struct pl ruri;
-	struct uri uri;
-	uint16_t scode;
-	struct pl reason;
-	struct list hdrl;
-	struct sip_via via;
-	struct sip_taddr to;
-	struct sip_taddr from;
-	struct sip_cseq cseq;
-	struct msg_ctype ctyp;
-	struct pl callid;
-	struct pl maxfwd;
-	struct pl expires;
-	struct pl clen;
-	struct hash *hdrht;
-	struct mbuf *mb;
-	void *sock;
-	uint64_t tag;
-	enum sip_transp tp;
-	bool req;
+	struct sa src;         /**< Source network address               */
+	struct sa dst;         /**< Destination network address          */
+	struct pl ver;         /**< SIP Version number                   */
+	struct pl met;         /**< Request method                       */
+	struct pl ruri;        /**< Raw request URI                      */
+	struct uri uri;        /**< Parsed request URI                   */
+	uint16_t scode;        /**< Response status code                 */
+	struct pl reason;      /**< Response reason phrase               */
+	struct list hdrl;      /**< List of SIP Headers (struct sip_hdr) */
+	struct sip_via via;    /**< Parsed first Via header              */
+	struct sip_taddr to;   /**< Parsed To header                     */
+	struct sip_taddr from; /**< Parsed From header                   */
+	struct sip_cseq cseq;  /**< Parsed CSeq header                   */
+	struct msg_ctype ctyp; /**< Content Type                         */
+	struct pl callid;      /**< Cached Call-ID header                */
+	struct pl maxfwd;      /**< Cached Max-Forwards header           */
+	struct pl expires;     /**< Cached Expires header                */
+	struct pl clen;        /**< Cached Content-Length header         */
+	struct hash *hdrht;    /**< Hash-table with all SIP headers      */
+	struct mbuf *mb;       /**< Buffer containing the SIP message    */
+	void *sock;            /**< Transport socket                     */
+	uint64_t tag;          /**< Opaque tag                           */
+	enum sip_transp tp;    /**< SIP Transport                        */
+	bool req;              /**< True if Request, False if Response  */
 };
 
 /** SIP Loop-state */
