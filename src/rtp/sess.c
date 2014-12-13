@@ -39,8 +39,9 @@ enum {
 struct txstat {
 	uint32_t psent;      /**< Total number of RTP packets sent */
 	uint32_t osent;      /**< Total number of RTP octets  sent */
-	uint32_t ts_offset;  /**< RTP Timestamp offset (transmit)  */
-	time_t start;        /**< When session started [s]         */
+	uint64_t jfs_ref;    /**< Timer ticks at RTP timestamp reference */
+	uint32_t ts_ref;     /**< RTP timestamp reference (transmit)     */
+	bool ts_synced;      /**< RTP timestamp synchronization flag     */
 };
 
 /** RTCP Session */
@@ -395,20 +396,21 @@ static int mk_sr(struct rtcp_sess *sess, struct mbuf *mb)
 {
 	struct ntp_time ntp = {0, 0};
 	struct txstat txstat;
-	uint32_t dur = 0, rtp_ts = 0;
+	uint32_t dur, rtp_ts = 0;
 	int err;
 
 	err = ntp_time_get(&ntp);
 	if (err)
 		return err;
 
-	lock_read_get(sess->lock);
+	lock_write_get(sess->lock);
 	txstat = sess->txstat;
+	sess->txstat.ts_synced = false;
 	lock_rel(sess->lock);
 
-	if (txstat.start) {
-		dur = (uint32_t)(time(NULL) - txstat.start);
-		rtp_ts = txstat.ts_offset + dur * sess->srate_tx;
+	if (txstat.jfs_ref) {
+		dur = (uint32_t)(tmr_jiffies() - txstat.jfs_ref);
+		rtp_ts = txstat.ts_ref + dur * sess->srate_tx / 1000;
 	}
 
 	err = rtcp_encode(mb, RTCP_SR, sess->senderc, rtp_sess_ssrc(sess->rs),
@@ -519,9 +521,10 @@ void rtcp_sess_tx_rtp(struct rtcp_sess *sess, uint32_t ts, size_t payload_size)
 	sess->txstat.osent += (uint32_t)payload_size;
 	sess->txstat.psent += 1;
 
-	if (sess->txstat.start == 0) {
-		sess->txstat.ts_offset = ts;
-		sess->txstat.start = time(NULL);
+	if (!sess->txstat.ts_synced) {
+		sess->txstat.jfs_ref   = tmr_jiffies();
+		sess->txstat.ts_ref    = ts;
+		sess->txstat.ts_synced = true;
 	}
 
 	lock_rel(sess->lock);
