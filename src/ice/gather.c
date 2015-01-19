@@ -81,7 +81,8 @@ static void stun_resp_handler(int err, uint16_t scode, const char *reason,
 		goto out;
 	}
 
-	err = icem_lcand_add(icem, lcand->base, CAND_TYPE_SRFLX, &attr->v.sa);
+	err = icem_lcand_add(icem, lcand->base, ICE_CAND_TYPE_SRFLX,
+			     &attr->v.sa);
 
  out:
 	call_gather_handler(err, icem, scode, reason);
@@ -148,12 +149,12 @@ static void turnc_handler(int err, uint16_t scode, const char *reason,
 
 	if (!sa_cmp(relay, &lcand->base->addr, SA_ALL)) {
 		err = icem_lcand_add(icem, lcand->base,
-				     CAND_TYPE_RELAY, relay);
+				     ICE_CAND_TYPE_RELAY, relay);
 	}
 
 	if (mapped) {
 		err |= icem_lcand_add(icem, lcand->base,
-				      CAND_TYPE_SRFLX, mapped);
+				      ICE_CAND_TYPE_SRFLX, mapped);
 	}
 	else {
 		err |= send_binding_request(icem, comp);

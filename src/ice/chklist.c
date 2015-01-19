@@ -65,7 +65,7 @@ static int candpairs_form(struct icem *icem)
 /* Replace server reflexive candidates by its base */
 static const struct sa *cand_srflx_addr(const struct cand *c)
 {
-	return (CAND_TYPE_SRFLX == c->type) ? &c->base->addr : &c->addr;
+	return (ICE_CAND_TYPE_SRFLX == c->type) ? &c->base->addr : &c->addr;
 }
 
 

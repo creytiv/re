@@ -14,27 +14,27 @@
 #include "ice.h"
 
 
-const char *ice_cand_type2name(enum cand_type type)
+const char *ice_cand_type2name(enum ice_cand_type type)
 {
 	switch (type) {
 
-	case CAND_TYPE_HOST:  return "host";
-	case CAND_TYPE_SRFLX: return "srflx";
-	case CAND_TYPE_PRFLX: return "prflx";
-	case CAND_TYPE_RELAY: return "relay";
-	default:              return "???";
+	case ICE_CAND_TYPE_HOST:  return "host";
+	case ICE_CAND_TYPE_SRFLX: return "srflx";
+	case ICE_CAND_TYPE_PRFLX: return "prflx";
+	case ICE_CAND_TYPE_RELAY: return "relay";
+	default:                  return "???";
 	}
 }
 
 
-enum cand_type ice_cand_name2type(const struct pl *name)
+enum ice_cand_type ice_cand_name2type(const char *name)
 {
-	if (0 == pl_strcasecmp(name, "host"))  return CAND_TYPE_HOST;
-	if (0 == pl_strcasecmp(name, "srflx")) return CAND_TYPE_SRFLX;
-	if (0 == pl_strcasecmp(name, "prflx")) return CAND_TYPE_PRFLX;
-	if (0 == pl_strcasecmp(name, "relay")) return CAND_TYPE_RELAY;
+	if (0 == str_casecmp(name, "host"))  return ICE_CAND_TYPE_HOST;
+	if (0 == str_casecmp(name, "srflx")) return ICE_CAND_TYPE_SRFLX;
+	if (0 == str_casecmp(name, "prflx")) return ICE_CAND_TYPE_PRFLX;
+	if (0 == str_casecmp(name, "relay")) return ICE_CAND_TYPE_RELAY;
 
-	return (enum cand_type)-1;
+	return (enum ice_cand_type)-1;
 }
 
 

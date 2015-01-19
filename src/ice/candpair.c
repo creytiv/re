@@ -222,7 +222,8 @@ void icem_candpair_set_state(struct candpair *cp, enum candpair_state state)
 /**
  * Delete all Candidate-Pairs where the Local candidate is of a given type
  */
-void icem_candpairs_flush(struct list *lst, enum cand_type type, uint8_t id)
+void icem_candpairs_flush(struct list *lst, enum ice_cand_type type,
+			  uint8_t id)
 {
 	struct le *le = list_head(lst);
 

@@ -281,8 +281,8 @@ static void purge_relayed(struct icem *icem, struct icem_comp *comp)
 	 * Purge all Candidate-Pairs where the Local candidate
 	 * is of type "Relay"
 	 */
-	icem_candpairs_flush(&icem->checkl, CAND_TYPE_RELAY, comp->id);
-	icem_candpairs_flush(&icem->validl, CAND_TYPE_RELAY, comp->id);
+	icem_candpairs_flush(&icem->checkl, ICE_CAND_TYPE_RELAY, comp->id);
+	icem_candpairs_flush(&icem->validl, ICE_CAND_TYPE_RELAY, comp->id);
 
 	comp->turnc = mem_deref(comp->turnc);
 }
@@ -307,7 +307,7 @@ void icem_update(struct icem *icem)
 		/* remove TURN client if not used by local "Selected" */
 		if (comp->cp_sel) {
 
-			if (comp->cp_sel->lcand->type != CAND_TYPE_RELAY)
+			if (comp->cp_sel->lcand->type != ICE_CAND_TYPE_RELAY)
 				purge_relayed(icem, comp);
 		}
 	}

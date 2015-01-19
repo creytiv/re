@@ -23,6 +23,14 @@ enum ice_nomination {
 	ICE_NOMINATION_AGGRESSIVE
 };
 
+/** ICE Candidate type */
+enum ice_cand_type {
+	ICE_CAND_TYPE_HOST,   /**< Host candidate             */
+	ICE_CAND_TYPE_SRFLX,  /**< Server Reflexive candidate */
+	ICE_CAND_TYPE_PRFLX,  /**< Peer Reflexive candidate   */
+	ICE_CAND_TYPE_RELAY   /**< Relayed candidate          */
+};
+
 struct ice;
 struct icem;
 
@@ -92,3 +100,11 @@ extern const char ice_attr_mismatch[];
 extern const char ice_attr_pwd[];
 extern const char ice_attr_remote_cand[];
 extern const char ice_attr_ufrag[];
+
+
+const char        *ice_cand_type2name(enum ice_cand_type type);
+enum ice_cand_type ice_cand_name2type(const char *name);
+
+
+uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,
+			    uint8_t compid);

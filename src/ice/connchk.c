@@ -116,7 +116,7 @@ static void handle_success(struct icem *icem, struct candpair *cp,
 			       laddr);
 
 		err = icem_lcand_add(icem, cp->lcand,
-				     CAND_TYPE_PRFLX, laddr);
+				     ICE_CAND_TYPE_PRFLX, laddr);
 		if (err) {
 			DEBUG_WARNING("failed to add PRFLX: %m\n", err);
 		}
@@ -220,7 +220,7 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 			  "%s:%s", icem->rufrag, ice->lufrag);
 
 	/* PRIORITY and USE-CANDIDATE */
-	prio_prflx = ice_calc_prio(CAND_TYPE_PRFLX, 0, lcand->compid);
+	prio_prflx = ice_cand_calc_prio(ICE_CAND_TYPE_PRFLX, 0, lcand->compid);
 
 	switch (ice->lrole) {
 
@@ -264,7 +264,7 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 
 	switch (lcand->type) {
 
-	case CAND_TYPE_RELAY:
+	case ICE_CAND_TYPE_RELAY:
 		/* Creating Permissions for Relayed Candidates */
 		err = turnc_add_chan(cp->comp->turnc, &cp->rcand->addr,
 				     NULL, NULL);
@@ -275,9 +275,9 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 		presz = 4;
 		/*@fallthrough@*/
 
-	case CAND_TYPE_HOST:
-	case CAND_TYPE_SRFLX:
-	case CAND_TYPE_PRFLX:
+	case ICE_CAND_TYPE_HOST:
+	case ICE_CAND_TYPE_SRFLX:
+	case ICE_CAND_TYPE_PRFLX:
 		cp->ct_conn = mem_deref(cp->ct_conn);
 		err = stun_request(&cp->ct_conn, ice->stun, icem->proto,
 				   cp->comp->sock, &cp->rcand->addr, presz,

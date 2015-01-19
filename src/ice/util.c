@@ -36,20 +36,21 @@ enum {
 };
 
 
-static int type_prio(enum cand_type type)
+static int type_prio(enum ice_cand_type type)
 {
 	switch (type) {
 
-	case CAND_TYPE_HOST:   return CAND_PRIO_HOST;
-	case CAND_TYPE_SRFLX:  return CAND_PRIO_SRFLX;
-	case CAND_TYPE_PRFLX:  return CAND_PRIO_PRFLX;
-	case CAND_TYPE_RELAY:  return CAND_PRIO_RELAY;
+	case ICE_CAND_TYPE_HOST:   return CAND_PRIO_HOST;
+	case ICE_CAND_TYPE_SRFLX:  return CAND_PRIO_SRFLX;
+	case ICE_CAND_TYPE_PRFLX:  return CAND_PRIO_PRFLX;
+	case ICE_CAND_TYPE_RELAY:  return CAND_PRIO_RELAY;
 	default: return 0;
 	}
 }
 
 
-uint32_t ice_calc_prio(enum cand_type type, uint16_t local, uint8_t compid)
+uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,
+			    uint8_t compid)
 {
 	return (uint32_t)type_prio(type)<<24 | local<<8 | (256 - compid);
 }

@@ -49,7 +49,7 @@ static int compute_foundation(struct cand *cand)
 
 
 static int cand_alloc(struct cand **candp, struct icem *icem,
-		      enum cand_type type, uint8_t compid,
+		      enum ice_cand_type type, uint8_t compid,
 		      uint32_t prio, const char *ifname,
 		      enum ice_transp transp, const struct sa *addr)
 {
@@ -98,8 +98,8 @@ int icem_lcand_add_base(struct icem *icem, uint8_t compid, uint16_t lprio,
 	if (!comp)
 		return ENOENT;
 
-	err = cand_alloc(&cand, icem, CAND_TYPE_HOST, compid,
-			 ice_calc_prio(CAND_TYPE_HOST, lprio, compid),
+	err = cand_alloc(&cand, icem, ICE_CAND_TYPE_HOST, compid,
+			 ice_cand_calc_prio(ICE_CAND_TYPE_HOST, lprio, compid),
 			 ifname, transp, addr);
 	if (err)
 		return err;
@@ -113,7 +113,8 @@ int icem_lcand_add_base(struct icem *icem, uint8_t compid, uint16_t lprio,
 }
 
 
-int icem_lcand_add(struct icem *icem, struct cand *base, enum cand_type type,
+int icem_lcand_add(struct icem *icem, struct cand *base,
+		   enum ice_cand_type type,
 		   const struct sa *addr)
 {
 	struct cand *cand;
@@ -123,7 +124,7 @@ int icem_lcand_add(struct icem *icem, struct cand *base, enum cand_type type,
 		return EINVAL;
 
 	err = cand_alloc(&cand, icem, type, base->compid,
-			 ice_calc_prio(type, 0, base->compid),
+			 ice_cand_calc_prio(type, 0, base->compid),
 			 base->ifname, base->transp, addr);
 	if (err)
 		return err;
@@ -135,7 +136,7 @@ int icem_lcand_add(struct icem *icem, struct cand *base, enum cand_type type,
 }
 
 
-int icem_rcand_add(struct icem *icem, enum cand_type type, uint8_t compid,
+int icem_rcand_add(struct icem *icem, enum ice_cand_type type, uint8_t compid,
 		   uint32_t prio, const struct sa *addr,
 		   const struct sa *rel_addr, const struct pl *foundation)
 {
@@ -182,7 +183,7 @@ int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
 
 	list_append(&icem->rcandl, &rcand->le, rcand);
 
-	rcand->type   = CAND_TYPE_PRFLX;
+	rcand->type   = ICE_CAND_TYPE_PRFLX;
 	rcand->compid = compid;
 	rcand->prio   = prio;
 	rcand->addr   = *addr;
@@ -242,8 +243,8 @@ struct cand *icem_lcand_find_checklist(const struct icem *icem, uint8_t compid)
 
 		switch (cp->lcand->type) {
 
-		case CAND_TYPE_HOST:
-		case CAND_TYPE_RELAY:
+		case ICE_CAND_TYPE_HOST:
+		case ICE_CAND_TYPE_RELAY:
 			return cp->lcand;
 
 		default:

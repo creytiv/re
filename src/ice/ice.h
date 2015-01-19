@@ -23,13 +23,6 @@ enum checkl_state {
 	CHECKLIST_FAILED
 };
 
-enum cand_type {
-	CAND_TYPE_HOST,
-	CAND_TYPE_SRFLX,
-	CAND_TYPE_PRFLX,
-	CAND_TYPE_RELAY
-};
-
 /** Candidate pair states */
 enum candpair_state {
 	CANDPAIR_FROZEN = 0, /**< Frozen state (default)                    */
@@ -112,7 +105,7 @@ struct icem {
 /** Defines a candidate */
 struct cand {
 	struct le le;                /**< List element                       */
-	enum cand_type type;         /**< Candidate type                     */
+	enum ice_cand_type type;     /**< Candidate type                     */
 	uint32_t prio;               /**< Priority of this candidate         */
 	char *foundation;            /**< Foundation                         */
 	uint8_t compid;              /**< Component ID (1-256)               */
@@ -147,9 +140,10 @@ struct candpair {
 int icem_lcand_add_base(struct icem *icem, uint8_t compid, uint16_t lprio,
 			const char *ifname, enum ice_transp transp,
 			const struct sa *addr);
-int icem_lcand_add(struct icem *icem, struct cand *base, enum cand_type type,
+int icem_lcand_add(struct icem *icem, struct cand *base,
+		   enum ice_cand_type type,
 		   const struct sa *addr);
-int icem_rcand_add(struct icem *icem, enum cand_type type, uint8_t compid,
+int icem_rcand_add(struct icem *icem, enum ice_cand_type type, uint8_t compid,
 		   uint32_t prio, const struct sa *addr,
 		   const struct sa *rel_addr, const struct pl *foundation);
 int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
@@ -172,7 +166,8 @@ void icem_candpair_cancel(struct candpair *cp);
 void icem_candpair_make_valid(struct candpair *cp);
 void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode);
 void icem_candpair_set_state(struct candpair *cp, enum candpair_state state);
-void icem_candpairs_flush(struct list *lst, enum cand_type type, uint8_t id);
+void icem_candpairs_flush(struct list *lst, enum ice_cand_type type,
+			  uint8_t id);
 bool icem_candpair_iscompleted(const struct candpair *cp);
 bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2);
 bool icem_candpair_cmp_fnd(const struct candpair *cp1,
@@ -224,8 +219,6 @@ int  icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged);
 
 
 /* icestr */
-const char    *ice_cand_type2name(enum cand_type type);
-enum cand_type ice_cand_name2type(const struct pl *name);
 const char    *ice_mode2name(enum ice_mode mode);
 const char    *ice_role2name(enum role role);
 const char    *ice_candpair_state2name(enum candpair_state st);
@@ -235,7 +228,6 @@ const char    *ice_checkl_state2name(enum checkl_state cst);
 /* util */
 typedef void * (list_unique_h)(struct le *le1, struct le *le2);
 
-uint32_t ice_calc_prio(enum cand_type type, uint16_t local, uint8_t compid);
 uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d);
 void ice_switch_local_role(struct ice *ice);
 uint32_t ice_list_unique(struct list *list, list_unique_h *uh);

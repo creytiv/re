@@ -93,15 +93,15 @@ static struct cand *cand_default(const struct list *lcandl, uint8_t compid)
 
 		switch (cand->type) {
 
-		case CAND_TYPE_RELAY:
+		case ICE_CAND_TYPE_RELAY:
 			return cand;
 
-		case CAND_TYPE_SRFLX:
-			if (!def || CAND_TYPE_SRFLX != def->type)
+		case ICE_CAND_TYPE_SRFLX:
+			if (!def || ICE_CAND_TYPE_SRFLX != def->type)
 				def = cand;
 			break;
 
-		case CAND_TYPE_HOST:
+		case ICE_CAND_TYPE_HOST:
 			if (!def)
 				def = cand;
 			break;
@@ -241,7 +241,7 @@ static void timeout(void *arg)
 		return;
 
 	(void)stun_indication(comp->icem->proto, comp->sock, &cp->rcand->addr,
-			      (cp->lcand->type == CAND_TYPE_RELAY) ? 4 : 0,
+			      (cp->lcand->type == ICE_CAND_TYPE_RELAY) ? 4 : 0,
 			      STUN_METHOD_BINDING, NULL, 0, true, 0);
 }
 

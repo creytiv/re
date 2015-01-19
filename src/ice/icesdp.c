@@ -202,6 +202,7 @@ static int cand_decode(struct icem *icem, const char *val)
 	struct pl foundation, compid, transp, prio, addr, port, cand_type;
 	struct pl extra = pl_null;
 	struct sa caddr, rel_addr;
+	char type[8];
 	uint8_t cid;
 	int err;
 
@@ -253,7 +254,9 @@ static int cand_decode(struct icem *icem, const char *val)
 	if (icem_cand_find(&icem->rcandl, cid, &caddr))
 		return 0;
 
-	return icem_rcand_add(icem, ice_cand_name2type(&cand_type), cid,
+	(void)pl_strcpy(&cand_type, type, sizeof(type));
+
+	return icem_rcand_add(icem, ice_cand_name2type(type), cid,
 			      pl_u32(&prio), &caddr, &rel_addr, &foundation);
 }
 
