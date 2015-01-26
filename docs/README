@@ -25,7 +25,7 @@ Modules:
 * conf      testing       Configuration file parser
 * crc32     testing       32-bit CRC defined in ITU V.42
 * dbg       testing       Debug printing
-* dns       testing       DNS resolving (NAPTR, SRV, A)
+* dns       stable        DNS resolving (NAPTR, SRV, A)
 * fmt       testing       Formatted printing and regular expression
 * hash      testing       Hashmap table
 * hmac      testing       HMAC: Keyed-Hashing for Message Authentication
@@ -48,18 +48,18 @@ Modules:
 * sa        stable        Socket Address functions
 * sdp       testing       Session Description Protocol
 * sha       testing       Secure Hash Standard, NIST, FIPS PUB 180-1
-* sip       testing       Core SIP library
+* sip       stable        Core SIP library
 * sipevent  testing       SIP Event framework
-* sipreg    testing       SIP register client
-* sipsess   testing       SIP Sessions
+* sipreg    stable        SIP register client
+* sipsess   stable        SIP Sessions
 * srtp      unstable      Secure Real-time Transport Protocol (SRTP)
-* stun      testing       Session Traversal Utilities for NAT (STUN)
+* stun      stable        Session Traversal Utilities for NAT (STUN)
 * sys       testing       System information
 * tcp       testing       TCP transport
 * telev     testing       Telephony Events (RFC 4733)
 * tls       unstable      Transport Layer Security
 * tmr       stable        Timer handling
-* turn      testing       Obtaining Relay Addresses from STUN (TURN)
+* turn      stable        Obtaining Relay Addresses from STUN (TURN)
 * udp       testing       UDP transport
 * uri       testing       Generic URI library
 * websock   unstable      WebSocket Client and Server
@@ -162,3 +162,30 @@ Coding guidelines:
 * in allocating functions, first arg is always double pointer
 * Use POSIX error-codes; EINVAL for invalid args, EBADMSG for
   parse errors and EPROTO for protocol errors
+
+
+Transport protocols:
+
+
+           TCP   UDP   TLS   DTLS
+           ~~~   ~~~   ~~~   ~~~~
+
+BFCP       -     yes   -     -
+
+DNS        yes   yes   -     -
+
+HTTP       yes   n/a   yes   n/a
+
+ICE        -     yes   -     -
+
+RTP        -     yes   -     -
+
+RTCP       -     yes   -     -
+
+SIP        yes   yes   yes   -
+
+STUN       yes   yes   yes   yes
+
+TURN       yes   yes   yes   yes
+
+WEBSOCK    yes   n/a   yes   n/a
