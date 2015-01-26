@@ -71,7 +71,7 @@ struct icem_comp {
 	struct udp_helper *uh;       /**< UDP helper                        */
 	void *sock;                  /**< Transport socket                  */
 	uint16_t lport;              /**< Local port number                 */
-	uint8_t id;                  /**< Component ID                      */
+	unsigned id;                 /**< Component ID                      */
 	bool concluded;              /**< Concluded flag                    */
 	struct turnc *turnc;         /**< TURN Client                       */
 	struct stun_ctrans *ct_gath; /**< STUN Transaction for gathering    */
@@ -108,7 +108,7 @@ struct cand {
 	enum ice_cand_type type;     /**< Candidate type                     */
 	uint32_t prio;               /**< Priority of this candidate         */
 	char *foundation;            /**< Foundation                         */
-	uint8_t compid;              /**< Component ID (1-256)               */
+	unsigned compid;             /**< Component ID (1-256)               */
 	struct sa rel;               /**< Related IP address and port number */
 	struct sa addr;              /**< Transport address                  */
 	enum ice_transp transp;      /**< Transport protocol                 */
@@ -137,21 +137,21 @@ struct candpair {
 
 
 /* cand */
-int icem_lcand_add_base(struct icem *icem, uint8_t compid, uint16_t lprio,
+int icem_lcand_add_base(struct icem *icem, unsigned compid, uint16_t lprio,
 			const char *ifname, enum ice_transp transp,
 			const struct sa *addr);
 int icem_lcand_add(struct icem *icem, struct cand *base,
 		   enum ice_cand_type type,
 		   const struct sa *addr);
-int icem_rcand_add(struct icem *icem, enum ice_cand_type type, uint8_t compid,
+int icem_rcand_add(struct icem *icem, enum ice_cand_type type, unsigned compid,
 		   uint32_t prio, const struct sa *addr,
 		   const struct sa *rel_addr, const struct pl *foundation);
-int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
+int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, unsigned compid,
 			 uint32_t prio, const struct sa *addr);
-struct cand *icem_cand_find(const struct list *lst, uint8_t compid,
+struct cand *icem_cand_find(const struct list *lst, unsigned compid,
 			    const struct sa *addr);
 struct cand *icem_lcand_find_checklist(const struct icem *icem,
-				       uint8_t compid);
+				       unsigned compid);
 int icem_cands_debug(struct re_printf *pf, const struct list *lst);
 int icem_cand_print(struct re_printf *pf, const struct cand *c);
 
@@ -167,7 +167,7 @@ void icem_candpair_make_valid(struct candpair *cp);
 void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode);
 void icem_candpair_set_state(struct candpair *cp, enum candpair_state state);
 void icem_candpairs_flush(struct list *lst, enum ice_cand_type type,
-			  uint8_t id);
+			  unsigned compid);
 bool icem_candpair_iscompleted(const struct candpair *cp);
 bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2);
 bool icem_candpair_cmp_fnd(const struct candpair *cp1,
@@ -175,10 +175,10 @@ bool icem_candpair_cmp_fnd(const struct candpair *cp1,
 struct candpair *icem_candpair_find(const struct list *lst,
 				    const struct cand *lcand,
 				    const struct cand *rcand);
-struct candpair *icem_candpair_find_st(const struct list *lst, uint8_t compid,
+struct candpair *icem_candpair_find_st(const struct list *lst, unsigned compid,
 				       enum candpair_state state);
 struct candpair *icem_candpair_find_compid(const struct list *lst,
-					   uint8_t compid);
+					   unsigned compid);
 struct candpair *icem_candpair_find_rcand(struct icem *icem,
 					  const struct cand *rcand);
 int  icem_candpair_debug(struct re_printf *pf, const struct candpair *cp);
@@ -206,7 +206,7 @@ int  icem_comp_alloc(struct icem_comp **cp, struct icem *icem, int id,
 int  icem_comp_set_default_cand(struct icem_comp *comp);
 void icem_comp_set_default_rcand(struct icem_comp *comp, struct cand *rcand);
 void icem_comp_set_selected(struct icem_comp *comp, struct candpair *cp);
-struct icem_comp *icem_comp_find(const struct icem *icem, uint8_t compid);
+struct icem_comp *icem_comp_find(const struct icem *icem, unsigned compid);
 void icem_comp_keepalive(struct icem_comp *comp, bool enable);
 void icecomp_printf(struct icem_comp *comp, const char *fmt, ...);
 int  icecomp_debug(struct re_printf *pf, const struct icem_comp *comp);

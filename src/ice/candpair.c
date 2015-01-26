@@ -223,7 +223,7 @@ void icem_candpair_set_state(struct candpair *cp, enum candpair_state state)
  * Delete all Candidate-Pairs where the Local candidate is of a given type
  */
 void icem_candpairs_flush(struct list *lst, enum ice_cand_type type,
-			  uint8_t id)
+			  unsigned compid)
 {
 	struct le *le = list_head(lst);
 
@@ -233,7 +233,7 @@ void icem_candpairs_flush(struct list *lst, enum ice_cand_type type,
 
 		le = le->next;
 
-		if (cp->lcand->compid != id)
+		if (cp->lcand->compid != compid)
 			continue;
 
 		if (cp->lcand->type != type)
@@ -310,7 +310,7 @@ struct candpair *icem_candpair_find(const struct list *lst,
 }
 
 
-struct candpair *icem_candpair_find_st(const struct list *lst, uint8_t compid,
+struct candpair *icem_candpair_find_st(const struct list *lst, unsigned compid,
 				       enum candpair_state state)
 {
 	struct le *le;
@@ -333,7 +333,7 @@ struct candpair *icem_candpair_find_st(const struct list *lst, uint8_t compid,
 
 
 struct candpair *icem_candpair_find_compid(const struct list *lst,
-					   uint8_t compid)
+					   unsigned compid)
 {
 	struct le *le;
 

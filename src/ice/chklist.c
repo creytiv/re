@@ -296,7 +296,7 @@ void icem_checklist_update(struct icem *icem)
  *
  * @return Local address if available, otherwise NULL
  */
-const struct sa *icem_selected_laddr(const struct icem *icem, uint8_t compid)
+const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid)
 {
 	const struct icem_comp *comp = icem_comp_find(icem, compid);
 	if (!comp || !comp->cp_sel)

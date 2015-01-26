@@ -78,7 +78,7 @@ static void destructor(void *arg)
 }
 
 
-static struct cand *cand_default(const struct list *lcandl, uint8_t compid)
+static struct cand *cand_default(const struct list *lcandl, unsigned compid)
 {
 	struct cand *def = NULL;
 	struct le *le;
@@ -208,7 +208,7 @@ void icem_comp_set_selected(struct icem_comp *comp, struct candpair *cp)
 }
 
 
-struct icem_comp *icem_comp_find(const struct icem *icem, uint8_t compid)
+struct icem_comp *icem_comp_find(const struct icem *icem, unsigned compid)
 {
 	struct le *le;
 

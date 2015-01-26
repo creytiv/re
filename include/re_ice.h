@@ -71,18 +71,18 @@ const char *ice_pwd(const struct ice *ice);
 int  icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 		ice_gather_h *gh, ice_connchk_h *chkh, void *arg);
 void icem_set_name(struct icem *icem, const char *name);
-int  icem_comp_add(struct icem *icem, uint8_t compid, void *sock);
-int  icem_cand_add(struct icem *icem, uint8_t compid, uint16_t lprio,
+int  icem_comp_add(struct icem *icem, unsigned compid, void *sock);
+int  icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
 		   const char *ifname, const struct sa *addr);
 int  icem_gather_srflx(struct icem *icem, const struct sa *stun_srv);
 int  icem_gather_relay(struct icem *icem, const struct sa *stun_srv,
 		       const char *username, const char *password);
 int  icem_lite_set_default_candidates(struct icem *icem);
-bool icem_verify_support(struct icem *icem, uint8_t compid,
+bool icem_verify_support(struct icem *icem, unsigned compid,
 			 const struct sa *raddr);
 int  icem_conncheck_start(struct icem *icem);
 void icem_conncheck_stop(struct icem *icem, int err);
-int  icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr);
+int  icem_add_chan(struct icem *icem, unsigned compid, const struct sa *raddr);
 bool icem_mismatch(const struct icem *icem);
 void icem_update(struct icem *icem);
 int  icem_sdp_decode(struct icem *icem, const char *name, const char *value);
@@ -91,8 +91,8 @@ struct list *icem_lcandl(const struct icem *icem);
 struct list *icem_rcandl(const struct icem *icem);
 struct list *icem_checkl(const struct icem *icem);
 struct list *icem_validl(const struct icem *icem);
-const struct sa *icem_cand_default(struct icem *icem, uint8_t compid);
-const struct sa *icem_selected_laddr(const struct icem *icem, uint8_t compid);
+const struct sa *icem_cand_default(struct icem *icem, unsigned compid);
+const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid);
 
 
 struct cand;
@@ -114,13 +114,13 @@ enum ice_cand_type ice_cand_name2type(const char *name);
 
 
 uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,
-			    uint8_t compid);
+			    unsigned compid);
 
 
 /** Defines an SDP candidate attribute */
 struct ice_cand_attr {
 	char foundation[32];      /**< Foundation string                    */
-	uint8_t compid;           /**< Component ID (1-255)                 */
+	unsigned compid;          /**< Component ID (1-256)                 */
 	int proto;                /**< Transport protocol                   */
 	uint32_t prio;            /**< Priority of this candidate           */
 	struct sa addr;           /**< Transport address                    */

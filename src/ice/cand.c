@@ -49,7 +49,7 @@ static int compute_foundation(struct cand *cand)
 
 
 static int cand_alloc(struct cand **candp, struct icem *icem,
-		      enum ice_cand_type type, uint8_t compid,
+		      enum ice_cand_type type, unsigned compid,
 		      uint32_t prio, const char *ifname,
 		      enum ice_transp transp, const struct sa *addr)
 {
@@ -86,7 +86,7 @@ static int cand_alloc(struct cand **candp, struct icem *icem,
 }
 
 
-int icem_lcand_add_base(struct icem *icem, uint8_t compid, uint16_t lprio,
+int icem_lcand_add_base(struct icem *icem, unsigned compid, uint16_t lprio,
 			const char *ifname, enum ice_transp transp,
 			const struct sa *addr)
 {
@@ -136,7 +136,7 @@ int icem_lcand_add(struct icem *icem, struct cand *base,
 }
 
 
-int icem_rcand_add(struct icem *icem, enum ice_cand_type type, uint8_t compid,
+int icem_rcand_add(struct icem *icem, enum ice_cand_type type, unsigned compid,
 		   uint32_t prio, const struct sa *addr,
 		   const struct sa *rel_addr, const struct pl *foundation)
 {
@@ -168,7 +168,7 @@ int icem_rcand_add(struct icem *icem, enum ice_cand_type type, uint8_t compid,
 }
 
 
-int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
+int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, unsigned compid,
 			 uint32_t prio, const struct sa *addr)
 {
 	struct cand *rcand;
@@ -206,7 +206,7 @@ int icem_rcand_add_prflx(struct cand **rcp, struct icem *icem, uint8_t compid,
 }
 
 
-struct cand *icem_cand_find(const struct list *lst, uint8_t compid,
+struct cand *icem_cand_find(const struct list *lst, unsigned compid,
 			    const struct sa *addr)
 {
 	struct le *le;
@@ -231,7 +231,8 @@ struct cand *icem_cand_find(const struct list *lst, uint8_t compid,
 /**
  * Find the highest priority LCAND on the check-list of type HOST/RELAY
  */
-struct cand *icem_lcand_find_checklist(const struct icem *icem, uint8_t compid)
+struct cand *icem_lcand_find_checklist(const struct icem *icem,
+				       unsigned compid)
 {
 	struct le *le;
 

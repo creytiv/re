@@ -120,7 +120,7 @@ void icem_set_name(struct icem *icem, const char *name)
  *
  * @return 0 if success, otherwise errorcode
  */
-int icem_comp_add(struct icem *icem, uint8_t compid, void *sock)
+int icem_comp_add(struct icem *icem, unsigned compid, void *sock)
 {
 	struct icem_comp *comp;
 	int err;
@@ -152,7 +152,7 @@ int icem_comp_add(struct icem *icem, uint8_t compid, void *sock)
  *
  * @return 0 if success, otherwise errorcode
  */
-int icem_cand_add(struct icem *icem, uint8_t compid, uint16_t lprio,
+int icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
 		  const char *ifname, const struct sa *addr)
 {
 	if (!icem_comp_find(icem, compid))
@@ -195,7 +195,7 @@ void icem_cand_redund_elim(struct icem *icem)
  *
  * @return Default Local Candidate address if set, otherwise NULL
  */
-const struct sa *icem_cand_default(struct icem *icem, uint8_t compid)
+const struct sa *icem_cand_default(struct icem *icem, unsigned compid)
 {
 	const struct icem_comp *comp = icem_comp_find(icem, compid);
 
@@ -215,7 +215,7 @@ const struct sa *icem_cand_default(struct icem *icem, uint8_t compid)
  *
  * @return True if ICE is supported, otherwise false
  */
-bool icem_verify_support(struct icem *icem, uint8_t compid,
+bool icem_verify_support(struct icem *icem, unsigned compid,
 			 const struct sa *raddr)
 {
 	struct cand *rcand;
@@ -248,7 +248,7 @@ bool icem_verify_support(struct icem *icem, uint8_t compid,
  *
  * @return 0 if success, otherwise errorcode
  */
-int icem_add_chan(struct icem *icem, uint8_t compid, const struct sa *raddr)
+int icem_add_chan(struct icem *icem, unsigned compid, const struct sa *raddr)
 {
 	struct icem_comp *comp;
 
