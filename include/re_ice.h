@@ -31,6 +31,13 @@ enum ice_cand_type {
 	ICE_CAND_TYPE_RELAY   /**< Relayed candidate          */
 };
 
+/** ICE TCP protocol type */
+enum ice_tcptype {
+	ICE_TCP_ACTIVE,   /**< Active TCP client                   */
+	ICE_TCP_PASSIVE,  /**< Passive TCP server                  */
+	ICE_TCP_SO        /**< Simultaneous-open TCP client/server */
+};
+
 struct ice;
 struct icem;
 
@@ -108,3 +115,20 @@ enum ice_cand_type ice_cand_name2type(const char *name);
 
 uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,
 			    uint8_t compid);
+
+
+/** Defines an SDP candidate attribute */
+struct ice_cand_attr {
+	char foundation[32];      /**< Foundation string                    */
+	uint8_t compid;           /**< Component ID (1-255)                 */
+	int proto;                /**< Transport protocol                   */
+	uint32_t prio;            /**< Priority of this candidate           */
+	struct sa addr;           /**< Transport address                    */
+	enum ice_cand_type type;  /**< Candidate type                       */
+	struct sa rel_addr;       /**< Related transport address (optional) */
+	enum ice_tcptype tcptype; /**< TCP candidate type (TCP-only)        */
+};
+
+int ice_cand_attr_encode(struct re_printf *pf,
+			 const struct ice_cand_attr *cand);
+int ice_cand_attr_decode(struct ice_cand_attr *cand, const char *val);

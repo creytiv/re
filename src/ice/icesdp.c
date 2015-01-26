@@ -11,6 +11,7 @@
 #include <re_list.h>
 #include <re_tmr.h>
 #include <re_sa.h>
+#include <re_net.h>
 #include <re_stun.h>
 #include <re_ice.h>
 #include "ice.h"
@@ -314,6 +315,126 @@ int icem_sdp_decode(struct icem *icem, const char *name, const char *value)
 		return media_ufrag_decode(icem, value);
 	else if (0 == str_casecmp(name, ice_attr_pwd))
 		return media_pwd_decode(icem, value);
+
+	return 0;
+}
+
+
+static const char *ice_tcptype_name(enum ice_tcptype tcptype)
+{
+	switch (tcptype) {
+
+	case ICE_TCP_ACTIVE:  return "active";
+	case ICE_TCP_PASSIVE: return "passive";
+	case ICE_TCP_SO:      return "so";
+	default: return "???";
+	}
+}
+
+
+static enum ice_tcptype ice_tcptype_resolve(const struct pl *pl)
+{
+	if (0 == pl_strcasecmp(pl, "active"))  return ICE_TCP_ACTIVE;
+	if (0 == pl_strcasecmp(pl, "passive")) return ICE_TCP_PASSIVE;
+	if (0 == pl_strcasecmp(pl, "so"))      return ICE_TCP_SO;
+
+	return (enum ice_tcptype)-1;
+}
+
+
+int ice_cand_attr_encode(struct re_printf *pf,
+			 const struct ice_cand_attr *cand)
+{
+	int err = 0;
+
+	if (!cand)
+		return 0;
+
+	err |= re_hprintf(pf, "%s %u %s %u %j %u typ %s",
+			  cand->foundation, cand->compid,
+			  net_proto2name(cand->proto), cand->prio,
+			  &cand->addr, sa_port(&cand->addr),
+			  ice_cand_type2name(cand->type));
+
+	if (sa_isset(&cand->rel_addr, SA_ADDR))
+		err |= re_hprintf(pf, " raddr %j", &cand->rel_addr);
+
+	if (sa_isset(&cand->rel_addr, SA_PORT))
+		err |= re_hprintf(pf, " rport %u", sa_port(&cand->rel_addr));
+
+	if (cand->proto == IPPROTO_TCP) {
+		err |= re_hprintf(pf, " tcptype %s",
+				  ice_tcptype_name(cand->tcptype));
+	}
+
+	return err;
+}
+
+
+int ice_cand_attr_decode(struct ice_cand_attr *cand, const char *val)
+{
+	struct pl pl_fnd, pl_compid, pl_transp, pl_prio, pl_addr, pl_port;
+	struct pl pl_type, pl_raddr, pl_rport, pl_opt = PL_INIT;
+	size_t len;
+	char type[8];
+	int err;
+
+	if (!cand || !val)
+		return EINVAL;
+
+	memset(cand, 0, sizeof(*cand));
+
+	len = str_len(val);
+
+	err = re_regex(val, len,
+		       "[^ ]+ [0-9]+ [a-z]+ [0-9]+ [^ ]+ [0-9]+ typ [a-z]+"
+		       "[^]*",
+		       &pl_fnd, &pl_compid, &pl_transp, &pl_prio,
+		       &pl_addr, &pl_port, &pl_type, &pl_opt);
+	if (err)
+		return err;
+
+	(void)pl_strcpy(&pl_fnd, cand->foundation, sizeof(cand->foundation));
+
+	if (0 == pl_strcasecmp(&pl_transp, "UDP"))
+		cand->proto = IPPROTO_UDP;
+	else if (0 == pl_strcasecmp(&pl_transp, "TCP"))
+		cand->proto = IPPROTO_TCP;
+	else
+		cand->proto = 0;
+
+	err = sa_set(&cand->addr, &pl_addr, pl_u32(&pl_port));
+	if (err)
+		return err;
+
+	cand->compid = pl_u32(&pl_compid);
+	cand->prio   = pl_u32(&pl_prio);
+
+	(void)pl_strcpy(&pl_type, type, sizeof(type));
+
+	cand->type = ice_cand_name2type(type);
+
+	/* optional */
+
+	if (0 == re_regex(pl_opt.p, pl_opt.l, "raddr [^ ]+ rport [0-9]+",
+			  &pl_raddr, &pl_rport)) {
+
+		err = sa_set(&cand->rel_addr, &pl_raddr, pl_u32(&pl_rport));
+		if (err)
+			return err;
+	}
+
+	if (cand->proto == IPPROTO_TCP) {
+
+		struct pl tcptype;
+
+		err = re_regex(pl_opt.p, pl_opt.l, "tcptype [^ ]+",
+			       &tcptype);
+		if (err)
+			return err;
+
+		cand->tcptype = ice_tcptype_resolve(&tcptype);
+	}
 
 	return 0;
 }

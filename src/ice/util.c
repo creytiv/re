@@ -36,7 +36,7 @@ enum {
 };
 
 
-static int type_prio(enum ice_cand_type type)
+static uint32_t type_prio(enum ice_cand_type type)
 {
 	switch (type) {
 
@@ -52,7 +52,7 @@ static int type_prio(enum ice_cand_type type)
 uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,
 			    uint8_t compid)
 {
-	return (uint32_t)type_prio(type)<<24 | local<<8 | (256 - compid);
+	return type_prio(type)<<24 | (uint32_t)local<<8 | (256 - compid);
 }
 
 
@@ -66,8 +66,9 @@ uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,
 uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d)
 {
 	const uint64_t m = min(g, d);
+	const uint64_t x = max(g, d);
 
-	return (m<<32) + 2*max(g, d) + (g>d?1:0);
+	return (m<<32) + 2*x + (g>d?1:0);
 }
 
 

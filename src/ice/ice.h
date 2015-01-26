@@ -34,7 +34,7 @@ enum candpair_state {
 
 enum ice_transp {
 	ICE_TRANSP_NONE = -1,
-	ICE_TRANSP_UDP
+	ICE_TRANSP_UDP  = IPPROTO_UDP
 };
 
 /** ICE protocol values */
