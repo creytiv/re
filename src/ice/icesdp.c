@@ -64,7 +64,7 @@ static enum ice_transp transp_resolve(const struct pl *transp)
  *
  * @return 0 if success, otherwise errorcode
  */
-int ice_cand_encode(struct re_printf *pf, const struct cand *cand)
+int ice_cand_encode(struct re_printf *pf, const struct ice_cand *cand)
 {
 	int err;
 
@@ -119,7 +119,7 @@ int ice_remotecands_encode(struct re_printf *pf, const struct icem *icem)
 
 	for (le = icem->rcandl.head; le && !err; le = le->next) {
 
-		const struct cand *rcand = le->data;
+		const struct ice_cand *rcand = le->data;
 
 		err = re_hprintf(pf, "%s%d %j %u",
 				 icem->rcandl.head==le ? "" : " ",

@@ -165,7 +165,7 @@ int icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
 
 static void *unique_handler(struct le *le1, struct le *le2)
 {
-	struct cand *c1 = le1->data, *c2 = le2->data;
+	struct ice_cand *c1 = le1->data, *c2 = le2->data;
 
 	if (c1->base != c2->base || !sa_cmp(&c1->addr, &c2->addr, SA_ALL))
 		return NULL;
@@ -218,7 +218,7 @@ const struct sa *icem_cand_default(struct icem *icem, unsigned compid)
 bool icem_verify_support(struct icem *icem, unsigned compid,
 			 const struct sa *raddr)
 {
-	struct cand *rcand;
+	struct ice_cand *rcand;
 	bool match;
 
 	if (!icem)

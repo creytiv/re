@@ -58,7 +58,7 @@ static void stun_resp_handler(int err, uint16_t scode, const char *reason,
 	struct icem_comp *comp = arg;
 	struct icem *icem = comp->icem;
 	struct stun_attr *attr;
-	struct cand *lcand;
+	struct ice_cand *lcand;
 
 	--icem->nstun;
 
@@ -118,7 +118,7 @@ static void turnc_handler(int err, uint16_t scode, const char *reason,
 {
 	struct icem_comp *comp = arg;
 	struct icem *icem = comp->icem;
-	struct cand *lcand;
+	struct ice_cand *lcand;
 	(void)msg;
 
 	--icem->nstun;

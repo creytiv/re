@@ -80,7 +80,7 @@ static void list_add_sorted(struct list *list, struct candpair *cp)
 
 
 int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
-			struct cand *lcand, struct cand *rcand)
+			struct ice_cand *lcand, struct ice_cand *rcand)
 {
 	struct candpair *cp;
 	struct icem_comp *comp;
@@ -115,7 +115,7 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 
 
 int icem_candpair_clone(struct candpair **cpp, struct candpair *cp0,
-			struct cand *lcand, struct cand *rcand)
+			struct ice_cand *lcand, struct ice_cand *rcand)
 {
 	struct candpair *cp;
 
@@ -283,8 +283,8 @@ bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2)
  * note: assume list is sorted by priority
  */
 struct candpair *icem_candpair_find(const struct list *lst,
-				    const struct cand *lcand,
-				    const struct cand *rcand)
+				    const struct ice_cand *lcand,
+				    const struct ice_cand *rcand)
 {
 	struct le *le;
 
@@ -355,7 +355,7 @@ struct candpair *icem_candpair_find_compid(const struct list *lst,
  * Find a remote candidate in the checklist or validlist
  */
 struct candpair *icem_candpair_find_rcand(struct icem *icem,
-					  const struct cand *rcand)
+					  const struct ice_cand *rcand)
 {
 	struct candpair *cp;
 

@@ -39,12 +39,12 @@ static int candpairs_form(struct icem *icem)
 
 	for (le = icem->lcandl.head; le; le = le->next) {
 
-		struct cand *lcand = le->data;
+		struct ice_cand *lcand = le->data;
 		struct le *rle;
 
 		for (rle = icem->rcandl.head; rle; rle = rle->next) {
 
-			struct cand *rcand = rle->data;
+			struct ice_cand *rcand = rle->data;
 
 			if (lcand->compid != rcand->compid)
 				continue;
@@ -63,7 +63,7 @@ static int candpairs_form(struct icem *icem)
 
 
 /* Replace server reflexive candidates by its base */
-static const struct sa *cand_srflx_addr(const struct cand *c)
+static const struct sa *cand_srflx_addr(const struct ice_cand *c)
 {
 	return (ICE_CAND_TYPE_SRFLX == c->type) ? &c->base->addr : &c->addr;
 }

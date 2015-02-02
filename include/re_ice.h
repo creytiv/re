@@ -95,9 +95,9 @@ const struct sa *icem_cand_default(struct icem *icem, unsigned compid);
 const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid);
 
 
-struct cand;
+struct ice_cand;
 bool ice_remotecands_avail(const struct icem *icem);
-int  ice_cand_encode(struct re_printf *pf, const struct cand *cand);
+int  ice_cand_encode(struct re_printf *pf, const struct ice_cand *cand);
 int  ice_remotecands_encode(struct re_printf *pf, const struct icem *icem);
 
 

@@ -78,15 +78,16 @@ static void destructor(void *arg)
 }
 
 
-static struct cand *cand_default(const struct list *lcandl, unsigned compid)
+static struct ice_cand *cand_default(const struct list *lcandl,
+				     unsigned compid)
 {
-	struct cand *def = NULL;
+	struct ice_cand *def = NULL;
 	struct le *le;
 
 	/* NOTE: list must be sorted by priority */
 	for (le = list_head(lcandl); le; le = le->next) {
 
-		struct cand *cand = le->data;
+		struct ice_cand *cand = le->data;
 
 		if (cand->compid != compid)
 			continue;
@@ -156,7 +157,7 @@ int icem_comp_alloc(struct icem_comp **cp, struct icem *icem, int id,
 
 int icem_comp_set_default_cand(struct icem_comp *comp)
 {
-	struct cand *cand;
+	struct ice_cand *cand;
 
 	if (!comp)
 		return EINVAL;
@@ -172,7 +173,8 @@ int icem_comp_set_default_cand(struct icem_comp *comp)
 }
 
 
-void icem_comp_set_default_rcand(struct icem_comp *comp, struct cand *rcand)
+void icem_comp_set_default_rcand(struct icem_comp *comp,
+				 struct ice_cand *rcand)
 {
 	if (!comp)
 		return;

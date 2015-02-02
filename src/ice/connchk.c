@@ -45,7 +45,7 @@ static struct candpair *construct_valid_pair(struct icem *icem,
 					     const struct sa *mapped,
 					     const struct sa *dest)
 {
-	struct cand *lcand, *rcand;
+	struct ice_cand *lcand, *rcand;
 	struct candpair *cp2;
 	int err;
 
@@ -205,7 +205,7 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 
 int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 {
-	struct cand *lcand = cp->lcand;
+	struct ice_cand *lcand = cp->lcand;
 	struct icem *icem = cp->icem;
 	struct ice *ice = icem->ice;
 	char username_buf[64];

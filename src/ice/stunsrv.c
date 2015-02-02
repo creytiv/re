@@ -25,8 +25,8 @@
 static const char *sw = "ice stunsrv v" VERSION " (" ARCH "/" OS ")";
 
 
-static void triggered_check(struct icem *icem, struct cand *lcand,
-			    struct cand *rcand)
+static void triggered_check(struct icem *icem, struct ice_cand *lcand,
+			    struct ice_cand *rcand)
 {
 	struct candpair *cp = NULL;
 	int err;
@@ -96,7 +96,7 @@ static int handle_stun_full(struct ice *ice, struct icem *icem,
 			    struct icem_comp *comp, const struct sa *src,
 			    uint32_t prio, bool use_cand, bool tunnel)
 {
-	struct cand *lcand = NULL, *rcand;
+	struct ice_cand *lcand = NULL, *rcand;
 	struct candpair *cp = NULL;
 	int err;
 
@@ -177,7 +177,7 @@ static int handle_stun_lite(struct icem *icem,
 			    struct icem_comp *comp, const struct sa *src,
 			    bool use_cand)
 {
-	struct cand *lcand, *rcand;
+	struct ice_cand *lcand, *rcand;
 	struct candpair *cp;
 	int err;
 
