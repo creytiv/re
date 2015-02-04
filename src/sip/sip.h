@@ -70,8 +70,6 @@ int  sip_transp_init(struct sip *sip, uint32_t sz);
 int  sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 		     enum sip_transp tp, const struct sa *dst, struct mbuf *mb,
 		     sip_transp_h *transph, void *arg);
-int  sip_transp_laddr(struct sip *sip, struct sa *laddr, enum sip_transp tp,
-		      const struct sa *dst);
 bool sip_transp_supported(struct sip *sip, enum sip_transp tp, int af);
 const char *sip_transp_srvid(enum sip_transp tp);
 bool sip_transp_reliable(enum sip_transp tp);
