@@ -194,12 +194,12 @@ void icem_comp_set_default_rcand(struct icem_comp *comp,
 }
 
 
-void icem_comp_set_selected(struct icem_comp *comp, struct candpair *cp)
+void icem_comp_set_selected(struct icem_comp *comp, struct ice_candpair *cp)
 {
 	if (!comp || !cp)
 		return;
 
-	if (cp->state != CANDPAIR_SUCCEEDED) {
+	if (cp->state != ICE_CANDPAIR_SUCCEEDED) {
 		DEBUG_WARNING("{%s.%u} set_selected: invalid state %s\n",
 			      comp->icem->name, comp->id,
 			      ice_candpair_state2name(cp->state));
@@ -232,7 +232,7 @@ struct icem_comp *icem_comp_find(const struct icem *icem, unsigned compid)
 static void timeout(void *arg)
 {
 	struct icem_comp *comp = arg;
-	struct candpair *cp;
+	struct ice_candpair *cp;
 
 	tmr_start(&comp->tmr_ka, ICE_DEFAULT_Tr * 1000 + rand_u16() % 1000,
 		  timeout, comp);

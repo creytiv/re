@@ -23,12 +23,12 @@
 
 static void pace_next(struct icem *icem)
 {
-	if (icem->state != CHECKLIST_RUNNING)
+	if (icem->state != ICE_CHECKLIST_RUNNING)
 		return;
 
 	icem_conncheck_schedule_check(icem);
 
-	if (icem->state == CHECKLIST_FAILED)
+	if (icem->state == ICE_CHECKLIST_FAILED)
 		return;
 
 	icem_checklist_update(icem);
@@ -40,13 +40,13 @@ static void pace_next(struct icem *icem)
  *
  * @return The valid pair
  */
-static struct candpair *construct_valid_pair(struct icem *icem,
-					     struct candpair *cp,
+static struct ice_candpair *construct_valid_pair(struct icem *icem,
+					     struct ice_candpair *cp,
 					     const struct sa *mapped,
 					     const struct sa *dest)
 {
 	struct ice_cand *lcand, *rcand;
-	struct candpair *cp2;
+	struct ice_candpair *cp2;
 	int err;
 
 	lcand = icem_cand_find(&icem->lcandl, cp->lcand->compid, mapped);
@@ -105,7 +105,7 @@ static struct candpair *construct_valid_pair(struct icem *icem,
 }
 
 
-static void handle_success(struct icem *icem, struct candpair *cp,
+static void handle_success(struct icem *icem, struct ice_candpair *cp,
 			   const struct sa *laddr)
 {
 	if (!icem_cand_find(&icem->lcandl, cp->lcand->compid, laddr)) {
@@ -155,7 +155,7 @@ static int print_err(struct re_printf *pf, const int *err)
 static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 			       const struct stun_msg *msg, void *arg)
 {
-	struct candpair *cp = arg;
+	struct ice_candpair *cp = arg;
 	struct icem *icem = cp->icem;
 	struct stun_attr *attr;
 
@@ -203,7 +203,7 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 }
 
 
-int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
+int icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged)
 {
 	struct ice_cand *lcand = cp->lcand;
 	struct icem *icem = cp->icem;
@@ -214,7 +214,7 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 	uint16_t ctrl_attr;
 	int err = 0;
 
-	icem_candpair_set_state(cp, CANDPAIR_INPROGRESS);
+	icem_candpair_set_state(cp, ICE_CANDPAIR_INPROGRESS);
 
 	(void)re_snprintf(username_buf, sizeof(username_buf),
 			  "%s:%s", icem->rufrag, ice->lufrag);
@@ -304,7 +304,7 @@ int icem_conncheck_send(struct candpair *cp, bool use_cand, bool trigged)
 
 static void abort_ice(struct icem *icem, int err)
 {
-	icem->state = CHECKLIST_FAILED;
+	icem->state = ICE_CHECKLIST_FAILED;
 	tmr_cancel(&icem->tmr_pace);
 
 	if (icem->chkh) {
@@ -316,7 +316,7 @@ static void abort_ice(struct icem *icem, int err)
 }
 
 
-static void do_check(struct candpair *cp)
+static void do_check(struct ice_candpair *cp)
 {
 	int err;
 
@@ -339,11 +339,11 @@ static void do_check(struct candpair *cp)
  */
 void icem_conncheck_schedule_check(struct icem *icem)
 {
-	struct candpair *cp;
+	struct ice_candpair *cp;
 
 	/* Find the highest priority pair in that check list that is in the
 	   Waiting state. */
-	cp = icem_candpair_find_st(&icem->checkl, 0, CANDPAIR_WAITING);
+	cp = icem_candpair_find_st(&icem->checkl, 0, ICE_CANDPAIR_WAITING);
 	if (cp) {
 		do_check(cp);
 		return;
@@ -353,7 +353,7 @@ void icem_conncheck_schedule_check(struct icem *icem)
 
 	/* Find the highest priority pair in that check list that is in
 	   the Frozen state. */
-	cp = icem_candpair_find_st(&icem->checkl, 0, CANDPAIR_FROZEN);
+	cp = icem_candpair_find_st(&icem->checkl, 0, ICE_CANDPAIR_FROZEN);
 	if (cp) { /* If there is such a pair: */
 
 		/* Unfreeze the pair.
@@ -368,7 +368,7 @@ void icem_conncheck_schedule_check(struct icem *icem)
 	/* Terminate the timer for that check list. */
 
 #if 0
-	icem->state = CHECKLIST_COMPLETED;
+	icem->state = ICE_CHECKLIST_COMPLETED;
 #endif
 }
 
@@ -398,7 +398,7 @@ int icem_conncheck_start(struct icem *icem)
 	if (err)
 		return err;
 
-	icem->state = CHECKLIST_RUNNING;
+	icem->state = ICE_CHECKLIST_RUNNING;
 
 	icem_printf(icem, "starting connectivity checks"
 		    " with %u candidate pairs\n",
@@ -425,12 +425,12 @@ void icem_conncheck_stop(struct icem *icem, int err)
 {
 	struct le *le;
 
-	icem->state = err ? CHECKLIST_FAILED : CHECKLIST_COMPLETED;
+	icem->state = err ? ICE_CHECKLIST_FAILED : ICE_CHECKLIST_COMPLETED;
 
 	tmr_cancel(&icem->tmr_pace);
 
 	for (le = icem->checkl.head; le; le = le->next) {
-		struct candpair *cp = le->data;
+		struct ice_candpair *cp = le->data;
 
 		if (!icem_candpair_iscompleted(cp)) {
 			icem_candpair_cancel(cp);

@@ -97,7 +97,7 @@ bool ice_remotecands_avail(const struct icem *icem)
 		return false;
 
 	return icem->ice->lrole == ROLE_CONTROLLING &&
-		icem->state == CHECKLIST_COMPLETED;
+		icem->state == ICE_CHECKLIST_COMPLETED;
 }
 
 

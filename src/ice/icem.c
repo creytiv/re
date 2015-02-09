@@ -75,7 +75,7 @@ int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 	icem->ice   = ice;
 	icem->layer = layer;
 	icem->proto = proto;
-	icem->state = CHECKLIST_NULL;
+	icem->state = ICE_CHECKLIST_NULL;
 	icem->nstun = 0;
 	icem->gh    = gh;
 	icem->chkh  = chkh;
@@ -397,7 +397,7 @@ struct list *icem_rcandl(const struct icem *icem)
  *
  * @param icem ICE Media object
  *
- * @return Checklist (struct candpair)
+ * @return Checklist (struct ice_candpair)
  */
 struct list *icem_checkl(const struct icem *icem)
 {
@@ -410,7 +410,7 @@ struct list *icem_checkl(const struct icem *icem)
  *
  * @param icem ICE Media object
  *
- * @return Validlist (struct candpair)
+ * @return Validlist (struct ice_candpair)
  */
 struct list *icem_validl(const struct icem *icem)
 {

@@ -61,28 +61,28 @@ const char *ice_role2name(enum role role)
 }
 
 
-const char *ice_candpair_state2name(enum candpair_state st)
+const char *ice_candpair_state2name(enum ice_candpair_state st)
 {
 	switch (st) {
 
-	case CANDPAIR_FROZEN:     return "Frozen";
-	case CANDPAIR_WAITING:    return "Waiting";
-	case CANDPAIR_INPROGRESS: return "InProgress";
-	case CANDPAIR_SUCCEEDED:  return "Succeeded";
-	case CANDPAIR_FAILED:     return "Failed";
-	default:                  return "???";
+	case ICE_CANDPAIR_FROZEN:     return "Frozen";
+	case ICE_CANDPAIR_WAITING:    return "Waiting";
+	case ICE_CANDPAIR_INPROGRESS: return "InProgress";
+	case ICE_CANDPAIR_SUCCEEDED:  return "Succeeded";
+	case ICE_CANDPAIR_FAILED:     return "Failed";
+	default:                      return "???";
 	}
 }
 
 
-const char *ice_checkl_state2name(enum checkl_state cst)
+const char *ice_checkl_state2name(enum ice_checkl_state cst)
 {
 	switch (cst) {
 
-	case CHECKLIST_NULL:      return "(NULL)";
-	case CHECKLIST_RUNNING:   return "Running";
-	case CHECKLIST_COMPLETED: return "Completed";
-	case CHECKLIST_FAILED:    return "Failed";
-	default:                  return "???";
+	case ICE_CHECKLIST_NULL:      return "(NULL)";
+	case ICE_CHECKLIST_RUNNING:   return "Running";
+	case ICE_CHECKLIST_COMPLETED: return "Completed";
+	case ICE_CHECKLIST_FAILED:    return "Failed";
+	default:                      return "???";
 	}
 }

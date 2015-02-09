@@ -238,7 +238,7 @@ struct ice_cand *icem_lcand_find_checklist(const struct icem *icem,
 	struct le *le;
 
 	for (le = icem->checkl.head; le; le = le->next) {
-		struct candpair *cp = le->data;
+		struct ice_candpair *cp = le->data;
 
 		if (cp->lcand->compid != compid)
 			continue;

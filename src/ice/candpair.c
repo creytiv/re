@@ -23,7 +23,7 @@
 
 static void candpair_destructor(void *arg)
 {
-	struct candpair *cp = arg;
+	struct ice_candpair *cp = arg;
 
 	list_unlink(&cp->le);
 	mem_deref(cp->ct_conn);
@@ -34,14 +34,14 @@ static void candpair_destructor(void *arg)
 
 static bool sort_handler(struct le *le1, struct le *le2, void *arg)
 {
-	const struct candpair *cp1 = le1->data, *cp2 = le2->data;
+	const struct ice_candpair *cp1 = le1->data, *cp2 = le2->data;
 	(void)arg;
 
 	return cp1->pprio >= cp2->pprio;
 }
 
 
-static void candpair_set_pprio(struct candpair *cp)
+static void candpair_set_pprio(struct ice_candpair *cp)
 {
 	uint32_t g, d;
 
@@ -61,13 +61,13 @@ static void candpair_set_pprio(struct candpair *cp)
 /**
  * Add candidate pair to list, sorted by pair priority (highest is first)
  */
-static void list_add_sorted(struct list *list, struct candpair *cp)
+static void list_add_sorted(struct list *list, struct ice_candpair *cp)
 {
 	struct le *le;
 
 	/* find our slot */
 	for (le = list_tail(list); le; le = le->prev) {
-		struct candpair *cp0 = le->data;
+		struct ice_candpair *cp0 = le->data;
 
 		if (cp->pprio < cp0->pprio) {
 			list_insert_after(list, le, &cp->le, cp);
@@ -79,10 +79,10 @@ static void list_add_sorted(struct list *list, struct candpair *cp)
 }
 
 
-int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
+int icem_candpair_alloc(struct ice_candpair **cpp, struct icem *icem,
 			struct ice_cand *lcand, struct ice_cand *rcand)
 {
-	struct candpair *cp;
+	struct ice_candpair *cp;
 	struct icem_comp *comp;
 
 	if (!icem || !lcand || !rcand)
@@ -100,7 +100,7 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 	cp->comp  = comp;
 	cp->lcand = mem_ref(lcand);
 	cp->rcand = mem_ref(rcand);
-	cp->state = CANDPAIR_FROZEN;
+	cp->state = ICE_CANDPAIR_FROZEN;
 	cp->def   = comp->def_lcand == lcand && comp->def_rcand == rcand;
 
 	candpair_set_pprio(cp);
@@ -114,10 +114,10 @@ int icem_candpair_alloc(struct candpair **cpp, struct icem *icem,
 }
 
 
-int icem_candpair_clone(struct candpair **cpp, struct candpair *cp0,
+int icem_candpair_clone(struct ice_candpair **cpp, struct ice_candpair *cp0,
 			struct ice_cand *lcand, struct ice_cand *rcand)
 {
-	struct candpair *cp;
+	struct ice_candpair *cp;
 
 	if (!cp0)
 		return EINVAL;
@@ -153,7 +153,7 @@ void icem_candpair_prio_order(struct list *lst)
 	struct le *le;
 
 	for (le = list_head(lst); le; le = le->next) {
-		struct candpair *cp = le->data;
+		struct ice_candpair *cp = le->data;
 
 		candpair_set_pprio(cp);
 	}
@@ -163,7 +163,7 @@ void icem_candpair_prio_order(struct list *lst)
 
 
 /* cancel transaction */
-void icem_candpair_cancel(struct candpair *cp)
+void icem_candpair_cancel(struct ice_candpair *cp)
 {
 	if (!cp)
 		return;
@@ -172,7 +172,7 @@ void icem_candpair_cancel(struct candpair *cp)
 }
 
 
-void icem_candpair_make_valid(struct candpair *cp)
+void icem_candpair_make_valid(struct ice_candpair *cp)
 {
 	if (!cp)
 		return;
@@ -181,14 +181,14 @@ void icem_candpair_make_valid(struct candpair *cp)
 	cp->scode = 0;
 	cp->valid = true;
 
-	icem_candpair_set_state(cp, CANDPAIR_SUCCEEDED);
+	icem_candpair_set_state(cp, ICE_CANDPAIR_SUCCEEDED);
 
 	list_unlink(&cp->le);
 	list_add_sorted(&cp->icem->validl, cp);
 }
 
 
-void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode)
+void icem_candpair_failed(struct ice_candpair *cp, int err, uint16_t scode)
 {
 	if (!cp)
 		return;
@@ -197,11 +197,12 @@ void icem_candpair_failed(struct candpair *cp, int err, uint16_t scode)
 	cp->scode = scode;
 	cp->valid = false;
 
-	icem_candpair_set_state(cp, CANDPAIR_FAILED);
+	icem_candpair_set_state(cp, ICE_CANDPAIR_FAILED);
 }
 
 
-void icem_candpair_set_state(struct candpair *cp, enum candpair_state state)
+void icem_candpair_set_state(struct ice_candpair *cp,
+			     enum ice_candpair_state state)
 {
 	if (!cp)
 		return;
@@ -229,7 +230,7 @@ void icem_candpairs_flush(struct list *lst, enum ice_cand_type type,
 
 	while (le) {
 
-		struct candpair *cp = le->data;
+		struct ice_candpair *cp = le->data;
 
 		le = le->next;
 
@@ -244,12 +245,13 @@ void icem_candpairs_flush(struct list *lst, enum ice_cand_type type,
 }
 
 
-bool icem_candpair_iscompleted(const struct candpair *cp)
+bool icem_candpair_iscompleted(const struct ice_candpair *cp)
 {
 	if (!cp)
 		return false;
 
-	return cp->state == CANDPAIR_FAILED || cp->state == CANDPAIR_SUCCEEDED;
+	return cp->state == ICE_CANDPAIR_FAILED ||
+		cp->state == ICE_CANDPAIR_SUCCEEDED;
 }
 
 
@@ -261,7 +263,8 @@ bool icem_candpair_iscompleted(const struct candpair *cp)
  *
  * @return true if match
  */
-bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2)
+bool icem_candpair_cmp(const struct ice_candpair *cp1,
+		       const struct ice_candpair *cp2)
 {
 	if (!sa_cmp(&cp1->lcand->addr, &cp2->lcand->addr, SA_ALL))
 		return false;
@@ -282,7 +285,7 @@ bool icem_candpair_cmp(const struct candpair *cp1, const struct candpair *cp2)
  *
  * note: assume list is sorted by priority
  */
-struct candpair *icem_candpair_find(const struct list *lst,
+struct ice_candpair *icem_candpair_find(const struct list *lst,
 				    const struct ice_cand *lcand,
 				    const struct ice_cand *rcand)
 {
@@ -290,7 +293,7 @@ struct candpair *icem_candpair_find(const struct list *lst,
 
 	for (le = list_head(lst); le; le = le->next) {
 
-		struct candpair *cp = le->data;
+		struct ice_candpair *cp = le->data;
 
 		if (!cp->lcand || !cp->rcand) {
 			DEBUG_WARNING("corrupt candpair %p\n", cp);
@@ -310,14 +313,15 @@ struct candpair *icem_candpair_find(const struct list *lst,
 }
 
 
-struct candpair *icem_candpair_find_st(const struct list *lst, unsigned compid,
-				       enum candpair_state state)
+struct ice_candpair *icem_candpair_find_st(const struct list *lst,
+					   unsigned compid,
+					   enum ice_candpair_state state)
 {
 	struct le *le;
 
 	for (le = list_head(lst); le; le = le->next) {
 
-		struct candpair *cp = le->data;
+		struct ice_candpair *cp = le->data;
 
 		if (compid && cp->lcand->compid != compid)
 			continue;
@@ -332,14 +336,14 @@ struct candpair *icem_candpair_find_st(const struct list *lst, unsigned compid,
 }
 
 
-struct candpair *icem_candpair_find_compid(const struct list *lst,
+struct ice_candpair *icem_candpair_find_compid(const struct list *lst,
 					   unsigned compid)
 {
 	struct le *le;
 
 	for (le = list_head(lst); le; le = le->next) {
 
-		struct candpair *cp = le->data;
+		struct ice_candpair *cp = le->data;
 
 		if (cp->lcand->compid != compid)
 			continue;
@@ -354,10 +358,10 @@ struct candpair *icem_candpair_find_compid(const struct list *lst,
 /**
  * Find a remote candidate in the checklist or validlist
  */
-struct candpair *icem_candpair_find_rcand(struct icem *icem,
+struct ice_candpair *icem_candpair_find_rcand(struct icem *icem,
 					  const struct ice_cand *rcand)
 {
-	struct candpair *cp;
+	struct ice_candpair *cp;
 
 	cp = icem_candpair_find(&icem->checkl, NULL, rcand);
 	if (cp)
@@ -371,8 +375,8 @@ struct candpair *icem_candpair_find_rcand(struct icem *icem,
 }
 
 
-bool icem_candpair_cmp_fnd(const struct candpair *cp1,
-			   const struct candpair *cp2)
+bool icem_candpair_cmp_fnd(const struct ice_candpair *cp1,
+			   const struct ice_candpair *cp2)
 {
 	if (!cp1 || !cp2)
 		return false;
@@ -382,7 +386,7 @@ bool icem_candpair_cmp_fnd(const struct candpair *cp1,
 }
 
 
-int icem_candpair_debug(struct re_printf *pf, const struct candpair *cp)
+int icem_candpair_debug(struct re_printf *pf, const struct ice_candpair *cp)
 {
 	int err;
 
@@ -420,7 +424,7 @@ int icem_candpairs_debug(struct re_printf *pf, const struct list *list)
 
 	for (le = list->head; le && !err; le = le->next) {
 
-		const struct candpair *cp = le->data;
+		const struct ice_candpair *cp = le->data;
 		bool is_selected = (cp == cp->comp->cp_sel);
 
 		err = re_hprintf(pf, "  %c  %H\n",
