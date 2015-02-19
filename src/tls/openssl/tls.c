@@ -97,6 +97,19 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	case TLS_METHOD_DTLSV1:
 		tls->ctx = SSL_CTX_new(DTLSv1_method());
 		break;
+
+#ifdef SSL_OP_NO_DTLSv1_2
+		/* DTLS v1.2 is available in OpenSSL 1.0.2 and later */
+
+	case TLS_METHOD_DTLS:
+		tls->ctx = SSL_CTX_new(DTLS_method());
+		break;
+
+	case TLS_METHOD_DTLSV1_2:
+		tls->ctx = SSL_CTX_new(DTLSv1_2_method());
+		break;
+#endif
+
 #endif
 
 	default:

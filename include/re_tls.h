@@ -15,6 +15,8 @@ struct udp_sock;
 enum tls_method {
 	TLS_METHOD_SSLV23,
 	TLS_METHOD_DTLSV1,
+	TLS_METHOD_DTLS,      /* DTLS 1.0 and 1.2 */
+	TLS_METHOD_DTLSV1_2,  /* DTLS 1.2 */
 };
 
 enum tls_fingerprint {
