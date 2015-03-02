@@ -14,6 +14,14 @@
 
 #define MAGIC 0x14553399
 
+
+#ifdef WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#define close closesocket
+#endif
+
+
 /**
  * Defines a Thread-safe Message Queue
  *
