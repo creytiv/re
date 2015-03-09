@@ -128,10 +128,6 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	SSL_CTX_set_verify_depth(tls->ctx, 1);
 #endif
 
-	if (method == TLS_METHOD_DTLSV1) {
-		SSL_CTX_set_read_ahead(tls->ctx, 1);
-	}
-
 	/* Load our keys and certificates */
 	if (keyfile) {
 		if (pwd) {

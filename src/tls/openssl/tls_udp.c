@@ -435,6 +435,8 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 
 	SSL_set_bio(tc->ssl, tc->sbio_in, tc->sbio_out);
 
+	SSL_set_read_ahead(tc->ssl, 1);
+
  out:
 	if (err)
 		mem_deref(tc);
