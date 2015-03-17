@@ -1,3 +1,19 @@
+2015-03-16 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.12
+
+	* ice: added ice_ prefix to some functions and types
+               fix bug in priority calculations (thanks to Daniel Ma)
+
+	* mqueue: fix bug with leaking sockets on Windows-32
+
+	* rtp: fix bug with RTCP timestamp calculation
+
+	* sip: export sip_transp_laddr()
+
+	* tls: added more TLS methods
+
+
 2014-12-09 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.11
