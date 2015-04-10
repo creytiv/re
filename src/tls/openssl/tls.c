@@ -7,6 +7,8 @@
 #define OPENSSL_NO_KRB5 1
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/rsa.h>
+#include <openssl/bn.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -207,14 +209,23 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 	X509_NAME *subj = NULL;
 	EVP_PKEY *key = NULL;
 	X509 *cert = NULL;
+	BIGNUM *bn = NULL;
 	RSA *rsa = NULL;
 	int r, err = ENOMEM;
 
 	if (!tls || !cn)
 		return EINVAL;
 
-	rsa = RSA_generate_key(1024, RSA_F4, NULL, NULL);
+	rsa = RSA_new();
 	if (!rsa)
+		goto out;
+
+	bn = BN_new();
+	if (!bn)
+		goto out;
+
+	BN_set_word(bn, RSA_F4);
+	if (!RSA_generate_key_ex(rsa, 1024, bn, NULL))
 		goto out;
 
 	key = EVP_PKEY_new();
@@ -285,6 +296,9 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 
 	if (rsa)
 		RSA_free(rsa);
+
+	if (bn)
+		BN_free(bn);
 
 	if (err)
 		ERR_clear_error();
