@@ -83,6 +83,11 @@ void aes_set_iv(struct aes *st, const uint8_t iv[AES_BLOCK_SIZE])
 		return;
 
 	/* we must reset the state when updating IV */
+	if (st->cryptor) {
+		CCCryptorRelease(st->cryptor);
+		st->cryptor = NULL;
+	}
+
 	status = CCCryptorCreateWithMode(kCCEncrypt, kCCModeCTR,
 					 kCCAlgorithmAES, ccNoPadding,
 					 iv, st->key, st->key_bytes,

@@ -12,9 +12,11 @@
 #include <re_hmac.h>
 
 
+enum { KEY_SIZE = 20 };
+
 struct hmac {
 	CCHmacContext ctx;
-	uint8_t key[20];
+	uint8_t key[KEY_SIZE];
 	size_t key_len;
 };
 
@@ -32,7 +34,7 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 {
 	struct hmac *hmac;
 
-	if (!hmacp || !key || !key_len)
+	if (!hmacp || !key || !key_len || key_len > KEY_SIZE)
 		return EINVAL;
 
 	if (hash != HMAC_HASH_SHA1)
@@ -44,8 +46,6 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 
 	memcpy(hmac->key, key, key_len);
 	hmac->key_len = key_len;
-
-	CCHmacInit(&hmac->ctx, kCCHmacAlgSHA1, key, key_len);
 
 	*hmacp = hmac;
 
