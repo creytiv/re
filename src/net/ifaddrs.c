@@ -31,14 +31,15 @@
 int net_getifaddrs(net_ifaddr_h *ifh, void *arg)
 {
 	struct ifaddrs *ifa, *ifp;
-	int err = 0;
+	int err;
 
 	if (!ifh)
 		return EINVAL;
 
 	if (0 != getifaddrs(&ifa)) {
-		DEBUG_WARNING("getifaddrs: %m\n", errno);
-		return errno;
+		err = errno;
+		DEBUG_WARNING("getifaddrs: %m\n", err);
+		return err;
 	}
 
 	for (ifp = ifa; ifa; ifa = ifa->ifa_next) {
@@ -59,5 +60,5 @@ int net_getifaddrs(net_ifaddr_h *ifh, void *arg)
 
 	freeifaddrs(ifp);
 
-	return err;
+	return 0;
 }
