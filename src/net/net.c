@@ -104,3 +104,52 @@ int net_if_apply(net_ifaddr_h *ifh, void *arg)
 	return net_if_list(ifh, arg);
 #endif
 }
+
+
+static bool net_rt_handler(const char *ifname, const struct sa *dst,
+			   int dstlen, const struct sa *gw, void *arg)
+{
+	void **argv = arg;
+	struct sa *ip = argv[1];
+	(void)dst;
+	(void)dstlen;
+
+	if (0 == str_cmp(ifname, argv[0])) {
+		*ip = *gw;
+		return true;
+	}
+
+	return false;
+}
+
+
+/**
+ * Get the IP-address of the default gateway
+ *
+ * @param af  Address Family
+ * @param gw  Returned Gateway address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int net_default_gateway_get(int af, struct sa *gw)
+{
+	char ifname[64];
+	void *argv[2];
+	int err;
+
+	if (!af || !gw)
+		return EINVAL;
+
+	err = net_rt_default_get(af, ifname, sizeof(ifname));
+	if (err)
+		return err;
+
+	argv[0] = ifname;
+	argv[1] = gw;
+
+	err = net_rt_list(net_rt_handler, argv);
+	if (err)
+		return err;
+
+	return 0;
+}
