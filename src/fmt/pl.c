@@ -187,7 +187,9 @@ uint64_t pl_x64(const struct pl *pl)
 
 
 /**
- * Convert a pointer-length object to floating point representation
+ * Convert a pointer-length object to floating point representation.
+ * Both positive and negative numbers are supported, a string with a
+ * minus sign ('-') is treated as a negative number.
  *
  * @param pl Pointer-length object
  *
@@ -197,6 +199,7 @@ double pl_float(const struct pl *pl)
 {
 	double v=0, mul=1;
 	const char *p;
+	bool neg = false;
 
 	if (!pl || !pl->p)
 		return 0;
@@ -215,12 +218,15 @@ double pl_float(const struct pl *pl)
 			v /= mul;
 			mul = 1;
 		}
+		else if (ch == '-' && p == pl->p) {
+			neg = true;
+		}
 		else {
 			return 0;
 		}
 	}
 
-	return v;
+	return neg ? -v : v;
 }
 
 
