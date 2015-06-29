@@ -259,6 +259,7 @@ endif
 	AR		:= ar
 	AFLAGS		:= cru
 	LIB_SUFFIX	:= .dylib
+	HAVE_KQUEUE	:= 1
 endif
 ifeq ($(OS),netbsd)
 	CFLAGS		+= -fPIC -DNETBSD
@@ -268,6 +269,7 @@ ifeq ($(OS),netbsd)
 	APP_LFLAGS	+= -rdynamic
 	AR		:= ar
 	AFLAGS		:= cru
+	HAVE_KQUEUE	:= 1
 endif
 ifeq ($(OS),freebsd)
 	CFLAGS		+= -fPIC -DFREEBSD
@@ -277,6 +279,7 @@ ifeq ($(OS),freebsd)
 	APP_LFLAGS	+= -rdynamic
 	AR		:= ar
 	AFLAGS		:= cru
+	HAVE_KQUEUE	:= 1
 endif
 ifeq ($(OS),openbsd)
 	CFLAGS		+= -fPIC -DOPENBSD
@@ -286,6 +289,7 @@ ifeq ($(OS),openbsd)
 	APP_LFLAGS	+= -rdynamic
 	AR		:= ar
 	AFLAGS		:= cru
+	HAVE_KQUEUE	:= 1
 endif
 ifeq ($(OS),win32)
 	CFLAGS		+= -DWIN32 -D_WIN32_WINNT=0x0501
@@ -562,6 +566,9 @@ CFLAGS  += -DHAVE_SIGNAL
 CFLAGS  += -DHAVE_SYS_TIME_H
 ifneq ($(HAVE_EPOLL),)
 CFLAGS  += -DHAVE_EPOLL
+endif
+ifneq ($(HAVE_KQUEUE),)
+CFLAGS  += -DHAVE_KQUEUE
 endif
 CFLAGS  += -DHAVE_UNAME
 CFLAGS  += -DHAVE_UNISTD_H

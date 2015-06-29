@@ -29,6 +29,13 @@
 #ifdef HAVE_EPOLL
 #include <sys/epoll.h>
 #endif
+#ifdef HAVE_KQUEUE
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+#undef LIST_INIT
+#undef LIST_FOREACH
+#endif
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -104,6 +111,11 @@ struct re {
 	int epfd;                    /**< epoll control file descriptor     */
 #endif
 
+#ifdef HAVE_KQUEUE
+	struct kevent *evlist;
+	int kqfd;
+#endif
+
 #ifdef HAVE_PTHREAD
 	pthread_mutex_t mutex;       /**< Mutex for thread synchronization  */
 	pthread_mutex_t *mutexp;     /**< Pointer to active mutex           */
@@ -123,6 +135,10 @@ static struct re global_re = {
 	NULL,
 #endif
 #ifdef HAVE_EPOLL
+	NULL,
+	-1,
+#endif
+#ifdef HAVE_KQUEUE
 	NULL,
 	-1,
 #endif
@@ -270,7 +286,7 @@ static int set_epoll_fds(struct re *re, int fd, int flags)
 	struct epoll_event event;
 	int err = 0;
 
-	if (re->epfd <= 0)
+	if (re->epfd < 0)
 		return EBADFD;
 
 	memset(&event, 0, sizeof(event));
@@ -323,6 +339,46 @@ static int set_epoll_fds(struct re *re, int fd, int flags)
 #endif
 
 
+#ifdef HAVE_KQUEUE
+static int set_kqueue_fds(struct re *re, int fd, int flags)
+{
+	struct kevent kev[2];
+	int r, n = 0;
+
+	memset(kev, 0, sizeof(kev));
+
+	/* always delete the events */
+	EV_SET(&kev[0], fd, EVFILT_READ,  EV_DELETE, 0, 0, 0);
+	EV_SET(&kev[1], fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
+	kevent(re->kqfd, kev, 2, NULL, 0, NULL);
+
+	memset(kev, 0, sizeof(kev));
+
+	if (flags & FD_READ) {
+		EV_SET(&kev[n], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
+		++n;
+	}
+	if (flags & FD_WRITE) {
+		EV_SET(&kev[n], fd, EVFILT_WRITE, EV_ADD, 0, 0, 0);
+		++n;
+	}
+
+	if (n) {
+		r = kevent(re->kqfd, kev, n, NULL, 0, NULL);
+		if (r < 0) {
+			int err = errno;
+
+			DEBUG_WARNING("set: [fd=%d, flags=%x] kevent: %m\n",
+				      fd, flags, err);
+			return err;
+		}
+	}
+
+	return 0;
+}
+#endif
+
+
 /**
  * Rebuild the file descriptor mapping table. This must be done whenever
  * the polling method is changed.
@@ -350,9 +406,19 @@ static int rebuild_fds(struct re *re)
 			err = set_epoll_fds(re, i, re->fhs[i].flags);
 			break;
 #endif
+
+#ifdef HAVE_KQUEUE
+		case METHOD_KQUEUE:
+			err = set_kqueue_fds(re, i, re->fhs[i].flags);
+			break;
+#endif
+
 		default:
 			break;
 		}
+
+		if (err)
+			break;
 	}
 
 	return err;
@@ -391,15 +457,39 @@ static int poll_init(struct re *re)
 				return ENOMEM;
 		}
 
-		if (re->epfd <= 0
+		if (re->epfd < 0
 		    && -1 == (re->epfd = epoll_create(re->maxfds))) {
+
+			int err = errno;
+
 			DEBUG_WARNING("epoll_create: %m (maxfds=%d)\n",
-				      errno, re->maxfds);
-			return errno;
+				      err, re->maxfds);
+			return err;
 		}
 		DEBUG_INFO("init: epoll_create() epfd=%d\n", re->epfd);
 		break;
 #endif
+
+#ifdef HAVE_KQUEUE
+	case METHOD_KQUEUE:
+
+		if (!re->evlist) {
+			size_t sz = re->maxfds * sizeof(*re->evlist);
+			re->evlist = mem_zalloc(sz, NULL);
+			if (!re->evlist)
+				return ENOMEM;
+		}
+
+		if (re->kqfd < 0) {
+			re->kqfd = kqueue();
+			if (re->kqfd < 0)
+				return errno;
+			DEBUG_INFO("kqueue: fd=%d\n", re->kqfd);
+		}
+
+		break;
+#endif
+
 	default:
 		break;
 	}
@@ -421,12 +511,21 @@ static void poll_close(struct re *re)
 #ifdef HAVE_EPOLL
 	DEBUG_INFO("poll_close: epfd=%d\n", re->epfd);
 
-	if (re->epfd > 0) {
+	if (re->epfd >= 0) {
 		(void)close(re->epfd);
 		re->epfd = -1;
 	}
 
 	re->events = mem_deref(re->events);
+#endif
+
+#ifdef HAVE_KQUEUE
+	if (re->kqfd >= 0) {
+		close(re->kqfd);
+		re->kqfd = -1;
+	}
+
+	re->evlist = mem_deref(re->evlist);
 #endif
 }
 
@@ -514,11 +613,18 @@ int fd_listen(int fd, int flags, fd_h *fh, void *arg)
 
 #ifdef HAVE_EPOLL
 	case METHOD_EPOLL:
-		if (re->epfd <= 0)
+		if (re->epfd < 0)
 			return EBADFD;
 		err = set_epoll_fds(re, fd, flags);
 		break;
 #endif
+
+#ifdef HAVE_KQUEUE
+	case METHOD_KQUEUE:
+		err = set_kqueue_fds(re, fd, flags);
+		break;
+#endif
+
 	default:
 		break;
 	}
@@ -615,6 +721,21 @@ static int fd_poll(struct re *re)
 		break;
 #endif
 
+#ifdef HAVE_KQUEUE
+	case METHOD_KQUEUE: {
+		struct timespec timeout;
+
+		timeout.tv_sec = to / 1000;
+		timeout.tv_nsec = (to % 1000) * 1000000;
+
+		re_unlock(re);
+		n = kevent(re->kqfd, NULL, 0, re->evlist, re->maxfds,
+			   to ? &timeout : NULL);
+		re_lock(re);
+		}
+		break;
+#endif
+
 	default:
 		(void)to;
 		DEBUG_WARNING("no polling method set\n");
@@ -678,6 +799,44 @@ static int fd_poll(struct re *re)
 
 			break;
 #endif
+
+#ifdef HAVE_KQUEUE
+		case METHOD_KQUEUE: {
+
+			struct kevent *kev = &re->evlist[i];
+
+			fd = (int)kev->ident;
+
+			if (fd >= re->maxfds) {
+				DEBUG_WARNING("large fd=%d\n", fd);
+				break;
+			}
+
+			if (kev->filter == EVFILT_READ)
+				flags |= FD_READ;
+			else if (kev->filter == EVFILT_WRITE)
+				flags |= FD_WRITE;
+			else {
+				DEBUG_WARNING("kqueue: unhandled "
+					      "filter %x\n",
+					      kev->filter);
+			}
+
+			if (kev->flags & EV_EOF) {
+				flags |= FD_EXCEPT;
+			}
+			if (kev->flags & EV_ERROR) {
+				DEBUG_WARNING("kqueue: EV_ERROR on fd %d\n",
+					      fd);
+			}
+
+			if (!flags) {
+				DEBUG_WARNING("kqueue: no flags fd=%d\n", fd);
+			}
+		}
+			break;
+#endif
+
 		default:
 			return EINVAL;
 		}
@@ -938,6 +1097,10 @@ int poll_method_set(enum poll_method method)
 	case METHOD_ACTSCHED:
 		break;
 #endif
+#ifdef HAVE_KQUEUE
+	case METHOD_KQUEUE:
+		break;
+#endif
 	default:
 		DEBUG_WARNING("poll method not supported: '%s'\n",
 			      poll_method_name(method));
@@ -987,6 +1150,10 @@ int re_thread_init(void)
 
 #ifdef HAVE_EPOLL
 	re->epfd = -1;
+#endif
+
+#ifdef HAVE_KQUEUE
+	re->kqfd = -1;
 #endif
 
 	pthread_setspecific(pt_key, re);
