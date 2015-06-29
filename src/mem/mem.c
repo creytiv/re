@@ -282,6 +282,7 @@ void *mem_deref(void *data)
 	if (m->dh)
 		m->dh(data);
 
+	/* NOTE: check if the destructor called mem_ref() */
 	if (m->nrefs > 0)
 		return NULL;
 
