@@ -26,6 +26,8 @@ struct memstat {
 void    *mem_alloc(size_t size, mem_destroy_h *dh);
 void    *mem_zalloc(size_t size, mem_destroy_h *dh);
 void    *mem_realloc(void *data, size_t size);
+void    *mem_reallocarray(void *ptr, size_t nmemb,
+			  size_t membsize, mem_destroy_h *dh);
 void    *mem_ref(void *data);
 void    *mem_deref(void *data);
 uint32_t mem_nrefs(const void *data);

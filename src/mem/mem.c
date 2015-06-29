@@ -232,6 +232,41 @@ void *mem_realloc(void *data, size_t size)
 }
 
 
+#ifndef SIZE_MAX
+#define SIZE_MAX    (~((size_t)0))
+#endif
+
+
+/**
+ * Re-allocate a reference-counted array
+ *
+ * @param ptr      Pointer to existing array, NULL to allocate a new array
+ * @param nmemb    Number of members in array
+ * @param membsize Number of bytes in each member
+ * @param dh       Optional destructor, only used when ptr is NULL
+ *
+ * @return New pointer to allocated array
+ */
+void *mem_reallocarray(void *ptr, size_t nmemb, size_t membsize,
+		       mem_destroy_h *dh)
+{
+	size_t tsize;
+
+	if (membsize && nmemb > SIZE_MAX / membsize) {
+		return NULL;
+	}
+
+	tsize = nmemb * membsize;
+
+	if (ptr) {
+		return mem_realloc(ptr, tsize);
+	}
+	else {
+		return mem_alloc(tsize, dh);
+	}
+}
+
+
 /**
  * Reference a reference-counted memory object
  *
