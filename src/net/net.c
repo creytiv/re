@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#define _BSD_SOURCE 1
 #include <stdlib.h>
 #include <string.h>
 #if !defined(WIN32) && !defined(CYGWIN)
