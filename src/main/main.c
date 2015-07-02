@@ -354,12 +354,12 @@ static int set_kqueue_fds(struct re *re, int fd, int flags)
 
 	memset(kev, 0, sizeof(kev));
 
-	if (flags & FD_READ) {
-		EV_SET(&kev[n], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
-		++n;
-	}
 	if (flags & FD_WRITE) {
 		EV_SET(&kev[n], fd, EVFILT_WRITE, EV_ADD, 0, 0, 0);
+		++n;
+	}
+	if (flags & FD_READ) {
+		EV_SET(&kev[n], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
 		++n;
 	}
 
