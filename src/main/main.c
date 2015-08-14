@@ -1081,7 +1081,7 @@ int poll_method_set(enum poll_method method)
 #endif
 #ifdef HAVE_SELECT
 	case METHOD_SELECT:
-		if (re->maxfds > FD_SETSIZE) {
+		if (re->maxfds > (int)FD_SETSIZE) {
 			DEBUG_WARNING("SELECT: maxfds > FD_SETSIZE\n");
 			return EMFILE;
 		}
