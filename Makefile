@@ -30,6 +30,7 @@ MODULES += fmt tmr main mem dbg sys lock mqueue
 MODULES += mod conf
 MODULES += bfcp
 MODULES += aes srtp
+MODULES += odict
 
 INSTALL := install
 ifeq ($(DESTDIR),)

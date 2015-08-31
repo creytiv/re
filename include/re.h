@@ -39,6 +39,7 @@ extern "C" {
 #include "re_mod.h"
 #include "re_mqueue.h"
 #include "re_net.h"
+#include "re_odict.h"
 #include "re_rtp.h"
 #include "re_sdp.h"
 #include "re_uri.h"

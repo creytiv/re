@@ -29,3 +29,5 @@ uint32_t hash_joaat_str(const char *str);
 uint32_t hash_joaat_str_ci(const char *str);
 uint32_t hash_joaat_pl(const struct pl *pl);
 uint32_t hash_joaat_pl_ci(const struct pl *pl);
+uint32_t hash_fast(const char *k, size_t len);
+uint32_t hash_fast_str(const char *str);
