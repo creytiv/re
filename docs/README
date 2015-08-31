@@ -44,6 +44,7 @@ Modules:
 * msg       unstable      Generic message component library
 * natbd     unstable      NAT Behavior Discovery using STUN
 * net       testing       Networking routines
+* odict     unstable      Ordered Dictionary
 * rtp       testing       Real-time Transport Protocol
 * sa        stable        Socket Address functions
 * sdp       testing       Session Description Protocol
