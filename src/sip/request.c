@@ -701,7 +701,7 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
  * @param sendh    Send handler
  * @param resph    Response handler
  * @param arg      Handler argument
- * @param fmt      Formatted SIP headers
+ * @param fmt      Formatted SIP headers and body
  *
  * @return 0 if success, otherwise errorcode
  */
