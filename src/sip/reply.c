@@ -145,7 +145,7 @@ static int vreplyf(struct sip_strans **stp, struct mbuf **mbp, bool trans,
  * @param rec_route True to copy Record-Route headers
  * @param scode     Response status code
  * @param reason    Response reason phrase
- * @param fmt       Formatted SIP message
+ * @param fmt       Additional formatted SIP headers and body, otherwise NULL
  *
  * @return 0 if success, otherwise errorcode
  */
@@ -190,7 +190,7 @@ int sip_treply(struct sip_strans **stp, struct sip *sip,
  * @param msg    Incoming SIP message
  * @param scode  Response status code
  * @param reason Response reason phrase
- * @param fmt    Formatted SIP message
+ * @param fmt    Additional formatted SIP headers and body, otherwise NULL
  *
  * @return 0 if success, otherwise errorcode
  */
