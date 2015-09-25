@@ -41,7 +41,7 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 
 	if (_res.dnsrch[0])
 		str_ncpy(domain, _res.dnsrch[0], dsize);
-	else if (_res.defdname)
+	else if ((char *)_res.defdname)
 		str_ncpy(domain, _res.defdname, dsize);
 
 	if (!_res.nscount) {
