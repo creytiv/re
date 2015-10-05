@@ -31,7 +31,7 @@ static bool inited = false;
 /** Check random state */
 #define RAND_CHECK							\
 	if (!inited) {							\
-		DEBUG_WARNING("%s: random not inited\n", __FUNCTION__);	\
+		DEBUG_WARNING("%s: random not inited\n", __REFUNC__);	\
 	}
 #else
 #define RAND_CHECK if (0) {}

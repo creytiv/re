@@ -236,3 +236,13 @@ typedef bool _Bool;
 #ifndef EAUTH
 #define EAUTH 217
 #endif
+
+
+/*
+ * Any C compiler conforming to C99 or later MUST support __func__
+ */
+#if __STDC_VERSION__ >= 199901L
+#define __REFUNC__ (const char *)__func__
+#else
+#define __REFUNC__ __FUNCTION__
+#endif

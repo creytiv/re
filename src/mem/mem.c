@@ -104,7 +104,7 @@ static inline void mem_unlock(void)
 #define MAGIC_CHECK(m) \
 	if (mem_magic != (m)->magic) { \
 		DEBUG_WARNING("%s: magic check failed 0x%08x (%p)\n", \
-			      __FUNCTION__, (m)->magic, (m)+1);	      \
+			      __REFUNC__, (m)->magic, (m)+1);	      \
 		BREAKPOINT;					      \
 	}
 #else
