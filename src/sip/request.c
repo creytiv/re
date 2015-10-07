@@ -281,6 +281,23 @@ static bool transp_next(struct sip *sip, enum sip_transp *tp)
 }
 
 
+static bool transp_next_srv(struct sip *sip, enum sip_transp *tp)
+{
+	enum sip_transp i;
+
+	for (i=(enum sip_transp)(*tp-1); i>SIP_TRANSP_NONE; i--) {
+
+		if (!sip_transp_supported(sip, i, AF_UNSPEC))
+			continue;
+
+		*tp = i;
+		return true;
+	}
+
+	return false;
+}
+
+
 static bool rr_append_handler(struct dnsrr *rr, void *arg)
 {
 	struct list *lst = arg;
@@ -375,6 +392,12 @@ static void naptr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	rr = dns_rrlist_apply(ansl, NULL, DNS_TYPE_NAPTR, DNS_CLASS_IN, false,
 			      rr_naptr_handler, req);
 	if (!rr) {
+		req->tp = SIP_TRANSPC;
+		if (!transp_next_srv(req->sip, &req->tp)) {
+			err = EPROTONOSUPPORT;
+			goto fail;
+		}
+
 		err = srv_lookup(req, req->host);
 		if (err)
 			goto fail;
@@ -432,7 +455,7 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 
 	if (!req->srvl.head) {
 		if (!req->tp_selected) {
-			if (transp_next(req->sip, &req->tp)) {
+			if (transp_next_srv(req->sip, &req->tp)) {
 
 				err = srv_lookup(req, req->host);
 				if (err)
