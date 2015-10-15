@@ -33,6 +33,7 @@ Modules:
 * httpauth  testing       HTTP-based Authentication (RFC 2617)
 * ice       unstable      Interactive Connectivity Establishment (ICE)
 * jbuf      testing       Jitter buffer
+* json      unstable      JavaScript Object Notation (JSON)
 * list      stable        Sortable doubly-linked list handling
 * lock      testing       Resource locking functions
 * main      testing       Main poll loop
