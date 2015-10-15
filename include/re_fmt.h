@@ -139,3 +139,8 @@ typedef void (fmt_param_h)(const struct pl *name, const struct pl *val,
 bool fmt_param_exists(const struct pl *pl, const char *pname);
 bool fmt_param_get(const struct pl *pl, const char *pname, struct pl *val);
 void fmt_param_apply(const struct pl *pl, fmt_param_h *ph, void *arg);
+
+
+/* unicode */
+int utf8_encode(struct re_printf *pf, const char *str);
+int utf8_decode(struct re_printf *pf, const struct pl *pl);
