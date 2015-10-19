@@ -39,6 +39,7 @@ int odict_debug(struct re_printf *pf, const struct odict *o);
 
 int odict_entry_add(struct odict *o, const char *key,
 		    enum odict_type type, ...);
+void odict_entry_del(struct odict *o, const char *key);
 int odict_entry_debug(struct re_printf *pf, const struct odict_entry *e);
 
 bool odict_type_iscontainer(enum odict_type type);
