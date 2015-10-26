@@ -1,3 +1,28 @@
+2015-10-24 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.14
+
+	* New modules: json and odict
+
+	* build: add pkg-config file (thanks to William King)
+	
+	* re_types: added a portable __REFUNC__
+
+	* fmt: add utf8_encode/decode, used by JSON module
+
+	* hash: add hash_fast() function
+
+	* json: new JavaScript Object Notation (JSON) module
+
+	* main: fix order of kqueue setting events (WRITE,READ)
+
+	* odict: new Ordered Dictionary module
+
+	* sip: reverse order of transport enumeration for SRV-records
+
+	* udp,tcp,net: add __USE_XOPEN2K (thanks Dmitrij D. Czarkoff)
+
+
 2015-07-01 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.13
