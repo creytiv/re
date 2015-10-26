@@ -1,5 +1,5 @@
 /**
- * @file utf8.c  Unicode character coding
+ * @file unicode.c  Unicode character coding
  *
  * Copyright (C) 2010 Creytiv.com
  */
