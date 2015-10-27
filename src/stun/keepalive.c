@@ -135,6 +135,12 @@ static bool udp_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 	if (stun_msg_decode(&msg, mb, &ua))
 		return false;
 
+	if (stun_msg_method(msg) != STUN_METHOD_BINDING) {
+		hdld = false;
+		mb->pos = pos;
+		goto out;
+	}
+
 	switch (stun_msg_class(msg)) {
 
 	case STUN_CLASS_ERROR_RESP:
@@ -149,6 +155,7 @@ static bool udp_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 		break;
 	}
 
+ out:
 	mem_deref(msg);
 
 	return hdld;
