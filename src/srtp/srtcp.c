@@ -49,7 +49,7 @@ int srtcp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 	strm = stream_get(srtp, ssrc);
 	if (!strm)
-		return ENOMEM;
+		return ENOSR;
 
 	strm->rtcp_index = (strm->rtcp_index+1) & 0x7fffffff;
 
@@ -118,7 +118,7 @@ int srtcp_decrypt(struct srtp *srtp, struct mbuf *mb)
 
 	strm = stream_get(srtp, ssrc);
 	if (!strm)
-		return ENOMEM;
+		return ENOSR;
 
 	pld_start = mb->pos;
 

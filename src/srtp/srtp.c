@@ -165,7 +165,7 @@ int srtp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 	strm = stream_get_seq(srtp, hdr.ssrc, hdr.seq);
 	if (!strm)
-		return ENOMEM;
+		return ENOSR;
 
 	/* Roll-Over Counter (ROC) */
 	if (seq_diff(strm->s_l, hdr.seq) <= -32768) {
@@ -243,7 +243,7 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 
 	strm = stream_get_seq(srtp, hdr.ssrc, hdr.seq);
 	if (!strm)
-		return ENOMEM;
+		return ENOSR;
 
 	diff = seq_diff(strm->s_l, hdr.seq);
 	if (diff > 32768)
