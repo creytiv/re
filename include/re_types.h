@@ -237,6 +237,11 @@ typedef bool _Bool;
 #define EAUTH 217
 #endif
 
+/** No STREAM resources */
+#ifndef ENOSR
+#define ENOSR 218
+#endif
+
 
 /*
  * Any C compiler conforming to C99 or later MUST support __func__
