@@ -167,7 +167,7 @@ static int decode_value(struct json_value *val, const struct pl *pl)
 		val->type = JSON_NULL;
 	}
 	else {
-		re_printf("json: value of unkown type: <%r>\n", pl);
+		re_printf("json: value of unknown type: <%r>\n", pl);
 		err = EBADMSG;
 	}
 
