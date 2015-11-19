@@ -236,6 +236,11 @@ static void sip_recv(struct sip *sip, const struct sip_msg *msg)
 {
 	struct le *le = sip->lsnrl.head;
 
+	if (sip->traceh) {
+		sip->traceh(false, msg->tp, &msg->src, &msg->dst,
+			    msg->mb->buf, msg->mb->end, sip->arg);
+	}
+
 	while (le) {
 		struct sip_lsnr *lsnr = le->data;
 
@@ -727,6 +732,11 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 
 	if (!sip || !dst || !mb)
 		return EINVAL;
+
+	if (sip->traceh) {
+		sip->traceh(true, tp, NULL, dst,
+			    mbuf_buf(mb), mbuf_get_left(mb), sip->arg);
+	}
 
 	switch (tp) {
 
