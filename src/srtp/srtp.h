@@ -49,9 +49,9 @@ struct srtp {
 };
 
 
-struct srtp_stream *stream_get(struct srtp *srtp, uint32_t ssrc);
-struct srtp_stream *stream_get_seq(struct srtp *srtp, uint32_t ssrc,
-				   uint16_t seq);
+int stream_get(struct srtp_stream **strmp, struct srtp *srtp, uint32_t ssrc);
+int stream_get_seq(struct srtp_stream **strmp, struct srtp *srtp,
+		   uint32_t ssrc, uint16_t seq);
 
 
 int  srtp_derive(uint8_t *out, size_t out_len, uint8_t label,
