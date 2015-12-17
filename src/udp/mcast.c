@@ -5,6 +5,7 @@
  */
 
 #define _BSD_SOURCE 1
+#define _DEFAULT_SOURCE 1
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_sa.h>

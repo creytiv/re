@@ -8,6 +8,7 @@
 #include <windows.h>
 #else
 #define _BSD_SOURCE 1    /**< Use BSD code */
+#define _DEFAULT_SOURCE 1
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>

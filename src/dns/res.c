@@ -4,6 +4,7 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #define _BSD_SOURCE 1
+#define _DEFAULT_SOURCE 1
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
