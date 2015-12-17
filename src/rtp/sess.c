@@ -555,7 +555,6 @@ void rtcp_sess_rx_rtp(struct rtcp_sess *sess, uint16_t seq, uint32_t ts,
 
 		/* first packet - init sequence number */
 		source_init_seq(mbr->s, seq);
-		mbr->s->max_seq = seq - 1;
 		/* probation not used */
 		sa_cpy(&mbr->s->rtp_peer, peer);
 		++sess->senderc;
