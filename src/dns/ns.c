@@ -87,18 +87,26 @@ static int parse_resolv_conf(char *domain, size_t dsize,
 #ifdef __ANDROID__
 static int get_android_dns(struct sa *nsv, uint32_t *n)
 {
-	char value[PROP_VALUE_MAX] = {0};
+	char prop[PROP_NAME_MAX] = {0}, value[PROP_VALUE_MAX] = {0};
+	uint32_t i, count = 0;
+	int err;
 
-	if (__system_property_get("net.dns1", value)) {
-		int err = sa_set_str(&nsv[0], value, DNS_PORT);
-		if (err)
-			return err;
+	for (i=0; i<*n; i++) {
+		re_snprintf(prop, sizeof(prop), "net.dns%u", 1+i);
 
-		*n = 1;
-		return 0;
+		if (__system_property_get(prop, value)) {
+
+			err = sa_set_str(&nsv[count], value, DNS_PORT);
+			if (!err)
+				++count;
+		}
 	}
+	if (count == 0)
+		return ENOENT;
 
-	return ENOENT;
+	*n = count;
+
+	return 0;
 }
 #endif
 
