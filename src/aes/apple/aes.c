@@ -105,7 +105,7 @@ int aes_encr(struct aes *st, uint8_t *out, const uint8_t *in, size_t len)
 	CCCryptorStatus status;
 	size_t moved;
 
-	if (!st || !out || !in || !len)
+	if (!st || !out || !in)
 		return EINVAL;
 
 	status = CCCryptorUpdate(st->cryptor, in, len, out, len, &moved);

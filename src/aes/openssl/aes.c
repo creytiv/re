@@ -93,7 +93,7 @@ int aes_encr(struct aes *aes, uint8_t *out, const uint8_t *in, size_t len)
 {
 	int c_len = (int)len;
 
-	if (!aes || !out || !in || !len)
+	if (!aes || !out || !in)
 		return EINVAL;
 
 	if (!EVP_EncryptUpdate(&aes->ctx, out, &c_len, in, (int)len)) {
@@ -172,7 +172,7 @@ int aes_encr(struct aes *aes, uint8_t *out, const uint8_t *in, size_t len)
 	unsigned char ec[AES_BLOCK_SIZE] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	unsigned int num = 0;
 
-	if (!aes || !out || !in || !len)
+	if (!aes || !out || !in)
 		return EINVAL;
 
 	AES_ctr128_encrypt(in, out, len, &aes->key, aes->iv, ec, &num);
