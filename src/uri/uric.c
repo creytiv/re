@@ -172,7 +172,7 @@ static int comp_unescape(struct re_printf *pf, const struct pl *pl, esc_h *eh)
 		}
 
 		if ('%' == c) {
-			if (i < (pl->l - 2)) {
+			if (i+2 < pl->l) {
 				const uint8_t hi = ch_hex(pl->p[++i]);
 				const uint8_t lo = ch_hex(pl->p[++i]);
 				const char b = hi<<4 | lo;
