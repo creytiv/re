@@ -12,12 +12,13 @@
 #include <re_hmac.h>
 
 
-enum { KEY_SIZE = 20 };
+enum { KEY_SIZE = 256 };
 
 struct hmac {
 	CCHmacContext ctx;
 	uint8_t key[KEY_SIZE];
 	size_t key_len;
+	CCHmacAlgorithm algo;
 };
 
 
@@ -33,12 +34,24 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 		const uint8_t *key, size_t key_len)
 {
 	struct hmac *hmac;
+	CCHmacAlgorithm algo;
 
 	if (!hmacp || !key || !key_len || key_len > KEY_SIZE)
 		return EINVAL;
 
-	if (hash != HMAC_HASH_SHA1)
+	switch (hash) {
+
+	case HMAC_HASH_SHA1:
+		algo = kCCHmacAlgSHA1;
+		break;
+
+	case HMAC_HASH_SHA256:
+		algo = kCCHmacAlgSHA256;
+		break;
+
+	default:
 		return ENOTSUP;
+	}
 
 	hmac = mem_zalloc(sizeof(*hmac), destructor);
 	if (!hmac)
@@ -46,6 +59,7 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 
 	memcpy(hmac->key, key, key_len);
 	hmac->key_len = key_len;
+	hmac->algo = algo;
 
 	*hmacp = hmac;
 
@@ -60,7 +74,7 @@ int hmac_digest(struct hmac *hmac, uint8_t *md, size_t md_len,
 		return EINVAL;
 
 	/* reset state */
-	CCHmacInit(&hmac->ctx, kCCHmacAlgSHA1, hmac->key, hmac->key_len);
+	CCHmacInit(&hmac->ctx, hmac->algo, hmac->key, hmac->key_len);
 
 	CCHmacUpdate(&hmac->ctx, data, data_len);
 	CCHmacFinal(&hmac->ctx, md);

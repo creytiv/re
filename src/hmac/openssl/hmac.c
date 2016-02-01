@@ -28,13 +28,25 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 		const uint8_t *key, size_t key_len)
 {
 	struct hmac *hmac;
+	const EVP_MD *evp;
 	int err = 0;
 
 	if (!hmacp || !key || !key_len)
 		return EINVAL;
 
-	if (hash != HMAC_HASH_SHA1)
+	switch (hash) {
+
+	case HMAC_HASH_SHA1:
+		evp = EVP_sha1();
+		break;
+
+	case HMAC_HASH_SHA256:
+		evp = EVP_sha256();
+		break;
+
+	default:
 		return ENOTSUP;
+	}
 
 	hmac = mem_zalloc(sizeof(*hmac), destructor);
 	if (!hmac)
@@ -43,12 +55,12 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 	HMAC_CTX_init(&hmac->ctx);
 
 #if (OPENSSL_VERSION_NUMBER >= 0x00909000)
-	if (!HMAC_Init_ex(&hmac->ctx, key, (int)key_len, EVP_sha1(), NULL)) {
+	if (!HMAC_Init_ex(&hmac->ctx, key, (int)key_len, evp, NULL)) {
 		ERR_clear_error();
 		err = EPROTO;
 	}
 #else
-	HMAC_Init_ex(&hmac->ctx, key, (int)key_len, EVP_sha1(), NULL);
+	HMAC_Init_ex(&hmac->ctx, key, (int)key_len, evp, NULL);
 #endif
 
 	if (err)
