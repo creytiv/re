@@ -49,6 +49,7 @@ enum {
 	EVENT_END     = 0xff,
 	PAYLOAD_SIZE  = 4,
 	VOLUME        = 10,
+	QUEUE_SIZE    = 8192,
 };
 
 
@@ -191,6 +192,9 @@ int telev_send(struct telev *tel, int event, bool end)
 
 	if (!tel)
 		return EINVAL;
+
+	if (tel->mb->end >= QUEUE_SIZE)
+		return EOVERFLOW;
 
 	pos = tel->mb->pos;
 
