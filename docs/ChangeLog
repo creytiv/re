@@ -1,3 +1,27 @@
+2016-02-06 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.15
+
+	* build: fix warnings about DEFAULT_SOURCE with new glibc
+		 fix compile error for mingw32 (thanks Dmitrij D. Czarkoff)
+
+	* aes: handle buffers with zero length
+
+	* dns: add support for multiple DNS name-servers on Android
+	
+	* hmac: add support for HMAC-SHA256
+
+	* rtp: fix packet-loss calc when first packet has seq=0
+
+	* srtp: split error code in ENOSR and ENOMEM
+
+	* stun: keepalive: handle method BINDING only
+
+	* telev: add a maximum queue size
+
+	* uri: fix a potential read buffer overflow
+
+
 2015-10-24 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.14
