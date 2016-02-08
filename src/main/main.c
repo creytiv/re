@@ -725,7 +725,7 @@ static int fd_poll(struct re *re)
 	case METHOD_KQUEUE: {
 		struct timespec timeout;
 
-		timeout.tv_sec = to / 1000;
+		timeout.tv_sec = (time_t) (to / 1000);
 		timeout.tv_nsec = (to % 1000) * 1000000;
 
 		re_unlock(re);
