@@ -147,15 +147,17 @@ int rtcp_psfb_decode(struct mbuf *mb, struct rtcp_msg *msg)
 		break;
 
 	case RTCP_PSFB_AFB:
-		if (mbuf_get_left(mb) < 4)
+		sz = msg->r.fb.n * 4;
+
+		if (mbuf_get_left(mb) < sz)
 			return EBADMSG;
 
 		msg->r.fb.fci.afb = mbuf_alloc_ref(mb);
 		if (!msg->r.fb.fci.afb)
 			return ENOMEM;
 
-		sz = msg->r.fb.n * 4;
 		msg->r.fb.fci.afb->end = msg->r.fb.fci.afb->pos + sz;
+		mbuf_advance(mb, sz);
 		break;
 
 	default:
