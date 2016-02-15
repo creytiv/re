@@ -25,6 +25,12 @@
 #include <re_dbg.h>
 
 
+enum {
+	MTU_DEFAULT  = 1400,
+	MTU_FALLBACK = 548,
+};
+
+
 struct dtls_sock {
 	struct sa peer;
 	struct udp_helper *uh;
@@ -33,6 +39,7 @@ struct dtls_sock {
 	struct mbuf *mb;
 	dtls_conn_h *connh;
 	void *arg;
+	size_t mtu;
 };
 
 
@@ -103,13 +110,21 @@ static int bio_write(BIO *b, const char *buf, int len)
 
 static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
-	(void)b;
+	struct tls_conn *tc = b->ptr;
 	(void)num;
 	(void)ptr;
 
-	if (cmd == BIO_CTRL_FLUSH) {
+	switch (cmd) {
+
+	case BIO_CTRL_FLUSH:
 		/* The OpenSSL library needs this */
 		return 1;
+
+	case BIO_CTRL_DGRAM_QUERY_MTU:
+		return tc ? tc->sock->mtu : MTU_DEFAULT;
+
+	case BIO_CTRL_DGRAM_GET_FALLBACK_MTU:
+		return MTU_FALLBACK;
 	}
 
 	return 0;
@@ -706,6 +721,7 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 	if (err)
 		goto out;
 
+	sock->mtu   = MTU_DEFAULT;
 	sock->connh = connh;
 	sock->arg   = arg;
 
@@ -729,4 +745,19 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 struct udp_sock *dtls_udp_sock(struct dtls_sock *sock)
 {
 	return sock ? sock->us : NULL;
+}
+
+
+/**
+ * Set MTU on a DTLS Socket
+ *
+ * @param sock DTLS Socket
+ * @param mtu  MTU value
+ */
+void dtls_set_mtu(struct dtls_sock *sock, size_t mtu)
+{
+	if (!sock)
+		return;
+
+	sock->mtu = mtu;
 }
