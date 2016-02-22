@@ -3,6 +3,10 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+
+#define _BSD_SOURCE 1
+#define _DEFAULT_SOURCE 1
+
 #ifdef HAVE_INET_NTOP
 #ifdef WIN32
 #ifdef _MSC_VER

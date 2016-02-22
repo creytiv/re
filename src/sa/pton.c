@@ -3,12 +3,14 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+
+#define _BSD_SOURCE 1
+#define _DEFAULT_SOURCE 1
+
 #ifdef HAVE_INET_PTON
 #ifdef WIN32
 #include <windows.h>
 #else
-#define _BSD_SOURCE 1    /**< Use BSD code */
-#define _DEFAULT_SOURCE 1
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
