@@ -120,11 +120,15 @@ static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 		/* The OpenSSL library needs this */
 		return 1;
 
+#if defined (BIO_CTRL_DGRAM_QUERY_MTU)
 	case BIO_CTRL_DGRAM_QUERY_MTU:
 		return tc ? tc->sock->mtu : MTU_DEFAULT;
+#endif
 
+#if defined (BIO_CTRL_DGRAM_GET_FALLBACK_MTU)
 	case BIO_CTRL_DGRAM_GET_FALLBACK_MTU:
 		return MTU_FALLBACK;
+#endif
 	}
 
 	return 0;
