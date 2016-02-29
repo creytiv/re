@@ -122,7 +122,7 @@ int net_if_list(net_ifaddr_h *ifh, void *arg)
 	}
 
 	for (ifr = ifc.ifc_req;
-	     (char *)ifr < (ifc.ifc_buf + ifc.ifc_len);
+	     (char *)ifr < ((char *)ifc.ifc_buf + ifc.ifc_len);
 	     ++ifr) {
 		struct ifreq ifrr;
 		struct sa sa;
