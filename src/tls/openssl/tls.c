@@ -644,3 +644,19 @@ int tls_srtp_keyinfo(const struct tls_conn *tc, enum srtp_suite *suite,
 	return ENOSYS;
 #endif
 }
+
+
+/**
+ * Get cipher name of a TLS connection
+ *
+ * @param tc TLS Connection
+ *
+ * @return name of cipher actually used or NULL, if session is not established.
+ */
+const char *tls_cipher_name(const struct tls_conn *tc)
+{
+	if (!tc)
+		return NULL;
+
+	return SSL_get_cipher_name(tc->ssl);
+}
