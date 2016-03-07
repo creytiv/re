@@ -651,7 +651,7 @@ int tls_srtp_keyinfo(const struct tls_conn *tc, enum srtp_suite *suite,
  *
  * @param tc TLS Connection
  *
- * @return name of cipher actually used or NULL, if session is not established.
+ * @return name of cipher actually used.
  */
 const char *tls_cipher_name(const struct tls_conn *tc)
 {
