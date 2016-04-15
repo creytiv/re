@@ -85,6 +85,8 @@ uint32_t rand_u32(void)
 			      ERR_GET_REASON(ERR_get_error()));
 		ERR_clear_error();
 	}
+#elif defined(HAVE_ARC4RANDOM)
+	v = arc4random();
 #elif defined(WIN32)
 	v = (rand() << 16) + rand(); /* note: 16-bit rand */
 #else
@@ -161,6 +163,8 @@ void rand_bytes(uint8_t *p, size_t size)
 			      ERR_GET_REASON(ERR_get_error()));
 		ERR_clear_error();
 	}
+#elif defined (HAVE_ARC4RANDOM)
+	arc4random_buf(p, size);
 #else
 	while (size--) {
 		p[size] = rand_u32();

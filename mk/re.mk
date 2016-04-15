@@ -290,6 +290,7 @@ ifeq ($(OS),openbsd)
 	AR		:= ar
 	AFLAGS		:= cru
 	HAVE_KQUEUE	:= 1
+	HAVE_ARC4RANDOM	:= 1
 endif
 ifeq ($(OS),win32)
 	CFLAGS		+= -DWIN32 -D_WIN32_WINNT=0x0501 -D__ssize_t_defined
@@ -576,6 +577,10 @@ ifneq ($(OS),cygwin)
 CFLAGS  += -DHAVE_STRINGS_H
 CFLAGS  += -DHAVE_GAI_STRERROR
 endif
+endif
+
+ifneq ($(HAVE_ARC4RANDOM),)
+CFLAGS  += -DHAVE_ARC4RANDOM
 endif
 
 
