@@ -25,7 +25,11 @@ Description: Generic library for real-time communications with async IO support
   BFCP
   Jitter-buffer
   Async I/O (poll, epoll, select)
-  UDP/TCP/TLS transport
+  UDP/TCP/TLS/DTLS transport
+  HTTP Client and Server
+  Websocket Client and Server
+  JSON parser
+  SRTP and SRTCP (Secure RTP)
  .
  Design goals:
  .
@@ -53,7 +57,11 @@ Description: Generic library for real-time communications (development files)
   BFCP
   Jitter-buffer
   Async I/O (poll, epoll, select)
-  UDP/TCP/TLS transport
+  UDP/TCP/TLS/DTLS transport
+  HTTP Client and Server
+  Websocket Client and Server
+  JSON parser
+  SRTP and SRTCP (Secure RTP)
  .
  Design goals:
  .
