@@ -98,7 +98,7 @@ int net_sockopt_reuse_set(int fd, bool reuse)
 #ifdef SO_REUSEPORT
 	if (-1 == setsockopt(fd, SOL_SOCKET, SO_REUSEPORT,
 			     BUF_CAST &r, sizeof(r))) {
-		DEBUG_WARNING("SO_REUSEPORT: %m\n", errno);
+		DEBUG_INFO("SO_REUSEPORT: %m\n", errno);
 		return errno;
 	}
 #endif
