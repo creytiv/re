@@ -1,3 +1,19 @@
+2016-04-27 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.16
+
+	* build: fix warnings about DEFAULT_SOURCE with new glibc
+
+	* lock: fix debian build without HAVE_PTHREAD_RWLOCK
+
+	* rand: add arc4random (based on patch from Dmitrij D. Czarkoff)
+
+	* rtcp: adjust mbuf positions for RTCP_PSFB_AFB decoding
+
+	* tls: add tls_cipher_name()
+	       add dtls_set_mtu()
+
+
 2016-02-06 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.15
