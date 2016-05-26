@@ -61,7 +61,9 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	*n = i;
 
  out:
+#ifndef OPENBSD
 	res_close();
+#endif
 
 	return err;
 }
