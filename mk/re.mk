@@ -273,6 +273,16 @@ ifeq ($(OS),netbsd)
 	AFLAGS		:= cru
 	HAVE_KQUEUE	:= 1
 endif
+ifeq ($(OS),dragonfly)
+	CFLAGS		+= -fPIC -DDRAGONFLY
+	LFLAGS		+= -fPIC
+	SH_LFLAGS	+= -shared
+	MOD_LFLAGS	+=
+	APP_LFLAGS	+= -rdynamic
+	AR		:= ar
+	AFLAGS		:= cru
+	HAVE_KQUEUE	:= 1
+endif
 ifeq ($(OS),freebsd)
 	CFLAGS		+= -fPIC -DFREEBSD
 	LFLAGS		+= -fPIC
