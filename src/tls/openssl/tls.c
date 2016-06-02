@@ -707,3 +707,26 @@ int tls_set_ciphers(struct tls *tls, const char *cipherv[], size_t count)
 
 	return err;
 }
+
+
+/**
+ * Set the server name on a TLS Connection, using TLS SNI extension.
+ *
+ * @param tc         TLS Connection
+ * @param servername Server name
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_servername(struct tls_conn *tc, const char *servername)
+{
+	if (!tc || !servername)
+		return EINVAL;
+
+	if (1 != SSL_set_tlsext_host_name(tc->ssl, servername)) {
+		DEBUG_WARNING("tls: SSL_set_tlsext_host_name error\n");
+		ERR_clear_error();
+		return EPROTO;
+	}
+
+	return 0;
+}
