@@ -455,6 +455,9 @@ CFLAGS  += -DUSE_OPENSSL_SRTP -DUSE_DTLS_SRTP
 USE_DTLS_SRTP := yes
 endif
 
+USE_OPENSSL_AES		:= yes
+USE_OPENSSL_HMAC	:= yes
+
 endif
 
 
@@ -658,6 +661,8 @@ info:
 	@echo "  LIBRE_INC:     $(LIBRE_INC)"
 	@echo "  LIBRE_SO:      $(LIBRE_SO)"
 	@echo "  USE_OPENSSL:   $(USE_OPENSSL)"
+	@echo "  USE_OPENSSL_AES:   $(USE_OPENSSL_AES)"
+	@echo "  USE_OPENSSL_HMAC:  $(USE_OPENSSL_HMAC)"
 	@echo "  USE_TLS:       $(USE_TLS)"
 	@echo "  USE_DTLS:      $(USE_DTLS)"
 	@echo "  USE_DTLS_SRTP: $(USE_DTLS_SRTP)"
