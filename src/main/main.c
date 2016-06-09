@@ -70,7 +70,7 @@
   - Look at howto optimise main loop
  */
 
-#ifndef RELEASE
+#if !defined (RELEASE) && !defined (MAIN_DEBUG)
 #define MAIN_DEBUG 1  /**< Enable main loop debugging */
 #endif
 

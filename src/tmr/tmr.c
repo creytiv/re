@@ -28,7 +28,7 @@
 #include <re_dbg.h>
 
 
-#ifndef RELEASE
+#if !defined (RELEASE) && !defined (TMR_DEBUG)
 #define TMR_DEBUG 1  /**< Timer debugging (0 or 1) */
 #endif
 
