@@ -163,7 +163,7 @@ static void allocate_resp_handler(int err, uint16_t scode, const char *reason,
 
 static int allocate_request(struct turnc *t)
 {
-	const int proto = IPPROTO_UDP;
+	const uint8_t proto = IPPROTO_UDP;
 
 	return stun_request(&t->ct, t->stun, t->proto, t->sock, &t->srv, 0,
 			    STUN_METHOD_ALLOCATE,

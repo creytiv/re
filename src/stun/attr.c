@@ -56,7 +56,9 @@ int stun_attr_encode(struct mbuf *mb, uint16_t type, const void *v,
 	const struct stun_change_req *ch_req = v;
 	const struct stun_errcode *err_code = v;
 	const struct stun_unknown_attr *ua = v;
-	const unsigned int *num = v;
+	const uint32_t *num32 = v;
+	const uint16_t *num16 = v;
+	const uint8_t *num8 = v;
 	const struct mbuf *mbd = v;
 	size_t start, len;
 	uint32_t i, n;
@@ -112,14 +114,14 @@ int stun_attr_encode(struct mbuf *mb, uint16_t type, const void *v,
 
 	case STUN_ATTR_CHANNEL_NUMBER:
 	case STUN_ATTR_RESP_PORT:
-		err |= mbuf_write_u16(mb, htons(*num));
+		err |= mbuf_write_u16(mb, htons(*num16));
 		err |= mbuf_write_u16(mb, 0x0000);
 		break;
 
 	case STUN_ATTR_LIFETIME:
 	case STUN_ATTR_PRIORITY:
 	case STUN_ATTR_FINGERPRINT:
-		err |= mbuf_write_u32(mb, htonl(*num));
+		err |= mbuf_write_u32(mb, htonl(*num32));
 		break;
 
 	case STUN_ATTR_DATA:
@@ -133,7 +135,7 @@ int stun_attr_encode(struct mbuf *mb, uint16_t type, const void *v,
 
 	case STUN_ATTR_REQ_ADDR_FAMILY:
 	case STUN_ATTR_REQ_TRANSPORT:
-		err |= mbuf_write_u8(mb, *num);
+		err |= mbuf_write_u8(mb, *num8);
 		err |= mbuf_write_u8(mb, 0x00);
 		err |= mbuf_write_u16(mb, 0x0000);
 		break;
