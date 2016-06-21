@@ -259,6 +259,11 @@ static int request_next(struct sip_request *req)
 		if (req->addrl.head || req->srvl.head)
 			goto again;
 	}
+	else if (!req->stateful) {
+		req->resph = NULL;
+		terminate(req, 0, NULL);
+		mem_deref(req);
+	}
 
 	return err;
 }
@@ -427,12 +432,6 @@ static void naptr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	if (err)
 		goto fail;
 
-	if (!req->stateful) {
-		req->resph = NULL;
-		terminate(req, 0, NULL);
-		mem_deref(req);
-	}
-
 	return;
 
  fail:
@@ -487,12 +486,6 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	if (err)
 		goto fail;
 
-	if (!req->stateful) {
-		req->resph = NULL;
-		terminate(req, 0, NULL);
-		mem_deref(req);
-	}
-
 	return;
 
  fail:
@@ -524,12 +517,6 @@ static void addr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	err = request_next(req);
 	if (err)
 		goto fail;
-
-	if (!req->stateful) {
-		req->resph = NULL;
-		terminate(req, 0, NULL);
-		mem_deref(req);
-	}
 
 	return;
 
