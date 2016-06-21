@@ -138,7 +138,7 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	(void)hdr;
 	(void)authl;
 
-	dns_rrlist_sort(ansl, DNS_TYPE_SRV);
+	dns_rrlist_sort(ansl, DNS_TYPE_SRV, (size_t)dns->arg);
 
 	/* Find SRV answers */
 	rr = dns_rrlist_find(ansl, NULL, DNS_TYPE_SRV, DNS_CLASS_IN, false);

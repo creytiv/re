@@ -172,7 +172,8 @@ int  dns_dname_encode(struct mbuf *mb, const char *name,
 int  dns_dname_decode(struct mbuf *mb, char **name, size_t start);
 int  dns_cstr_encode(struct mbuf *mb, const char *str);
 int  dns_cstr_decode(struct mbuf *mb, char **str);
-void dns_rrlist_sort(struct list *rrl, uint16_t type);
+void dns_rrlist_sort(struct list *rrl, uint16_t type, size_t key);
+void dns_rrlist_sort_addr(struct list *rrl, size_t key);
 struct dnsrr *dns_rrlist_apply(struct list *rrl, const char *name,
 			       uint16_t type, uint16_t dnsclass,
 			       bool recurse, dns_rrlist_h *rrlh, void *arg);

@@ -227,6 +227,7 @@ static int request_next(struct sip_request *req)
 		list_unlink(&rr->le);
 
 		if (req->addrl.head) {
+			dns_rrlist_sort_addr(&req->addrl, (size_t)req->arg);
 			mem_deref(rr);
 			goto again;
 		}
@@ -392,7 +393,7 @@ static void naptr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	(void)hdr;
 	(void)authl;
 
-	dns_rrlist_sort(ansl, DNS_TYPE_NAPTR);
+	dns_rrlist_sort(ansl, DNS_TYPE_NAPTR, (size_t)req->arg);
 
 	rr = dns_rrlist_apply(ansl, NULL, DNS_TYPE_NAPTR, DNS_CLASS_IN, false,
 			      rr_naptr_handler, req);
@@ -410,8 +411,6 @@ static void naptr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 		return;
 	}
 
-	dns_rrlist_sort(addl, DNS_TYPE_SRV);
-
 	dns_rrlist_apply(addl, rr->rdata.naptr.replace, DNS_TYPE_SRV,
 			 DNS_CLASS_IN, true, rr_append_handler, &req->srvl);
 
@@ -424,6 +423,8 @@ static void naptr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 
 		return;
 	}
+
+	dns_rrlist_sort(&req->srvl, DNS_TYPE_SRV, (size_t)req->arg);
 
 	dns_rrlist_apply(addl, NULL, DNS_QTYPE_ANY, DNS_CLASS_IN, false,
 			 rr_cache_handler, req);
@@ -446,8 +447,6 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	struct sip_request *req = arg;
 	(void)hdr;
 	(void)authl;
-
-	dns_rrlist_sort(ansl, DNS_TYPE_SRV);
 
 	dns_rrlist_apply(ansl, NULL, DNS_TYPE_SRV, DNS_CLASS_IN, false,
 			 rr_append_handler, &req->srvl);
@@ -478,6 +477,8 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 
 		return;
 	}
+
+	dns_rrlist_sort(&req->srvl, DNS_TYPE_SRV, (size_t)req->arg);
 
 	dns_rrlist_apply(addl, NULL, DNS_QTYPE_ANY, DNS_CLASS_IN, false,
 			 rr_cache_handler, req);
@@ -513,6 +514,8 @@ static void addr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 		err = err ? err : EDESTADDRREQ;
 		goto fail;
 	}
+
+	dns_rrlist_sort_addr(&req->addrl, (size_t)req->arg);
 
 	err = request_next(req);
 	if (err)

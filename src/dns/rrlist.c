@@ -3,8 +3,10 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#include <string.h>
 #include <re_types.h>
 #include <re_list.h>
+#include <re_hash.h>
 #include <re_mbuf.h>
 #include <re_fmt.h>
 #include <re_dns.h>
@@ -15,31 +17,56 @@ enum {
 };
 
 
+struct sort {
+	uint16_t type;
+	uint32_t key;
+};
+
+
+static uint32_t sidx(const struct dnsrr *rr, uint32_t key)
+{
+	uint32_t addr[4];
+
+	switch (rr->type) {
+
+	case DNS_TYPE_A:
+		return rr->rdata.a.addr ^ key;
+
+	case DNS_TYPE_AAAA:
+		memcpy(addr, rr->rdata.aaaa.addr, 16);
+
+		return addr[0] ^ addr[1] ^ addr[2] ^ addr[3] ^ key;
+
+	case DNS_TYPE_SRV:
+		return ((hash_fast_str(rr->rdata.srv.target) & 0xfff) ^ key) +
+			rr->rdata.srv.weight;
+
+	default:
+		return 0;
+	}
+}
+
+
 static bool std_sort_handler(struct le *le1, struct le *le2, void *arg)
 {
 	struct dnsrr *rr1 = le1->data;
 	struct dnsrr *rr2 = le2->data;
-	const uint16_t type = *(uint16_t *)arg;
+	struct sort *sort = arg;
 
-	if (type != rr1->type)
-		return type != rr2->type;
+	if (sort->type != rr1->type)
+		return sort->type != rr2->type;
 
-	if (type != rr2->type)
+	if (sort->type != rr2->type)
 		return true;
 
-	switch (type) {
+	switch (sort->type) {
 
 	case DNS_TYPE_MX:
 		return rr1->rdata.mx.pref <= rr2->rdata.mx.pref;
 
 	case DNS_TYPE_SRV:
-		if (rr1->rdata.srv.pri == rr2->rdata.srv.pri) {
-
-			if (rr1->rdata.srv.weight)
-				return 0 != rr2->rdata.srv.weight;
-
-			return true;
-		}
+		if (rr1->rdata.srv.pri == rr2->rdata.srv.pri)
+			return sidx(rr1, sort->key) >= sidx(rr2, sort->key);
 
 		return rr1->rdata.srv.pri < rr2->rdata.srv.pri;
 
@@ -57,16 +84,42 @@ static bool std_sort_handler(struct le *le1, struct le *le2, void *arg)
 }
 
 
+static bool addr_sort_handler(struct le *le1, struct le *le2, void *arg)
+{
+	struct dnsrr *rr1 = le1->data;
+	struct dnsrr *rr2 = le2->data;
+	struct sort *sort = arg;
+
+	return sidx(rr1, sort->key) >= sidx(rr2, sort->key);
+}
+
+
 /**
  * Sort a list of DNS Resource Records
  *
  * @param rrl  DNS Resource Record list
  * @param type DNS Record type
+ * @param key  Sort key
  */
-void dns_rrlist_sort(struct list *rrl, uint16_t type)
+void dns_rrlist_sort(struct list *rrl, uint16_t type, size_t key)
 {
-	list_sort(rrl, std_sort_handler, &type);
-	/* todo add SRV postprocessing for weighted load balancing. */
+	struct sort sort = {type, (uint32_t)key>>5};
+
+	list_sort(rrl, std_sort_handler, &sort);
+}
+
+
+/**
+ * Sort a list of A/AAAA DNS Resource Records
+ *
+ * @param rrl  DNS Resource Record list
+ * @param key  Sort key
+ */
+void dns_rrlist_sort_addr(struct list *rrl, size_t key)
+{
+	struct sort sort = {0, (uint32_t)key>>5};
+
+	list_sort(rrl, addr_sort_handler, &sort);
 }
 
 
