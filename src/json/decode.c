@@ -227,7 +227,7 @@ static int object_start(const struct pl *pl_name, unsigned idx,
 			struct json_handlers *h)
 {
 	char *name = NULL;
-	int err;
+	int err = 0;
 
 	if (pl_name->p) {
 
@@ -249,7 +249,7 @@ static int array_start(const struct pl *pl_name, unsigned idx,
 		       struct json_handlers *h)
 {
 	char *name = NULL;
-	int err;
+	int err = 0;
 
 	if (pl_name->p) {
 
