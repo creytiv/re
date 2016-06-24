@@ -86,6 +86,7 @@ int  sip_dialog_encode(struct mbuf *mb, struct sip_dialog *dlg, uint32_t cseq,
 		       const char *met);
 const char *sip_dialog_uri(const struct sip_dialog *dlg);
 const struct uri *sip_dialog_route(const struct sip_dialog *dlg);
+uint32_t sip_dialog_hash(const struct sip_dialog *dlg);
 
 
 /* keepalive */

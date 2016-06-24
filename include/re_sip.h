@@ -271,7 +271,7 @@ int  sip_transp_laddr(struct sip *sip, struct sa *laddr, enum sip_transp tp,
 /* request */
 int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 		const char *met, int metl, const char *uri, int uril,
-		const struct uri *route, struct mbuf *mb,
+		const struct uri *route, struct mbuf *mb, size_t sortkey,
 		sip_send_h *sendh, sip_resp_h *resph, void *arg);
 int sip_requestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 		 const char *met, const char *uri, const struct uri *route,

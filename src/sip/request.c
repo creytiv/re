@@ -35,6 +35,7 @@ struct sip_request {
 	sip_send_h *sendh;
 	sip_resp_h *resph;
 	void *arg;
+	size_t sortkey;
 	enum sip_transp tp;
 	bool tp_selected;
 	bool stateful;
@@ -227,7 +228,7 @@ static int request_next(struct sip_request *req)
 		list_unlink(&rr->le);
 
 		if (req->addrl.head) {
-			dns_rrlist_sort_addr(&req->addrl, (size_t)req->arg);
+			dns_rrlist_sort_addr(&req->addrl, req->sortkey);
 			mem_deref(rr);
 			goto again;
 		}
@@ -393,7 +394,7 @@ static void naptr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	(void)hdr;
 	(void)authl;
 
-	dns_rrlist_sort(ansl, DNS_TYPE_NAPTR, (size_t)req->arg);
+	dns_rrlist_sort(ansl, DNS_TYPE_NAPTR, req->sortkey);
 
 	rr = dns_rrlist_apply(ansl, NULL, DNS_TYPE_NAPTR, DNS_CLASS_IN, false,
 			      rr_naptr_handler, req);
@@ -424,7 +425,7 @@ static void naptr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 		return;
 	}
 
-	dns_rrlist_sort(&req->srvl, DNS_TYPE_SRV, (size_t)req->arg);
+	dns_rrlist_sort(&req->srvl, DNS_TYPE_SRV, req->sortkey);
 
 	dns_rrlist_apply(addl, NULL, DNS_QTYPE_ANY, DNS_CLASS_IN, false,
 			 rr_cache_handler, req);
@@ -478,7 +479,7 @@ static void srv_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 		return;
 	}
 
-	dns_rrlist_sort(&req->srvl, DNS_TYPE_SRV, (size_t)req->arg);
+	dns_rrlist_sort(&req->srvl, DNS_TYPE_SRV, req->sortkey);
 
 	dns_rrlist_apply(addl, NULL, DNS_QTYPE_ANY, DNS_CLASS_IN, false,
 			 rr_cache_handler, req);
@@ -515,7 +516,7 @@ static void addr_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 		goto fail;
 	}
 
-	dns_rrlist_sort_addr(&req->addrl, (size_t)req->arg);
+	dns_rrlist_sort_addr(&req->addrl, req->sortkey);
 
 	err = request_next(req);
 	if (err)
@@ -585,6 +586,7 @@ static int addr_lookup(struct sip_request *req, const char *name)
  * @param uril     Length of Request URI string
  * @param route    Next hop route URI
  * @param mb       Buffer containing SIP request
+ * @param sortkey  Key for DNS record sorting
  * @param sendh    Send handler
  * @param resph    Response handler
  * @param arg      Handler argument
@@ -593,7 +595,7 @@ static int addr_lookup(struct sip_request *req, const char *name)
  */
 int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 		const char *met, int metl, const char *uri, int uril,
-		const struct uri *route, struct mbuf *mb,
+		const struct uri *route, struct mbuf *mb, size_t sortkey,
 		sip_send_h *sendh, sip_resp_h *resph, void *arg)
 {
 	struct sip_request *req;
@@ -629,6 +631,7 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 		goto out;
 
 	req->stateful = stateful;
+	req->sortkey = sortkey;
 	req->mb    = mem_ref(mb);
 	req->sip   = sip;
 	req->sendh = sendh;
@@ -765,7 +768,7 @@ int sip_requestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 	mb->pos = 0;
 
 	err = sip_request(reqp, sip, stateful, met, -1, uri, -1, route, mb,
-			  sendh, resph, arg);
+			  (size_t)arg, sendh, resph, arg);
 	if (err)
 		goto out;
 
@@ -832,7 +835,8 @@ int sip_drequestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 	mb->pos = 0;
 
 	err = sip_request(reqp, sip, stateful, met, -1, sip_dialog_uri(dlg),
-			  -1, sip_dialog_route(dlg), mb, sendh, resph, arg);
+			  -1, sip_dialog_route(dlg), mb, sip_dialog_hash(dlg),
+			  sendh, resph, arg);
 	if (err)
 		goto out;
 
