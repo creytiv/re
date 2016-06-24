@@ -1,3 +1,22 @@
+2016-06-23 Alfred E. Heggestad <aeh@db.org>
+
+	* Version 0.4.17
+
+	* build: add USE_OPENSSL_AES and USE_OPENSSL_HMAC
+
+	* dns: add key to dns_rrlist_sort()
+	       add dns_rrlist_sort_addr
+
+	* tls: add tls_set_ciphers()
+	       add tls_set_servername()
+
+	* sip: fix for stateless SIP requests
+	       sort DNS RR entries by a fixed key
+
+	* stun: fix bug with 8-bit and 16-bit attributes on certain
+		platforms, such as MIPS
+
+
 2016-04-27 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.16
