@@ -242,29 +242,29 @@ static int tls_connect(struct tls_conn *tc)
 	r = SSL_connect(tc->ssl);
 	if (r <= 0) {
 		const int ssl_err = SSL_get_error(tc->ssl, r);
-        int err = 0;
+		int err = 0;
 
 		switch (ssl_err) {
 
 		case SSL_ERROR_WANT_READ:
 			break;
-        
-        case SSL_ERROR_SYSCALL:
-        case SSL_ERROR_SSL:
-            DEBUG_WARNING("connect error: ");
-            ERR_print_errors_fp(stderr);
-            err = EPROTO;
-            break;
+		
+		case SSL_ERROR_SYSCALL:
+		case SSL_ERROR_SSL:
+			DEBUG_WARNING("connect error: ");
+			ERR_print_errors_fp(stderr);
+			err = EPROTO;
+			break;
 
 		default:
 			DEBUG_WARNING("connect error: %i\n", ssl_err);
 			err = EPROTO;
 		}
-        
-        ERR_clear_error();
-        
-        if (err)
-            return err;
+		
+		ERR_clear_error();
+		
+		if (err)
+			return err;
 	}
 
 	check_timer(tc);
@@ -282,19 +282,19 @@ static int tls_accept(struct tls_conn *tc)
 	r = SSL_accept(tc->ssl);
 	if (r <= 0) {
 		const int ssl_err = SSL_get_error(tc->ssl, r);
-        int err = 0;
+		int err = 0;
 
 		switch (ssl_err) {
 
 		case SSL_ERROR_WANT_READ:
 			break;
-        
-        case SSL_ERROR_SYSCALL:
-        case SSL_ERROR_SSL:
-            DEBUG_WARNING("accept error: ");
-            ERR_print_errors_fp(stderr);
-            err = EPROTO;
-            break;
+		
+		case SSL_ERROR_SYSCALL:
+		case SSL_ERROR_SSL:
+			DEBUG_WARNING("accept error: ");
+			ERR_print_errors_fp(stderr);
+			err = EPROTO;
+			break;
 
 		default:
 			DEBUG_WARNING("accept error: %i\n", ssl_err);
@@ -302,9 +302,9 @@ static int tls_accept(struct tls_conn *tc)
 		}
 
 		ERR_clear_error();
-        
-        if (err)
-            return err;
+		
+		if (err)
+			return err;
 	}
 
 	check_timer(tc);
@@ -365,12 +365,12 @@ static void conn_recv(struct tls_conn *tc, struct mbuf *mb)
 
 			tc->estabh(tc->arg);
 
-                        nrefs = mem_nrefs(tc);
-                        mem_deref(tc);
+						nrefs = mem_nrefs(tc);
+						mem_deref(tc);
 
-                        /* check if connection was deref'd from handler */
-                        if (nrefs == 1)
-                                return;
+						/* check if connection was deref'd from handler */
+						if (nrefs == 1)
+								return;
 		}
 	}
 
