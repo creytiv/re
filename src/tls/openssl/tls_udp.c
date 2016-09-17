@@ -24,10 +24,18 @@
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
 
+#define ONE_PEER_HASH 0x776f656d
 
 enum {
 	MTU_DEFAULT  = 1400,
 	MTU_FALLBACK = 548,
+};
+
+
+struct att_us {
+    struct le le;
+    struct udp_helper *uh;
+    struct udp_sock *us;
 };
 
 
@@ -40,6 +48,8 @@ struct dtls_sock {
 	dtls_conn_h *connh;
 	void *arg;
 	size_t mtu;
+    bool one_peer;
+    struct list att_uss;
 };
 
 
@@ -416,7 +426,8 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	if (!tc)
 		return ENOMEM;
 
-	hash_append(sock->ht, sa_hash(peer, SA_ALL), &tc->he, tc);
+    uint32_t key = sock->one_peer ? ONE_PEER_HASH : sa_hash(peer, SA_ALL);
+	hash_append(sock->ht, key, &tc->he, tc);
 
 	tc->sock   = mem_ref(sock);
 	tc->peer   = *peer;
@@ -629,6 +640,7 @@ static void sock_destructor(void *arg)
 	mem_deref(sock->us);
 	mem_deref(sock->ht);
 	mem_deref(sock->mb);
+    list_flush(&sock->att_uss);
 }
 
 
@@ -643,8 +655,13 @@ static bool cmp_handler(struct le *le, void *arg)
 static struct tls_conn *conn_lookup(struct dtls_sock *sock,
 				    const struct sa *peer)
 {
-	return list_ledata(hash_lookup(sock->ht, sa_hash(peer, SA_ALL),
-                                       cmp_handler, (void *)peer));
+    if (sock->one_peer) {
+        return list_ledata(list_head(hash_list(sock->ht, ONE_PEER_HASH)));
+    }
+    else {
+        return list_ledata(hash_lookup(sock->ht, sa_hash(peer, SA_ALL),
+            cmp_handler, (void *)peer));
+    }
 }
 
 
@@ -686,7 +703,9 @@ static bool recv_handler(struct sa *src, struct mbuf *mb, void *arg)
  * @param sockp  Pointer to returned DTLS Socket
  * @param laddr  Local listen address (optional)
  * @param us     External UDP socket (optional)
- * @param htsize Connection hash table size
+ * @param htsize Connection hash table size. Set
+ *               to 0 if one DTLS session shall be
+ *               used for all peers.
  * @param layer  UDP protocol layer
  * @param connh  Connect handler
  * @param arg    Handler argument
@@ -721,9 +740,19 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 	if (err)
 		goto out;
 
-	err = hash_alloc(&sock->ht, hash_valid_size(htsize));
-	if (err)
-		goto out;
+    if (htsize == 0) {
+        sock->one_peer = true;
+        htsize = 1;
+    }
+    else {
+        sock->one_peer = false;
+    }
+    
+    err = hash_alloc(&sock->ht, hash_valid_size(htsize));
+    if (err)
+        goto out;
+
+    list_init(&sock->att_uss);
 
 	sock->mtu   = MTU_DEFAULT;
 	sock->connh = connh;
@@ -735,6 +764,58 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 	else
 		*sockp = sock;
 
+	return err;
+}
+
+
+static void att_us_destructor(void *arg)
+{
+	struct att_us *att = arg;
+
+	list_unlink(&att->le);
+	mem_deref(att->uh);
+	mem_deref(att->us);
+}
+
+
+/**
+ * Attach UDP socket and listen for DTLS messages.
+ * Note: Outgoing messages will still use the originally
+ * created DTLS's UDP socket.
+ *
+ * @param sock   Existing DTLS Socket
+ * @param us     External UDP socket to listen on
+ * @param layer  UDP protocol layer
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int dtls_attach_udp_sock(struct dtls_sock *sock, struct udp_sock *us,
+        int layer)
+{
+    struct att_us *att;
+	int err;
+
+	if (!sock || !us)
+		return EINVAL;
+        
+	att = mem_zalloc(sizeof(*att), att_us_destructor);
+	if (!att)
+		return ENOMEM;
+        
+    list_append(&sock->att_uss, &att->le, att);
+
+    att->us = mem_ref(us);
+
+	err = udp_register_helper(&att->uh, us, layer,
+				  NULL, recv_handler, sock);
+	if (err)
+		goto out;
+    
+    return 0;
+
+ out:
+    mem_deref(us);
+    mem_deref(att);
 	return err;
 }
 

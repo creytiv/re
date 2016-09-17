@@ -65,6 +65,8 @@ struct dtls_sock;
 int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 		struct udp_sock *us, uint32_t htsize, int layer,
 		dtls_conn_h *connh, void *arg);
+int dtls_attach_udp_sock(struct dtls_sock *sock, struct udp_sock *us,
+		int layer);
 struct udp_sock *dtls_udp_sock(struct dtls_sock *sock);
 void dtls_set_mtu(struct dtls_sock *sock, size_t mtu);
 int dtls_connect(struct tls_conn **ptc, struct tls *tls,
