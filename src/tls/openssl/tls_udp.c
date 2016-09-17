@@ -248,7 +248,7 @@ static int tls_connect(struct tls_conn *tc)
 
 		case SSL_ERROR_WANT_READ:
 			break;
-		
+
 		case SSL_ERROR_SYSCALL:
 		case SSL_ERROR_SSL:
 			DEBUG_WARNING("connect error: ");
@@ -259,10 +259,11 @@ static int tls_connect(struct tls_conn *tc)
 		default:
 			DEBUG_WARNING("connect error: %i\n", ssl_err);
 			err = EPROTO;
+			break;
 		}
-		
+
 		ERR_clear_error();
-		
+
 		if (err)
 			return err;
 	}
@@ -288,7 +289,7 @@ static int tls_accept(struct tls_conn *tc)
 
 		case SSL_ERROR_WANT_READ:
 			break;
-		
+
 		case SSL_ERROR_SYSCALL:
 		case SSL_ERROR_SSL:
 			DEBUG_WARNING("accept error: ");
@@ -299,10 +300,11 @@ static int tls_accept(struct tls_conn *tc)
 		default:
 			DEBUG_WARNING("accept error: %i\n", ssl_err);
 			err = EPROTO;
+			break;
 		}
 
 		ERR_clear_error();
-		
+
 		if (err)
 			return err;
 	}
@@ -365,12 +367,12 @@ static void conn_recv(struct tls_conn *tc, struct mbuf *mb)
 
 			tc->estabh(tc->arg);
 
-						nrefs = mem_nrefs(tc);
-						mem_deref(tc);
+			nrefs = mem_nrefs(tc);
+			mem_deref(tc);
 
-						/* check if connection was deref'd from handler */
-						if (nrefs == 1)
-								return;
+			/* check if connection was deref'd from handler */
+			if (nrefs == 1)
+					return;
 		}
 	}
 
