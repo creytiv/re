@@ -1,0 +1,16 @@
+language: c
+
+os:
+    - linux
+    - osx
+
+before_install:
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];   then brew update             ; fi
+
+install:
+    - wget "https://github.com/alfredh/pytools/raw/master/ccheck.py"
+
+script: 
+    - make EXTRA_CFLAGS=-Werror
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python2 ccheck.py ; fi
