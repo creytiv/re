@@ -657,7 +657,8 @@ static struct tls_conn *conn_lookup(struct dtls_sock *sock,
 				    const struct sa *peer)
 {
 	if (sock->one_peer) {
-		return list_ledata(list_head(hash_list(sock->ht, ONE_PEER_HASH)));
+		return list_ledata(list_head(hash_list(sock->ht,
+		    ONE_PEER_HASH)));
 	}
 	else {
 		return list_ledata(hash_lookup(sock->ht, sa_hash(peer, SA_ALL),
@@ -748,7 +749,7 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 	else {
 		sock->one_peer = false;
 	}
-	
+
 	err = hash_alloc(&sock->ht, hash_valid_size(htsize));
 	if (err)
 		goto out;
@@ -798,11 +799,11 @@ int dtls_attach_udp_sock(struct dtls_sock *sock, struct udp_sock *us,
 
 	if (!sock || !us)
 		return EINVAL;
-		
+
 	att = mem_zalloc(sizeof(*att), att_us_destructor);
 	if (!att)
 		return ENOMEM;
-		
+
 	list_append(&sock->att_uss, &att->le, att);
 
 	att->us = mem_ref(us);
@@ -811,7 +812,7 @@ int dtls_attach_udp_sock(struct dtls_sock *sock, struct udp_sock *us,
 				  NULL, recv_handler, sock);
 	if (err)
 		goto out;
-	
+
 	return 0;
 
  out:
