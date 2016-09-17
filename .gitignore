@@ -1,0 +1,8 @@
+build*
+test
+test.c
+test.d
+*stamp
+*.previous
+libre.dylib
+libre.pc
