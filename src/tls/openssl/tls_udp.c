@@ -420,13 +420,14 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 		      dtls_close_h *closeh, void *arg)
 {
 	struct tls_conn *tc;
+	uint32_t key;
 	int err = 0;
 
 	tc = mem_zalloc(sizeof(*tc), conn_destructor);
 	if (!tc)
 		return ENOMEM;
 
-    uint32_t key = sock->one_peer ? ONE_PEER_HASH : sa_hash(peer, SA_ALL);
+    key = sock->one_peer ? ONE_PEER_HASH : sa_hash(peer, SA_ALL);
 	hash_append(sock->ht, key, &tc->he, tc);
 
 	tc->sock   = mem_ref(sock);
