@@ -4,5 +4,7 @@ test.c
 test.d
 *stamp
 *.previous
+libre.a
 libre.dylib
 libre.pc
+libre.so
