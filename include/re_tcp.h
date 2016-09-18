@@ -84,13 +84,6 @@ int  tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
 int  tcp_local_get(const struct tcp_sock *ts, struct sa *local);
 
 
-#ifdef __SYMBIAN32__
-struct RSocketServ;
-struct RConnection;
-void tcp_rconn_set(struct RSocketServ *sockSrv, struct RConnection *rconn);
-#endif
-
-
 /* Helper API */
 typedef bool (tcp_helper_estab_h)(int *err, bool active, void *arg);
 typedef bool (tcp_helper_send_h)(int *err, struct mbuf *mb, void *arg);

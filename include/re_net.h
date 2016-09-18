@@ -129,9 +129,3 @@ void net_conn_stop(void);
 /* Net strings */
 const char *net_proto2name(int proto);
 const char *net_af2name(int af);
-
-
-/* todo: this does not really belong here.. */
-#ifdef __SYMBIAN32__
-int kerr2errno(int kerr);
-#endif
