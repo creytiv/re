@@ -233,8 +233,9 @@ static void check_timer(struct tls_conn *tc)
 #endif
 
 
-static int print_error(const char *str, size_t len, void *u)
+static int print_error(const char *str, size_t len, void *unused)
 {
+	(void)unused;
 	DEBUG_WARNING("%b", str, len);
 	/* return code > 0: Continue outputting the error report */
 	return 1;
