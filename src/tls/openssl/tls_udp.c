@@ -233,6 +233,14 @@ static void check_timer(struct tls_conn *tc)
 #endif
 
 
+static int print_error(const char *str, size_t len, void *u)
+{
+	DEBUG_WARNING("%b", str, len);
+	/* return code > 0: Continue outputting the error report */
+	return 1;
+}
+
+
 static int tls_connect(struct tls_conn *tc)
 {
 	int r;
@@ -251,8 +259,8 @@ static int tls_connect(struct tls_conn *tc)
 
 		case SSL_ERROR_SYSCALL:
 		case SSL_ERROR_SSL:
-			DEBUG_WARNING("connect error: ");
-			ERR_print_errors_fp(stderr);
+			DEBUG_WARNING("connect error: %i\n", ssl_err);
+			ERR_print_errors_cb(print_error, NULL);
 			err = EPROTO;
 			break;
 
@@ -292,8 +300,8 @@ static int tls_accept(struct tls_conn *tc)
 
 		case SSL_ERROR_SYSCALL:
 		case SSL_ERROR_SSL:
-			DEBUG_WARNING("accept error: ");
-			ERR_print_errors_fp(stderr);
+			DEBUG_WARNING("accept error: %i\n", ssl_err);
+			ERR_print_errors_cb(print_error, NULL);
 			err = EPROTO;
 			break;
 
