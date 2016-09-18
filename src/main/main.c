@@ -14,8 +14,6 @@
 #endif
 #ifdef WIN32
 #include <winsock.h>
-#elif defined(__SYMBIAN32__)
-#define bzero(b,len) memset(b,0,len)
 #endif
 #ifdef HAVE_SIGNAL
 #include <signal.h>

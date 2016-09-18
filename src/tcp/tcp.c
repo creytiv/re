@@ -42,10 +42,6 @@
 #define SOK_CAST (int)
 #define SIZ_CAST (int)
 #define close closesocket
-#elif defined (__SYMBIAN32__)
-#define BUF_CAST (void *)
-#define SOK_CAST
-#define SIZ_CAST
 #else
 #define BUF_CAST
 #define SOK_CAST

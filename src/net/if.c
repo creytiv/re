@@ -138,7 +138,6 @@ int net_if_getaddr(const char *ifname, int af, struct sa *ip)
 }
 
 
-#ifndef __SYMBIAN32__
 static bool if_debug_handler(const char *ifname, const struct sa *sa,
 			     void *arg)
 {
@@ -174,7 +173,6 @@ int net_if_debug(struct re_printf *pf, void *unused)
 
 	return err;
 }
-#endif
 
 
 static bool linklocal_handler(const char *ifname, const struct sa *sa,

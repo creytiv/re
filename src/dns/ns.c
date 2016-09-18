@@ -21,11 +21,6 @@
 #include <re_dbg.h>
 
 
-#ifdef __SYMBIAN32__
-extern int get_symbiandns(struct sa *nsv, uint32_t *n);
-#endif
-
-
 static int parse_resolv_conf(char *domain, size_t dsize,
 			     struct sa *srvv, uint32_t *n)
 {
@@ -145,10 +140,6 @@ int dns_srv_get(char *domain, size_t dsize, struct sa *srvv, uint32_t *n)
 
 #ifdef WIN32
 	err = get_windns(domain, dsize, srvv, n);
-#endif
-
-#ifdef __SYMBIAN32__
-	err = get_symbiandns(srvv, n);
 #endif
 
 #ifdef __ANDROID__
