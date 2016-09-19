@@ -12,11 +12,7 @@
 
 
 struct hmac {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	HMAC_CTX *ctx;
-#else
-	HMAC_CTX ctx;
-#endif
 };
 
 
@@ -28,7 +24,9 @@ static void destructor(void *arg)
 	if (hmac->ctx)
 		HMAC_CTX_free(hmac->ctx);
 #else
-	HMAC_CTX_cleanup(&hmac->ctx);
+	if (hmac->ctx)
+		HMAC_CTX_cleanup(hmac->ctx);
+	mem_deref(hmac->ctx);
 #endif
 }
 
@@ -69,28 +67,25 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 		goto out;
 	}
 #else
-	HMAC_CTX_init(&hmac->ctx);
+	hmac->ctx = mem_zalloc(sizeof(*hmac->ctx), NULL);
+	if (!hmac->ctx) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	HMAC_CTX_init(hmac->ctx);
 #endif
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-
+#if (OPENSSL_VERSION_NUMBER >= 0x00909000)
 	if (!HMAC_Init_ex(hmac->ctx, key, (int)key_len, evp, NULL)) {
 		ERR_clear_error();
 		err = EPROTO;
 	}
-
-#elif (OPENSSL_VERSION_NUMBER >= 0x00909000)
-	if (!HMAC_Init_ex(&hmac->ctx, key, (int)key_len, evp, NULL)) {
-		ERR_clear_error();
-		err = EPROTO;
-	}
 #else
-	HMAC_Init_ex(&hmac->ctx, key, (int)key_len, evp, NULL);
+	HMAC_Init_ex(hmac->ctx, key, (int)key_len, evp, NULL);
 #endif
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
  out:
-#endif
 	if (err)
 		mem_deref(hmac);
 	else
@@ -108,7 +103,7 @@ int hmac_digest(struct hmac *hmac, uint8_t *md, size_t md_len,
 	if (!hmac || !md || !md_len || !data || !data_len)
 		return EINVAL;
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if (OPENSSL_VERSION_NUMBER >= 0x00909000)
 	/* the HMAC context must be reset here */
 	if (!HMAC_Init_ex(hmac->ctx, 0, 0, 0, NULL))
 		goto error;
@@ -124,28 +119,12 @@ int hmac_digest(struct hmac *hmac, uint8_t *md, size_t md_len,
 	ERR_clear_error();
 	return EPROTO;
 
-#elif (OPENSSL_VERSION_NUMBER >= 0x00909000)
-	/* the HMAC context must be reset here */
-	if (!HMAC_Init_ex(&hmac->ctx, 0, 0, 0, NULL))
-		goto error;
-
-	if (!HMAC_Update(&hmac->ctx, data, (int)data_len))
-		goto error;
-	if (!HMAC_Final(&hmac->ctx, md, &len))
-		goto error;
-
-	return 0;
-
- error:
-	ERR_clear_error();
-	return EPROTO;
-
 #else
 	/* the HMAC context must be reset here */
-	HMAC_Init_ex(&hmac->ctx, 0, 0, 0, NULL);
+	HMAC_Init_ex(hmac->ctx, 0, 0, 0, NULL);
 
-	HMAC_Update(&hmac->ctx, data, (int)data_len);
-	HMAC_Final(&hmac->ctx, md, &len);
+	HMAC_Update(hmac->ctx, data, (int)data_len);
+	HMAC_Final(hmac->ctx, md, &len);
 
 	return 0;
 #endif
