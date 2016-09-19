@@ -3,6 +3,9 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+
+#include <sys/time.h>
+
 #define OPENSSL_NO_KRB5 1
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -58,15 +61,24 @@ struct tls_conn {
 	void *arg;
 	bool active;
 	bool up;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	BIO_METHOD *method;  /* XXX: can move to a shared state? */
+#endif
 };
 
 
 static int bio_create(BIO *b)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	BIO_set_init(b, 1);
+	BIO_set_data(b, NULL);
+	BIO_set_flags(b, 0);
+#else
 	b->init  = 1;
 	b->num   = 0;
 	b->ptr   = NULL;
 	b->flags = 0;
+#endif
 
 	return 1;
 }
@@ -77,9 +89,15 @@ static int bio_destroy(BIO *b)
 	if (!b)
 		return 0;
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	BIO_set_init(b, 0);
+	BIO_set_data(b, NULL);
+	BIO_set_flags(b, 0);
+#else
 	b->ptr   = NULL;
 	b->init  = 0;
 	b->flags = 0;
+#endif
 
 	return 1;
 }
@@ -87,7 +105,11 @@ static int bio_destroy(BIO *b)
 
 static int bio_write(BIO *b, const char *buf, int len)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	struct tls_conn *tc = BIO_get_data(b);
+#else
 	struct tls_conn *tc = b->ptr;
+#endif
 	struct mbuf *mb;
 	enum {SPACE = 4};
 	int err;
@@ -110,7 +132,11 @@ static int bio_write(BIO *b, const char *buf, int len)
 
 static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	struct tls_conn *tc = BIO_get_data(b);
+#else
 	struct tls_conn *tc = b->ptr;
+#endif
 	(void)num;
 	(void)ptr;
 
@@ -135,6 +161,7 @@ static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static struct bio_method_st bio_udp_send = {
 	BIO_TYPE_SOURCE_SINK,
 	"udp_send",
@@ -147,6 +174,7 @@ static struct bio_method_st bio_udp_send = {
 	bio_destroy,
 	0
 };
+#endif
 
 
 static void tls_close(struct tls_conn *tc)
@@ -173,6 +201,11 @@ static void conn_destructor(void *arg)
 	tmr_cancel(&tc->tmr);
 	tls_close(tc);
 	mem_deref(tc->sock);
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	if (tc->method)
+		BIO_meth_free(tc->method);
+#endif
 }
 
 
@@ -442,7 +475,26 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 		goto out;
 	}
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	tc->method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "udp_send");
+	if (!tc->method) {
+		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
+		ERR_clear_error();
+		BIO_free(tc->sbio_in);
+		goto out;
+	}
+
+	BIO_meth_set_write(tc->method, bio_write);
+	BIO_meth_set_ctrl(tc->method, bio_ctrl);
+	BIO_meth_set_create(tc->method, bio_create);
+	BIO_meth_set_destroy(tc->method, bio_destroy);
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	tc->sbio_out = BIO_new(tc->method);
+#else
 	tc->sbio_out = BIO_new(&bio_udp_send);
+#endif
 	if (!tc->sbio_out) {
 		ERR_clear_error();
 		BIO_free(tc->sbio_in);
@@ -450,7 +502,11 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 		goto out;
 	}
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	BIO_set_data(tc->sbio_out, tc);
+#else
 	tc->sbio_out->ptr = tc;
+#endif
 
 	SSL_set_bio(tc->ssl, tc->sbio_in, tc->sbio_out);
 

@@ -5,6 +5,12 @@
  */
 
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#define SSL_state SSL_get_state
+#define SSL_ST_OK TLS_ST_OK
+#endif
+
+
 struct tls {
 	SSL_CTX *ctx;
 	X509 *cert;
