@@ -258,15 +258,9 @@ static int tls_connect(struct tls_conn *tc)
 		case SSL_ERROR_WANT_READ:
 			break;
 
-		case SSL_ERROR_SYSCALL:
-		case SSL_ERROR_SSL:
-			DEBUG_WARNING("connect error: %i\n", ssl_err);
-			ERR_print_errors_cb(print_error, NULL);
-			err = EPROTO;
-			break;
-
 		default:
 			DEBUG_WARNING("connect error: %i\n", ssl_err);
+			ERR_print_errors_cb(print_error, NULL);
 			err = EPROTO;
 			break;
 		}
@@ -299,15 +293,9 @@ static int tls_accept(struct tls_conn *tc)
 		case SSL_ERROR_WANT_READ:
 			break;
 
-		case SSL_ERROR_SYSCALL:
-		case SSL_ERROR_SSL:
-			DEBUG_WARNING("accept error: %i\n", ssl_err);
-			ERR_print_errors_cb(print_error, NULL);
-			err = EPROTO;
-			break;
-
 		default:
 			DEBUG_WARNING("accept error: %i\n", ssl_err);
+			ERR_print_errors_cb(print_error, NULL);
 			err = EPROTO;
 			break;
 		}
