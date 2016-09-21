@@ -121,7 +121,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	}
 
 	if (!tls->ctx) {
-		ERR_clear_error();
+		tls_flush_error();
 		err = ENOMEM;
 		goto out;
 	}
@@ -145,7 +145,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		if (r <= 0) {
 			DEBUG_WARNING("Can't read certificate file: %s (%d)\n",
 				      keyfile, r);
-			ERR_clear_error();
+			tls_flush_error();
 			err = EINVAL;
 			goto out;
 		}
@@ -155,7 +155,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		if (r <= 0) {
 			DEBUG_WARNING("Can't read key file: %s (%d)\n",
 				      keyfile, r);
-			ERR_clear_error();
+			tls_flush_error();
 			err = EINVAL;
 			goto out;
 		}
@@ -188,7 +188,7 @@ int tls_add_ca(struct tls *tls, const char *capath)
 	/* Load the CAs we trust */
 	if (!(SSL_CTX_load_verify_locations(tls->ctx, capath, 0))) {
 		DEBUG_WARNING("Can't read CA list: %s\n", capath);
-		ERR_clear_error();
+		tls_flush_error();
 		return EINVAL;
 	}
 
@@ -301,7 +301,7 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 		BN_free(bn);
 
 	if (err)
-		ERR_clear_error();
+		tls_flush_error();
 
 	return err;
 }
@@ -364,7 +364,7 @@ int tls_set_certificate(struct tls *tls, const char *pem, size_t len)
 	if (kbio)
 		BIO_free(kbio);
 	if (err)
-		ERR_clear_error();
+		tls_flush_error();
 
 	return err;
 }
@@ -410,7 +410,7 @@ int tls_set_srtp(struct tls *tls, const char *suites)
 		return EINVAL;
 
 	if (0 != SSL_CTX_set_tlsext_use_srtp(tls->ctx, suites)) {
-		ERR_clear_error();
+		tls_flush_error();
 		return ENOSYS;
 	}
 
@@ -451,7 +451,7 @@ static int cert_fingerprint(X509 *cert, enum tls_fingerprint type,
 	}
 
 	if (n != 1) {
-		ERR_clear_error();
+		tls_flush_error();
 		return ENOENT;
 	}
 
@@ -537,7 +537,7 @@ int tls_peer_common_name(const struct tls_conn *tc, char *cn, size_t size)
 	X509_free(cert);
 
 	if (n < 0) {
-		ERR_clear_error();
+		tls_flush_error();
 		return ENOENT;
 	}
 
@@ -621,7 +621,7 @@ int tls_srtp_keyinfo(const struct tls_conn *tc, enum srtp_suite *suite,
 
 	if (1 != SSL_export_keying_material(tc->ssl, keymat, 2*size, label,
 					    strlen(label), NULL, 0, 0)) {
-		ERR_clear_error();
+		tls_flush_error();
 		return ENOENT;
 	}
 
@@ -697,7 +697,7 @@ int tls_set_ciphers(struct tls *tls, const char *cipherv[], size_t count)
 
 	r = SSL_CTX_set_cipher_list(tls->ctx, (char *)mb->buf);
 	if (r <= 0) {
-		ERR_clear_error();
+		tls_flush_error();
 		err = EPROTO;
 		goto out;
 	}
@@ -724,9 +724,24 @@ int tls_set_servername(struct tls_conn *tc, const char *servername)
 
 	if (1 != SSL_set_tlsext_host_name(tc->ssl, servername)) {
 		DEBUG_WARNING("tls: SSL_set_tlsext_host_name error\n");
-		ERR_clear_error();
+		tls_flush_error();
 		return EPROTO;
 	}
 
 	return 0;
+}
+
+
+static int print_errors_cb(const char *str, size_t len, void *unused)
+{
+	(void)unused;
+	DEBUG_WARNING("%b", str, len);
+	/* return code > 0: Continue outputting the error report */
+	return 1;
+}
+
+
+void tls_flush_error(void)
+{
+	ERR_print_errors_cb(print_errors_cb, NULL);
 }

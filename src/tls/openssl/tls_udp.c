@@ -158,7 +158,7 @@ static void tls_close(struct tls_conn *tc)
 
 	r = SSL_shutdown(tc->ssl);
 	if (r <= 0)
-		ERR_clear_error();
+		tls_flush_error();
 
 	SSL_free(tc->ssl);
 	tc->ssl = NULL;
@@ -203,7 +203,7 @@ static void timeout(void *arg)
 		check_timer(tc);
 	}
 	else {
-		ERR_clear_error();
+		tls_flush_error();
 		conn_close(tc, ETIMEDOUT);
 	}
 }
@@ -233,20 +233,11 @@ static void check_timer(struct tls_conn *tc)
 #endif
 
 
-static int print_error(const char *str, size_t len, void *unused)
-{
-	(void)unused;
-	DEBUG_WARNING("%b", str, len);
-	/* return code > 0: Continue outputting the error report */
-	return 1;
-}
-
-
 static int tls_connect(struct tls_conn *tc)
 {
 	int r;
 
-	ERR_clear_error();
+	tls_flush_error();
 
 	r = SSL_connect(tc->ssl);
 	if (r <= 0) {
@@ -260,12 +251,11 @@ static int tls_connect(struct tls_conn *tc)
 
 		default:
 			DEBUG_WARNING("connect error: %i\n", ssl_err);
-			ERR_print_errors_cb(print_error, NULL);
 			err = EPROTO;
 			break;
 		}
 
-		ERR_clear_error();
+		tls_flush_error();
 
 		if (err)
 			return err;
@@ -281,7 +271,7 @@ static int tls_accept(struct tls_conn *tc)
 {
 	int r;
 
-	ERR_clear_error();
+	tls_flush_error();
 
 	r = SSL_accept(tc->ssl);
 	if (r <= 0) {
@@ -295,12 +285,11 @@ static int tls_accept(struct tls_conn *tc)
 
 		default:
 			DEBUG_WARNING("accept error: %i\n", ssl_err);
-			ERR_print_errors_cb(print_error, NULL);
 			err = EPROTO;
 			break;
 		}
 
-		ERR_clear_error();
+		tls_flush_error();
 
 		if (err)
 			return err;
@@ -323,7 +312,7 @@ static void conn_recv(struct tls_conn *tc, struct mbuf *mb)
 	r = BIO_write(tc->sbio_in, mbuf_buf(mb), (int)mbuf_get_left(mb));
 	if (r <= 0) {
 		DEBUG_WARNING("receive bio write error: %i\n", r);
-		ERR_clear_error();
+		tls_flush_error();
 		conn_close(tc, ENOMEM);
 		return;
 	}
@@ -386,13 +375,13 @@ static void conn_recv(struct tls_conn *tc, struct mbuf *mb)
 			}
 		}
 
-		ERR_clear_error();
+		tls_flush_error();
 
 		n = SSL_read(tc->ssl, mbuf_buf(mb), (int)mbuf_get_space(mb));
 		if (n <= 0) {
 			const int ssl_err = SSL_get_error(tc->ssl, n);
 
-			ERR_clear_error();
+			tls_flush_error();
 
 			switch (ssl_err) {
 
@@ -451,21 +440,21 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	if (!tc->ssl) {
 		DEBUG_WARNING("ssl new failed: %i\n",
 			      ERR_GET_REASON(ERR_get_error()));
-		ERR_clear_error();
+		tls_flush_error();
 		err = ENOMEM;
 		goto out;
 	}
 
 	tc->sbio_in = BIO_new(BIO_s_mem());
 	if (!tc->sbio_in) {
-		ERR_clear_error();
+		tls_flush_error();
 		err = ENOMEM;
 		goto out;
 	}
 
 	tc->sbio_out = BIO_new(&bio_udp_send);
 	if (!tc->sbio_out) {
-		ERR_clear_error();
+		tls_flush_error();
 		BIO_free(tc->sbio_in);
 		err = ENOMEM;
 		goto out;
@@ -567,7 +556,7 @@ int dtls_accept(struct tls_conn **ptc, struct tls *tls,
 		      (int)mbuf_get_left(sock->mb));
 	if (r <= 0) {
 		DEBUG_WARNING("accept bio write error: %i\n", r);
-		ERR_clear_error();
+		tls_flush_error();
 		err = ENOMEM;
 		goto out;
 	}
@@ -606,12 +595,12 @@ int dtls_send(struct tls_conn *tc, struct mbuf *mb)
 	if (!tc->up || !tc->ssl)
 		return ENOTCONN;
 
-	ERR_clear_error();
+	tls_flush_error();
 
 	r = SSL_write(tc->ssl, mbuf_buf(mb), (int)mbuf_get_left(mb));
 	if (r <= 0) {
 		DEBUG_WARNING("write error: %i\n", SSL_get_error(tc->ssl, r));
-		ERR_clear_error();
+		tls_flush_error();
 		return EPROTO;
 	}
 
