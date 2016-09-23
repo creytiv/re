@@ -276,7 +276,7 @@ static int tls_connect(struct tls_conn *tc)
 	if (r <= 0) {
 		const int ssl_err = SSL_get_error(tc->ssl, r);
 
-		ERR_clear_error();
+		tls_flush_error();
 
 		switch (ssl_err) {
 
@@ -305,7 +305,7 @@ static int tls_accept(struct tls_conn *tc)
 	if (r <= 0) {
 		const int ssl_err = SSL_get_error(tc->ssl, r);
 
-		ERR_clear_error();
+		tls_flush_error();
 
 		switch (ssl_err) {
 

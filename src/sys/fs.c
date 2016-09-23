@@ -83,14 +83,6 @@ int fs_gethome(char *path, size_t sz)
 
 	return 0;
 
-#elif defined(__SYMBIAN32__)
-	if (!path || !sz)
-		return EINVAL;
-
-	str_ncpy(path, "c:\\Data", sz);
-
-	return 0;
-
 #elif defined(HAVE_PWD_H)
 	const char *loginname;
 	struct passwd *pw;

@@ -56,10 +56,3 @@ int udp_register_helper(struct udp_helper **uhp, struct udp_sock *us,
 			void *arg);
 int udp_send_helper(struct udp_sock *us, const struct sa *dst,
 		    struct mbuf *mb, struct udp_helper *uh);
-
-
-#ifdef __SYMBIAN32__
-struct RConnection;
-struct RSocketServ;
-void udp_rconn_set(struct RSocketServ *sockSrv, struct RConnection *rconn);
-#endif

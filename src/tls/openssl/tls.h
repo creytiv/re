@@ -16,3 +16,6 @@ struct tls {
 	X509 *cert;
 	char *pass;  /* password for private key */
 };
+
+
+void tls_flush_error(void);
