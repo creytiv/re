@@ -17,11 +17,7 @@
 
 
 struct aes {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	EVP_CIPHER_CTX *ctx;
-#else
-	EVP_CIPHER_CTX ctx;
-#endif
 };
 
 
@@ -33,7 +29,9 @@ static void destructor(void *arg)
 	if (st->ctx)
 		EVP_CIPHER_CTX_free(st->ctx);
 #else
-	EVP_CIPHER_CTX_cleanup(&st->ctx);
+	if (st->ctx)
+		EVP_CIPHER_CTX_cleanup(st->ctx);
+	mem_deref(st->ctx);
 #endif
 }
 
@@ -65,7 +63,13 @@ int aes_alloc(struct aes **aesp, enum aes_mode mode,
 	}
 
 #else
-	EVP_CIPHER_CTX_init(&st->ctx);
+	st->ctx = mem_zalloc(sizeof(*st->ctx), NULL);
+	if (!st->ctx) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	EVP_CIPHER_CTX_init(st->ctx);
 #endif
 
 	switch (key_bits) {
@@ -79,11 +83,7 @@ int aes_alloc(struct aes **aesp, enum aes_mode mode,
 		goto out;
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	r = EVP_EncryptInit_ex(st->ctx, cipher, NULL, key, iv);
-#else
-	r = EVP_EncryptInit_ex(&st->ctx, cipher, NULL, key, iv);
-#endif
 	if (!r) {
 		ERR_clear_error();
 		err = EPROTO;
@@ -106,11 +106,7 @@ void aes_set_iv(struct aes *aes, const uint8_t iv[AES_BLOCK_SIZE])
 	if (!aes || !iv)
 		return;
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	r = EVP_EncryptInit_ex(aes->ctx, NULL, NULL, NULL, iv);
-#else
-	r = EVP_EncryptInit_ex(&aes->ctx, NULL, NULL, NULL, iv);
-#endif
 	if (!r)
 		ERR_clear_error();
 }
@@ -123,17 +119,10 @@ int aes_encr(struct aes *aes, uint8_t *out, const uint8_t *in, size_t len)
 	if (!aes || !out || !in)
 		return EINVAL;
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	if (!EVP_EncryptUpdate(aes->ctx, out, &c_len, in, (int)len)) {
 		ERR_clear_error();
 		return EPROTO;
 	}
-#else
-	if (!EVP_EncryptUpdate(&aes->ctx, out, &c_len, in, (int)len)) {
-		ERR_clear_error();
-		return EPROTO;
-	}
-#endif
 
 	return 0;
 }
