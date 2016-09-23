@@ -730,3 +730,18 @@ int tls_set_servername(struct tls_conn *tc, const char *servername)
 
 	return 0;
 }
+
+
+static int print_error(const char *str, size_t len, void *unused)
+{
+	(void)unused;
+	DEBUG_WARNING("%b", str, len);
+
+	return 1;
+}
+
+
+void tls_flush_error(void)
+{
+	ERR_print_errors_cb(print_error, NULL);
+}
