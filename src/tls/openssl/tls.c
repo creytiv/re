@@ -97,7 +97,11 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 
 #ifdef USE_OPENSSL_DTLS
 	case TLS_METHOD_DTLSV1:
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+		tls->ctx = SSL_CTX_new(DTLS_method());
+#else
 		tls->ctx = SSL_CTX_new(DTLSv1_method());
+#endif
 		break;
 
 #ifdef SSL_OP_NO_DTLSv1_2
@@ -108,7 +112,11 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		break;
 
 	case TLS_METHOD_DTLSV1_2:
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+		tls->ctx = SSL_CTX_new(DTLS_method());
+#else
 		tls->ctx = SSL_CTX_new(DTLSv1_2_method());
+#endif
 		break;
 #endif
 
