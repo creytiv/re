@@ -43,6 +43,9 @@ struct dtls_sock {
 	dtls_conn_h *connh;
 	void *arg;
 	size_t mtu;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	BIO_METHOD *method;  /* XXX: can move to a shared state? */
+#endif
 };
 
 
@@ -61,9 +64,6 @@ struct tls_conn {
 	void *arg;
 	bool active;
 	bool up;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	BIO_METHOD *method;  /* XXX: can move to a shared state? */
-#endif
 };
 
 
@@ -201,11 +201,6 @@ static void conn_destructor(void *arg)
 	tmr_cancel(&tc->tmr);
 	tls_close(tc);
 	mem_deref(tc->sock);
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	if (tc->method)
-		BIO_meth_free(tc->method);
-#endif
 }
 
 
@@ -476,22 +471,7 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	}
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	tc->method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "udp_send");
-	if (!tc->method) {
-		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
-		ERR_clear_error();
-		BIO_free(tc->sbio_in);
-		goto out;
-	}
-
-	BIO_meth_set_write(tc->method, bio_write);
-	BIO_meth_set_ctrl(tc->method, bio_ctrl);
-	BIO_meth_set_create(tc->method, bio_create);
-	BIO_meth_set_destroy(tc->method, bio_destroy);
-#endif
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	tc->sbio_out = BIO_new(tc->method);
+	tc->sbio_out = BIO_new(sock->method);
 #else
 	tc->sbio_out = BIO_new(&bio_udp_send);
 #endif
@@ -685,6 +665,11 @@ static void sock_destructor(void *arg)
 	mem_deref(sock->us);
 	mem_deref(sock->ht);
 	mem_deref(sock->mb);
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	if (sock->method)
+		BIO_meth_free(sock->method);
+#endif
 }
 
 
@@ -784,6 +769,21 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 	sock->mtu   = MTU_DEFAULT;
 	sock->connh = connh;
 	sock->arg   = arg;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	sock->method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "udp_send");
+	if (!sock->method) {
+		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
+		ERR_clear_error();
+		err = ENOMEM;
+		goto out;
+	}
+
+	BIO_meth_set_write(sock->method, bio_write);
+	BIO_meth_set_ctrl(sock->method, bio_ctrl);
+	BIO_meth_set_create(sock->method, bio_create);
+	BIO_meth_set_destroy(sock->method, bio_destroy);
+#endif
 
  out:
 	if (err)
