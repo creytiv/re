@@ -221,7 +221,7 @@ BIN_SUFFIX	:=
 
 ifeq ($(OS),solaris)
 	CFLAGS		+= -fPIC -DSOLARIS
-	LIBS		+= -ldl -lsocket -lnsl
+	LIBS		+= -ldl -lsocket -lnsl -lresolv
 	LFLAGS		+= -fPIC
 	SH_LFLAGS	+= -G
 	MOD_LFLAGS	+=
@@ -231,7 +231,7 @@ ifeq ($(OS),solaris)
 endif
 ifeq ($(OS),linux)
 	CFLAGS		+= -fPIC -DLINUX
-	LIBS		+= -ldl
+	LIBS		+= -ldl -lresolv
 	LFLAGS		+= -fPIC
 	SH_LFLAGS	+= -shared
 	MOD_LFLAGS	+=
@@ -241,6 +241,7 @@ ifeq ($(OS),linux)
 endif
 ifeq ($(OS),darwin)
 	CFLAGS		+= -fPIC -dynamic -DDARWIN
+	LIBS		+= -lresolv
 ifneq (,$(findstring Apple, $(CC_LONGVER)))
 	CFLAGS		+= -Wshorten-64-to-32
 endif
@@ -263,6 +264,17 @@ endif
 endif
 ifeq ($(OS),netbsd)
 	CFLAGS		+= -fPIC -DNETBSD
+	LIBS		+= -lresolv
+	LFLAGS		+= -fPIC
+	SH_LFLAGS	+= -shared
+	MOD_LFLAGS	+=
+	APP_LFLAGS	+= -rdynamic
+	AR		:= ar
+	AFLAGS		:= cru
+	HAVE_KQUEUE	:= 1
+endif
+ifeq ($(OS),dragonfly)
+	CFLAGS		+= -fPIC -DDRAGONFLY
 	LFLAGS		+= -fPIC
 	SH_LFLAGS	+= -shared
 	MOD_LFLAGS	+=
@@ -535,15 +547,10 @@ HAVE_EPOLL   := $(shell [ -f $(SYSROOT)/include/sys/epoll.h ] || \
 			[ -f $(SYSROOT)/include/$(MACHINE)/sys/epoll.h ] \
 			&& echo "1")
 endif
-ifneq ($(OS),openbsd)
-HAVE_LIBRESOLV := $(shell [ -f $(SYSROOT)/include/resolv.h ] && echo "1")
-endif
 
-ifneq ($(HAVE_LIBRESOLV),)
-CFLAGS  += -DHAVE_LIBRESOLV
-ifneq ($(OS),freebsd)
-LIBS    += -lresolv
-endif
+HAVE_RESOLV_H := $(shell [ -f $(SYSROOT)/include/resolv.h ] && echo "1")
+ifneq ($(HAVE_RESOLV_H),)
+CFLAGS  += -DHAVE_RESOLV_H
 endif
 ifneq ($(HAVE_SYSLOG),)
 CFLAGS  += -DHAVE_SYSLOG
