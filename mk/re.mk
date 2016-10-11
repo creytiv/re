@@ -245,6 +245,7 @@ ifneq (,$(findstring Apple, $(CC_LONGVER)))
 	CFLAGS		+= -Wshorten-64-to-32
 endif
 	DFLAGS		:= -MD
+	LIBS		+= -lresolv
 	LFLAGS		+= -fPIC
 	SH_LFLAGS	+= -dynamiclib
 ifeq ($(CC_NAME),gcc)
