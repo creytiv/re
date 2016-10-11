@@ -548,9 +548,9 @@ HAVE_EPOLL   := $(shell [ -f $(SYSROOT)/include/sys/epoll.h ] || \
 			&& echo "1")
 endif
 
-HAVE_LIBRESOLV := $(shell [ -f $(SYSROOT)/include/resolv.h ] && echo "1")
-ifneq ($(HAVE_LIBRESOLV),)
-CFLAGS  += -DHAVE_LIBRESOLV
+HAVE_RESOLV_H := $(shell [ -f $(SYSROOT)/include/resolv.h ] && echo "1")
+ifneq ($(HAVE_RESOLV_H),)
+CFLAGS  += -DHAVE_RESOLV_H
 endif
 ifneq ($(HAVE_SYSLOG),)
 CFLAGS  += -DHAVE_SYSLOG
