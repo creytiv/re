@@ -12,12 +12,8 @@ SRCS	+= dns/ns.c
 SRCS	+= dns/rr.c
 SRCS	+= dns/rrlist.c
 
-ifneq ($(HAVE_LIBRESOLV),)
-ifeq ($(filter-out netbsd openbsd,$(OS)),)
-SRCS	+= dns/bsd/srv.c
-else
+ifneq ($(HAVE_RESOLV),)
 SRCS	+= dns/res.c
-endif
 endif
 
 ifeq ($(OS),win32)
