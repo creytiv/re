@@ -25,8 +25,13 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	uint32_t i;
 	int ret, err;
 
+#ifdef OPENBSD
+	ret = res_init();
+	state = _res;
+#else
 	memset(&state, 0, sizeof(state));
 	ret = res_ninit(&state);
+#endif
 	if (0 != ret)
 		return ENOENT;
 
@@ -51,7 +56,10 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	*n = i;
 
  out:
+#ifdef OPENBSD
+#else
 	res_nclose(&state);
+#endif
 
 	return err;
 }
