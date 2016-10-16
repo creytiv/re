@@ -1,12 +1,31 @@
 language: c
 
+os:
+    - linux
+    - osx
+
+compiler:
+    - clang
+    - gcc
+
 before_install:
-    - sudo apt-get -qq update
-    - sudo apt-get -y install libssl-dev
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        sudo apt-get -qq update;
+        sudo apt-get -y install libssl-dev;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        brew update;
+        brew install openssl;
+    fi
 
 install:
     - wget "https://github.com/alfredh/pytools/raw/master/ccheck.py"
 
 script: 
-    - make EXTRA_CFLAGS=-Werror
-    - python2 ccheck.py
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        make EXTRA_CFLAGS=-Werror CCACHE=;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        make EXTRA_CFLAGS="-I/usr/local/opt/openssl/include -Werror" EXTRA_LFLAGS="-L/usr/local/opt/openssl/lib" CCACHE=;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python2 ccheck.py ; fi
