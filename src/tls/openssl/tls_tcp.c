@@ -33,9 +33,6 @@ struct tls_conn {
 	struct tcp_conn *tcp;
 	bool active;
 	bool up;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	BIO_METHOD *method;  /* XXX: can move to a shared state? */
-#endif
 };
 
 
@@ -52,11 +49,6 @@ static void destructor(void *arg)
 	}
 	mem_deref(tc->th);
 	mem_deref(tc->tcp);
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	if (tc->method)
-		BIO_meth_free(tc->method);
-#endif
 }
 
 
@@ -372,24 +364,9 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 		goto out;
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	tc->method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "tcp_send");
-	if (!tc->method) {
-		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
-		ERR_clear_error();
-		BIO_free(tc->sbio_in);
-		goto out;
-	}
-
-	BIO_meth_set_write(tc->method, bio_write);
-	BIO_meth_set_ctrl(tc->method, bio_ctrl);
-	BIO_meth_set_create(tc->method, bio_create);
-	BIO_meth_set_destroy(tc->method, bio_destroy);
-#endif
-
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	tc->sbio_out = BIO_new(tc->method);
+	tc->sbio_out = BIO_new(tls->method_tcp);
 #else
 	tc->sbio_out = BIO_new(&bio_tcp_send);
 #endif
@@ -418,3 +395,25 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 
 	return err;
 }
+
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+BIO_METHOD *tls_method_tcp(void)
+{
+	BIO_METHOD *method;
+
+	method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "tcp_send");
+	if (!method) {
+		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
+		ERR_clear_error();
+		return NULL;
+	}
+
+	BIO_meth_set_write(method, bio_write);
+	BIO_meth_set_ctrl(method, bio_ctrl);
+	BIO_meth_set_create(method, bio_create);
+	BIO_meth_set_destroy(method, bio_destroy);
+
+	return method;
+}
+#endif

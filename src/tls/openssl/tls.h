@@ -15,7 +15,15 @@ struct tls {
 	SSL_CTX *ctx;
 	X509 *cert;
 	char *pass;  /* password for private key */
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	BIO_METHOD *method_tcp;
+#endif
 };
+
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+BIO_METHOD *tls_method_tcp(void);
+#endif
 
 
 void tls_flush_error(void);

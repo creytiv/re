@@ -45,6 +45,11 @@ static void destructor(void *data)
 		X509_free(tls->cert);
 
 	mem_deref(tls->pass);
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	if (tls->method_tcp)
+		BIO_meth_free(tls->method_tcp);
+#endif
 }
 
 
@@ -168,6 +173,15 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 			goto out;
 		}
 	}
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	tls->method_tcp = tls_method_tcp();
+	if (!tls->method_tcp) {
+		ERR_clear_error();
+		err = ENOMEM;
+		goto out;
+	}
+#endif
 
 	err = 0;
  out:
