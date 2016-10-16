@@ -8,15 +8,10 @@ compiler:
     - clang
     - gcc
 
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-        sudo apt-get -qq update;
-        sudo apt-get -y install libssl-dev;
-    fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-        brew update;
-        brew install openssl;
-    fi
+addons:
+  apt:
+    packages:
+      libssl-dev
 
 install:
     - wget "https://github.com/alfredh/pytools/raw/master/ccheck.py"
