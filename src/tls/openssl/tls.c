@@ -49,6 +49,8 @@ static void destructor(void *data)
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	if (tls->method_tcp)
 		BIO_meth_free(tls->method_tcp);
+	if (tls->method_udp)
+		BIO_meth_free(tls->method_udp);
 #endif
 }
 
@@ -176,8 +178,8 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	tls->method_tcp = tls_method_tcp();
-	if (!tls->method_tcp) {
-		ERR_clear_error();
+	tls->method_udp = tls_method_udp();
+	if (!tls->method_tcp || !tls->method_udp) {
 		err = ENOMEM;
 		goto out;
 	}

@@ -43,9 +43,6 @@ struct dtls_sock {
 	dtls_conn_h *connh;
 	void *arg;
 	size_t mtu;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	BIO_METHOD *method;  /* XXX: can move to a shared state? */
-#endif
 };
 
 
@@ -471,7 +468,7 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	}
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	tc->sbio_out = BIO_new(sock->method);
+	tc->sbio_out = BIO_new(tls->method_udp);
 #else
 	tc->sbio_out = BIO_new(&bio_udp_send);
 #endif
@@ -665,11 +662,6 @@ static void sock_destructor(void *arg)
 	mem_deref(sock->us);
 	mem_deref(sock->ht);
 	mem_deref(sock->mb);
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	if (sock->method)
-		BIO_meth_free(sock->method);
-#endif
 }
 
 
@@ -770,21 +762,6 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 	sock->connh = connh;
 	sock->arg   = arg;
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	sock->method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "udp_send");
-	if (!sock->method) {
-		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
-		ERR_clear_error();
-		err = ENOMEM;
-		goto out;
-	}
-
-	BIO_meth_set_write(sock->method, bio_write);
-	BIO_meth_set_ctrl(sock->method, bio_ctrl);
-	BIO_meth_set_create(sock->method, bio_create);
-	BIO_meth_set_destroy(sock->method, bio_destroy);
-#endif
-
  out:
 	if (err)
 		mem_deref(sock);
@@ -821,3 +798,25 @@ void dtls_set_mtu(struct dtls_sock *sock, size_t mtu)
 
 	sock->mtu = mtu;
 }
+
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+BIO_METHOD *tls_method_udp(void)
+{
+	BIO_METHOD *method;
+
+	method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "udp_send");
+	if (!method) {
+		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
+		ERR_clear_error();
+		return NULL;
+	}
+
+	BIO_meth_set_write(method, bio_write);
+	BIO_meth_set_ctrl(method, bio_ctrl);
+	BIO_meth_set_create(method, bio_create);
+	BIO_meth_set_destroy(method, bio_destroy);
+
+	return method;
+}
+#endif

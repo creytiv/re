@@ -17,12 +17,14 @@ struct tls {
 	char *pass;  /* password for private key */
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	BIO_METHOD *method_tcp;
+	BIO_METHOD *method_udp;
 #endif
 };
 
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 BIO_METHOD *tls_method_tcp(void);
+BIO_METHOD *tls_method_udp(void);
 #endif
 
 
