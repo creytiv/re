@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#define OPENSSL_NO_KRB5 1
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <re_types.h>
@@ -54,7 +54,9 @@ static void destructor(void *arg)
 
 static int bio_create(BIO *b)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	BIO_set_init(b, 1);
 	BIO_set_data(b, NULL);
 	BIO_set_flags(b, 0);
@@ -74,7 +76,9 @@ static int bio_destroy(BIO *b)
 	if (!b)
 		return 0;
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	BIO_set_init(b, 0);
 	BIO_set_data(b, NULL);
 	BIO_set_flags(b, 0);
@@ -90,7 +94,9 @@ static int bio_destroy(BIO *b)
 
 static int bio_write(BIO *b, const char *buf, int len)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	struct tls_conn *tc = BIO_get_data(b);
 #else
 	struct tls_conn *tc = b->ptr;
@@ -125,7 +131,8 @@ static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || \
+	OPENSSL_VERSION_NUMBER >= 0x20000000L
 static struct bio_method_st bio_tcp_send = {
 	BIO_TYPE_SOURCE_SINK,
 	"tcp_send",
@@ -365,7 +372,9 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 	}
 
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	tc->sbio_out = BIO_new(tls->method_tcp);
 #else
 	tc->sbio_out = BIO_new(&bio_tcp_send);
@@ -377,7 +386,9 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 		goto out;
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	BIO_set_data(tc->sbio_out, tc);
 #else
 	tc->sbio_out->ptr = tc;
@@ -397,7 +408,9 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 }
 
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 BIO_METHOD *tls_method_tcp(void)
 {
 	BIO_METHOD *method;

@@ -4,7 +4,6 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #include <string.h>
-#define OPENSSL_NO_KRB5 1
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rsa.h>
@@ -46,7 +45,9 @@ static void destructor(void *data)
 
 	mem_deref(tls->pass);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	if (tls->method_tcp)
 		BIO_meth_free(tls->method_tcp);
 	if (tls->method_udp)
@@ -104,7 +105,9 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 
 #ifdef USE_OPENSSL_DTLS
 	case TLS_METHOD_DTLSV1:
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 		tls->ctx = SSL_CTX_new(DTLS_method());
 #else
 		tls->ctx = SSL_CTX_new(DTLSv1_method());
@@ -119,7 +122,9 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		break;
 
 	case TLS_METHOD_DTLSV1_2:
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 		tls->ctx = SSL_CTX_new(DTLS_method());
 #else
 		tls->ctx = SSL_CTX_new(DTLSv1_2_method());
@@ -176,7 +181,9 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		}
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	tls->method_tcp = tls_method_tcp();
 	tls->method_udp = tls_method_udp();
 	if (!tls->method_tcp || !tls->method_udp) {

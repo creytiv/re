@@ -5,8 +5,6 @@
  */
 
 #include <sys/time.h>
-
-#define OPENSSL_NO_KRB5 1
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <re_types.h>
@@ -66,7 +64,9 @@ struct tls_conn {
 
 static int bio_create(BIO *b)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	BIO_set_init(b, 1);
 	BIO_set_data(b, NULL);
 	BIO_set_flags(b, 0);
@@ -86,7 +86,9 @@ static int bio_destroy(BIO *b)
 	if (!b)
 		return 0;
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
+
 	BIO_set_init(b, 0);
 	BIO_set_data(b, NULL);
 	BIO_set_flags(b, 0);
@@ -102,7 +104,8 @@ static int bio_destroy(BIO *b)
 
 static int bio_write(BIO *b, const char *buf, int len)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
 	struct tls_conn *tc = BIO_get_data(b);
 #else
 	struct tls_conn *tc = b->ptr;
@@ -129,7 +132,8 @@ static int bio_write(BIO *b, const char *buf, int len)
 
 static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
 	struct tls_conn *tc = BIO_get_data(b);
 #else
 	struct tls_conn *tc = b->ptr;
@@ -158,7 +162,8 @@ static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || \
+	OPENSSL_VERSION_NUMBER >= 0x20000000L
 static struct bio_method_st bio_udp_send = {
 	BIO_TYPE_SOURCE_SINK,
 	"udp_send",
@@ -467,7 +472,8 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 		goto out;
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
 	tc->sbio_out = BIO_new(tls->method_udp);
 #else
 	tc->sbio_out = BIO_new(&bio_udp_send);
@@ -479,7 +485,8 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 		goto out;
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
 	BIO_set_data(tc->sbio_out, tc);
 #else
 	tc->sbio_out->ptr = tc;
@@ -800,7 +807,8 @@ void dtls_set_mtu(struct dtls_sock *sock, size_t mtu)
 }
 
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	OPENSSL_VERSION_NUMBER < 0x20000000L
 BIO_METHOD *tls_method_udp(void)
 {
 	BIO_METHOD *method;
