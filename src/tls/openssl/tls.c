@@ -10,6 +10,8 @@
 #include <openssl/bn.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+#include <openssl/dh.h>
+#include <openssl/ec.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -842,6 +844,157 @@ int tls_set_ciphers(struct tls *tls, const char *cipherv[], size_t count)
 
  out:
 	mem_deref(mb);
+
+	return err;
+}
+
+
+static int set_dh_params(struct tls *tls, DH *dh)
+{
+	int codes, r;
+#if OPENSSL_VERSION_NUMBER < 0x1000200fL
+	EC_KEY *ec_key;
+#endif
+
+	if (!DH_check(dh, &codes))
+		return ENOMEM;
+	if (codes) {
+#if defined(DH_CHECK_P_NOT_PRIME)
+		if (codes & DH_CHECK_P_NOT_PRIME)
+			DEBUG_WARNING("set_dh_params: p is not prime\n");
+#endif
+#if defined(DH_CHECK_P_NOT_SAFE_PRIME)
+		if (codes & DH_CHECK_P_NOT_SAFE_PRIME)
+			DEBUG_WARNING("set_dh_params: p is not safe prime\n");
+#endif
+#if defined(DH_UNABLE_TO_CHECK_GENERATOR)
+		if (codes & DH_UNABLE_TO_CHECK_GENERATOR)
+			DEBUG_WARNING("set_dh_params: generator g "
+			              "cannot be checked\n");
+#endif
+#if defined(DH_NOT_SUITABLE_GENERATOR)
+		if (codes & DH_NOT_SUITABLE_GENERATOR)
+			DEBUG_WARNING("set_dh_params: generator g "
+			              "is not suitable\n");
+#endif
+#if defined(DH_CHECK_Q_NOT_PRIME)
+		if (codes & DH_CHECK_Q_NOT_PRIME)
+			DEBUG_WARNING("set_dh_params: q is not prime\n");
+#endif
+#if defined(DH_CHECK_INVALID_Q_VALUE)
+		if (codes & DH_CHECK_INVALID_Q_VALUE)
+			DEBUG_WARNING("set_dh_params: q is invalid\n");
+#endif
+#if defined(DH_CHECK_INVALID_J_VALUE)
+		if (codes & DH_CHECK_INVALID_J_VALUE)
+			DEBUG_WARNING("set_dh_params: j is invalid\n");
+#endif
+		return EINVAL;
+	}
+
+	if (!SSL_CTX_set_tmp_dh(tls->ctx, dh)) {
+		DEBUG_WARNING("set_dh_params: set_tmp_dh failed\n");
+		return ENOMEM;
+	}
+
+#if OPENSSL_VERSION_NUMBER >= 0x1000200fL
+	r = SSL_CTX_set_ecdh_auto(tls->ctx, 1);
+	if (!r) {
+		DEBUG_WARNING("set_dh_params: set_ecdh_auto failed\n");
+		return ENOMEM;
+	}
+#else
+	ec_key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+	if (!ec_key)
+		return ENOMEM;
+	r = SSL_CTX_set_tmp_ecdh(tls->ctx, ec_key);
+	EC_KEY_free(ec_key);
+	if (!r) {
+		DEBUG_WARNING("set_dh_params: set_tmp_ecdh failed\n");
+		return ENOMEM;
+	}
+#endif
+
+	return 0;
+}
+
+
+/**
+ * Set Diffie-Hellman parameters on a TLS context
+ *
+ * @param tls TLS Context
+ * @param pem Diffie-Hellman parameters in PEM format
+ * @param len Length of PEM string
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_dh_params_pem(struct tls *tls, const char *pem, size_t len)
+{
+	BIO *bio = NULL;
+	DH *dh = NULL;
+	int err = ENOMEM;
+
+	if (!tls || !pem || !len)
+		return EINVAL;
+
+	bio = BIO_new_mem_buf((char *)pem, (int)len);
+	if (!bio)
+		goto out;
+
+	dh = PEM_read_bio_DHparams(bio, NULL, 0, NULL);
+	if (!dh)
+		goto out;
+
+	err = set_dh_params(tls, dh);
+	if (err)
+		goto out;
+
+	err = 0;
+
+ out:
+	if (dh)
+		DH_free(dh);
+	if (bio)
+		BIO_free(bio);
+	if (err)
+		ERR_clear_error();
+
+	return err;
+}
+
+
+/**
+ * Set Diffie-Hellman parameters on a TLS context
+ *
+ * @param tls TLS Context
+ * @param der Diffie-Hellman parameters in DER format
+ * @param len Length of DER bytes
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_dh_params_der(struct tls *tls, const uint8_t *der, size_t len)
+{
+	DH *dh = NULL;
+	int err = ENOMEM;
+
+	if (!tls || !der || !len)
+		return EINVAL;
+
+	dh = d2i_DHparams(NULL, &der, len);
+	if (!dh)
+		goto out;
+
+	err = set_dh_params(tls, dh);
+	if (err)
+		goto out;
+
+	err = 0;
+
+ out:
+	if (dh)
+		DH_free(dh);
+	if (err)
+		ERR_clear_error();
 
 	return err;
 }
