@@ -21,9 +21,6 @@ int libre_init(void)
 {
 	int err;
 
-#ifdef HAVE_ACTSCHED
-	actsched_init();
-#endif
 	rand_init();
 
 #ifdef USE_OPENSSL

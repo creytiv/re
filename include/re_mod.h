@@ -17,9 +17,6 @@
 #if defined (WIN32)
 #define MOD_PRE ""
 #define MOD_EXT ".dll"
-#elif defined (__SYMBIAN32__)
-#define MOD_PRE "mod_"
-#define MOD_EXT ".dll"
 #else
 #define MOD_PRE ""
 #define MOD_EXT ".so"
