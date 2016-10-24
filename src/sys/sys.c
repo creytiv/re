@@ -197,7 +197,7 @@ const char *sys_username(void)
 	login = getenv("LOGNAME");
 	if (!login)
 		login = getenv("USER");
-#if defined (HAVE_UNISTD_H) && !defined (__SYMBIAN32__)
+#ifdef HAVE_UNISTD_H
 	if (!login) {
 		login = getlogin();
 	}

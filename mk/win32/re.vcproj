@@ -316,9 +316,6 @@
 				<File
 					RelativePath="..\..\src\main\mod.mk">
 				</File>
-				<File
-					RelativePath="..\..\src\main\symbian">
-				</File>
 			</Filter>
 			<Filter
 				Name="mbuf"
