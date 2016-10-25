@@ -25,7 +25,7 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	uint32_t i;
 	int ret, err;
 
-#ifdef OPENBSD
+#if defined (__RES) && __RES <= 19991006
 	ret = res_init();
 	state = _res;
 #else
@@ -56,8 +56,7 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	*n = i;
 
  out:
-#ifdef OPENBSD
-#else
+#if !defined (__RES) || __RES > 19991006
 	res_nclose(&state);
 #endif
 
