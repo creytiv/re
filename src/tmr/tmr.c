@@ -271,15 +271,6 @@ void tmr_start(struct tmr *tmr, uint64_t delay, tmr_h *th, void *arg)
 			list_prepend(tmrl, &tmr->le, tmr);
 		}
 	}
-
-#ifdef HAVE_ACTSCHED
-	/* TODO: this is a hack. when a new timer is started we must reset
-	   the main sleeping timer in actsched.cpp */
-	{
-		extern void actsched_restart_timer(void);
-		actsched_restart_timer();
-	}
-#endif
 }
 
 
