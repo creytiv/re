@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#define _BSD_SOURCE
 #include <unistd.h>
 #include <sys/socket.h>
 #define __USE_MISC 1   /**< Use MISC code */
