@@ -65,7 +65,7 @@ struct tls_conn {
 static int bio_create(BIO *b)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 
 	BIO_set_init(b, 1);
 	BIO_set_data(b, NULL);
@@ -87,7 +87,7 @@ static int bio_destroy(BIO *b)
 		return 0;
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 
 	BIO_set_init(b, 0);
 	BIO_set_data(b, NULL);
@@ -105,7 +105,7 @@ static int bio_destroy(BIO *b)
 static int bio_write(BIO *b, const char *buf, int len)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 	struct tls_conn *tc = BIO_get_data(b);
 #else
 	struct tls_conn *tc = b->ptr;
@@ -133,7 +133,7 @@ static int bio_write(BIO *b, const char *buf, int len)
 static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 	struct tls_conn *tc = BIO_get_data(b);
 #else
 	struct tls_conn *tc = b->ptr;
@@ -473,7 +473,7 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	}
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 	tc->sbio_out = BIO_new(tls->method_udp);
 #else
 	tc->sbio_out = BIO_new(&bio_udp_send);
@@ -486,7 +486,7 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	}
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 	BIO_set_data(tc->sbio_out, tc);
 #else
 	tc->sbio_out->ptr = tc;
@@ -808,7 +808,7 @@ void dtls_set_mtu(struct dtls_sock *sock, size_t mtu)
 
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 BIO_METHOD *tls_method_udp(void)
 {
 	BIO_METHOD *method;
