@@ -132,7 +132,7 @@ static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L || \
-	OPENSSL_VERSION_NUMBER >= 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 static struct bio_method_st bio_tcp_send = {
 	BIO_TYPE_SOURCE_SINK,
 	"tcp_send",
