@@ -182,10 +182,12 @@ endif
 endif
 
 # Compiler dependency flags
+ifeq ($(CC_NAME),$(filter $(CC_NAME),gcc clang))
 ifeq ($(CC_SHORTVER), 2.9x)
 	DFLAGS		= -MD
 else
 	DFLAGS		= -MD -MF $(@:.o=.d) -MT $@
+endif
 endif
 
 
@@ -344,6 +346,9 @@ endif
 ifeq ($(ARCH),)
 ifeq ($(CC_NAME),$(filter $(CC_NAME),gcc clang))
 PREDEF	:= $(shell $(CC) -dM -E -x c $(EXTRA_CFLAGS) $(CFLAGS) /dev/null)
+else ifeq ($(CCNAME),suncc)
+PREFEF	:= $(shell $(CC) -xdumpmacros -E /dev/null 2>&1)
+endif
 
 ifneq ($(strip $(filter i386 __i386__ __i386 _M_IX86 __X86__ _X86_, \
 	$(PREDEF))),)
@@ -404,7 +409,6 @@ endif
 
 endif
 
-endif
 endif
 
 
