@@ -221,7 +221,7 @@ BIN_SUFFIX	:=
 
 ifeq ($(OS),solaris)
 	CFLAGS		+= -fPIC -DSOLARIS
-	LIBS		+= -ldl -lsocket -lnsl
+	LIBS		+= -ldl -lresolv -lsocket -lnsl
 	LFLAGS		+= -fPIC
 	SH_LFLAGS	+= -G
 	MOD_LFLAGS	+=
