@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #ifdef HAVE_STRINGS_H
-#define __EXTENSIONS__ 1
+#define _XPG4_2
 #include <strings.h>
 #endif
 #include <string.h>
