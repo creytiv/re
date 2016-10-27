@@ -21,7 +21,8 @@ static void destructor(void *arg)
 	struct hmac *hmac = arg;
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
+
 	if (hmac->ctx)
 		HMAC_CTX_free(hmac->ctx);
 #else
@@ -61,7 +62,8 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 		return ENOMEM;
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
+
 	hmac->ctx = HMAC_CTX_new();
 	if (!hmac->ctx) {
 		ERR_clear_error();

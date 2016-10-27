@@ -46,7 +46,7 @@ static void destructor(void *data)
 	mem_deref(tls->pass);
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 
 	if (tls->method_tcp)
 		BIO_meth_free(tls->method_tcp);
@@ -106,7 +106,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 #ifdef USE_OPENSSL_DTLS
 	case TLS_METHOD_DTLSV1:
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 
 		tls->ctx = SSL_CTX_new(DTLS_method());
 #else
@@ -123,7 +123,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 
 	case TLS_METHOD_DTLSV1_2:
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 
 		tls->ctx = SSL_CTX_new(DTLS_method());
 #else
@@ -182,7 +182,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	}
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	OPENSSL_VERSION_NUMBER < 0x20000000L
+	!defined(LIBRESSL_VERSION_NUMBER)
 
 	tls->method_tcp = tls_method_tcp();
 	tls->method_udp = tls_method_udp();
