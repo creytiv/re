@@ -75,9 +75,6 @@ endif
 ifeq ($(CC),)
 	CC := gcc
 endif
-ifeq ($(CC),cc)
-	CC := gcc
-endif
 LD := $(CC)
 CC_LONGVER := $(shell if $(CC) -v 2>/dev/null; then \
 						$(CC) -v 2>&1 ;\
