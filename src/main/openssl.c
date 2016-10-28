@@ -30,7 +30,7 @@ static pthread_mutex_t *lockv;
 static inline unsigned long threadid(void)
 {
 #if defined (DARWIN) || defined (FREEBSD) || defined (OPENBSD) || \
-	defined (NETBSD)
+	defined (NETBSD) || defined (DRAGONFLY)
 	return (unsigned long)(void *)pthread_self();
 #else
 	return (unsigned long)pthread_self();
