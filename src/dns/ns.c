@@ -122,7 +122,7 @@ int dns_srv_get(char *domain, size_t dsize, struct sa *srvv, uint32_t *n)
 
 	/* Try them all in prioritized order */
 
-#ifdef HAVE_LIBRESOLV
+#ifdef HAVE_RESOLV
 	err = get_resolv_dns(domain, dsize, srvv, n);
 	if (!err)
 		return 0;
