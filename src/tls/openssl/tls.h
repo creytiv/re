@@ -13,7 +13,7 @@
 #define TLS_BIO_OPAQUE 1
 #endif
 
-#if defined (LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER <= 0x2040300fL
+#if defined (LIBRESSL_VERSION_NUMBER)
 #undef  TLS_BIO_OPAQUE
 #endif
 
