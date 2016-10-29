@@ -45,9 +45,7 @@ static void destructor(void *data)
 
 	mem_deref(tls->pass);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	!defined(LIBRESSL_VERSION_NUMBER)
-
+#ifdef TLS_BIO_OPAQUE
 	if (tls->method_tcp)
 		BIO_meth_free(tls->method_tcp);
 	if (tls->method_udp)
@@ -181,9 +179,7 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		}
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
-	!defined(LIBRESSL_VERSION_NUMBER)
-
+#ifdef TLS_BIO_OPAQUE
 	tls->method_tcp = tls_method_tcp();
 	tls->method_udp = tls_method_udp();
 	if (!tls->method_tcp || !tls->method_udp) {
