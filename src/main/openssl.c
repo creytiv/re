@@ -24,9 +24,6 @@
 static pthread_mutex_t *lockv;
 
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-
-
 static inline unsigned long threadid(void)
 {
 #if defined (DARWIN) || defined (FREEBSD) || defined (OPENBSD) || \
@@ -51,10 +48,6 @@ static unsigned long threadid_handler(void)
 #endif
 
 
-#endif  /* OPENSSL_VERSION_NUMBER */
-
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static void locking_handler(int mode, int type, const char *file, int line)
 {
 	(void)file;
@@ -65,7 +58,6 @@ static void locking_handler(int mode, int type, const char *file, int line)
 	else
 		(void)pthread_mutex_unlock(&lockv[type]);
 }
-#endif
 
 
 #endif
