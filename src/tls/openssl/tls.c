@@ -8,6 +8,8 @@
 #include <openssl/err.h>
 #include <openssl/rsa.h>
 #include <openssl/bn.h>
+#include <openssl/evp.h>
+#include <openssl/x509.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -337,6 +339,155 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 /**
  * Set the certificate and private key on a TLS context
  *
+ * @param tls	  TLS Context
+ * @param cert	 Certificate in PEM format
+ * @param len_cert Length of certificate PEM string
+ * @param key	  Private key in PEM format, will be read from cert if NULL
+ * @param len_key  Length of private key PEM string
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
+		const char *key, size_t len_key)
+{
+	BIO *bio_cert = NULL, *bio_key = NULL;
+	X509 *x509 = NULL;
+	EVP_PKEY *pkey = NULL;
+	int r, err = ENOMEM;
+
+	if (!tls || !cert || !len_cert || (key && !len_key))
+		return EINVAL;
+
+	if (!key) {
+		key = cert;
+		len_key = len_cert;
+	}
+
+	bio_cert = BIO_new_mem_buf((char *)cert, (int)len_cert);
+	bio_key = BIO_new_mem_buf((char *)key, (int)len_key);
+	if (!bio_cert || !bio_key)
+		goto out;
+
+	x509 = PEM_read_bio_X509(bio_cert, NULL, 0, NULL);
+	pkey = PEM_read_bio_PrivateKey(bio_key, NULL, 0, NULL);
+	if (!x509 || !pkey)
+		goto out;
+
+	r = SSL_CTX_use_certificate(tls->ctx, x509);
+	if (r != 1)
+		goto out;
+
+	r = SSL_CTX_use_PrivateKey(tls->ctx, pkey);
+	if (r != 1) {
+		DEBUG_WARNING("set_certificate_pem: use_PrivateKey failed\n");
+		goto out;
+	}
+
+	if (tls->cert)
+		X509_free(tls->cert);
+
+	tls->cert = x509;
+	x509 = NULL;
+
+	err = 0;
+
+out:
+	if (x509)
+		X509_free(x509);
+	if (pkey)
+		EVP_PKEY_free(pkey);
+	if (bio_cert)
+		BIO_free(bio_cert);
+	if (bio_key)
+		BIO_free(bio_key);
+	if (err)
+		ERR_clear_error();
+
+	return err;
+}
+
+/**
+ * Set the certificate and private key on a TLS context
+ *
+ * @param tls	  TLS Context
+ * @param cert	 Certificate in DER format
+ * @param key_type Private key type
+ * @param len_cert Length of certificate DER bytes
+ * @param key	  Private key in DER format, will be read from cert if NULL
+ * @param len_key  Length of private key DER bytes
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_certificate_der(struct tls *tls, enum tls_key_type key_type,
+		const uint8_t *cert, size_t len_cert, const uint8_t *key,
+		size_t len_key)
+{
+	const uint8_t *buf_cert, *buf_key;
+	X509 *x509 = NULL;
+	EVP_PKEY *pkey = NULL;
+	int r, type, err = ENOMEM;
+
+	if (!tls || !cert || !len_cert || (key && !len_key))
+		return EINVAL;
+
+	switch (key_type) {
+		case TLS_KEY_TYPE_EC:
+			type = EVP_PKEY_EC;
+			break;
+		case TLS_KEY_TYPE_RSA:
+			type = EVP_PKEY_RSA;
+			break;
+		default:
+			return EINVAL;
+	}
+
+	buf_cert = cert;
+
+	x509 = d2i_X509(NULL, &buf_cert, len_cert);
+	if (!key) {
+		buf_key = buf_cert;
+		len_key = len_cert - (buf_cert - cert);
+	}
+	else {
+		buf_key = key;
+	}
+	pkey = d2i_PrivateKey(type, NULL, &buf_key, len_key);
+	if (!x509 || !pkey)
+		goto out;
+
+	r = SSL_CTX_use_certificate(tls->ctx, x509);
+	if (r != 1)
+		goto out;
+
+	r = SSL_CTX_use_PrivateKey(tls->ctx, pkey);
+	if (r != 1) {
+		DEBUG_WARNING("set_certificate_der: use_PrivateKey failed\n");
+		goto out;
+	}
+
+	if (tls->cert)
+		X509_free(tls->cert);
+
+	tls->cert = x509;
+	x509 = NULL;
+
+	err = 0;
+
+out:
+	if (x509)
+		X509_free(x509);
+	if (pkey)
+		EVP_PKEY_free(pkey);
+	if (err)
+		ERR_clear_error();
+
+	return err;
+}
+
+/**
+ * Set the certificate and private key on a TLS context
+ * @deprecated Use tls_set_certificate_pem or tls_set_certificate_der instead
+ *
  * @param tls TLS Context
  * @param pem Certificate and private key in PEM format
  * @param len Length of PEM string
@@ -345,55 +496,7 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
  */
 int tls_set_certificate(struct tls *tls, const char *pem, size_t len)
 {
-	BIO *bio = NULL, *kbio = NULL;
-	X509 *cert = NULL;
-	RSA *rsa = NULL;
-	int r, err = ENOMEM;
-
-	if (!tls || !pem || !len)
-		return EINVAL;
-
-	bio  = BIO_new_mem_buf((char *)pem, (int)len);
-	kbio = BIO_new_mem_buf((char *)pem, (int)len);
-	if (!bio || !kbio)
-		goto out;
-
-	cert = PEM_read_bio_X509(bio, NULL, 0, NULL);
-	rsa = PEM_read_bio_RSAPrivateKey(kbio, NULL, 0, NULL);
-	if (!cert || !rsa)
-		goto out;
-
-	r = SSL_CTX_use_certificate(tls->ctx, cert);
-	if (r != 1)
-		goto out;
-
-	r = SSL_CTX_use_RSAPrivateKey(tls->ctx, rsa);
-	if (r != 1) {
-		DEBUG_WARNING("set_certificate: use_RSAPrivateKey failed\n");
-		goto out;
-	}
-
-	if (tls->cert)
-		X509_free(tls->cert);
-
-	tls->cert = cert;
-	cert = NULL;
-
-	err = 0;
-
- out:
-	if (cert)
-		X509_free(cert);
-	if (rsa)
-		RSA_free(rsa);
-	if (bio)
-		BIO_free(bio);
-	if (kbio)
-		BIO_free(kbio);
-	if (err)
-		ERR_clear_error();
-
-	return err;
+	return tls_set_certificate_pem(tls, pem, len, NULL, 0);
 }
 
 
