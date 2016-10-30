@@ -12,7 +12,7 @@
 
 
 struct hmac {
-	HMAC_CTX ctx;
+	HMAC_CTX *ctx;
 };
 
 
@@ -20,7 +20,16 @@ static void destructor(void *arg)
 {
 	struct hmac *hmac = arg;
 
-	HMAC_CTX_cleanup(&hmac->ctx);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	!defined(LIBRESSL_VERSION_NUMBER)
+
+	if (hmac->ctx)
+		HMAC_CTX_free(hmac->ctx);
+#else
+	if (hmac->ctx)
+		HMAC_CTX_cleanup(hmac->ctx);
+	mem_deref(hmac->ctx);
+#endif
 }
 
 
@@ -52,17 +61,35 @@ int hmac_create(struct hmac **hmacp, enum hmac_hash hash,
 	if (!hmac)
 		return ENOMEM;
 
-	HMAC_CTX_init(&hmac->ctx);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	!defined(LIBRESSL_VERSION_NUMBER)
+
+	hmac->ctx = HMAC_CTX_new();
+	if (!hmac->ctx) {
+		ERR_clear_error();
+		err = ENOMEM;
+		goto out;
+	}
+#else
+	hmac->ctx = mem_zalloc(sizeof(*hmac->ctx), NULL);
+	if (!hmac->ctx) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	HMAC_CTX_init(hmac->ctx);
+#endif
 
 #if (OPENSSL_VERSION_NUMBER >= 0x00909000)
-	if (!HMAC_Init_ex(&hmac->ctx, key, (int)key_len, evp, NULL)) {
+	if (!HMAC_Init_ex(hmac->ctx, key, (int)key_len, evp, NULL)) {
 		ERR_clear_error();
 		err = EPROTO;
 	}
 #else
-	HMAC_Init_ex(&hmac->ctx, key, (int)key_len, evp, NULL);
+	HMAC_Init_ex(hmac->ctx, key, (int)key_len, evp, NULL);
 #endif
 
+ out:
 	if (err)
 		mem_deref(hmac);
 	else
@@ -82,12 +109,12 @@ int hmac_digest(struct hmac *hmac, uint8_t *md, size_t md_len,
 
 #if (OPENSSL_VERSION_NUMBER >= 0x00909000)
 	/* the HMAC context must be reset here */
-	if (!HMAC_Init_ex(&hmac->ctx, 0, 0, 0, NULL))
+	if (!HMAC_Init_ex(hmac->ctx, 0, 0, 0, NULL))
 		goto error;
 
-	if (!HMAC_Update(&hmac->ctx, data, (int)data_len))
+	if (!HMAC_Update(hmac->ctx, data, (int)data_len))
 		goto error;
-	if (!HMAC_Final(&hmac->ctx, md, &len))
+	if (!HMAC_Final(hmac->ctx, md, &len))
 		goto error;
 
 	return 0;
@@ -98,10 +125,10 @@ int hmac_digest(struct hmac *hmac, uint8_t *md, size_t md_len,
 
 #else
 	/* the HMAC context must be reset here */
-	HMAC_Init_ex(&hmac->ctx, 0, 0, 0, NULL);
+	HMAC_Init_ex(hmac->ctx, 0, 0, 0, NULL);
 
-	HMAC_Update(&hmac->ctx, data, (int)data_len);
-	HMAC_Final(&hmac->ctx, md, &len);
+	HMAC_Update(hmac->ctx, data, (int)data_len);
+	HMAC_Final(hmac->ctx, md, &len);
 
 	return 0;
 #endif

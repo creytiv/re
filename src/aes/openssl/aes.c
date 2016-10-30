@@ -17,7 +17,7 @@
 
 
 struct aes {
-	EVP_CIPHER_CTX ctx;
+	EVP_CIPHER_CTX *ctx;
 };
 
 
@@ -25,7 +25,14 @@ static void destructor(void *arg)
 {
 	struct aes *st = arg;
 
-	EVP_CIPHER_CTX_cleanup(&st->ctx);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	if (st->ctx)
+		EVP_CIPHER_CTX_free(st->ctx);
+#else
+	if (st->ctx)
+		EVP_CIPHER_CTX_cleanup(st->ctx);
+	mem_deref(st->ctx);
+#endif
 }
 
 
@@ -47,7 +54,23 @@ int aes_alloc(struct aes **aesp, enum aes_mode mode,
 	if (!st)
 		return ENOMEM;
 
-	EVP_CIPHER_CTX_init(&st->ctx);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	st->ctx = EVP_CIPHER_CTX_new();
+	if (!st->ctx) {
+		ERR_clear_error();
+		err = ENOMEM;
+		goto out;
+	}
+
+#else
+	st->ctx = mem_zalloc(sizeof(*st->ctx), NULL);
+	if (!st->ctx) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	EVP_CIPHER_CTX_init(st->ctx);
+#endif
 
 	switch (key_bits) {
 
@@ -60,7 +83,7 @@ int aes_alloc(struct aes **aesp, enum aes_mode mode,
 		goto out;
 	}
 
-	r = EVP_EncryptInit_ex(&st->ctx, cipher, NULL, key, iv);
+	r = EVP_EncryptInit_ex(st->ctx, cipher, NULL, key, iv);
 	if (!r) {
 		ERR_clear_error();
 		err = EPROTO;
@@ -83,7 +106,7 @@ void aes_set_iv(struct aes *aes, const uint8_t iv[AES_BLOCK_SIZE])
 	if (!aes || !iv)
 		return;
 
-	r = EVP_EncryptInit_ex(&aes->ctx, NULL, NULL, NULL, iv);
+	r = EVP_EncryptInit_ex(aes->ctx, NULL, NULL, NULL, iv);
 	if (!r)
 		ERR_clear_error();
 }
@@ -96,7 +119,7 @@ int aes_encr(struct aes *aes, uint8_t *out, const uint8_t *in, size_t len)
 	if (!aes || !out || !in)
 		return EINVAL;
 
-	if (!EVP_EncryptUpdate(&aes->ctx, out, &c_len, in, (int)len)) {
+	if (!EVP_EncryptUpdate(aes->ctx, out, &c_len, in, (int)len)) {
 		ERR_clear_error();
 		return EPROTO;
 	}

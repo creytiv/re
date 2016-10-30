@@ -18,7 +18,8 @@
 #include "main.h"
 
 
-#ifdef HAVE_PTHREAD
+#if defined (HAVE_PTHREAD) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
+
 
 static pthread_mutex_t *lockv;
 
@@ -58,9 +59,11 @@ static void locking_handler(int mode, int type, const char *file, int line)
 		(void)pthread_mutex_unlock(&lockv[type]);
 }
 
+
 #endif
 
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static struct CRYPTO_dynlock_value *dynlock_create_handler(const char *file,
 							   int line)
 {
@@ -97,6 +100,7 @@ static void dynlock_destroy_handler(struct CRYPTO_dynlock_value *l,
 
 	mem_deref(l);
 }
+#endif
 
 
 #ifdef SIGPIPE
@@ -110,7 +114,7 @@ static void sigpipe_handler(int x)
 
 int openssl_init(void)
 {
-#ifdef HAVE_PTHREAD
+#if defined (HAVE_PTHREAD) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
 	int err, i;
 
 	lockv = mem_zalloc(sizeof(pthread_mutex_t) * CRYPTO_num_locks(), NULL);
@@ -135,9 +139,11 @@ int openssl_init(void)
 	CRYPTO_set_locking_callback(locking_handler);
 #endif
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	CRYPTO_set_dynlock_create_callback(dynlock_create_handler);
 	CRYPTO_set_dynlock_lock_callback(dynlock_lock_handler);
 	CRYPTO_set_dynlock_destroy_callback(dynlock_destroy_handler);
+#endif
 
 #ifdef SIGPIPE
 	(void)signal(SIGPIPE, sigpipe_handler);
@@ -153,7 +159,7 @@ int openssl_init(void)
 void openssl_close(void)
 {
 	ERR_free_strings();
-#ifdef HAVE_PTHREAD
+#if defined (HAVE_PTHREAD) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
 	lockv = mem_deref(lockv);
 #endif
 }

@@ -4,7 +4,6 @@
  * Copyright (C) 2010 Creytiv.com
  */
 #include <string.h>
-#define OPENSSL_NO_KRB5 1
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rsa.h>
@@ -45,6 +44,13 @@ static void destructor(void *data)
 		X509_free(tls->cert);
 
 	mem_deref(tls->pass);
+
+#ifdef TLS_BIO_OPAQUE
+	if (tls->method_tcp)
+		BIO_meth_free(tls->method_tcp);
+	if (tls->method_udp)
+		BIO_meth_free(tls->method_udp);
+#endif
 }
 
 
@@ -97,7 +103,13 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 
 #ifdef USE_OPENSSL_DTLS
 	case TLS_METHOD_DTLSV1:
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	!defined(LIBRESSL_VERSION_NUMBER)
+
+		tls->ctx = SSL_CTX_new(DTLS_method());
+#else
 		tls->ctx = SSL_CTX_new(DTLSv1_method());
+#endif
 		break;
 
 #ifdef SSL_OP_NO_DTLSv1_2
@@ -108,7 +120,13 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 		break;
 
 	case TLS_METHOD_DTLSV1_2:
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	!defined(LIBRESSL_VERSION_NUMBER)
+
+		tls->ctx = SSL_CTX_new(DTLS_method());
+#else
 		tls->ctx = SSL_CTX_new(DTLSv1_2_method());
+#endif
 		break;
 #endif
 
@@ -160,6 +178,15 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 			goto out;
 		}
 	}
+
+#ifdef TLS_BIO_OPAQUE
+	tls->method_tcp = tls_method_tcp();
+	tls->method_udp = tls_method_udp();
+	if (!tls->method_tcp || !tls->method_udp) {
+		err = ENOMEM;
+		goto out;
+	}
+#endif
 
 	err = 0;
  out:

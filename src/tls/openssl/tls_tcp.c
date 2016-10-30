@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#define OPENSSL_NO_KRB5 1
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <re_types.h>
@@ -54,10 +54,16 @@ static void destructor(void *arg)
 
 static int bio_create(BIO *b)
 {
+#ifdef TLS_BIO_OPAQUE
+	BIO_set_init(b, 1);
+	BIO_set_data(b, NULL);
+	BIO_set_flags(b, 0);
+#else
 	b->init  = 1;
 	b->num   = 0;
 	b->ptr   = NULL;
 	b->flags = 0;
+#endif
 
 	return 1;
 }
@@ -68,9 +74,15 @@ static int bio_destroy(BIO *b)
 	if (!b)
 		return 0;
 
+#ifdef TLS_BIO_OPAQUE
+	BIO_set_init(b, 0);
+	BIO_set_data(b, NULL);
+	BIO_set_flags(b, 0);
+#else
 	b->ptr   = NULL;
 	b->init  = 0;
 	b->flags = 0;
+#endif
 
 	return 1;
 }
@@ -78,7 +90,11 @@ static int bio_destroy(BIO *b)
 
 static int bio_write(BIO *b, const char *buf, int len)
 {
+#ifdef TLS_BIO_OPAQUE
+	struct tls_conn *tc = BIO_get_data(b);
+#else
 	struct tls_conn *tc = b->ptr;
+#endif
 	struct mbuf mb;
 	int err;
 
@@ -109,6 +125,7 @@ static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 
+#ifndef TLS_BIO_OPAQUE
 static struct bio_method_st bio_tcp_send = {
 	BIO_TYPE_SOURCE_SINK,
 	"tcp_send",
@@ -121,6 +138,7 @@ static struct bio_method_st bio_tcp_send = {
 	bio_destroy,
 	0
 };
+#endif
 
 
 static int tls_connect(struct tls_conn *tc)
@@ -346,7 +364,12 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 		goto out;
 	}
 
+
+#ifdef TLS_BIO_OPAQUE
+	tc->sbio_out = BIO_new(tls->method_tcp);
+#else
 	tc->sbio_out = BIO_new(&bio_tcp_send);
+#endif
 	if (!tc->sbio_out) {
 		DEBUG_WARNING("alloc: BIO_new_socket() failed\n");
 		ERR_clear_error();
@@ -354,7 +377,11 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 		goto out;
 	}
 
+#ifdef TLS_BIO_OPAQUE
+	BIO_set_data(tc->sbio_out, tc);
+#else
 	tc->sbio_out->ptr = tc;
+#endif
 
 	SSL_set_bio(tc->ssl, tc->sbio_in, tc->sbio_out);
 
@@ -368,3 +395,26 @@ int tls_start_tcp(struct tls_conn **ptc, struct tls *tls, struct tcp_conn *tcp,
 
 	return err;
 }
+
+
+#ifdef TLS_BIO_OPAQUE
+
+BIO_METHOD *tls_method_tcp(void)
+{
+	BIO_METHOD *method;
+
+	method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "tcp_send");
+	if (!method) {
+		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
+		ERR_clear_error();
+		return NULL;
+	}
+
+	BIO_meth_set_write(method, bio_write);
+	BIO_meth_set_ctrl(method, bio_ctrl);
+	BIO_meth_set_create(method, bio_create);
+	BIO_meth_set_destroy(method, bio_destroy);
+
+	return method;
+}
+#endif
