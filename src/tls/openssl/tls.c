@@ -74,15 +74,15 @@ static int password_cb(char *buf, int size, int rwflag, void *userdata)
 }
 
 
-static int key_type2int(enum tls_key_type type)
+static int keytype2int(enum tls_keytype type)
 {
 	switch (type) {
-		case TLS_KEY_TYPE_EC:
-			return EVP_PKEY_EC;
-		case TLS_KEY_TYPE_RSA:
-			return EVP_PKEY_RSA;
-		default:
-			return EVP_PKEY_NONE;
+	case TLS_KEYTYPE_EC:
+		return EVP_PKEY_EC;
+	case TLS_KEYTYPE_RSA:
+		return EVP_PKEY_RSA;
+	default:
+		return EVP_PKEY_NONE;
 	}
 }
 
@@ -423,7 +423,7 @@ int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
  * Set the certificate and private key on a TLS context
  *
  * @param tls      TLS Context
- * @param key_type Private key type
+ * @param keytype Private key type
  * @param cert     Certificate in DER format
  * @param len_cert Length of certificate DER bytes
  * @param key      Private key in DER format, will be read from cert if NULL
@@ -431,11 +431,11 @@ int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
  *
  * @return 0 if success, otherwise errorcode
  */
-int tls_set_certificate_der(struct tls *tls, enum tls_key_type key_type,
+int tls_set_certificate_der(struct tls *tls, enum tls_keytype keytype,
 		const uint8_t *cert, size_t len_cert, const uint8_t *key,
 		size_t len_key)
 {
-	const uint8_t *buf_cert, *buf_key;
+	const uint8_t *buf_cert;
 	X509 *x509 = NULL;
 	EVP_PKEY *pkey = NULL;
 	int r, type, err = ENOMEM;
@@ -443,7 +443,7 @@ int tls_set_certificate_der(struct tls *tls, enum tls_key_type key_type,
 	if (!tls || !cert || !len_cert || (key && !len_key))
 		return EINVAL;
 
-	type = key_type2int(key_type);
+	type = keytype2int(keytype);
 	if (type == EVP_PKEY_NONE)
 		return EINVAL;
 
@@ -452,14 +452,13 @@ int tls_set_certificate_der(struct tls *tls, enum tls_key_type key_type,
 	x509 = d2i_X509(NULL, &buf_cert, len_cert);
 	if (!x509)
 		goto out;
+
 	if (!key) {
-		buf_key = buf_cert;
+		key = buf_cert;
 		len_key = len_cert - (buf_cert - cert);
 	}
-	else {
-		buf_key = key;
-	}
-	pkey = d2i_PrivateKey(type, NULL, &buf_key, len_key);
+
+	pkey = d2i_PrivateKey(type, NULL, &key, len_key);
 	if (!pkey)
 		goto out;
 

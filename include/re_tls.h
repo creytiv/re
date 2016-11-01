@@ -24,9 +24,9 @@ enum tls_fingerprint {
 	TLS_FINGERPRINT_SHA256,
 };
 
-enum tls_key_type {
-	TLS_KEY_TYPE_RSA,
-	TLS_KEY_TYPE_EC,
+enum tls_keytype {
+	TLS_KEYTYPE_RSA,
+	TLS_KEYTYPE_EC,
 };
 
 
@@ -36,7 +36,7 @@ int tls_add_ca(struct tls *tls, const char *capath);
 int tls_set_selfsigned(struct tls *tls, const char *cn);
 int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
 		const char *key, size_t len_key);
-int tls_set_certificate_der(struct tls *tls, enum tls_key_type key_type,
+int tls_set_certificate_der(struct tls *tls, enum tls_keytype key_type,
 		const uint8_t *cert, size_t len_cert, const uint8_t *key,
 		size_t len_key);
 int tls_set_certificate(struct tls *tls, const char *cert, size_t len);
