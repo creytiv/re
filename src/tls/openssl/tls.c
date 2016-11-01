@@ -74,6 +74,19 @@ static int password_cb(char *buf, int size, int rwflag, void *userdata)
 }
 
 
+static int key_type2int(enum tls_key_type type)
+{
+	switch (type) {
+		case TLS_KEY_TYPE_EC:
+			return EVP_PKEY_EC;
+		case TLS_KEY_TYPE_RSA:
+			return EVP_PKEY_RSA;
+		default:
+			return EVP_PKEY_NONE;
+	}
+}
+
+
 /**
  * Allocate a new TLS context
  *
@@ -363,7 +376,7 @@ int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
 		len_key = len_cert;
 	}
 
-	bio = BIO_new_mem_buf((char *)cert, (int)len_cert);
+	bio  = BIO_new_mem_buf((char *)cert, (int)len_cert);
 	kbio = BIO_new_mem_buf((char *)key, (int)len_key);
 	if (!bio || !kbio)
 		goto out;
@@ -391,7 +404,7 @@ int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
 
 	err = 0;
 
-out:
+ out:
 	if (x509)
 		X509_free(x509);
 	if (pkey)
@@ -410,8 +423,8 @@ out:
  * Set the certificate and private key on a TLS context
  *
  * @param tls      TLS Context
- * @param cert     Certificate in DER format
  * @param key_type Private key type
+ * @param cert     Certificate in DER format
  * @param len_cert Length of certificate DER bytes
  * @param key      Private key in DER format, will be read from cert if NULL
  * @param len_key  Length of private key DER bytes
@@ -430,16 +443,9 @@ int tls_set_certificate_der(struct tls *tls, enum tls_key_type key_type,
 	if (!tls || !cert || !len_cert || (key && !len_key))
 		return EINVAL;
 
-	switch (key_type) {
-		case TLS_KEY_TYPE_EC:
-			type = EVP_PKEY_EC;
-			break;
-		case TLS_KEY_TYPE_RSA:
-			type = EVP_PKEY_RSA;
-			break;
-		default:
-			return EINVAL;
-	}
+	type = key_type2int(key_type);
+	if (type == EVP_PKEY_NONE)
+		return EINVAL;
 
 	buf_cert = cert;
 
@@ -475,7 +481,7 @@ int tls_set_certificate_der(struct tls *tls, enum tls_key_type key_type,
 
 	err = 0;
 
-out:
+ out:
 	if (x509)
 		X509_free(x509);
 	if (pkey)
@@ -488,7 +494,6 @@ out:
 
 /**
  * Set the certificate and private key on a TLS context
- * @deprecated Use tls_set_certificate_pem or tls_set_certificate_der instead
  *
  * @param tls TLS Context
  * @param pem Certificate and private key in PEM format
