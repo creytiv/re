@@ -78,4 +78,5 @@ int dtls_accept(struct tls_conn **ptc, struct tls *tls,
 int dtls_send(struct tls_conn *tc, struct mbuf *mb);
 void dtls_set_handlers(struct tls_conn *tc, dtls_estab_h *estabh,
 		       dtls_recv_h *recvh, dtls_close_h *closeh, void *arg);
-bool dtls_set_peer(struct tls_conn *tc, const struct sa *peer);
+const struct sa *dtls_peer(const struct tls_conn *tc);
+void dtls_set_peer(struct tls_conn *tc, const struct sa *peer);

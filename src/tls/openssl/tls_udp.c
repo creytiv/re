@@ -652,27 +652,33 @@ void dtls_set_handlers(struct tls_conn *tc, dtls_estab_h *estabh,
 
 
 /**
- * Set remote peer of a DTLS Connection
+ * Get the remote peer a DTLS Connection
+ *
+ * @param tc DTLS Connection
+ *
+ * @return Remote peer
+ */
+const struct sa *dtls_peer(const struct tls_conn *tc)
+{
+	return tc ? &tc->peer : NULL;
+}
+
+
+/**
+ * Set the remote peer of a DTLS Connection
  *
  * @param tc     DTLS Connection
  * @param peer   Peer address
- *
- * @return true if peer has been replaced, false if not
  */
-bool dtls_set_peer(struct tls_conn *tc, const struct sa *peer)
+void dtls_set_peer(struct tls_conn *tc, const struct sa *peer)
 {
 	if (!tc || !peer)
-		return false;
+		return;
 
-	if (!sa_cmp(&tc->peer, peer, SA_ALL)) {
-		hash_unlink(&tc->he);
-		hash_append(tc->sock->ht, sa_hash(peer, SA_ALL), &tc->he, tc);
+	hash_unlink(&tc->he);
+	hash_append(tc->sock->ht, sa_hash(peer, SA_ALL), &tc->he, tc);
 
-		tc->peer = *peer;
-		return true;
-	}
-
-	return false;
+	tc->peer = *peer;
 }
 
 
