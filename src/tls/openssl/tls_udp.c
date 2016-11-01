@@ -652,7 +652,7 @@ void dtls_set_handlers(struct tls_conn *tc, dtls_estab_h *estabh,
 
 
 /**
- * Get the remote peer a DTLS Connection
+ * Get the remote peer of a DTLS Connection
  *
  * @param tc DTLS Connection
  *
