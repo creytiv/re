@@ -361,7 +361,7 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
  * @return 0 if success, otherwise errorcode
  */
 int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
-		const char *key, size_t len_key)
+			    const char *key, size_t len_key)
 {
 	BIO *bio = NULL, *kbio = NULL;
 	X509 *x509 = NULL;
@@ -419,11 +419,12 @@ int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
 	return err;
 }
 
+
 /**
  * Set the certificate and private key on a TLS context
  *
  * @param tls      TLS Context
- * @param keytype Private key type
+ * @param keytype  Private key type
  * @param cert     Certificate in DER format
  * @param len_cert Length of certificate DER bytes
  * @param key      Private key in DER format, will be read from cert if NULL
@@ -432,8 +433,8 @@ int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
  * @return 0 if success, otherwise errorcode
  */
 int tls_set_certificate_der(struct tls *tls, enum tls_keytype keytype,
-		const uint8_t *cert, size_t len_cert, const uint8_t *key,
-		size_t len_key)
+			    const uint8_t *cert, size_t len_cert,
+			    const uint8_t *key, size_t len_key)
 {
 	const uint8_t *buf_cert;
 	X509 *x509 = NULL;
@@ -490,6 +491,7 @@ int tls_set_certificate_der(struct tls *tls, enum tls_keytype keytype,
 
 	return err;
 }
+
 
 /**
  * Set the certificate and private key on a TLS context

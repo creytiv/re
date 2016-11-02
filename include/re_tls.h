@@ -35,10 +35,10 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 int tls_add_ca(struct tls *tls, const char *capath);
 int tls_set_selfsigned(struct tls *tls, const char *cn);
 int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
-		const char *key, size_t len_key);
-int tls_set_certificate_der(struct tls *tls, enum tls_keytype key_type,
-		const uint8_t *cert, size_t len_cert, const uint8_t *key,
-		size_t len_key);
+			    const char *key, size_t len_key);
+int tls_set_certificate_der(struct tls *tls, enum tls_keytype keytype,
+			    const uint8_t *cert, size_t len_cert,
+			    const uint8_t *key, size_t len_key);
 int tls_set_certificate(struct tls *tls, const char *cert, size_t len);
 void tls_set_verify_client(struct tls *tls);
 int tls_set_srtp(struct tls *tls, const char *suites);
