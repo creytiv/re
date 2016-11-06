@@ -94,62 +94,60 @@ Please send private feedback to libre [at] creytiv.com
 
 ## Modules
 
-```
-  name:     status:       description:
-
-* aes       unstable      AES (Advanced Encryption Standard)
-* base64    testing       Base-64 encoding/decoding functions
-* bfcp      unstable      The Binary Floor Control Protocol (BFCP)
-* conf      testing       Configuration file parser
-* crc32     testing       32-bit CRC defined in ITU V.42
-* dbg       testing       Debug printing
-* dns       stable        DNS resolving (NAPTR, SRV, A)
-* fmt       testing       Formatted printing and regular expression
-* hash      testing       Hashmap table
-* hmac      testing       HMAC: Keyed-Hashing for Message Authentication
-* http      unstable      HTTP parser ([RFC 2616](https://tools.ietf.org/html/rfc2616))
-* httpauth  testing       HTTP-based Authentication ([RFC 2617](https://tools.ietf.org/html/rfc2617))
-* ice       unstable      Interactive Connectivity Establishment (ICE)
-* jbuf      testing       Jitter buffer
-* json      unstable      JavaScript Object Notation (JSON)
-* list      stable        Sortable doubly-linked list handling
-* lock      testing       Resource locking functions
-* main      testing       Main poll loop
-* mbuf      stable        Linear memory buffers
-* md5       stable        The MD5 Message-Digest Algorithm ([RFC 1321](https://tools.ietf.org/html/rfc1321))
-* mem       stable        Memory referencing
-* mod       testing       Run-time module loading
-* mqueue    testing       Thread-safe message queue
-* msg       unstable      Generic message component library
-* natbd     unstable      NAT Behavior Discovery using STUN
-* net       testing       Networking routines
-* odict     unstable      Ordered Dictionary
-* rtp       testing       Real-time Transport Protocol
-* sa        stable        Socket Address functions
-* sdp       testing       Session Description Protocol
-* sha       testing       Secure Hash Standard, NIST, FIPS PUB 180-1
-* sip       stable        Core SIP library
-* sipevent  testing       SIP Event framework
-* sipreg    stable        SIP register client
-* sipsess   stable        SIP Sessions
-* srtp      unstable      Secure Real-time Transport Protocol (SRTP)
-* stun      stable        Session Traversal Utilities for NAT (STUN)
-* sys       testing       System information
-* tcp       testing       TCP transport
-* telev     testing       Telephony Events ([RFC 4733](https://tools.ietf.org/html/rfc4733))
-* tls       unstable      Transport Layer Security
-* tmr       stable        Timer handling
-* turn      stable        Obtaining Relay Addresses from STUN (TURN)
-* udp       testing       UDP transport
-* uri       testing       Generic URI library
-* websock   unstable      WebSocket Client and Server
+| Name     | Status   | Description                                    |
+|----------|----------|------------------------------------------------|
+| aes      | unstable | AES (Advanced Encryption Standard)             |
+| base64   | testing  | Base-64 encoding/decoding functions            |
+| bfcp     | unstable | The Binary Floor Control Protocol (BFCP)       |
+| conf     | testing  | Configuration file parser                      |
+| crc32    | testing  | 32-bit CRC defined in ITU V.42                 |
+| dbg      | testing  | Debug printing                                 |
+| dns      | stable   | DNS resolving (NAPTR, SRV, A)                  |
+| fmt      | testing  | Formatted printing and regular expression      |
+| hash     | testing  | Hashmap table                                  |
+| hmac     | testing  | HMAC: Keyed-Hashing for Message Authentication |
+| http     | unstable | HTTP parser (RFC 2616)                         |
+| httpauth | testing  | HTTP-based Authentication (RFC 2617)           |
+| ice      | unstable | Interactive Connectivity Establishment (ICE)   |
+| jbuf     | testing  | Jitter buffer                                  |
+| json     | unstable | JavaScript Object Notation (JSON)              |
+| list     | stable   | Sortable doubly-linked list handling           |
+| lock     | testing  | Resource locking functions                     |
+| main     | testing  | Main poll loop                                 |
+| mbuf     | stable   | Linear memory buffers                          |
+| md5      | stable   | The MD5 Message-Digest Algorithm (RFC 1321)    |
+| mem      | stable   | Memory referencing                             |
+| mod      | testing  | Run-time module loading                        |
+| mqueue   | testing  | Thread-safe message queue                      |
+| msg      | unstable | Generic message component library              |
+| natbd    | unstable | NAT Behavior Discovery using STUN              |
+| net      | testing  | Networking routines                            |
+| odict    | unstable | Ordered Dictionary                             |
+| rtp      | testing  | Real-time Transport Protocol                   |
+| sa       | stable   | Socket Address functions                       |
+| sdp      | testing  | Session Description Protocol                   |
+| sha      | testing  | Secure Hash Standard, NIST, FIPS PUB 180-1     |
+| sip      | stable   | Core SIP library                               |
+| sipevent | testing  | SIP Event framework                            |
+| sipreg   | stable   | SIP register client                            |
+| sipsess  | stable   | SIP Sessions                                   |
+| srtp     | unstable | Secure Real-time Transport Protocol (SRTP)     |
+| stun     | stable   | Session Traversal Utilities for NAT (STUN)     |
+| sys      | testing  | System information                             |
+| tcp      | testing  | TCP transport                                  |
+| telev    | testing  | Telephony Events (RFC 4733)                    |
+| tls      | unstable | Transport Layer Security                       |
+| tmr      | stable   | Timer handling                                 |
+| turn     | stable   | Obtaining Relay Addresses from STUN (TURN)     |
+| udp      | testing  | UDP transport                                  |
+| uri      | testing  | Generic URI library                            |
+| websock  | unstable | WebSocket Client and Server                    |
 
 legend:
- "stable"       - Code complete; Stable code and stable API
- "testing"      - Code complete, but API might change
- "unstable"     - Code complete but not completely tested
- "development"  - Code is under development
-```
+* *stable* - code complete; stable code and stable API
+* *testing* - code complete, but API might change
+* *unstable* - code complete but not completely tested
+* *development* - code is under development
 
 
 ## Features
@@ -249,30 +247,18 @@ legend:
 ## Transport protocols
 
 
-```
-           TCP   UDP   TLS   DTLS
-           ~~~   ~~~   ~~~   ~~~~
-
-BFCP       -     yes   -     -
-
-DNS        yes   yes   -     -
-
-HTTP       yes   n/a   yes   n/a
-
-ICE        -     yes   -     -
-
-RTP        -     yes   -     -
-
-RTCP       -     yes   -     -
-
-SIP        yes   yes   yes   -
-
-STUN       yes   yes   yes   yes
-
-TURN       yes   yes   yes   yes
-
-WEBSOCK    yes   n/a   yes   n/a
-```
+|         | TCP | UDP | TLS | DTLS|
+|:--------|:---:|:---:|:---:|:---:|
+| BFCP    | -   | yes | -   | -   |
+| DNS     | yes | yes | -   | -   |
+| HTTP    | yes | n/a | yes | n/a |
+| ICE     | -   | yes | -   | -   |
+| RTP     | -   | yes | -   | -   |
+| RTCP    | -   | yes | -   | -   |
+| SIP     | yes | yes | yes | -   |
+| STUN    | yes | yes | yes | yes |
+| TURN    | yes | yes | yes | yes |
+| WEBSOCK | yes | n/a | yes | n/a |
 
 
 ## Related projects
