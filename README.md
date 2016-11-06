@@ -214,6 +214,14 @@ legend:
 * Apple Mac OS X and iOS
 * Android
 
+### Supported versions of C Standard library
+
+* Android bionic
+* BSD libc
+* GNU C Library (glibc)
+* Windows C Run-Time Libraries (CRT)
+* uClibc
+
 
 ## Supported compilers:
 
