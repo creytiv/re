@@ -11,7 +11,7 @@ Copyright (C) 2010 - 2016 Creytiv.com
 
 ## Features
 
-* SIP Stack (RFC 3261)
+* SIP Stack ([RFC 3261](https://tools.ietf.org/html/rfc3261))
 * SDP
 * RTP and RTCP
 * SRTP and SRTCP (Secure RTP)
@@ -107,8 +107,8 @@ Please send private feedback to libre [at] creytiv.com
 * fmt       testing       Formatted printing and regular expression
 * hash      testing       Hashmap table
 * hmac      testing       HMAC: Keyed-Hashing for Message Authentication
-* http      unstable      HTTP parser (RFC 2616)
-* httpauth  testing       HTTP-based Authentication (RFC 2617)
+* http      unstable      HTTP parser ([RFC 2616](https://tools.ietf.org/html/rfc2616))
+* httpauth  testing       HTTP-based Authentication ([RFC 2617](https://tools.ietf.org/html/rfc2617))
 * ice       unstable      Interactive Connectivity Establishment (ICE)
 * jbuf      testing       Jitter buffer
 * json      unstable      JavaScript Object Notation (JSON)
@@ -116,7 +116,7 @@ Please send private feedback to libre [at] creytiv.com
 * lock      testing       Resource locking functions
 * main      testing       Main poll loop
 * mbuf      stable        Linear memory buffers
-* md5       stable        The MD5 Message-Digest Algorithm (RFC 1321)
+* md5       stable        The MD5 Message-Digest Algorithm ([RFC 1321](https://tools.ietf.org/html/rfc1321))
 * mem       stable        Memory referencing
 * mod       testing       Run-time module loading
 * mqueue    testing       Thread-safe message queue
@@ -136,7 +136,7 @@ Please send private feedback to libre [at] creytiv.com
 * stun      stable        Session Traversal Utilities for NAT (STUN)
 * sys       testing       System information
 * tcp       testing       TCP transport
-* telev     testing       Telephony Events (RFC 4733)
+* telev     testing       Telephony Events ([RFC 4733](https://tools.ietf.org/html/rfc4733))
 * tls       unstable      Transport Layer Security
 * tmr       stable        Timer handling
 * turn      stable        Obtaining Relay Addresses from STUN (TURN)
@@ -154,53 +154,52 @@ legend:
 
 ## Features
 
-* RFC 1321 - The MD5 Message-Digest Algorithm
-* RFC 1886 - DNS Extensions to support IP version 6
-* RFC 2032 - RTP Payload Format for H.261 Video Streams
-* RFC 2616 - Hypertext Transfer Protocol -- HTTP/1.1
-* RFC 2617 - HTTP Authentication: Basic and Digest Access Authentication
-* RFC 2782 - A DNS RR for Specifying the Location of Services (DNS SRV)
-* RFC 2915 - The Naming Authority Pointer (NAPTR) DNS Resource Record
-* RFC 3261 - SIP: Session Initiation Protocol
-* RFC 3263 - Locating SIP Servers
-* RFC 3264 - An Offer/Answer Model with SDP
-* RFC 3265 - SIP-Specific Event Notification
-* RFC 3327 - SIP Extension Header Field for Registering Non-Adjacent Contacts
-* RFC 3428 - SIP Extension for Instant Messaging
-* RFC 3489 - STUN - Simple Traversal of UDP Through NATs
-* RFC 3515 - The SIP Refer Method
-* RFC 3550 - RTP: A Transport Protocol for Real-Time Applications
-* RFC 3551 - RTP Profile for Audio and Video Conferences with Minimal Control
-* RFC 3555 - MIME Type Registration of RTP Payload Formats
-* RFC 3556 - SDP Bandwidth Modifiers for RTCP Bandwidth
-* RFC 3581 - An Extension to SIP for Symmetric Response Routing
-* RFC 3605 - RTCP attribute in SDP
-* RFC 3711 - The Secure Real-time Transport Protocol (SRTP)
-* RFC 3969 - The IANA URI Parameter Registry for SIP
-* RFC 3994 - Indication of Message Composition for Instant Messaging
-* RFC 4346 - The TLS Protocol Version 1.1
-* RFC 4566 - SDP: Session Description Protocol
-* RFC 4582 - The Binary Floor Control Protocol (BFCP)
-* RFC 4585 - Extended RTP Profile for RTCP-Based Feedback
-* RFC 4733 - RTP Payload for DTMF Digits, Telephony Tones, and Teleph. Signals
-* RFC 4961 - Symmetric RTP / RTP Control Protocol (RTCP)
-* RFC 5118 - SIP Torture Test Messages for IPv6
-* RFC 5245 - Interactive Connectivity Establishment (ICE)
-* RFC 5389 - Session Traversal Utilities for NAT (STUN)
-* RFC 5626 - Managing Client-Initiated Connections in SIP
-* RFC 5761 - Multiplexing RTP Data and Control Packets on a Single Port
-* RFC 5766 - Traversal Using Relays around NAT (TURN)
-* RFC 5768 - Indicating Support for ICE in SIP
-* RFC 5769 - Test vectors for STUN
-* RFC 5780 - NAT Behaviour Discovery Using STUN
-* RFC 6026 - Correct Transaction Handling for 2xx Resp. to SIP INVITE Requests
-* RFC 6156 - TURN Extension for IPv6
-* RFC 6188 - The Use of AES-192 and AES-256 in Secure RTP
-* RFC 6455 - The WebSocket Protocol
-* RFC 7159 - JavaScript Object Notation (JSON)
-* RFC 7350 - DTLS as Transport for STUN
-* Symmetric RTP
-* draft-ietf-bfcpbis-rfc4582bis-08
+* [RFC 1321](https://tools.ietf.org/html/rfc1321) - The MD5 Message-Digest Algorithm
+* [RFC 1886](https://tools.ietf.org/html/rfc1886) - DNS Extensions to support IP version 6
+* [RFC 2032](https://tools.ietf.org/html/rfc2032) - RTP Payload Format for H.261 Video Streams
+* [RFC 2616](https://tools.ietf.org/html/rfc2616) - Hypertext Transfer Protocol -- HTTP/1.1
+* [RFC 2617](https://tools.ietf.org/html/rfc2617) - HTTP Authentication: Basic and Digest Access Authentication
+* [RFC 2782](https://tools.ietf.org/html/rfc2782) - A DNS RR for Specifying the Location of Services (DNS SRV)
+* [RFC 2915](https://tools.ietf.org/html/rfc2915) - The Naming Authority Pointer (NAPTR) DNS Resource Record
+* [RFC 3261](https://tools.ietf.org/html/rfc3261) - SIP: Session Initiation Protocol
+* [RFC 3263](https://tools.ietf.org/html/rfc3263) - Locating SIP Servers
+* [RFC 3264](https://tools.ietf.org/html/rfc3264) - An Offer/Answer Model with SDP
+* [RFC 3265](https://tools.ietf.org/html/rfc3265) - SIP-Specific Event Notification
+* [RFC 3327](https://tools.ietf.org/html/rfc3327) - SIP Extension Header Field for Registering Non-Adjacent Contacts
+* [RFC 3428](https://tools.ietf.org/html/rfc3428) - SIP Extension for Instant Messaging
+* [RFC 3489](https://tools.ietf.org/html/rfc3489) - STUN - Simple Traversal of UDP Through NATs
+* [RFC 3515](https://tools.ietf.org/html/rfc3515) - The SIP Refer Method
+* [RFC 3550](https://tools.ietf.org/html/rfc3550) - RTP: A Transport Protocol for Real-Time Applications
+* [RFC 3551](https://tools.ietf.org/html/rfc3551) - RTP Profile for Audio and Video Conferences with Minimal Control
+* [RFC 3555](https://tools.ietf.org/html/rfc3555) - MIME Type Registration of RTP Payload Formats
+* [RFC 3556](https://tools.ietf.org/html/rfc3556) - SDP Bandwidth Modifiers for RTCP Bandwidth
+* [RFC 3581](https://tools.ietf.org/html/rfc3581) - An Extension to SIP for Symmetric Response Routing
+* [RFC 3605](https://tools.ietf.org/html/rfc3605) - RTCP attribute in SDP
+* [RFC 3711](https://tools.ietf.org/html/rfc3711) - The Secure Real-time Transport Protocol (SRTP)
+* [RFC 3969](https://tools.ietf.org/html/rfc3969) - The IANA URI Parameter Registry for SIP
+* [RFC 3994](https://tools.ietf.org/html/rfc3994) - Indication of Message Composition for Instant Messaging
+* [RFC 4346](https://tools.ietf.org/html/rfc4346) - The TLS Protocol Version 1.1
+* [RFC 4566](https://tools.ietf.org/html/rfc4566) - SDP: Session Description Protocol
+* [RFC 4582](https://tools.ietf.org/html/rfc4582) - The Binary Floor Control Protocol (BFCP)
+* [RFC 4582bis](https://tools.ietf.org/html/draft-ietf-bfcpbis-rfc4582bis-08) - The Binary Floor Control Protocol (BFCP)
+* [RFC 4585](https://tools.ietf.org/html/rfc4585) - Extended RTP Profile for RTCP-Based Feedback
+* [RFC 4733](https://tools.ietf.org/html/rfc4733) - RTP Payload for DTMF Digits, Telephony Tones, and Teleph. Signals
+* [RFC 4961](https://tools.ietf.org/html/rfc4961) - Symmetric RTP / RTP Control Protocol (RTCP)
+* [RFC 5118](https://tools.ietf.org/html/rfc5118) - SIP Torture Test Messages for IPv6
+* [RFC 5245](https://tools.ietf.org/html/rfc5245) - Interactive Connectivity Establishment (ICE)
+* [RFC 5389](https://tools.ietf.org/html/rfc5389) - Session Traversal Utilities for NAT (STUN)
+* [RFC 5626](https://tools.ietf.org/html/rfc5626) - Managing Client-Initiated Connections in SIP
+* [RFC 5761](https://tools.ietf.org/html/rfc5761) - Multiplexing RTP Data and Control Packets on a Single Port
+* [RFC 5766](https://tools.ietf.org/html/rfc5766) - Traversal Using Relays around NAT (TURN)
+* [RFC 5768](https://tools.ietf.org/html/rfc5768) - Indicating Support for ICE in SIP
+* [RFC 5769](https://tools.ietf.org/html/rfc5769) - Test vectors for STUN
+* [RFC 5780](https://tools.ietf.org/html/rfc5780) - NAT Behaviour Discovery Using STUN
+* [RFC 6026](https://tools.ietf.org/html/rfc6026) - Correct Transaction Handling for 2xx Resp. to SIP INVITE Requests
+* [RFC 6156](https://tools.ietf.org/html/rfc6156) - TURN Extension for IPv6
+* [RFC 6188](https://tools.ietf.org/html/rfc6188) - The Use of AES-192 and AES-256 in Secure RTP
+* [RFC 6455](https://tools.ietf.org/html/rfc6455) - The WebSocket Protocol
+* [RFC 7159](https://tools.ietf.org/html/rfc7159) - JavaScript Object Notation (JSON)
+* [RFC 7350](https://tools.ietf.org/html/rfc7350) - DTLS as Transport for STUN
 
 
 ## Supported platforms
