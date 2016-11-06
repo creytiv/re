@@ -2,8 +2,11 @@ libre README
 ============
 
 
-libre is a Generic library for real-time communications with async IO support
+libre is a Generic library for real-time communications with async IO support.
 Copyright (C) 2010 - 2016 Creytiv.com
+
+
+[![Build Status](https://travis-ci.org/creytiv/re.svg?branch=master)](https://travis-ci.org/creytiv/re)
 
 
 ## Features
@@ -21,6 +24,37 @@ Copyright (C) 2010 - 2016 Creytiv.com
 * Async I/O (poll, epoll, select, kqueue)
 * UDP/TCP/TLS/DTLS transport
 * JSON parser
+
+
+## Building
+
+libre is using GNU makefiles, and OpenSSL development headers must be
+installed before building.
+
+
+### Build with debug enabled
+
+```
+$ make
+$ sudo make install
+$ sudo ldconfig
+```
+
+### Build with release
+
+```
+$ make RELEASE=1
+$ sudo make RELEASE=1 install
+$ sudo ldconfig
+```
+
+### Build with clang compiler
+
+```
+$ make CC=clang
+$ sudo make CC=clang install
+$ sudo ldconfig
+```
 
 
 ## Documentation
@@ -47,7 +81,7 @@ Patches can sent via Github
 [Pull-Requests](https://github.com/creytiv/re/pulls) or to the RE devel
 [mailing-list](http://lists.creytiv.com/mailman/listinfo/re-devel).
 Currently we only accept small patches.
-Please send private feedback to <libre [at] creytiv.com>
+Please send private feedback to libre [at] creytiv.com
 
 
 ## Design goals
@@ -246,6 +280,8 @@ WEBSOCK    yes   n/a   yes   n/a
 ## References
 
 http://creytiv.com/re.html
+
+https://github.com/creytiv/re
 
 http://lists.creytiv.com/mailman/listinfo/re-devel
 
