@@ -56,3 +56,4 @@ int udp_register_helper(struct udp_helper **uhp, struct udp_sock *us,
 			void *arg);
 int udp_send_helper(struct udp_sock *us, const struct sa *dst,
 		    struct mbuf *mb, struct udp_helper *uh);
+struct udp_helper *udp_helper_find(const struct udp_sock *us, int layer);
