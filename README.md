@@ -1,13 +1,90 @@
-README
-------
+libre README
+============
 
-libre - "Generic library for real-time communications with async IO support"
+
+libre is a Generic library for real-time communications with async IO support.
 Copyright (C) 2010 - 2016 Creytiv.com
 
-Distributed under BSD license
+
+[![Build Status](https://travis-ci.org/creytiv/re.svg?branch=master)](https://travis-ci.org/creytiv/re)
 
 
-Design goals:
+## Features
+
+* SIP Stack (RFC 3261)
+* SDP
+* RTP and RTCP
+* SRTP and SRTCP (Secure RTP)
+* DNS-Client
+* STUN/TURN/ICE stack
+* BFCP
+* HTTP-stack with client/server
+* Websockets
+* Jitter-buffer
+* Async I/O (poll, epoll, select, kqueue)
+* UDP/TCP/TLS/DTLS transport
+* JSON parser
+
+
+## Building
+
+libre is using GNU makefiles, and OpenSSL development headers must be
+installed before building.
+
+
+### Build with debug enabled
+
+```
+$ make
+$ sudo make install
+$ sudo ldconfig
+```
+
+### Build with release
+
+```
+$ make RELEASE=1
+$ sudo make RELEASE=1 install
+$ sudo ldconfig
+```
+
+### Build with clang compiler
+
+```
+$ make CC=clang
+$ sudo make CC=clang install
+$ sudo ldconfig
+```
+
+
+## Documentation
+
+The online documentation generated with doxygen is available in
+the main [website](http://creytiv.com/doxygen/re-dox/html/)
+
+
+
+### Examples
+
+Coding examples are available from the
+[redemo](http://creytiv.com/pub/redemo-0.4.1.tar.gz) project
+
+
+## License
+
+The libre project is using the BSD license.
+
+
+## Contributing
+
+Patches can sent via Github
+[Pull-Requests](https://github.com/creytiv/re/pulls) or to the RE devel
+[mailing-list](http://lists.creytiv.com/mailman/listinfo/re-devel).
+Currently we only accept small patches.
+Please send private feedback to libre [at] creytiv.com
+
+
+## Design goals
 
 * Portable POSIX source code (ANSI C89 and ISO C99 standard)
 * Robust, fast, low memory footprint
@@ -15,8 +92,9 @@ Design goals:
 * IPv4 and IPv6 support
 
 
-Modules:
+## Modules
 
+```
   name:     status:       description:
 
 * aes       unstable      AES (Advanced Encryption Standard)
@@ -71,9 +149,10 @@ legend:
  "testing"      - Code complete, but API might change
  "unstable"     - Code complete but not completely tested
  "development"  - Code is under development
+```
 
 
-Features:
+## Features
 
 * RFC 1321 - The MD5 Message-Digest Algorithm
 * RFC 1886 - DNS Extensions to support IP version 6
@@ -124,7 +203,7 @@ Features:
 * draft-ietf-bfcpbis-rfc4582bis-08
 
 
-Supported platforms:
+## Supported platforms
 
 * Linux
 * FreeBSD
@@ -135,8 +214,16 @@ Supported platforms:
 * Apple Mac OS X and iOS
 * Android
 
+### Supported versions of C Standard library
 
-Supported compilers:
+* Android bionic
+* BSD libc
+* GNU C Library (glibc)
+* Windows C Run-Time Libraries (CRT)
+* uClibc
+
+
+## Supported compilers:
 
 * gcc (v2.9x to v4.x)
 * gcce
@@ -144,12 +231,7 @@ Supported compilers:
 * clang
 
 
-Feedback:
-
-- Please send feedback to <libre [at] creytiv.com>
-
-
-Coding guidelines:
+## Coding guidelines
 
 * Use enum for constants where appropriate
 * Use const as much as possible (where appropriate)
@@ -165,9 +247,10 @@ Coding guidelines:
   parse errors and EPROTO for protocol errors
 
 
-Transport protocols:
+## Transport protocols
 
 
+```
            TCP   UDP   TLS   DTLS
            ~~~   ~~~   ~~~   ~~~~
 
@@ -190,3 +273,23 @@ STUN       yes   yes   yes   yes
 TURN       yes   yes   yes   yes
 
 WEBSOCK    yes   n/a   yes   n/a
+```
+
+
+## Related projects
+
+* [librem](https://github.com/creytiv/rem)
+* [retest](https://github.com/creytiv/retest)
+* [baresip](https://github.com/alfredh/baresip)
+* [restund](http://creytiv.com/restund.html)
+
+
+
+## References
+
+http://creytiv.com/re.html
+
+https://github.com/creytiv/re
+
+http://lists.creytiv.com/mailman/listinfo/re-devel
+
