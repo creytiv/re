@@ -808,3 +808,30 @@ int udp_send_helper(struct udp_sock *us, const struct sa *dst,
 
 	return udp_send_internal(us, dst, mb, uh->le.prev);
 }
+
+
+/**
+ * Find a UDP-helper on a UDP socket
+ *
+ * @param us    UDP socket
+ * @param layer Layer number
+ *
+ * @return UDP-helper if found, NULL if not found
+ */
+struct udp_helper *udp_helper_find(const struct udp_sock *us, int layer)
+{
+	struct le *le;
+
+	if (!us)
+		return NULL;
+
+	for (le = us->helpers.head; le; le = le->next) {
+
+		struct udp_helper *uh = le->data;
+
+		if (layer == uh->layer)
+			return uh;
+	}
+
+	return NULL;
+}
