@@ -59,6 +59,8 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
  out:
 #if __RES >= 19980901
 	res_nclose(&state);
+#elif !defined(OPENBSD)
+	res_close();
 #endif
 
 	return err;
