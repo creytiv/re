@@ -710,6 +710,16 @@ tar:
 		&& echo "created source tarball `pwd`/$(TAR_SRC).tar.gz"
 
 
+git_release:
+	git archive --format=tar --prefix=$(PROJECT)-$(VERSION)/ v$(VERSION) \
+		| gzip > ../$(PROJECT)-$(VERSION).tar.gz
+
+
+git_snapshot:
+	git archive --format=tar --prefix=$(PROJECT)-$(VERSION)/ HEAD \
+		| gzip > ../$(PROJECT)-$(VERSION).tar.gz
+
+
 # Debian
 .PHONY: deb
 deb:
