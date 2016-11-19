@@ -220,12 +220,21 @@ legend:
 * uClibc
 
 
-## Supported compilers:
+### Supported compilers:
 
-* gcc (v2.9x to v4.x)
-* gcce
+* gcc 3.x
+* gcc 4.x
+* gcc 5.x
+* gcc 6.x
 * ms vc2003 compiler
 * clang
+
+### Supported versions of OpenSSL
+
+* OpenSSL version 1.0.1
+* OpenSSL version 1.0.2
+* OpenSSL version 1.1.0 (supported since version 0.5.0)
+* LibreSSL version 2.x
 
 
 ## Coding guidelines
