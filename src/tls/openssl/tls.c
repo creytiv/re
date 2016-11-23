@@ -24,6 +24,12 @@
 #include "tls.h"
 
 
+/* also defined by wincrypt.h */
+#ifdef WIN32
+#undef X509_NAME
+#endif
+
+
 #define DEBUG_MODULE "tls"
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
