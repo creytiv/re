@@ -1,3 +1,32 @@
+2016-11-25 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.0
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: add Dragonfly BSD (thanks Dmitrij D. Czarkoff)
+		 remove support for Symbian OS
+
+	* aes: add support for OpenSSL version 1.1.0
+
+	* dns: dns/resolv cleanup (#11)
+	       (thanks Dmitrij D. Czarkoff)
+
+	* hmac: add support for OpenSSL version 1.1.0
+
+	* main: remove support for ActiveScheduler (SymbianOS)
+
+	* tls: add support for OpenSSL version 1.1.0
+	       add tls_set_certificate_pem()
+	       add tls_set_certificate_der()
+	       add dtls_peer()
+	       add dtls_set_peer()
+	       add tls_flush_error to dump openssl errors
+	       (thanks to Lennart Grahl)
+
+	* udp: add udp_helper_find()
+
+
 2016-06-24 Alfred E. Heggestad <aeh@db.org>
 
 	* Version 0.4.17

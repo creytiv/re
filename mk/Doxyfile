@@ -93,7 +93,7 @@ EXCLUDE                = test.c \
 
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = */.svn/*
-EXAMPLE_PATH           = docs
+EXAMPLE_PATH           = .
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
 IMAGE_PATH             = 
