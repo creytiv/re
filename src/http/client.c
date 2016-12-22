@@ -10,6 +10,7 @@
 #include <re_mbuf.h>
 #include <re_sa.h>
 #include <re_list.h>
+#include <re_hash.h>
 #include <re_fmt.h>
 #include <re_tmr.h>
 #include <re_srtp.h>
@@ -22,29 +23,36 @@
 
 enum {
 	CONN_TIMEOUT = 30000,
-	RECV_TIMEOUT = 30000,
+	RECV_TIMEOUT = 60000,
+	IDLE_TIMEOUT = 900000,
 	BUFSIZE_MAX  = 524288,
+	CONN_BSIZE   = 256,
 };
 
 struct http_cli {
+	struct list reql;
+	struct hash *ht_conn;
 	struct dnsc *dnsc;
 	struct tls *tls;
 };
 
+struct conn;
+
 struct http_req {
 	struct sa srvv[16];
-	struct tmr tmr;
+	struct le le;
 	struct http_req **reqp;
+	struct http_cli *cli;
 	struct dns_query *dq;
-	struct tls_conn *sc;
-	struct tcp_conn *tc;
+	struct conn *conn;
 	struct mbuf *mbreq;
 	struct mbuf *mb;
-	struct tls *tls;
 	char *host;
 	http_resp_h *resph;
 	http_data_h *datah;
 	void *arg;
+	size_t rx_bytes;
+	size_t rx_len;
 	unsigned srvc;
 	uint16_t port;
 	bool secure;
@@ -52,13 +60,36 @@ struct http_req {
 };
 
 
+struct conn {
+	struct tmr tmr;
+	struct sa addr;
+	struct le he;
+	struct http_req *req;
+	struct tls_conn *sc;
+	struct tcp_conn *tc;
+};
+
+
+static void req_close(struct http_req *req, int err,
+		      const struct http_msg *msg);
 static int req_connect(struct http_req *req);
+static void timeout_handler(void *arg);
 
 
 static void cli_destructor(void *arg)
 {
 	struct http_cli *cli = arg;
+	struct le *le = cli->reql.head;
 
+	while (le) {
+		struct http_req *req = le->data;
+
+		le = le->next;
+		req_close(req, ECONNABORTED, NULL);
+	}
+
+	hash_flush(cli->ht_conn);
+	mem_deref(cli->ht_conn);
 	mem_deref(cli->dnsc);
 	mem_deref(cli->tls);
 }
@@ -68,25 +99,44 @@ static void req_destructor(void *arg)
 {
 	struct http_req *req = arg;
 
-	tmr_cancel(&req->tmr);
+	list_unlink(&req->le);
 	mem_deref(req->dq);
-	mem_deref(req->sc);
-	mem_deref(req->tc);
+	mem_deref(req->conn);
 	mem_deref(req->mbreq);
 	mem_deref(req->mb);
-	mem_deref(req->tls);
 	mem_deref(req->host);
+}
+
+
+static void conn_destructor(void *arg)
+{
+	struct conn *conn = arg;
+
+	tmr_cancel(&conn->tmr);
+	hash_unlink(&conn->he);
+	mem_deref(conn->sc);
+	mem_deref(conn->tc);
+}
+
+
+static void conn_idle(struct conn *conn)
+{
+	tmr_start(&conn->tmr, IDLE_TIMEOUT, timeout_handler, conn);
+	conn->req = NULL;
 }
 
 
 static void req_close(struct http_req *req, int err,
 		      const struct http_msg *msg)
 {
-	tmr_cancel(&req->tmr);
+	list_unlink(&req->le);
 	req->dq = mem_deref(req->dq);
-	req->sc = mem_deref(req->sc);
-	req->tc = mem_deref(req->tc);
 	req->datah = NULL;
+
+	if (req->conn) {
+		conn_idle(req->conn);
+		req->conn = NULL;
+	}
 
 	if (req->reqp) {
 		*req->reqp = NULL;
@@ -97,15 +147,19 @@ static void req_close(struct http_req *req, int err,
 		req->resph(err, msg, req->arg);
 		req->resph = NULL;
 	}
+
+	mem_deref(req);
 }
 
 
-static void timeout_handler(void *arg)
+static void req_next(struct http_req *req, int err)
 {
-	struct http_req *req = arg;
-	int err = ETIMEDOUT;
+	if (!req)
+		return;
 
-	if (req->srvc > 0) {
+	req->conn = NULL;
+
+	if (req->srvc > 0 && !req->data) {
 
 		err = req_connect(req);
 		if (!err)
@@ -113,36 +167,75 @@ static void timeout_handler(void *arg)
 	}
 
 	req_close(req, err, NULL);
+}
+
+
+static void req_recv(struct http_req *req, struct mbuf *mb)
+{
+	uint32_t nrefs;
+
+	req->rx_bytes += mbuf_get_left(mb);
+
+	mem_ref(req);
+
+	if (req->datah)
+		req->datah(mb, req->arg);
+
+	nrefs = mem_nrefs(req);
 	mem_deref(req);
+
+	if (nrefs == 1)
+		return;
+
+	if (req->rx_bytes < req->rx_len)
+		return;
+
+	req_close(req, 0, NULL);
+}
+
+
+static void timeout_handler(void *arg)
+{
+	struct conn *conn = arg;
+
+	req_next(conn->req, ETIMEDOUT);
+	mem_deref(conn);
 }
 
 
 static void estab_handler(void *arg)
 {
-	struct http_req *req = arg;
+	struct conn *conn = arg;
+	struct http_req *req = conn->req;
 	int err;
 
-	err = tcp_send(req->tc, req->mbreq);
+	if (!req)
+		return;
+
+	err = tcp_send(conn->tc, req->mbreq);
 	if (err) {
-		req_close(req, err, NULL);
-		mem_deref(req);
+		req_next(req, err);
+		mem_deref(conn);
 		return;
 	}
 
-	tmr_start(&req->tmr, RECV_TIMEOUT, timeout_handler, req);
+	tmr_start(&conn->tmr, RECV_TIMEOUT, timeout_handler, conn);
 }
 
 
 static void recv_handler(struct mbuf *mb, void *arg)
 {
 	struct http_msg *msg = NULL;
-	struct http_req *req = arg;
+	struct conn *conn = arg;
+	struct http_req *req = conn->req;
 	size_t pos;
 	int err;
 
+	if (!req)
+		return;
+
 	if (req->data) {
-		if (req->datah)
-			req->datah(mb, req->arg);
+		req_recv(req, mb);
 		return;
 	}
 
@@ -180,11 +273,30 @@ static void recv_handler(struct mbuf *mb, void *arg)
 	}
 
 	if (req->datah) {
-		tmr_cancel(&req->tmr);
+
+		uint32_t nrefs;
+
+		if (http_msg_hdr(msg, HTTP_HDR_CONTENT_LENGTH))
+			req->rx_len = msg->clen;
+		else
+			req->rx_len = -1;
+
+		tmr_cancel(&conn->tmr);
 		req->data = true;
+
+		mem_ref(req);
+
 		if (req->resph)
 			req->resph(0, msg, req->arg);
+
+		nrefs = mem_nrefs(req);
+		mem_deref(req);
+
 		mem_deref(msg);
+
+		if (nrefs > 1 && mbuf_get_left(req->mb))
+			req_recv(req, req->mb);
+
 		return;
 	}
 
@@ -198,24 +310,90 @@ static void recv_handler(struct mbuf *mb, void *arg)
 
  out:
 	req_close(req, err, msg);
-	mem_deref(req);
 	mem_deref(msg);
+
+	if (err)
+		mem_deref(conn);
 }
 
 
 static void close_handler(int err, void *arg)
 {
-	struct http_req *req = arg;
+	struct conn *conn = arg;
 
-	if (req->srvc > 0 && !req->data) {
+	req_next(conn->req, err ? err : ECONNRESET);
+	mem_deref(conn);
+}
 
-		err = req_connect(req);
-		if (!err)
-			return;
+
+static bool conn_cmp(struct le *le, void *arg)
+{
+	const struct conn *conn = le->data;
+	const struct http_req *req = arg;
+
+	if (!sa_cmp(&req->srvv[req->srvc], &conn->addr, SA_ALL))
+		return false;
+
+	if (req->secure != !!conn->sc)
+		return false;
+
+	return conn->req == NULL;
+}
+
+
+static int conn_connect(struct http_req *req)
+{
+	const struct sa *addr = &req->srvv[req->srvc];
+	struct conn *conn;
+	int err;
+
+	conn = list_ledata(hash_lookup(req->cli->ht_conn,
+				       sa_hash(addr, SA_ALL), conn_cmp, req));
+	if (conn) {
+		err = tcp_send(conn->tc, req->mbreq);
+		if (err)
+			goto out;
+
+		tmr_start(&conn->tmr, RECV_TIMEOUT, timeout_handler, conn);
+
+		req->conn = conn;
+		conn->req = req;
+
+		return 0;
 	}
 
-	req_close(req, err ? err : ECONNRESET, NULL);
-	mem_deref(req);
+	conn = mem_zalloc(sizeof(*conn), conn_destructor);
+	if (!conn)
+		return ENOMEM;
+
+	hash_append(req->cli->ht_conn, sa_hash(addr, SA_ALL), &conn->he, conn);
+
+	conn->addr = *addr;
+
+	err = tcp_connect(&conn->tc, addr, estab_handler, recv_handler,
+			  close_handler, conn);
+	if (err)
+		goto out;
+
+#ifdef USE_TLS
+	if (req->secure) {
+
+		err = tls_start_tcp(&conn->sc, req->cli->tls, conn->tc, 0);
+		if (err)
+			goto out;
+	}
+#endif
+
+	tmr_start(&conn->tmr, CONN_TIMEOUT, timeout_handler, conn);
+
+	req->conn = conn;
+	conn->req = req;
+
+ out:
+	if (err)
+		mem_deref(conn);
+
+	return err;
 }
 
 
@@ -227,29 +405,11 @@ static int req_connect(struct http_req *req)
 
 		--req->srvc;
 
-		tmr_cancel(&req->tmr);
-		req->sc = mem_deref(req->sc);
-		req->tc = mem_deref(req->tc);
 		req->mb = mem_deref(req->mb);
 
-		err = tcp_connect(&req->tc, &req->srvv[req->srvc],
-				  estab_handler, recv_handler, close_handler,
-				  req);
-		if (err)
-			continue;
-
-#ifdef USE_TLS
-		if (req->secure) {
-
-			err = tls_start_tcp(&req->sc, req->tls, req->tc, 0);
-			if (err) {
-				req->tc = mem_deref(req->tc);
-				continue;
-			}
-		}
-#endif
-		tmr_start(&req->tmr, CONN_TIMEOUT, timeout_handler, req);
-		break;
+		err = conn_connect(req);
+		if (!err)
+			break;
 	}
 
 	return err;
@@ -303,7 +463,6 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 
  fail:
 	req_close(req, err, NULL);
-	mem_deref(req);
 }
 
 
@@ -332,7 +491,7 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 	va_list ap;
 	int err;
 
-	if (!reqp || !cli || !met || !uri)
+	if (!cli || !met || !uri)
 		return EINVAL;
 
 	if (re_regex(uri, strlen(uri), "[a-z]+://[^:/]+[:]*[0-9]*[^]+",
@@ -358,7 +517,9 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 	if (!req)
 		return ENOMEM;
 
-	req->tls    = mem_ref(cli->tls);
+	list_append(&cli->reql, &req->le, req);
+
+	req->cli    = cli;
 	req->secure = secure;
 	req->port   = pl_isset(&port) ? pl_u32(&port) : defport;
 	req->resph  = resph;
@@ -411,7 +572,7 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
  out:
 	if (err)
 		mem_deref(req);
-	else {
+	else if (reqp) {
 		req->reqp = reqp;
 		*reqp = req;
 	}
@@ -440,6 +601,10 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 	if (!cli)
 		return ENOMEM;
 
+	err = hash_alloc(&cli->ht_conn, CONN_BSIZE);
+	if (err)
+		goto out;
+
 #ifdef USE_TLS
 	err = tls_alloc(&cli->tls, TLS_METHOD_SSLV23, NULL, NULL);
 #else
@@ -462,11 +627,17 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 
 struct tcp_conn *http_req_tcp(struct http_req *req)
 {
-	return req ? req->tc : NULL;
+	if (!req || !req->conn)
+		return NULL;
+
+	return req->conn->tc;
 }
 
 
 struct tls_conn *http_req_tls(struct http_req *req)
 {
-	return req ? req->sc : NULL;
+	if (!req || !req->conn)
+		return NULL;
+
+	return req->conn->sc;
 }
