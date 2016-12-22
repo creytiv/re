@@ -358,7 +358,8 @@ static int conn_connect(struct http_req *req)
 	if (conn) {
 		err = tcp_send(conn->tc, req->mbreq);
 		if (!err) {
-			tmr_start(&conn->tmr, RECV_TIMEOUT, timeout_handler, conn);
+			tmr_start(&conn->tmr, RECV_TIMEOUT,
+				  timeout_handler, conn);
 
 			req->conn = conn;
 			conn->req = req;
