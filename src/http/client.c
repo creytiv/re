@@ -67,6 +67,7 @@ struct conn {
 	struct http_req *req;
 	struct tls_conn *sc;
 	struct tcp_conn *tc;
+	uint64_t usec;
 };
 
 
@@ -152,12 +153,20 @@ static void req_close(struct http_req *req, int err,
 }
 
 
-static void req_next(struct http_req *req, int err)
+static void try_next(struct conn *conn, int err)
 {
+	struct http_req *req = conn->req;
+	bool retry = conn->usec > 1;
+
+	mem_deref(conn);
+
 	if (!req)
 		return;
 
 	req->conn = NULL;
+
+	if (retry)
+		++req->srvc;
 
 	if (req->srvc > 0 && !req->data) {
 
@@ -198,8 +207,7 @@ static void timeout_handler(void *arg)
 {
 	struct conn *conn = arg;
 
-	req_next(conn->req, ETIMEDOUT);
-	mem_deref(conn);
+	try_next(conn, ETIMEDOUT);
 }
 
 
@@ -214,8 +222,7 @@ static void estab_handler(void *arg)
 
 	err = tcp_send(conn->tc, req->mbreq);
 	if (err) {
-		req_next(req, err);
-		mem_deref(conn);
+		try_next(conn, err);
 		return;
 	}
 
@@ -321,8 +328,7 @@ static void close_handler(int err, void *arg)
 {
 	struct conn *conn = arg;
 
-	req_next(conn->req, err ? err : ECONNRESET);
-	mem_deref(conn);
+	try_next(conn, err ? err : ECONNRESET);
 }
 
 
@@ -351,15 +357,18 @@ static int conn_connect(struct http_req *req)
 				       sa_hash(addr, SA_ALL), conn_cmp, req));
 	if (conn) {
 		err = tcp_send(conn->tc, req->mbreq);
-		if (err)
-			goto out;
+		if (!err) {
+			tmr_start(&conn->tmr, RECV_TIMEOUT, timeout_handler, conn);
 
-		tmr_start(&conn->tmr, RECV_TIMEOUT, timeout_handler, conn);
+			req->conn = conn;
+			conn->req = req;
 
-		req->conn = conn;
-		conn->req = req;
+			++conn->usec;
 
-		return 0;
+			return 0;
+		}
+
+		mem_deref(conn);
 	}
 
 	conn = mem_zalloc(sizeof(*conn), conn_destructor);
@@ -369,6 +378,7 @@ static int conn_connect(struct http_req *req)
 	hash_append(req->cli->ht_conn, sa_hash(addr, SA_ALL), &conn->he, conn);
 
 	conn->addr = *addr;
+	conn->usec = 1;
 
 	err = tcp_connect(&conn->tc, addr, estab_handler, recv_handler,
 			  close_handler, conn);
