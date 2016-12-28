@@ -56,6 +56,7 @@ struct http_req {
 	unsigned srvc;
 	uint16_t port;
 	bool secure;
+	bool close;
 	bool data;
 };
 
@@ -135,7 +136,11 @@ static void req_close(struct http_req *req, int err,
 	req->datah = NULL;
 
 	if (req->conn) {
-		conn_idle(req->conn);
+		if (err || req->close)
+			mem_deref(req->conn);
+		else
+			conn_idle(req->conn);
+
 		req->conn = NULL;
 	}
 
@@ -233,6 +238,7 @@ static void estab_handler(void *arg)
 static void recv_handler(struct mbuf *mb, void *arg)
 {
 	struct http_msg *msg = NULL;
+	const struct http_hdr *hdr;
 	struct conn *conn = arg;
 	struct http_req *req = conn->req;
 	size_t pos;
@@ -279,6 +285,11 @@ static void recv_handler(struct mbuf *mb, void *arg)
 		goto out;
 	}
 
+	hdr = http_msg_hdr(msg, HTTP_HDR_CONNECTION);
+
+	if (hdr && !pl_strcasecmp(&hdr->val, "close"))
+		req->close = true;
+
 	if (req->datah) {
 
 		uint32_t nrefs;
@@ -318,9 +329,6 @@ static void recv_handler(struct mbuf *mb, void *arg)
  out:
 	req_close(req, err, msg);
 	mem_deref(msg);
-
-	if (err)
-		mem_deref(conn);
 }
 
 
