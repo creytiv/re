@@ -550,6 +550,24 @@ static int print_handler_dyn(const char *p, size_t size, void *arg)
 }
 
 
+struct strm_print {
+	FILE *f;
+	size_t n;
+};
+
+static int print_handler_stream(const char *p, size_t size, void *arg)
+{
+	struct strm_print *sp = arg;
+
+	if (1 != fwrite(p, size, 1, sp->f))
+		return ENOMEM;
+
+	sp->n += size;
+
+	return 0;
+}
+
+
 /**
  * Print a formatted string to a file stream, using va_list
  *
@@ -561,25 +579,18 @@ static int print_handler_dyn(const char *p, size_t size, void *arg)
  */
 int re_vfprintf(FILE *stream, const char *fmt, va_list ap)
 {
-	char buf[4096]; /* TODO: avoid static, use print_handler_dyn ? */
-	struct pl pl;
-	size_t n;
+	struct strm_print sp;
 
 	if (!stream)
 		return -1;
 
-	pl.p = buf;
-	pl.l = sizeof(buf);
+	sp.f = stream;
+	sp.n = 0;
 
-	if (0 != re_vhprintf(fmt, ap, print_handler, &pl))
+	if (0 != re_vhprintf(fmt, ap, print_handler_stream, &sp))
 		return -1;
 
-	n = sizeof(buf) - pl.l;
-
-	if (1 != fwrite(buf, n, 1, stream))
-		return -1;
-
-	return (int)n;
+	return (int)sp.n;
 }
 
 
