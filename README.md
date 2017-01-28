@@ -3,7 +3,7 @@ libre README
 
 
 libre is a Generic library for real-time communications with async IO support.
-Copyright (C) 2010 - 2016 Creytiv.com
+Copyright (C) 2010 - 2017 Creytiv.com
 
 
 [![Build Status](https://travis-ci.org/creytiv/re.svg?branch=master)](https://travis-ci.org/creytiv/re)
