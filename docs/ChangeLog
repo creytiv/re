@@ -1,3 +1,17 @@
+2017-02-04 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.1
+
+	* Project URL: https://github.com/creytiv/re
+
+	* fmt: print directly to stream using handler (#38)
+
+	* http: HTTP client improvements (#36)
+	  - http client connection reuse
+	  - retry failed requests using fresh connections
+	  - Handle Connection: close response header
+
+
 2016-11-25 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.0
