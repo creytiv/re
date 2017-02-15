@@ -34,7 +34,7 @@ int srtcp_encrypt(struct srtp *srtp, struct mbuf *mb)
 	struct comp *rtcp;
 	uint32_t ssrc;
 	size_t start;
-	int ep = 0;
+	uint32_t ep = 0;
 	int err;
 
 	if (!srtp || !mb)
