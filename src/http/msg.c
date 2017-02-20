@@ -187,13 +187,15 @@ int http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req)
 
 	char *cm;
 	int ec = pl_strdup(&cm, &msg->prm);
-	if( ec )
+	if ( ec ) {
 		return EBADMSG;
+	}
 
 	char *cmPtr;
 	for (cmPtr = cm; *cmPtr != '\0'; cmPtr++){
-	  if(*cmPtr == '+')
+	  if (*cmPtr == '+') {
 		 	*cmPtr = ' ';
+		}
 	}
 
 	pl_set_str(&msg->prm, cm);
