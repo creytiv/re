@@ -184,6 +184,12 @@ int http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req)
 		msg->scode = pl_u32(&scode);
 	}
 
+	char *rep = pl_strchr(&msg->prm, '+');
+	while(rep){
+		*rep = ' ';
+		rep = pl_strchr(&msg->prm, '+');
+	}
+
 	l -= e.p + e.l - p;
 	p = e.p + e.l;
 
