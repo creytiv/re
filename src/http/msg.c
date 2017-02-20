@@ -184,11 +184,20 @@ int http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req)
 		msg->scode = pl_u32(&scode);
 	}
 
-	char *rep = pl_strchr(&msg->prm, '+');
-	while(rep){
-		*rep = ' ';
-		rep = pl_strchr(&msg->prm, '+');
+
+	char *cm;
+	int ec = pl_strdup(&cm, &msg->prm);
+	if( ec )
+		return EBADMSG;
+
+	char *cmPtr;
+	for (cmPtr = cm; *cmPtr != '\0'; cmPtr++){
+	  if(*cmPtr == '+')
+		 	*cmPtr = ' ';
 	}
+
+	pl_set_str(&msg->prm, cm);
+
 
 	l -= e.p + e.l - p;
 	p = e.p + e.l;
