@@ -784,7 +784,7 @@ static int fd_poll(struct re *re)
 				flags |= FD_READ;
 			if (re->events[i].events & EPOLLOUT)
 				flags |= FD_WRITE;
-			if (re->events[i].events & EPOLLERR)
+			if (re->events[i].events & (EPOLLERR|EPOLLHUP))
 				flags |= FD_EXCEPT;
 
 			if (!flags) {
