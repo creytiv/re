@@ -282,7 +282,7 @@ void icem_checklist_update(struct icem *icem)
 	icem->state = err ? ICE_CHECKLIST_FAILED : ICE_CHECKLIST_COMPLETED;
 
 	if (icem->chkh) {
-		icem->chkh(err, icem->ice->lrole == ROLE_CONTROLLING,
+		icem->chkh(err, icem->ice->lrole == ICE_ROLE_CONTROLLING,
 			   icem->arg);
 	}
 }

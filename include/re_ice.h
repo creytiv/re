@@ -11,6 +11,13 @@ enum ice_mode {
 	ICE_MODE_LITE
 };
 
+/** ICE Role */
+enum ice_role {
+	ICE_ROLE_UNKNOWN = 0,
+	ICE_ROLE_CONTROLLING,
+	ICE_ROLE_CONTROLLED
+};
+
 /** ICE Component ID */
 enum ice_compid {
 	ICE_COMPID_RTP  = 1,
@@ -111,6 +118,7 @@ extern const char ice_attr_ufrag[];
 
 const char        *ice_cand_type2name(enum ice_cand_type type);
 enum ice_cand_type ice_cand_name2type(const char *name);
+const char    *ice_role2name(enum ice_role role);
 
 
 uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,

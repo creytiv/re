@@ -49,13 +49,13 @@ const char *ice_mode2name(enum ice_mode mode)
 }
 
 
-const char *ice_role2name(enum role role)
+const char *ice_role2name(enum ice_role role)
 {
 	switch (role) {
 
-	case ROLE_UNKNOWN:     return "Unknown";
-	case ROLE_CONTROLLING: return "Controlling";
-	case ROLE_CONTROLLED:  return "Controlled";
+	case ICE_ROLE_UNKNOWN:     return "Unknown";
+	case ICE_ROLE_CONTROLLING: return "Controlling";
+	case ICE_ROLE_CONTROLLED:  return "Controlled";
 	default:               return "???";
 	}
 }

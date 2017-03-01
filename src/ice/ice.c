@@ -37,11 +37,12 @@ static void ice_determine_role(struct ice *ice, bool offerer)
 		return;
 
 	if (ice->lmode == ice->rmode)
-		ice->lrole = offerer ? ROLE_CONTROLLING : ROLE_CONTROLLED;
+		ice->lrole = offerer
+			? ICE_ROLE_CONTROLLING : ICE_ROLE_CONTROLLED;
 	else if (ice->lmode == ICE_MODE_FULL)
-		ice->lrole = ROLE_CONTROLLING;
+		ice->lrole = ICE_ROLE_CONTROLLING;
 	else
-		ice->lrole = ROLE_CONTROLLED;
+		ice->lrole = ICE_ROLE_CONTROLLED;
 }
 
 
