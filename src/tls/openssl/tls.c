@@ -209,6 +209,16 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	}
 #endif
 
+#if OPENSSL_VERSION_NUMBER >= 0x1000200fL
+	r = SSL_CTX_set_ecdh_auto(tls->ctx, 1);
+	if (!r) {
+		DEBUG_WARNING("alloc: set_ecdh_auto failed (ret=%d)\n", r);
+		ERR_clear_error();
+		err = ENOTSUP;
+		goto out;
+	}
+#endif
+
 	err = 0;
  out:
 	if (err)
