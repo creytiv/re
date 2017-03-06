@@ -145,7 +145,7 @@ static int handle_stun_full(struct ice *ice, struct icem *icem,
 
 	/* 7.2.1.5.  Updating the Nominated Flag */
 	if (use_cand) {
-		if (ice->lrole == ROLE_CONTROLLED &&
+		if (ice->lrole == ICE_ROLE_CONTROLLED &&
 		    cp->state == ICE_CANDPAIR_SUCCEEDED) {
 
 			if (!cp->nominated) {
@@ -235,7 +235,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 	struct ice *ice = icem->ice;
 	struct stun_attr *attr;
 	struct pl lu, ru;
-	enum role rrole = ROLE_UNKNOWN;
+	enum ice_role rrole = ICE_ROLE_UNKNOWN;
 	uint64_t tiebrk = 0;
 	uint32_t prio_prflx;
 	bool use_cand = false;
@@ -272,13 +272,13 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 
 	attr = stun_msg_attr(req, STUN_ATTR_CONTROLLED);
 	if (attr) {
-		rrole = ROLE_CONTROLLED;
+		rrole = ICE_ROLE_CONTROLLED;
 		tiebrk = attr->v.uint64;
 	}
 
 	attr = stun_msg_attr(req, STUN_ATTR_CONTROLLING);
 	if (attr) {
-		rrole = ROLE_CONTROLLING;
+		rrole = ICE_ROLE_CONTROLLING;
 		tiebrk = attr->v.uint64;
 	}
 

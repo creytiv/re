@@ -74,13 +74,13 @@ uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d)
 
 void ice_switch_local_role(struct ice *ice)
 {
-	enum role new_role;
+	enum ice_role new_role;
 	struct le *le;
 
-	if (ROLE_CONTROLLING == ice->lrole)
-		new_role = ROLE_CONTROLLED;
+	if (ICE_ROLE_CONTROLLING == ice->lrole)
+		new_role = ICE_ROLE_CONTROLLED;
 	else
-		new_role = ROLE_CONTROLLING;
+		new_role = ICE_ROLE_CONTROLLING;
 
 	DEBUG_NOTICE("Switch local role from %s to %s\n",
 		     ice_role2name(ice->lrole), ice_role2name(new_role));

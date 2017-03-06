@@ -224,14 +224,14 @@ int icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged)
 
 	switch (ice->lrole) {
 
-	case ROLE_CONTROLLING:
+	case ICE_ROLE_CONTROLLING:
 		ctrl_attr = STUN_ATTR_CONTROLLING;
 
 		if (ice->conf.nom == ICE_NOMINATION_AGGRESSIVE)
 			use_cand = true;
 		break;
 
-	case ROLE_CONTROLLED:
+	case ICE_ROLE_CONTROLLED:
 		ctrl_attr = STUN_ATTR_CONTROLLED;
 		break;
 
@@ -308,7 +308,7 @@ static void abort_ice(struct icem *icem, int err)
 	tmr_cancel(&icem->tmr_pace);
 
 	if (icem->chkh) {
-		icem->chkh(err, icem->ice->lrole == ROLE_CONTROLLING,
+		icem->chkh(err, icem->ice->lrole == ICE_ROLE_CONTROLLING,
 			   icem->arg);
 	}
 

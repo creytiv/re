@@ -10,12 +10,6 @@
 #endif
 
 
-enum role {
-	ROLE_UNKNOWN = 0,
-	ROLE_CONTROLLING,
-	ROLE_CONTROLLED
-};
-
 enum ice_checkl_state {
 	ICE_CHECKLIST_NULL = -1,
 	ICE_CHECKLIST_RUNNING,
@@ -52,7 +46,7 @@ enum {
 struct ice {
 	enum ice_mode lmode;          /**< Local mode                       */
 	enum ice_mode rmode;          /**< Remote mode                      */
-	enum role lrole;              /**< Local role                       */
+	enum ice_role lrole;          /**< Local role                       */
 	char lufrag[5];               /**< Local Username fragment          */
 	char lpwd[23];                /**< Local Password                   */
 	struct list ml;               /**< Media list (struct icem)         */
@@ -225,7 +219,6 @@ int  icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged);
 
 /* icestr */
 const char    *ice_mode2name(enum ice_mode mode);
-const char    *ice_role2name(enum role role);
 const char    *ice_candpair_state2name(enum ice_candpair_state st);
 const char    *ice_checkl_state2name(enum ice_checkl_state cst);
 

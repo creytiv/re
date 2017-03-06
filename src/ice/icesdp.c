@@ -96,7 +96,7 @@ bool ice_remotecands_avail(const struct icem *icem)
 	if (!icem)
 		return false;
 
-	return icem->ice->lrole == ROLE_CONTROLLING &&
+	return icem->ice->lrole == ICE_ROLE_CONTROLLING &&
 		icem->state == ICE_CHECKLIST_COMPLETED;
 }
 
@@ -282,7 +282,7 @@ int ice_sdp_decode(struct ice *ice, const char *name, const char *value)
 			return EPROTO;
 		}
 		ice->rmode = ICE_MODE_LITE;
-		ice->lrole = ROLE_CONTROLLING;
+		ice->lrole = ICE_ROLE_CONTROLLING;
 	}
 	else if (0 == str_casecmp(name, ice_attr_ufrag))
 		return ufrag_decode(ice, value);

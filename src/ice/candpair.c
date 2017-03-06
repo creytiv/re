@@ -45,7 +45,7 @@ static void candpair_set_pprio(struct ice_candpair *cp)
 {
 	uint32_t g, d;
 
-	if (ROLE_CONTROLLING == cp->icem->ice->lrole) {
+	if (ICE_ROLE_CONTROLLING == cp->icem->ice->lrole) {
 		g = cp->lcand->prio;
 		d = cp->rcand->prio;
 	}
