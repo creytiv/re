@@ -889,3 +889,16 @@ void tls_flush_error(void)
 {
 	ERR_print_errors_cb(print_error, NULL);
 }
+
+
+/**
+ * Get the backend-specific (OpenSSL) context
+ *
+ * @param tls  Generic TLS Context
+ *
+ * @return OpenSSL context
+ */
+struct ssl_ctx_st *tls_openssl_context(const struct tls *tls)
+{
+	return tls ? tls->ctx : NULL;
+}
