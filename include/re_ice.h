@@ -45,6 +45,15 @@ enum ice_tcptype {
 	ICE_TCP_SO        /**< Simultaneous-open TCP client/server */
 };
 
+/** Candidate pair states */
+enum ice_candpair_state {
+	ICE_CANDPAIR_FROZEN = 0, /**< Frozen state (default)                 */
+	ICE_CANDPAIR_WAITING,    /**< Waiting to become highest on list      */
+	ICE_CANDPAIR_INPROGRESS, /**< In-Progress state;transac. in progress */
+	ICE_CANDPAIR_SUCCEEDED,  /**< Succeeded state; successful result     */
+	ICE_CANDPAIR_FAILED      /**< Failed state; check failed             */
+};
+
 struct ice;
 struct icem;
 
@@ -119,6 +128,7 @@ extern const char ice_attr_ufrag[];
 const char        *ice_cand_type2name(enum ice_cand_type type);
 enum ice_cand_type ice_cand_name2type(const char *name);
 const char    *ice_role2name(enum ice_role role);
+const char    *ice_candpair_state2name(enum ice_candpair_state st);
 
 
 uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,
