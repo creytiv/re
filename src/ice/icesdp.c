@@ -96,7 +96,7 @@ bool ice_remotecands_avail(const struct icem *icem)
 	if (!icem)
 		return false;
 
-	return icem->ice->lrole == ICE_ROLE_CONTROLLING &&
+	return icem->lrole == ICE_ROLE_CONTROLLING &&
 		icem->state == ICE_CHECKLIST_COMPLETED;
 }
 
@@ -134,23 +134,17 @@ int ice_remotecands_encode(struct re_printf *pf, const struct icem *icem)
 /* Decode SDP Attributes */
 
 
-static int ufrag_decode(struct ice *ice, const char *value)
+static int ufrag_decode(struct icem *icem, const char *value)
 {
 	char *ufrag = NULL;
-	struct le *le;
 	int err;
 
 	err = str_dup(&ufrag, value);
 	if (err)
 		return err;
 
-	for (le = ice->ml.head; le; le = le->next) {
-
-		struct icem *icem = le->data;
-
-		mem_deref(icem->rufrag);
-		icem->rufrag = mem_ref(ufrag);
-	}
+	mem_deref(icem->rufrag);
+	icem->rufrag = mem_ref(ufrag);
 
 	mem_deref(ufrag);
 
@@ -158,23 +152,17 @@ static int ufrag_decode(struct ice *ice, const char *value)
 }
 
 
-static int pwd_decode(struct ice *ice, const char *value)
+static int pwd_decode(struct icem *icem, const char *value)
 {
 	char *pwd = NULL;
-	struct le *le;
 	int err;
 
 	err = str_dup(&pwd, value);
 	if (err)
 		return err;
 
-	for (le = ice->ml.head; le; le = le->next) {
-
-		struct icem *icem = le->data;
-
-		mem_deref(icem->rpwd);
-		icem->rpwd = mem_ref(pwd);
-	}
+	mem_deref(icem->rpwd);
+	icem->rpwd = mem_ref(pwd);
 
 	mem_deref(pwd);
 
@@ -271,23 +259,23 @@ static int cand_decode(struct icem *icem, const char *val)
  *
  * @return 0 if success, otherwise errorcode
  */
-int ice_sdp_decode(struct ice *ice, const char *name, const char *value)
+int ice_sdp_decode(struct icem *icem, const char *name, const char *value)
 {
-	if (!ice)
+	if (!icem)
 		return EINVAL;
 
 	if (0 == str_casecmp(name, ice_attr_lite)) {
-		if (ICE_MODE_LITE == ice->lmode) {
+		if (ICE_MODE_LITE == icem->lmode) {
 			DEBUG_WARNING("we are lite, peer is also lite!\n");
 			return EPROTO;
 		}
-		ice->rmode = ICE_MODE_LITE;
-		ice->lrole = ICE_ROLE_CONTROLLING;
+		icem->rmode = ICE_MODE_LITE;
+		icem->lrole = ICE_ROLE_CONTROLLING;
 	}
 	else if (0 == str_casecmp(name, ice_attr_ufrag))
-		return ufrag_decode(ice, value);
+		return ufrag_decode(icem, value);
 	else if (0 == str_casecmp(name, ice_attr_pwd))
-		return pwd_decode(ice, value);
+		return pwd_decode(icem, value);
 
 	return 0;
 }

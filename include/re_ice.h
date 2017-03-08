@@ -70,22 +70,15 @@ typedef void (ice_gather_h)(int err, uint16_t scode, const char *reason,
 typedef void (ice_connchk_h)(int err, bool update, void *arg);
 
 
-/* ICE Session */
-int  ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer);
-struct ice_conf *ice_conf(struct ice *ice);
-void ice_set_conf(struct ice *ice, const struct ice_conf *conf);
-void ice_set_offerer(struct ice *ice, bool offerer);
-int  ice_sdp_decode(struct ice *ice, const char *name, const char *value);
-int  ice_conncheck_start(struct ice *ice);
-int  ice_debug(struct re_printf *pf, const struct ice *ice);
-struct list *ice_medialist(const struct ice *ice);
-const char *ice_ufrag(const struct ice *ice);
-const char *ice_pwd(const struct ice *ice);
-
-
 /* ICE Media */
-int  icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
+int  icem_alloc(struct icem **icemp, struct list *lst,
+		enum ice_mode mode, bool offerer,
+		int proto, int layer,
+		uint64_t tiebrk, const char *lufrag, const char *lpwd,
 		ice_gather_h *gh, ice_connchk_h *chkh, void *arg);
+struct ice_conf *icem_conf(struct icem *icem);
+void icem_set_conf(struct icem *icem, const struct ice_conf *conf);
+void icem_set_offerer(struct icem *icem, bool offerer);
 void icem_set_name(struct icem *icem, const char *name);
 int  icem_comp_add(struct icem *icem, unsigned compid, void *sock);
 int  icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
@@ -101,6 +94,7 @@ void icem_conncheck_stop(struct icem *icem, int err);
 int  icem_add_chan(struct icem *icem, unsigned compid, const struct sa *raddr);
 bool icem_mismatch(const struct icem *icem);
 void icem_update(struct icem *icem);
+int  ice_sdp_decode(struct icem *ice, const char *name, const char *value);
 int  icem_sdp_decode(struct icem *icem, const char *name, const char *value);
 int  icem_debug(struct re_printf *pf, const struct icem *icem);
 struct list *icem_lcandl(const struct icem *icem);

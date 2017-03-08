@@ -72,24 +72,24 @@ uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d)
 }
 
 
-void ice_switch_local_role(struct ice *ice)
+void ice_switch_local_role(struct icem *icem)
 {
 	enum ice_role new_role;
 	struct le *le;
 
-	if (ICE_ROLE_CONTROLLING == ice->lrole)
+	if (ICE_ROLE_CONTROLLING == icem->lrole)
 		new_role = ICE_ROLE_CONTROLLED;
 	else
 		new_role = ICE_ROLE_CONTROLLING;
 
 	DEBUG_NOTICE("Switch local role from %s to %s\n",
-		     ice_role2name(ice->lrole), ice_role2name(new_role));
+		     ice_role2name(icem->lrole), ice_role2name(new_role));
 
-	ice->lrole = new_role;
+	icem->lrole = new_role;
 
 	/* recompute pair priorities for all media streams */
-	for (le = ice->ml.head; le; le = le->next) {
-		struct icem *icem = le->data;
+	for (le = icem->le.list->head; le; le = le->next) {
+		icem = le->data;
 		icem_candpair_prio_order(&icem->checkl);
 	}
 }

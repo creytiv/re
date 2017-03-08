@@ -161,7 +161,7 @@ int icem_checklist_form(struct icem *icem)
 	if (!icem)
 		return EINVAL;
 
-	if (ICE_MODE_LITE == icem->ice->lmode) {
+	if (ICE_MODE_LITE == icem->lmode) {
 		DEBUG_WARNING("%s: Checklist: only valid for full-mode\n",
 			      icem->name);
 		return EINVAL;
@@ -182,9 +182,12 @@ int icem_checklist_form(struct icem *icem)
 	/* 4. prune the pairs */
 	candpair_prune(icem);
 
+#if 0
 	/* 5. set the pair states -- first media stream only */
 	if (icem->ice->ml.head->data == icem)
 		candpair_set_states(icem);
+#endif
+	// todo: move to app
 
 	return err;
 }
@@ -230,7 +233,7 @@ static void concluding_ice(struct icem_comp *comp)
 
 	icem_comp_set_selected(comp, cp);
 
-	if (comp->icem->ice->conf.nom == ICE_NOMINATION_REGULAR) {
+	if (comp->icem->conf.nom == ICE_NOMINATION_REGULAR) {
 
 		/* send STUN request with USE_CAND flag via triggered qeueue */
 		(void)icem_conncheck_send(cp, true, true);
@@ -282,7 +285,7 @@ void icem_checklist_update(struct icem *icem)
 	icem->state = err ? ICE_CHECKLIST_FAILED : ICE_CHECKLIST_COMPLETED;
 
 	if (icem->chkh) {
-		icem->chkh(err, icem->ice->lrole == ICE_ROLE_CONTROLLING,
+		icem->chkh(err, icem->lrole == ICE_ROLE_CONTROLLING,
 			   icem->arg);
 	}
 }

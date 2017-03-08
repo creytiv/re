@@ -33,19 +33,6 @@ enum {
 };
 
 
-/** Defines an ICE session */
-struct ice {
-	enum ice_mode lmode;          /**< Local mode                       */
-	enum ice_mode rmode;          /**< Remote mode                      */
-	enum ice_role lrole;          /**< Local role                       */
-	char lufrag[5];               /**< Local Username fragment          */
-	char lpwd[23];                /**< Local Password                   */
-	struct list ml;               /**< Media list (struct icem)         */
-	uint64_t tiebrk;              /**< Tie-break value for roleconflict */
-	struct ice_conf conf;         /**< ICE Configuration                */
-	struct stun *stun;            /**< STUN Transport                   */
-};
-
 /** Defines a media-stream component */
 struct icem_comp {
 	struct le le;                /**< Linked-list element               */
@@ -65,8 +52,16 @@ struct icem_comp {
 
 /** Defines an ICE media-stream */
 struct icem {
+	struct ice_conf conf;         /**< ICE Configuration                */
+	enum ice_mode lmode;          /**< Local mode                       */
+	enum ice_mode rmode;          /**< Remote mode                      */
+	enum ice_role lrole;          /**< Local role                       */
+
+	uint64_t tiebrk;              /**< Tie-break value for roleconflict */
+	struct stun *stun;            /**< STUN Transport                   */
+
 	struct le le;                /**< Linked-list element                */
-	struct ice *ice;             /**< Pointer to parent ICE-session      */
+
 	struct sa stun_srv;          /**< STUN Server IP address and port    */
 	int nstun;                   /**< Number of pending STUN candidates  */
 	struct list lcandl;          /**< List of local candidates           */
@@ -79,6 +74,8 @@ struct icem {
 	int layer;                   /**< Protocol layer                     */
 	enum ice_checkl_state state; /**< State of the checklist             */
 	struct list compl;           /**< ICE media components               */
+	char *lufrag;               /**< Local Username fragment          */
+	char *lpwd;                /**< Local Password                   */
 	char *rufrag;                /**< Remote Username fragment           */
 	char *rpwd;                  /**< Remote Password                    */
 	ice_gather_h *gh;            /**< Gather handler                     */
@@ -217,5 +214,5 @@ const char    *ice_checkl_state2name(enum ice_checkl_state cst);
 typedef void * (list_unique_h)(struct le *le1, struct le *le2);
 
 uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d);
-void ice_switch_local_role(struct ice *ice);
+void ice_switch_local_role(struct icem *icem);
 uint32_t ice_list_unique(struct list *list, list_unique_h *uh);

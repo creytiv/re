@@ -92,7 +92,7 @@ static void triggered_check(struct icem *icem, struct ice_cand *lcand,
 /*
  * 7.2.1.  Additional Procedures for Full Implementations
  */
-static int handle_stun_full(struct ice *ice, struct icem *icem,
+static int handle_stun_full(struct icem *icem,
 			    struct icem_comp *comp, const struct sa *src,
 			    uint32_t prio, bool use_cand, bool tunnel)
 {
@@ -145,7 +145,7 @@ static int handle_stun_full(struct ice *ice, struct icem *icem,
 
 	/* 7.2.1.5.  Updating the Nominated Flag */
 	if (use_cand) {
-		if (ice->lrole == ICE_ROLE_CONTROLLED &&
+		if (icem->lrole == ICE_ROLE_CONTROLLED &&
 		    cp->state == ICE_CANDPAIR_SUCCEEDED) {
 
 			if (!cp->nominated) {
@@ -160,7 +160,7 @@ static int handle_stun_full(struct ice *ice, struct icem *icem,
 		/* Cancel conncheck. Choose Selected Pair */
 		icem_candpair_make_valid(cp);
 
-		if (ice->conf.nom == ICE_NOMINATION_REGULAR) {
+		if (icem->conf.nom == ICE_NOMINATION_REGULAR) {
 			icem_candpair_cancel(cp);
 			icem_comp_set_selected(comp, cp);
 		}
@@ -219,11 +219,10 @@ static int stunsrv_ereply(struct icem_comp *comp, const struct sa *src,
 			  uint16_t scode, const char *reason)
 {
 	struct icem *icem = comp->icem;
-	struct ice *ice = icem->ice;
 
 	return stun_ereply(icem->proto, comp->sock, src, presz, req,
 			   scode, reason,
-			   (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 1,
+			   (uint8_t *)icem->lpwd, strlen(icem->lpwd), true, 1,
 			   STUN_ATTR_SOFTWARE, sw);
 }
 
@@ -232,7 +231,6 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 		    struct stun_msg *req, size_t presz)
 {
 	struct icem *icem = comp->icem;
-	struct ice *ice = icem->ice;
 	struct stun_attr *attr;
 	struct pl lu, ru;
 	enum ice_role rrole = ICE_ROLE_UNKNOWN;
@@ -246,7 +244,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 	if (err)
 		return err;
 
-	err = stun_msg_chk_mi(req, (uint8_t *)ice->lpwd, strlen(ice->lpwd));
+	err = stun_msg_chk_mi(req, (uint8_t *)icem->lpwd, strlen(icem->lpwd));
 	if (err) {
 		if (err == EBADMSG)
 			goto unauth;
@@ -265,7 +263,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 			      attr->v.username);
 		goto unauth;
 	}
-	if (pl_strcmp(&lu, ice->lufrag))
+	if (pl_strcmp(&lu, icem->lufrag))
 		goto unauth;
 	if (str_isset(icem->rufrag) && pl_strcmp(&ru, icem->rufrag))
 		goto unauth;
@@ -282,9 +280,9 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 		tiebrk = attr->v.uint64;
 	}
 
-	if (rrole == ice->lrole) {
-		if (ice->tiebrk >= tiebrk)
-			ice_switch_local_role(ice);
+	if (rrole == icem->lrole) {
+		if (icem->tiebrk >= tiebrk)
+			ice_switch_local_role(icem);
 		else
 			goto conflict;
 	}
@@ -299,8 +297,8 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 	if (attr)
 		use_cand = true;
 
-	if (ice->lmode == ICE_MODE_FULL) {
-		err = handle_stun_full(ice, icem, comp, src, prio_prflx,
+	if (icem->lmode == ICE_MODE_FULL) {
+		err = handle_stun_full(icem, comp, src, prio_prflx,
 				       use_cand, presz > 0);
 	}
 	else {
@@ -311,7 +309,7 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 		goto badmsg;
 
 	return stun_reply(icem->proto, comp->sock, src, presz, req,
-			  (uint8_t *)ice->lpwd, strlen(ice->lpwd), true, 2,
+			  (uint8_t *)icem->lpwd, strlen(icem->lpwd), true, 2,
 			  STUN_ATTR_XOR_MAPPED_ADDR, src,
 			  STUN_ATTR_SOFTWARE, sw);
 

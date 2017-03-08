@@ -52,7 +52,7 @@ static bool helper_recv_handler(struct sa *src, struct mbuf *mb, void *arg)
 			break;
 
 		default:
-			(void)stun_ctrans_recv(icem->ice->stun, msg, &ua);
+			(void)stun_ctrans_recv(icem->stun, msg, &ua);
 			break;
 		}
 	}
@@ -266,7 +266,7 @@ void icecomp_printf(struct icem_comp *comp, const char *fmt, ...)
 {
 	va_list ap;
 
-	if (!comp || !comp->icem->ice->conf.debug)
+	if (!comp || !comp->icem->conf.debug)
 		return;
 
 	va_start(ap, fmt);
