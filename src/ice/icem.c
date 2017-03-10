@@ -54,7 +54,6 @@ static void icem_destructor(void *data)
 {
 	struct icem *icem = data;
 
-	list_unlink(&icem->le);
 	tmr_cancel(&icem->tmr_pace);
 	list_flush(&icem->compl);
 	list_flush(&icem->validl);
@@ -72,17 +71,21 @@ static void icem_destructor(void *data)
 /**
  * Add a new ICE Media object to the ICE Session
  *
- * @param icemp  Pointer to allocated ICE Media object
- * @param ice    ICE Session
- * @param proto  Transport protocol
- * @param layer  Protocol stack layer
- * @param gh     Gather handler
- * @param chkh   Connectivity check handler
- * @param arg    Handler argument
+ * @param icemp   Pointer to allocated ICE Media object
+ * @param mode    ICE mode
+ * @param offerer True if SDP offerer, False if not
+ * @param proto   Transport protocol
+ * @param layer   Protocol stack layer
+ * @param tiebrk  Tie-breaker value, must be same for all media streams
+ * @param lufrag  Local username fragment
+ * @param lpwd    Local password
+ * @param gh      Gather handler
+ * @param chkh    Connectivity check handler
+ * @param arg     Handler argument
  *
  * @return 0 if success, otherwise errorcode
  */
-int  icem_alloc(struct icem **icemp, struct list *lst,
+int  icem_alloc(struct icem **icemp,
 		enum ice_mode mode, bool offerer,
 		int proto, int layer,
 		uint64_t tiebrk, const char *lufrag, const char *lpwd,
@@ -91,7 +94,7 @@ int  icem_alloc(struct icem **icemp, struct list *lst,
 	struct icem *icem;
 	int err = 0;
 
-	if (!icemp)
+	if (!icemp || !tiebrk || !lufrag || !lpwd)
 		return EINVAL;
 
 	if (str_len(lufrag) < 4 || str_len(lpwd) < 22) {
@@ -146,9 +149,6 @@ int  icem_alloc(struct icem **icemp, struct list *lst,
 		stun_conf(icem->stun)->rc = icem->conf.rc;
 	}
 
-
-	list_append(lst, &icem->le, icem);
-
  out:
 	if (err)
 		mem_deref(icem);
@@ -162,13 +162,19 @@ int  icem_alloc(struct icem **icemp, struct list *lst,
 /**
  * Get the ICE Configuration
  *
- * @param ice ICE Session
+ * @param icem  ICE Media object
  *
  * @return ICE Configuration
  */
 struct ice_conf *icem_conf(struct icem *icem)
 {
 	return icem ? &icem->conf : NULL;
+}
+
+
+enum ice_role icem_local_role(const struct icem *icem)
+{
+	return icem ? icem->lrole : ICE_ROLE_UNKNOWN;
 }
 
 
@@ -191,7 +197,7 @@ void icem_set_conf(struct icem *icem, const struct ice_conf *conf)
 /**
  * Set the offerer flag on the ICE Session
  *
- * @param ice     ICE Session
+ * @param icem    ICE Media object
  * @param offerer True if offerer, otherwise false
  */
 void icem_set_offerer(struct icem *icem, bool offerer)

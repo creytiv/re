@@ -110,7 +110,7 @@ static void candpair_prune(struct icem *icem)
 /**
  * Computing States
  */
-static void candpair_set_states(struct icem *icem)
+void ice_candpair_set_states(struct icem *icem)
 {
 	struct le *le, *le2;
 
@@ -181,13 +181,6 @@ int icem_checklist_form(struct icem *icem)
 
 	/* 4. prune the pairs */
 	candpair_prune(icem);
-
-#if 0
-	/* 5. set the pair states -- first media stream only */
-	if (icem->ice->ml.head->data == icem)
-		candpair_set_states(icem);
-#endif
-	// todo: move to app
 
 	return err;
 }

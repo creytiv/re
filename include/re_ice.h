@@ -71,12 +71,12 @@ typedef void (ice_connchk_h)(int err, bool update, void *arg);
 
 
 /* ICE Media */
-int  icem_alloc(struct icem **icemp, struct list *lst,
-		enum ice_mode mode, bool offerer,
-		int proto, int layer,
+int  icem_alloc(struct icem **icemp, enum ice_mode mode,
+		bool offerer, int proto, int layer,
 		uint64_t tiebrk, const char *lufrag, const char *lpwd,
 		ice_gather_h *gh, ice_connchk_h *chkh, void *arg);
 struct ice_conf *icem_conf(struct icem *icem);
+enum ice_role icem_local_role(const struct icem *icem);
 void icem_set_conf(struct icem *icem, const struct ice_conf *conf);
 void icem_set_offerer(struct icem *icem, bool offerer);
 void icem_set_name(struct icem *icem, const char *name);
@@ -103,6 +103,7 @@ struct list *icem_checkl(const struct icem *icem);
 struct list *icem_validl(const struct icem *icem);
 const struct sa *icem_cand_default(struct icem *icem, unsigned compid);
 const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid);
+void ice_candpair_set_states(struct icem *icem);
 
 
 struct ice_cand;

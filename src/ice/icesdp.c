@@ -253,7 +253,7 @@ static int cand_decode(struct icem *icem, const char *val)
 /**
  * Decode SDP session attributes
  *
- * @param ice   ICE Session
+ * @param icem  ICE Media object
  * @param name  Name of the SDP attribute
  * @param value Value of the SDP attribute (optional)
  *

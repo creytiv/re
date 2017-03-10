@@ -52,30 +52,26 @@ struct icem_comp {
 
 /** Defines an ICE media-stream */
 struct icem {
-	struct ice_conf conf;         /**< ICE Configuration                */
-	enum ice_mode lmode;          /**< Local mode                       */
-	enum ice_mode rmode;          /**< Remote mode                      */
-	enum ice_role lrole;          /**< Local role                       */
-
-	uint64_t tiebrk;              /**< Tie-break value for roleconflict */
-	struct stun *stun;            /**< STUN Transport                   */
-
-	struct le le;                /**< Linked-list element                */
-
+	struct ice_conf conf;        /**< ICE Configuration                  */
+	struct stun *stun;           /**< STUN Transport                     */
 	struct sa stun_srv;          /**< STUN Server IP address and port    */
 	int nstun;                   /**< Number of pending STUN candidates  */
 	struct list lcandl;          /**< List of local candidates           */
 	struct list rcandl;          /**< List of remote candidates          */
 	struct list checkl;          /**< Check List of cand pairs (sorted)  */
 	struct list validl;          /**< Valid List of cand pairs (sorted)  */
+	uint64_t tiebrk;             /**< Tie-break value for roleconflict   */
 	bool mismatch;               /**< ICE mismatch flag                  */
+	enum ice_mode lmode;         /**< Local mode                         */
+	enum ice_mode rmode;         /**< Remote mode                        */
+	enum ice_role lrole;         /**< Local role                         */
 	struct tmr tmr_pace;         /**< Timer for pacing STUN requests     */
 	int proto;                   /**< Transport protocol                 */
 	int layer;                   /**< Protocol layer                     */
 	enum ice_checkl_state state; /**< State of the checklist             */
 	struct list compl;           /**< ICE media components               */
-	char *lufrag;               /**< Local Username fragment          */
-	char *lpwd;                /**< Local Password                   */
+	char *lufrag;                /**< Local Username fragment            */
+	char *lpwd;                  /**< Local Password                     */
 	char *rufrag;                /**< Remote Username fragment           */
 	char *rpwd;                  /**< Remote Password                    */
 	ice_gather_h *gh;            /**< Gather handler                     */
