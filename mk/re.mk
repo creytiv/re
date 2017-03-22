@@ -60,10 +60,6 @@ ifeq ($(SYSROOT_ALT),)
 SYSROOT_ALT := $(shell [ -d /opt/local/include ] && echo "/opt/local")
 endif
 
-ifneq ($(OPENSSL_SYSROOT),)
-CFLAGS  += -I$(OPENSSL_SYSROOT)/include
-LFLAGS  += -L$(OPENSSL_SYSROOT)/lib
-endif
 ifneq ($(SYSROOT_ALT),)
 CFLAGS  += -I$(SYSROOT_ALT)/include
 LFLAGS  += -L$(SYSROOT_ALT)/lib
@@ -463,11 +459,8 @@ endif
 # External libraries section
 #
 
-ifeq ($(OPENSSL_SYSROOT),)
-OPENSSL_SYSROOT := $(SYSROOT)
-endif
-USE_OPENSSL := $(shell [ -f $(OPENSSL_SYSROOT)/include/openssl/ssl.h ] || \
-	[ -f $(OPENSSL_SYSROOT)/local/include/openssl/ssl.h ] || \
+USE_OPENSSL := $(shell [ -f $(SYSROOT)/include/openssl/ssl.h ] || \
+	[ -f $(SYSROOT)/local/include/openssl/ssl.h ] || \
 	[ -f $(SYSROOT_ALT)/include/openssl/ssl.h ] && echo "yes")
 
 ifneq ($(USE_OPENSSL),)
@@ -475,12 +468,12 @@ CFLAGS  += -DUSE_OPENSSL -DUSE_TLS
 LIBS    += -lssl -lcrypto
 USE_TLS := yes
 
-USE_OPENSSL_DTLS := $(shell [ -f $(OPENSSL_SYSROOT)/include/openssl/dtls1.h ] || \
-	[ -f $(OPENSSL_SYSROOT)/local/include/openssl/dtls1.h ] || \
+USE_OPENSSL_DTLS := $(shell [ -f $(SYSROOT)/include/openssl/dtls1.h ] || \
+	[ -f $(SYSROOT)/local/include/openssl/dtls1.h ] || \
 	[ -f $(SYSROOT_ALT)/include/openssl/dtls1.h ] && echo "yes")
 
-USE_OPENSSL_SRTP := $(shell [ -f $(OPENSSL_SYSROOT)/include/openssl/srtp.h ] || \
-	[ -f $(OPENSSL_SYSROOT)/local/include/openssl/srtp.h ] || \
+USE_OPENSSL_SRTP := $(shell [ -f $(SYSROOT)/include/openssl/srtp.h ] || \
+	[ -f $(SYSROOT)/local/include/openssl/srtp.h ] || \
 	[ -f $(SYSROOT_ALT)/include/openssl/srtp.h ] && echo "yes")
 
 ifneq ($(USE_OPENSSL_DTLS),)
@@ -697,7 +690,6 @@ info:
 	@echo "  USE_OPENSSL:   $(USE_OPENSSL)"
 	@echo "  USE_OPENSSL_AES:   $(USE_OPENSSL_AES)"
 	@echo "  USE_OPENSSL_HMAC:  $(USE_OPENSSL_HMAC)"
-	@echo "  OPENSSL_SYSROOT:   $(OPENSSL_SYSROOT)"
 	@echo "  USE_TLS:       $(USE_TLS)"
 	@echo "  USE_DTLS:      $(USE_DTLS)"
 	@echo "  USE_DTLS_SRTP: $(USE_DTLS_SRTP)"
