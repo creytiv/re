@@ -693,6 +693,7 @@ info:
 	@echo "  USE_OPENSSL:   $(USE_OPENSSL)"
 	@echo "  USE_OPENSSL_AES:   $(USE_OPENSSL_AES)"
 	@echo "  USE_OPENSSL_HMAC:  $(USE_OPENSSL_HMAC)"
+	@echo "  OPENSSL_SYSROOT:   $(OPENSSL_SYSROOT)"
 	@echo "  USE_TLS:       $(USE_TLS)"
 	@echo "  USE_DTLS:      $(USE_DTLS)"
 	@echo "  USE_DTLS_SRTP: $(USE_DTLS_SRTP)"
