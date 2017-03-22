@@ -34,10 +34,12 @@ MODULES += odict
 MODULES += json
 
 INSTALL := install
+ifndef PREFIX
 ifeq ($(DESTDIR),)
 PREFIX  := /usr/local
 else
 PREFIX  := /usr
+endif
 endif
 ifeq ($(LIBDIR),)
 LIBDIR  := $(PREFIX)/lib
@@ -85,6 +87,7 @@ libre.pc:
 	@echo 'Version: '$(VERSION) >> libre.pc
 	@echo 'URL: http://creytiv.com/re.html' >> libre.pc
 	@echo 'Libs: -L$${libdir} -lre' >> libre.pc
+	@echo 'Libs.private: -L$${libdir} -lre ${LIBS}' >> libre.pc
 	@echo 'Cflags: -I$${includedir}' >> libre.pc
 
 $(BUILD)/%.o: src/%.c $(BUILD) Makefile $(MK) $(MODMKS)
