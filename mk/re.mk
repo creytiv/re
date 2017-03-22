@@ -60,6 +60,10 @@ ifeq ($(SYSROOT_ALT),)
 SYSROOT_ALT := $(shell [ -d /opt/local/include ] && echo "/opt/local")
 endif
 
+ifneq ($(OPENSSL_SYSROOT),)
+CFLAGS  += -I$(OPENSSL_SYSROOT)/include
+LFLAGS  += -L$(OPENSSL_SYSROOT)/lib
+endif
 ifneq ($(SYSROOT_ALT),)
 CFLAGS  += -I$(SYSROOT_ALT)/include
 LFLAGS  += -L$(SYSROOT_ALT)/lib
