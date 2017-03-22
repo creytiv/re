@@ -115,6 +115,15 @@ install: $(SHARED) $(STATIC) libre.pc
 	$(INSTALL) -m 0644 libre.pc $(DESTDIR)$(LIBDIR)/pkgconfig
 	$(INSTALL) -m 0644 $(MK) $(DESTDIR)$(MKDIR)
 
+install-static: $(STATIC) libre.pc
+	@mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(LIBDIR)/pkgconfig \
+		$(DESTDIR)$(INCDIR) $(DESTDIR)$(MKDIR)
+	$(INSTALL) -m 0644 $(shell find include -name "*.h") \
+		$(DESTDIR)$(INCDIR)
+	$(INSTALL) -m 0755 $(STATIC) $(DESTDIR)$(LIBDIR)
+	$(INSTALL) -m 0644 libre.pc $(DESTDIR)$(LIBDIR)/pkgconfig
+	$(INSTALL) -m 0644 $(MK) $(DESTDIR)$(MKDIR)
+
 uninstall:
 	@rm -rf $(DESTDIR)$(INCDIR)
 	@rm -rf $(DESTDIR)$(MKDIR)
