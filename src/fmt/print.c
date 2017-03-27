@@ -299,6 +299,11 @@ int re_vhprintf(const char *fmt, va_list ap, re_vprintf_h *vph, void *arg)
 			}
 			break;
 
+		case 'h':
+			lenmod = LENMOD_NONE;
+			fm = true;
+			break;
+
 		case 'H':
 			ph     = va_arg(ap, re_printf_h *);
 			ph_arg = va_arg(ap, void *);
