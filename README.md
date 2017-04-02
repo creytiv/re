@@ -206,7 +206,7 @@ legend:
 * FreeBSD
 * OpenBSD
 * NetBSD
-* Solaris
+* Solaris 11
 * Windows
 * Apple Mac OS X and iOS
 * Android
