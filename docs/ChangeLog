@@ -1,3 +1,20 @@
+2017-04-08 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.2
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: add Debian/kFreeBSD+Hurd (thanks Vasudev Kamath)
+
+	* ice: make enum ice_role type public
+
+	* main: fix build for Solaris 11
+
+	* srtcp: use unsigned for encrypted bit
+
+	* tls: add tls_openssl_context() accessor function
+
+
 2017-02-04 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.1
