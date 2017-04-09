@@ -28,7 +28,7 @@ Copyright (C) 2010 - 2017 Creytiv.com
 
 ## Building
 
-libre is using GNU makefiles, and OpenSSL development headers must be
+libre is using GNU makefiles. Make and OpenSSL development headers must be
 installed before building.
 
 
@@ -206,7 +206,7 @@ legend:
 * FreeBSD
 * OpenBSD
 * NetBSD
-* Solaris
+* Solaris 11
 * Windows
 * Apple Mac OS X and iOS
 * Android
