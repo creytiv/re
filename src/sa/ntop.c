@@ -12,7 +12,9 @@
 #ifdef _MSC_VER
 #pragma warning (disable: 4090)
 #endif
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
 #else
 #define __USE_BSD 1    /**< Use BSD code */
 #include <sys/types.h>

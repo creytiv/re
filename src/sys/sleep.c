@@ -7,7 +7,9 @@
 #include <re_fmt.h>
 #include <re_sys.h>
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
 #endif
 #ifdef HAVE_UNISTD_H
 #define _BSD_SOURCE 1

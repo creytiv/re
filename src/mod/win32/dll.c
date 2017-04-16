@@ -3,7 +3,9 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
 #include <re_types.h>
 #include "../mod_internal.h"
 

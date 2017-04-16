@@ -48,6 +48,10 @@
 #define SIZ_CAST
 #endif
 
+#ifdef WIN32
+#pragma comment(lib,  "ws2_32.lib") 
+#endif
+
 
 enum {
 	TCP_TXQSZ_DEFAULT = 524288,

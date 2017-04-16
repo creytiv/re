@@ -11,8 +11,12 @@
 #include <math.h>
 #ifdef _MSC_VER
 #include <float.h>
+#ifndef isinf
 #define isinf(d) (!_finite(d))
+#endif
+#ifndef isnan
 #define isnan(d) _isnan(d)
+#endif
 #endif
 #ifdef SOLARIS
 #include <ieeefp.h>
