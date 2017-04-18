@@ -1,0 +1,878 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{24ec5e26-1680-4fb0-8766-02a6834e676d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{f97cb0a3-607e-4302-a41d-cbac8aad6bd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\uri">
+      <UniqueIdentifier>{57a0561c-ea6e-45d0-a034-72d1fabd97ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\udp">
+      <UniqueIdentifier>{974b5b66-04cf-4237-9e6c-f706acb078bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\turn">
+      <UniqueIdentifier>{0115caca-c0eb-469d-9f51-1a8a53a4cf36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tmr">
+      <UniqueIdentifier>{e46ff0a0-f978-4356-8103-804f228ce65d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\telev">
+      <UniqueIdentifier>{7f1f0174-24be-4049-bccd-c03c00e5bacc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tcp">
+      <UniqueIdentifier>{b277177e-4cd2-4028-8e24-b12237bd4122}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sys">
+      <UniqueIdentifier>{d1a8c49e-d20f-4bca-ab49-7dd50593c09a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\stun">
+      <UniqueIdentifier>{469bd25d-3ebd-474b-b13c-6914bfa44f2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\srtp">
+      <UniqueIdentifier>{793d3b1b-a4a5-49a7-aeb4-fc3be5944d3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sipsess">
+      <UniqueIdentifier>{da8a92af-e8a6-45c6-9708-aa18e3adb084}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sipreg">
+      <UniqueIdentifier>{5d4ea0d3-afee-4f12-8a79-ac4c8447777a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sipevent">
+      <UniqueIdentifier>{ed8fd6a9-58aa-47c4-b1f7-34e1ac182b87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sip">
+      <UniqueIdentifier>{e29353b1-55db-453e-91c6-f7f37748147c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sdp">
+      <UniqueIdentifier>{f3ce68eb-55bb-46b2-8d3f-1b1048fad972}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sa">
+      <UniqueIdentifier>{c6620f98-9fd7-45ea-9b58-cc2c4a3b6f2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\rtp">
+      <UniqueIdentifier>{60bd6b3a-4f71-48fb-a161-10ce29910d93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\odict">
+      <UniqueIdentifier>{8643b7af-6ec5-43b4-b0fe-399a79d445cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\net">
+      <UniqueIdentifier>{f7c75b83-f284-430c-b18c-b2633914a750}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\net\win32">
+      <UniqueIdentifier>{779e44ed-0935-450c-a3dd-7bdef53a1179}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\natbd">
+      <UniqueIdentifier>{1bff8dd5-d220-4f10-8c26-64c82522d824}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\msg">
+      <UniqueIdentifier>{9ea33625-0411-4065-a16b-ce3f49d3ca15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mqueue">
+      <UniqueIdentifier>{955109b7-ec66-49d3-b4cf-0ba816e095e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mqueue\win32">
+      <UniqueIdentifier>{31d6e0d5-7c9d-4ca7-a911-4be6b45291b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mod">
+      <UniqueIdentifier>{249dc72a-9cb9-45fa-bdd1-742fafb1d831}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mod\win32">
+      <UniqueIdentifier>{e6d208f2-2ef2-49bc-a13a-d66885a1dd61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mem">
+      <UniqueIdentifier>{fc6552c5-e5cd-4f77-9daa-77361089d71f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\md5">
+      <UniqueIdentifier>{eb84b7a5-764a-43c4-98b1-90c989cbe8e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mbuf">
+      <UniqueIdentifier>{09180e07-9646-454c-ae1a-7bfdc9ec96cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\main">
+      <UniqueIdentifier>{4d08218c-9027-430b-bec4-5b435620ca77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\lock">
+      <UniqueIdentifier>{3489e5fe-f25d-4410-a351-8c485609a49a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\lock\win32">
+      <UniqueIdentifier>{c33fec0f-9764-431d-9fe3-46704e850f6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\list">
+      <UniqueIdentifier>{fb912922-9084-4a6a-b36f-cf7039fbdf59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\json">
+      <UniqueIdentifier>{bf38bff6-d13b-40e9-908f-73aa6bd29dc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\jbuf">
+      <UniqueIdentifier>{8723551b-d33a-464f-b15e-d477b65d8d34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ice">
+      <UniqueIdentifier>{c9915c2b-1f49-45bc-9552-8679bd697f23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\httpauth">
+      <UniqueIdentifier>{c8b66d98-2787-4b05-be8c-d4acd28dbf9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\http">
+      <UniqueIdentifier>{ac3c7db7-cb2d-4191-9c45-f499de912f51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hmac">
+      <UniqueIdentifier>{9a795fdf-efaf-4ea1-b7c7-671616e84f0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hash">
+      <UniqueIdentifier>{2af593ee-1fa6-44c1-b6ca-01d437c39397}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\fmt">
+      <UniqueIdentifier>{37c6bc4f-8fd1-40cf-b04c-77ae5d7f80c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\dns">
+      <UniqueIdentifier>{6aae1e31-0191-4c51-a470-c43be58ae837}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\dns\win32">
+      <UniqueIdentifier>{f029350a-d256-4dda-889b-430f65615047}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\dbg">
+      <UniqueIdentifier>{c1c4b382-5196-45dc-9185-1b321a34caa2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\crc32">
+      <UniqueIdentifier>{7590d26c-f92a-4da7-89be-857b74649099}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\conf">
+      <UniqueIdentifier>{394be8ad-8a7d-4ed8-93a5-cf4a1c9f5c37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\bfcp">
+      <UniqueIdentifier>{26df0238-b37e-4c97-97d4-549f23a4fb1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\aes">
+      <UniqueIdentifier>{3f9bcd72-2513-4e1e-826e-6df1e9c3fa3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base64">
+      <UniqueIdentifier>{7a203acf-4223-4b71-8705-995eac29db75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sha">
+      <UniqueIdentifier>{5bb58e89-4183-4380-993a-d01d1bc3d9d9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\re.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_aes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_base64.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_bfcp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_bitv.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_conf.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_crc32.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_dbg.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_dns.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_fmt.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_hash.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_hmac.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_http.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_httpauth.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_ice.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_jbuf.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_json.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_list.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_lock.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_main.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_mbuf.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_md5.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_mem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_mod.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_mqueue.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_msg.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_natbd.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_net.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_odict.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_rtp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sa.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sdp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sha.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sip.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sipevent.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sipreg.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sipsess.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_srtp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_stun.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_sys.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_tcp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_telev.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_tls.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_tmr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_turn.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_types.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_udp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_uri.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\re_websock.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\turn\turnc.h">
+      <Filter>src\turn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\stun\stun.h">
+      <Filter>src\stun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\srtp\srtp.h">
+      <Filter>src\srtp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sipsess\sipsess.h">
+      <Filter>src\sipsess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sipevent\sipevent.h">
+      <Filter>src\sipevent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sip\sip.h">
+      <Filter>src\sip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sdp\sdp.h">
+      <Filter>src\sdp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sa\sa.h">
+      <Filter>src\sa</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtp\rtcp.h">
+      <Filter>src\rtp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mqueue\mqueue.h">
+      <Filter>src\mqueue</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mod\mod_internal.h">
+      <Filter>src\mod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\md5\md5.h">
+      <Filter>src\md5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\main.h">
+      <Filter>src\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ice\ice.h">
+      <Filter>src\ice</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dns\dns.h">
+      <Filter>src\dns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bfcp\bfcp.h">
+      <Filter>src\bfcp</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\uri\ucmp.c">
+      <Filter>src\uri</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\uri\uri.c">
+      <Filter>src\uri</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\uri\uric.c">
+      <Filter>src\uri</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\udp\mcast.c">
+      <Filter>src\udp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\udp\udp.c">
+      <Filter>src\udp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\turn\chan.c">
+      <Filter>src\turn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\turn\perm.c">
+      <Filter>src\turn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\turn\turnc.c">
+      <Filter>src\turn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tmr\tmr.c">
+      <Filter>src\tmr</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\telev\telev.c">
+      <Filter>src\telev</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tcp\tcp.c">
+      <Filter>src\tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tcp\tcp_high.c">
+      <Filter>src\tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sys\daemon.c">
+      <Filter>src\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sys\endian.c">
+      <Filter>src\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sys\fs.c">
+      <Filter>src\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sys\rand.c">
+      <Filter>src\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sys\sleep.c">
+      <Filter>src\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sys\sys.c">
+      <Filter>src\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\addr.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\attr.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\ctrans.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\dnsdisc.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\hdr.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\ind.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\keepalive.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\msg.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\rep.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\req.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\stun.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\stun\stunstr.c">
+      <Filter>src\stun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\srtp\misc.c">
+      <Filter>src\srtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\srtp\replay.c">
+      <Filter>src\srtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\srtp\srtcp.c">
+      <Filter>src\srtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\srtp\srtp.c">
+      <Filter>src\srtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\srtp\stream.c">
+      <Filter>src\srtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\accept.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\ack.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\close.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\connect.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\info.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\listen.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\modify.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\reply.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\request.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipsess\sess.c">
+      <Filter>src\sipsess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipreg\reg.c">
+      <Filter>src\sipreg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipevent\listen.c">
+      <Filter>src\sipevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipevent\msg.c">
+      <Filter>src\sipevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipevent\notify.c">
+      <Filter>src\sipevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sipevent\subscribe.c">
+      <Filter>src\sipevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\addr.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\auth.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\contact.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\cseq.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\ctrans.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\dialog.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\keepalive.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\keepalive_udp.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\msg.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\reply.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\request.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\sip.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\strans.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\transp.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sip\via.c">
+      <Filter>src\sip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sdp\attr.c">
+      <Filter>src\sdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sdp\format.c">
+      <Filter>src\sdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sdp\media.c">
+      <Filter>src\sdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sdp\msg.c">
+      <Filter>src\sdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sdp\session.c">
+      <Filter>src\sdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sdp\str.c">
+      <Filter>src\sdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sdp\util.c">
+      <Filter>src\sdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sa\ntop.c">
+      <Filter>src\sa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sa\printaddr.c">
+      <Filter>src\sa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sa\pton.c">
+      <Filter>src\sa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sa\sa.c">
+      <Filter>src\sa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\fb.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\member.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\ntp.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\pkt.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\rr.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\rtcp.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\rtp.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\sdes.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\sess.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtp\source.c">
+      <Filter>src\rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\odict\entry.c">
+      <Filter>src\odict</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\odict\odict.c">
+      <Filter>src\odict</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\odict\type.c">
+      <Filter>src\odict</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\net\if.c">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\net\net.c">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\net\netstr.c">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\net\rt.c">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\net\sock.c">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\net\sockopt.c">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\net\win32\wif.c">
+      <Filter>src\net\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\natbd\filtering.c">
+      <Filter>src\natbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\natbd\genalg.c">
+      <Filter>src\natbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\natbd\hairpinning.c">
+      <Filter>src\natbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\natbd\lifetime.c">
+      <Filter>src\natbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\natbd\mapping.c">
+      <Filter>src\natbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\natbd\natstr.c">
+      <Filter>src\natbd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\msg\ctype.c">
+      <Filter>src\msg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\msg\param.c">
+      <Filter>src\msg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mqueue\mqueue.c">
+      <Filter>src\mqueue</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mqueue\win32\pipe.c">
+      <Filter>src\mqueue\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mod\mod.c">
+      <Filter>src\mod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mod\win32\dll.c">
+      <Filter>src\mod\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mem\mem.c">
+      <Filter>src\mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\md5\md5.c">
+      <Filter>src\md5</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\md5\wrap.c">
+      <Filter>src\md5</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mbuf\mbuf.c">
+      <Filter>src\mbuf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\init.c">
+      <Filter>src\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\main.c">
+      <Filter>src\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\method.c">
+      <Filter>src\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lock\win32\lock.c">
+      <Filter>src\lock\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\list\list.c">
+      <Filter>src\list</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\json\decode.c">
+      <Filter>src\json</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\json\decode_odict.c">
+      <Filter>src\json</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\json\encode.c">
+      <Filter>src\json</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jbuf\jbuf.c">
+      <Filter>src\jbuf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\cand.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\candpair.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\chklist.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\comp.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\connchk.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\gather.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\ice.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\icem.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\icesdp.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\icestr.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\stunsrv.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ice\util.c">
+      <Filter>src\ice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\httpauth\basic.c">
+      <Filter>src\httpauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\httpauth\digest.c">
+      <Filter>src\httpauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\http\auth.c">
+      <Filter>src\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\http\client.c">
+      <Filter>src\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\http\msg.c">
+      <Filter>src\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\http\server.c">
+      <Filter>src\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hmac\hmac.c">
+      <Filter>src\hmac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hmac\hmac_sha1.c">
+      <Filter>src\hmac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hash\func.c">
+      <Filter>src\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hash\hash.c">
+      <Filter>src\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\ch.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\hexdump.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\pl.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\print.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\prm.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\regex.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\str.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\str_error.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\time.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fmt\unicode.c">
+      <Filter>src\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\client.c">
+      <Filter>src\dns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\cstr.c">
+      <Filter>src\dns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\dname.c">
+      <Filter>src\dns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\hdr.c">
+      <Filter>src\dns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\ns.c">
+      <Filter>src\dns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\rr.c">
+      <Filter>src\dns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\rrlist.c">
+      <Filter>src\dns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dns\win32\srv.c">
+      <Filter>src\dns\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dbg\dbg.c">
+      <Filter>src\dbg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\crc32\crc32.c">
+      <Filter>src\crc32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\conf\conf.c">
+      <Filter>src\conf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bfcp\attr.c">
+      <Filter>src\bfcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bfcp\conn.c">
+      <Filter>src\bfcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bfcp\msg.c">
+      <Filter>src\bfcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bfcp\reply.c">
+      <Filter>src\bfcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bfcp\request.c">
+      <Filter>src\bfcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\aes\stub.c">
+      <Filter>src\aes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\base64\b64.c">
+      <Filter>src\base64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sha\sha1.c">
+      <Filter>src\sha</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\srtp\README">
+      <Filter>src\srtp</Filter>
+    </None>
+  </ItemGroup>
+</Project>
