@@ -35,14 +35,13 @@ static const struct ice_conf conf_default = {
 
 
 /** Determining Role */
-static void ice_determine_role(struct icem *icem, bool offerer)
+static void ice_determine_role(struct icem *icem, enum ice_role role)
 {
 	if (!icem)
 		return;
 
 	if (icem->lmode == icem->rmode)
-		icem->lrole = offerer
-			? ICE_ROLE_CONTROLLING : ICE_ROLE_CONTROLLED;
+		icem->lrole = role;
 	else if (icem->lmode == ICE_MODE_FULL)
 		icem->lrole = ICE_ROLE_CONTROLLING;
 	else
@@ -73,7 +72,7 @@ static void icem_destructor(void *data)
  *
  * @param icemp   Pointer to allocated ICE Media object
  * @param mode    ICE mode
- * @param offerer True if SDP offerer, False if not
+ * @param role    Local ICE role
  * @param proto   Transport protocol
  * @param layer   Protocol stack layer
  * @param tiebrk  Tie-breaker value, must be same for all media streams
@@ -86,7 +85,7 @@ static void icem_destructor(void *data)
  * @return 0 if success, otherwise errorcode
  */
 int  icem_alloc(struct icem **icemp,
-		enum ice_mode mode, bool offerer,
+		enum ice_mode mode, enum ice_role role,
 		int proto, int layer,
 		uint64_t tiebrk, const char *lufrag, const char *lpwd,
 		ice_gather_h *gh, ice_connchk_h *chkh, void *arg)
@@ -136,7 +135,7 @@ int  icem_alloc(struct icem **icemp,
 	if (err)
 		goto out;
 
-	ice_determine_role(icem, offerer);
+	ice_determine_role(icem, role);
 
 	if (ICE_MODE_FULL == icem->lmode) {
 
@@ -195,17 +194,17 @@ void icem_set_conf(struct icem *icem, const struct ice_conf *conf)
 
 
 /**
- * Set the offerer flag on the ICE Session
+ * Set the local role on the ICE Session
  *
  * @param icem    ICE Media object
- * @param offerer True if offerer, otherwise false
+ * @param role    Local ICE role
  */
-void icem_set_offerer(struct icem *icem, bool offerer)
+void icem_set_role(struct icem *icem, enum ice_role role)
 {
 	if (!icem)
 		return;
 
-	ice_determine_role(icem, offerer);
+	ice_determine_role(icem, role);
 }
 
 

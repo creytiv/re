@@ -72,13 +72,13 @@ typedef void (ice_connchk_h)(int err, bool update, void *arg);
 
 /* ICE Media */
 int  icem_alloc(struct icem **icemp, enum ice_mode mode,
-		bool offerer, int proto, int layer,
+		enum ice_role role, int proto, int layer,
 		uint64_t tiebrk, const char *lufrag, const char *lpwd,
 		ice_gather_h *gh, ice_connchk_h *chkh, void *arg);
 struct ice_conf *icem_conf(struct icem *icem);
 enum ice_role icem_local_role(const struct icem *icem);
 void icem_set_conf(struct icem *icem, const struct ice_conf *conf);
-void icem_set_offerer(struct icem *icem, bool offerer);
+void icem_set_role(struct icem *icem, enum ice_role role);
 void icem_set_name(struct icem *icem, const char *name);
 int  icem_comp_add(struct icem *icem, unsigned compid, void *sock);
 int  icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
