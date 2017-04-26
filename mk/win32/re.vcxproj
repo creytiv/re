@@ -1,0 +1,333 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\re.h" />
+    <ClInclude Include="..\..\include\re_aes.h" />
+    <ClInclude Include="..\..\include\re_base64.h" />
+    <ClInclude Include="..\..\include\re_bfcp.h" />
+    <ClInclude Include="..\..\include\re_bitv.h" />
+    <ClInclude Include="..\..\include\re_conf.h" />
+    <ClInclude Include="..\..\include\re_crc32.h" />
+    <ClInclude Include="..\..\include\re_dbg.h" />
+    <ClInclude Include="..\..\include\re_dns.h" />
+    <ClInclude Include="..\..\include\re_fmt.h" />
+    <ClInclude Include="..\..\include\re_hash.h" />
+    <ClInclude Include="..\..\include\re_hmac.h" />
+    <ClInclude Include="..\..\include\re_http.h" />
+    <ClInclude Include="..\..\include\re_httpauth.h" />
+    <ClInclude Include="..\..\include\re_ice.h" />
+    <ClInclude Include="..\..\include\re_jbuf.h" />
+    <ClInclude Include="..\..\include\re_json.h" />
+    <ClInclude Include="..\..\include\re_list.h" />
+    <ClInclude Include="..\..\include\re_lock.h" />
+    <ClInclude Include="..\..\include\re_main.h" />
+    <ClInclude Include="..\..\include\re_mbuf.h" />
+    <ClInclude Include="..\..\include\re_md5.h" />
+    <ClInclude Include="..\..\include\re_mem.h" />
+    <ClInclude Include="..\..\include\re_mod.h" />
+    <ClInclude Include="..\..\include\re_mqueue.h" />
+    <ClInclude Include="..\..\include\re_msg.h" />
+    <ClInclude Include="..\..\include\re_natbd.h" />
+    <ClInclude Include="..\..\include\re_net.h" />
+    <ClInclude Include="..\..\include\re_odict.h" />
+    <ClInclude Include="..\..\include\re_rtp.h" />
+    <ClInclude Include="..\..\include\re_sa.h" />
+    <ClInclude Include="..\..\include\re_sdp.h" />
+    <ClInclude Include="..\..\include\re_sha.h" />
+    <ClInclude Include="..\..\include\re_sip.h" />
+    <ClInclude Include="..\..\include\re_sipevent.h" />
+    <ClInclude Include="..\..\include\re_sipreg.h" />
+    <ClInclude Include="..\..\include\re_sipsess.h" />
+    <ClInclude Include="..\..\include\re_srtp.h" />
+    <ClInclude Include="..\..\include\re_stun.h" />
+    <ClInclude Include="..\..\include\re_sys.h" />
+    <ClInclude Include="..\..\include\re_tcp.h" />
+    <ClInclude Include="..\..\include\re_telev.h" />
+    <ClInclude Include="..\..\include\re_tls.h" />
+    <ClInclude Include="..\..\include\re_tmr.h" />
+    <ClInclude Include="..\..\include\re_turn.h" />
+    <ClInclude Include="..\..\include\re_types.h" />
+    <ClInclude Include="..\..\include\re_udp.h" />
+    <ClInclude Include="..\..\include\re_uri.h" />
+    <ClInclude Include="..\..\include\re_websock.h" />
+    <ClInclude Include="..\..\src\bfcp\bfcp.h" />
+    <ClInclude Include="..\..\src\dns\dns.h" />
+    <ClInclude Include="..\..\src\ice\ice.h" />
+    <ClInclude Include="..\..\src\main\main.h" />
+    <ClInclude Include="..\..\src\md5\md5.h" />
+    <ClInclude Include="..\..\src\mod\mod_internal.h" />
+    <ClInclude Include="..\..\src\mqueue\mqueue.h" />
+    <ClInclude Include="..\..\src\rtp\rtcp.h" />
+    <ClInclude Include="..\..\src\sa\sa.h" />
+    <ClInclude Include="..\..\src\sdp\sdp.h" />
+    <ClInclude Include="..\..\src\sipevent\sipevent.h" />
+    <ClInclude Include="..\..\src\sipsess\sipsess.h" />
+    <ClInclude Include="..\..\src\sip\sip.h" />
+    <ClInclude Include="..\..\src\srtp\srtp.h" />
+    <ClInclude Include="..\..\src\stun\stun.h" />
+    <ClInclude Include="..\..\src\turn\turnc.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\aes\stub.c" />
+    <ClCompile Include="..\..\src\base64\b64.c" />
+    <ClCompile Include="..\..\src\bfcp\attr.c" />
+    <ClCompile Include="..\..\src\bfcp\conn.c" />
+    <ClCompile Include="..\..\src\bfcp\msg.c" />
+    <ClCompile Include="..\..\src\bfcp\reply.c" />
+    <ClCompile Include="..\..\src\bfcp\request.c" />
+    <ClCompile Include="..\..\src\conf\conf.c" />
+    <ClCompile Include="..\..\src\crc32\crc32.c" />
+    <ClCompile Include="..\..\src\dbg\dbg.c" />
+    <ClCompile Include="..\..\src\dns\client.c" />
+    <ClCompile Include="..\..\src\dns\cstr.c" />
+    <ClCompile Include="..\..\src\dns\dname.c" />
+    <ClCompile Include="..\..\src\dns\hdr.c" />
+    <ClCompile Include="..\..\src\dns\ns.c" />
+    <ClCompile Include="..\..\src\dns\rr.c" />
+    <ClCompile Include="..\..\src\dns\rrlist.c" />
+    <ClCompile Include="..\..\src\dns\win32\srv.c" />
+    <ClCompile Include="..\..\src\fmt\ch.c" />
+    <ClCompile Include="..\..\src\fmt\hexdump.c" />
+    <ClCompile Include="..\..\src\fmt\pl.c" />
+    <ClCompile Include="..\..\src\fmt\print.c" />
+    <ClCompile Include="..\..\src\fmt\prm.c" />
+    <ClCompile Include="..\..\src\fmt\regex.c" />
+    <ClCompile Include="..\..\src\fmt\str.c" />
+    <ClCompile Include="..\..\src\fmt\str_error.c" />
+    <ClCompile Include="..\..\src\fmt\time.c" />
+    <ClCompile Include="..\..\src\fmt\unicode.c" />
+    <ClCompile Include="..\..\src\hash\func.c" />
+    <ClCompile Include="..\..\src\hash\hash.c" />
+    <ClCompile Include="..\..\src\hmac\hmac.c" />
+    <ClCompile Include="..\..\src\hmac\hmac_sha1.c" />
+    <ClCompile Include="..\..\src\httpauth\basic.c" />
+    <ClCompile Include="..\..\src\httpauth\digest.c" />
+    <ClCompile Include="..\..\src\http\auth.c" />
+    <ClCompile Include="..\..\src\http\client.c" />
+    <ClCompile Include="..\..\src\http\msg.c" />
+    <ClCompile Include="..\..\src\http\server.c" />
+    <ClCompile Include="..\..\src\ice\cand.c" />
+    <ClCompile Include="..\..\src\ice\candpair.c" />
+    <ClCompile Include="..\..\src\ice\chklist.c" />
+    <ClCompile Include="..\..\src\ice\comp.c" />
+    <ClCompile Include="..\..\src\ice\connchk.c" />
+    <ClCompile Include="..\..\src\ice\gather.c" />
+    <ClCompile Include="..\..\src\ice\ice.c" />
+    <ClCompile Include="..\..\src\ice\icem.c" />
+    <ClCompile Include="..\..\src\ice\icesdp.c" />
+    <ClCompile Include="..\..\src\ice\icestr.c" />
+    <ClCompile Include="..\..\src\ice\stunsrv.c" />
+    <ClCompile Include="..\..\src\ice\util.c" />
+    <ClCompile Include="..\..\src\jbuf\jbuf.c" />
+    <ClCompile Include="..\..\src\json\decode.c" />
+    <ClCompile Include="..\..\src\json\decode_odict.c" />
+    <ClCompile Include="..\..\src\json\encode.c" />
+    <ClCompile Include="..\..\src\list\list.c" />
+    <ClCompile Include="..\..\src\lock\win32\lock.c" />
+    <ClCompile Include="..\..\src\main\init.c" />
+    <ClCompile Include="..\..\src\main\main.c" />
+    <ClCompile Include="..\..\src\main\method.c" />
+    <ClCompile Include="..\..\src\mbuf\mbuf.c" />
+    <ClCompile Include="..\..\src\md5\md5.c" />
+    <ClCompile Include="..\..\src\md5\wrap.c" />
+    <ClCompile Include="..\..\src\mem\mem.c" />
+    <ClCompile Include="..\..\src\mod\mod.c" />
+    <ClCompile Include="..\..\src\mod\win32\dll.c" />
+    <ClCompile Include="..\..\src\mqueue\mqueue.c" />
+    <ClCompile Include="..\..\src\mqueue\win32\pipe.c" />
+    <ClCompile Include="..\..\src\msg\ctype.c" />
+    <ClCompile Include="..\..\src\msg\param.c" />
+    <ClCompile Include="..\..\src\natbd\filtering.c" />
+    <ClCompile Include="..\..\src\natbd\genalg.c" />
+    <ClCompile Include="..\..\src\natbd\hairpinning.c" />
+    <ClCompile Include="..\..\src\natbd\lifetime.c" />
+    <ClCompile Include="..\..\src\natbd\mapping.c" />
+    <ClCompile Include="..\..\src\natbd\natstr.c" />
+    <ClCompile Include="..\..\src\net\if.c" />
+    <ClCompile Include="..\..\src\net\net.c" />
+    <ClCompile Include="..\..\src\net\netstr.c" />
+    <ClCompile Include="..\..\src\net\rt.c" />
+    <ClCompile Include="..\..\src\net\sock.c" />
+    <ClCompile Include="..\..\src\net\sockopt.c" />
+    <ClCompile Include="..\..\src\net\win32\wif.c" />
+    <ClCompile Include="..\..\src\odict\entry.c" />
+    <ClCompile Include="..\..\src\odict\odict.c" />
+    <ClCompile Include="..\..\src\odict\type.c" />
+    <ClCompile Include="..\..\src\rtp\fb.c" />
+    <ClCompile Include="..\..\src\rtp\member.c" />
+    <ClCompile Include="..\..\src\rtp\ntp.c" />
+    <ClCompile Include="..\..\src\rtp\pkt.c" />
+    <ClCompile Include="..\..\src\rtp\rr.c" />
+    <ClCompile Include="..\..\src\rtp\rtcp.c" />
+    <ClCompile Include="..\..\src\rtp\rtp.c" />
+    <ClCompile Include="..\..\src\rtp\sdes.c" />
+    <ClCompile Include="..\..\src\rtp\sess.c" />
+    <ClCompile Include="..\..\src\rtp\source.c" />
+    <ClCompile Include="..\..\src\sa\ntop.c" />
+    <ClCompile Include="..\..\src\sa\printaddr.c" />
+    <ClCompile Include="..\..\src\sa\pton.c" />
+    <ClCompile Include="..\..\src\sa\sa.c" />
+    <ClCompile Include="..\..\src\sdp\attr.c" />
+    <ClCompile Include="..\..\src\sdp\format.c" />
+    <ClCompile Include="..\..\src\sdp\media.c" />
+    <ClCompile Include="..\..\src\sdp\msg.c" />
+    <ClCompile Include="..\..\src\sdp\session.c" />
+    <ClCompile Include="..\..\src\sdp\str.c" />
+    <ClCompile Include="..\..\src\sdp\util.c" />
+    <ClCompile Include="..\..\src\sha\sha1.c" />
+    <ClCompile Include="..\..\src\sipevent\listen.c" />
+    <ClCompile Include="..\..\src\sipevent\msg.c" />
+    <ClCompile Include="..\..\src\sipevent\notify.c" />
+    <ClCompile Include="..\..\src\sipevent\subscribe.c" />
+    <ClCompile Include="..\..\src\sipreg\reg.c" />
+    <ClCompile Include="..\..\src\sipsess\accept.c" />
+    <ClCompile Include="..\..\src\sipsess\ack.c" />
+    <ClCompile Include="..\..\src\sipsess\close.c" />
+    <ClCompile Include="..\..\src\sipsess\connect.c" />
+    <ClCompile Include="..\..\src\sipsess\info.c" />
+    <ClCompile Include="..\..\src\sipsess\listen.c" />
+    <ClCompile Include="..\..\src\sipsess\modify.c" />
+    <ClCompile Include="..\..\src\sipsess\reply.c" />
+    <ClCompile Include="..\..\src\sipsess\request.c" />
+    <ClCompile Include="..\..\src\sipsess\sess.c" />
+    <ClCompile Include="..\..\src\sip\addr.c" />
+    <ClCompile Include="..\..\src\sip\auth.c" />
+    <ClCompile Include="..\..\src\sip\contact.c" />
+    <ClCompile Include="..\..\src\sip\cseq.c" />
+    <ClCompile Include="..\..\src\sip\ctrans.c" />
+    <ClCompile Include="..\..\src\sip\dialog.c" />
+    <ClCompile Include="..\..\src\sip\keepalive.c" />
+    <ClCompile Include="..\..\src\sip\keepalive_udp.c" />
+    <ClCompile Include="..\..\src\sip\msg.c" />
+    <ClCompile Include="..\..\src\sip\reply.c" />
+    <ClCompile Include="..\..\src\sip\request.c" />
+    <ClCompile Include="..\..\src\sip\sip.c" />
+    <ClCompile Include="..\..\src\sip\strans.c" />
+    <ClCompile Include="..\..\src\sip\transp.c" />
+    <ClCompile Include="..\..\src\sip\via.c" />
+    <ClCompile Include="..\..\src\srtp\misc.c" />
+    <ClCompile Include="..\..\src\srtp\replay.c" />
+    <ClCompile Include="..\..\src\srtp\srtcp.c" />
+    <ClCompile Include="..\..\src\srtp\srtp.c" />
+    <ClCompile Include="..\..\src\srtp\stream.c" />
+    <ClCompile Include="..\..\src\stun\addr.c" />
+    <ClCompile Include="..\..\src\stun\attr.c" />
+    <ClCompile Include="..\..\src\stun\ctrans.c" />
+    <ClCompile Include="..\..\src\stun\dnsdisc.c" />
+    <ClCompile Include="..\..\src\stun\hdr.c" />
+    <ClCompile Include="..\..\src\stun\ind.c" />
+    <ClCompile Include="..\..\src\stun\keepalive.c" />
+    <ClCompile Include="..\..\src\stun\msg.c" />
+    <ClCompile Include="..\..\src\stun\rep.c" />
+    <ClCompile Include="..\..\src\stun\req.c" />
+    <ClCompile Include="..\..\src\stun\stun.c" />
+    <ClCompile Include="..\..\src\stun\stunstr.c" />
+    <ClCompile Include="..\..\src\sys\daemon.c" />
+    <ClCompile Include="..\..\src\sys\endian.c" />
+    <ClCompile Include="..\..\src\sys\fs.c" />
+    <ClCompile Include="..\..\src\sys\rand.c" />
+    <ClCompile Include="..\..\src\sys\sleep.c" />
+    <ClCompile Include="..\..\src\sys\sys.c" />
+    <ClCompile Include="..\..\src\tcp\tcp.c" />
+    <ClCompile Include="..\..\src\tcp\tcp_high.c" />
+    <ClCompile Include="..\..\src\telev\telev.c" />
+    <ClCompile Include="..\..\src\tmr\tmr.c" />
+    <ClCompile Include="..\..\src\turn\chan.c" />
+    <ClCompile Include="..\..\src\turn\perm.c" />
+    <ClCompile Include="..\..\src\turn\turnc.c" />
+    <ClCompile Include="..\..\src\udp\mcast.c" />
+    <ClCompile Include="..\..\src\udp\udp.c" />
+    <ClCompile Include="..\..\src\uri\ucmp.c" />
+    <ClCompile Include="..\..\src\uri\uri.c" />
+    <ClCompile Include="..\..\src\uri\uric.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\srtp\README" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>re-win32</ProjectName>
+    <ProjectGuid>{40B28DF6-4B4A-411A-9EB7-8D80C2A29B9D}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.25123.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\..\$(Platform)\$(Configuration)\bin\</OutDir>
+    <IntDir>..\..\$(Platform)\$(Configuration)\tmp\mk\win32\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\..\$(Platform)\$(Configuration)\bin\</OutDir>
+    <IntDir>..\..\$(Platform)\$(Configuration)\tmp\mk\win32\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\include;..\..\..\misc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;HAVE_INET_PTON;HAVE_INET_NTOP;FD_SETSIZE=1024;HAVE_SELECT;HAVE_IO_H;_CRT_SECURE_NO_DEPRECATE;WIN32_LEAN_AND_MEAN;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DisableSpecificWarnings>4142;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).obj</ObjectFileName>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>Iphlpapi.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\..\misc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;HAVE_INET_PTON;HAVE_INET_NTOP;FD_SETSIZE=1024;HAVE_SELECT;HAVE_IO_H;_CRT_SECURE_NO_DEPRECATE;WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4142;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ObjectFileName>$(IntDir)%(RelativeDir)%(Filename).obj</ObjectFileName>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

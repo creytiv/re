@@ -15,12 +15,10 @@
 #include <pwd.h>
 #endif
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlobj.h>
 #include <direct.h>
 #include <lmaccess.h>
-#undef WIN32_LEAN_AND_MEAN
 #endif
 #include <re_types.h>
 #include <re_fmt.h>
