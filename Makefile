@@ -34,12 +34,10 @@ MODULES += odict
 MODULES += json
 
 INSTALL := install
-ifndef PREFIX
 ifeq ($(DESTDIR),)
-PREFIX  := /usr/local
+PREFIX  ?= /usr/local
 else
-PREFIX  := /usr
-endif
+PREFIX  ?= /usr
 endif
 ifeq ($(LIBDIR),)
 LIBDIR  := $(PREFIX)/lib
