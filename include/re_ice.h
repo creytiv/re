@@ -45,6 +45,15 @@ enum ice_tcptype {
 	ICE_TCP_SO        /**< Simultaneous-open TCP client/server */
 };
 
+/** Candidate pair states */
+enum ice_candpair_state {
+	ICE_CANDPAIR_FROZEN = 0, /**< Frozen state (default)                 */
+	ICE_CANDPAIR_WAITING,    /**< Waiting to become highest on list      */
+	ICE_CANDPAIR_INPROGRESS, /**< In-Progress state;transac. in progress */
+	ICE_CANDPAIR_SUCCEEDED,  /**< Succeeded state; successful result     */
+	ICE_CANDPAIR_FAILED      /**< Failed state; check failed             */
+};
+
 struct ice;
 struct icem;
 
@@ -61,22 +70,15 @@ typedef void (ice_gather_h)(int err, uint16_t scode, const char *reason,
 typedef void (ice_connchk_h)(int err, bool update, void *arg);
 
 
-/* ICE Session */
-int  ice_alloc(struct ice **icep, enum ice_mode mode, bool offerer);
-struct ice_conf *ice_conf(struct ice *ice);
-void ice_set_conf(struct ice *ice, const struct ice_conf *conf);
-void ice_set_offerer(struct ice *ice, bool offerer);
-int  ice_sdp_decode(struct ice *ice, const char *name, const char *value);
-int  ice_conncheck_start(struct ice *ice);
-int  ice_debug(struct re_printf *pf, const struct ice *ice);
-struct list *ice_medialist(const struct ice *ice);
-const char *ice_ufrag(const struct ice *ice);
-const char *ice_pwd(const struct ice *ice);
-
-
 /* ICE Media */
-int  icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
+int  icem_alloc(struct icem **icemp, enum ice_mode mode,
+		enum ice_role role, int proto, int layer,
+		uint64_t tiebrk, const char *lufrag, const char *lpwd,
 		ice_gather_h *gh, ice_connchk_h *chkh, void *arg);
+struct ice_conf *icem_conf(struct icem *icem);
+enum ice_role icem_local_role(const struct icem *icem);
+void icem_set_conf(struct icem *icem, const struct ice_conf *conf);
+void icem_set_role(struct icem *icem, enum ice_role role);
 void icem_set_name(struct icem *icem, const char *name);
 int  icem_comp_add(struct icem *icem, unsigned compid, void *sock);
 int  icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
@@ -92,6 +94,7 @@ void icem_conncheck_stop(struct icem *icem, int err);
 int  icem_add_chan(struct icem *icem, unsigned compid, const struct sa *raddr);
 bool icem_mismatch(const struct icem *icem);
 void icem_update(struct icem *icem);
+int  ice_sdp_decode(struct icem *ice, const char *name, const char *value);
 int  icem_sdp_decode(struct icem *icem, const char *name, const char *value);
 int  icem_debug(struct re_printf *pf, const struct icem *icem);
 struct list *icem_lcandl(const struct icem *icem);
@@ -100,6 +103,7 @@ struct list *icem_checkl(const struct icem *icem);
 struct list *icem_validl(const struct icem *icem);
 const struct sa *icem_cand_default(struct icem *icem, unsigned compid);
 const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid);
+void ice_candpair_set_states(struct icem *icem);
 
 
 struct ice_cand;
@@ -119,6 +123,7 @@ extern const char ice_attr_ufrag[];
 const char        *ice_cand_type2name(enum ice_cand_type type);
 enum ice_cand_type ice_cand_name2type(const char *name);
 const char    *ice_role2name(enum ice_role role);
+const char    *ice_candpair_state2name(enum ice_candpair_state st);
 
 
 uint32_t ice_cand_calc_prio(enum ice_cand_type type, uint16_t local,

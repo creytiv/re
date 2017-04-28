@@ -187,7 +187,7 @@ static void stunc_resp_handler(int err, uint16_t scode, const char *reason,
 		break;
 
 	case 487: /* Role Conflict */
-		ice_switch_local_role(icem->ice);
+		ice_switch_local_role(icem);
 		(void)icem_conncheck_send(cp, false, true);
 		break;
 
@@ -207,7 +207,6 @@ int icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged)
 {
 	struct ice_cand *lcand = cp->lcand;
 	struct icem *icem = cp->icem;
-	struct ice *ice = icem->ice;
 	char username_buf[64];
 	size_t presz = 0;
 	uint32_t prio_prflx;
@@ -217,17 +216,17 @@ int icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged)
 	icem_candpair_set_state(cp, ICE_CANDPAIR_INPROGRESS);
 
 	(void)re_snprintf(username_buf, sizeof(username_buf),
-			  "%s:%s", icem->rufrag, ice->lufrag);
+			  "%s:%s", icem->rufrag, icem->lufrag);
 
 	/* PRIORITY and USE-CANDIDATE */
 	prio_prflx = ice_cand_calc_prio(ICE_CAND_TYPE_PRFLX, 0, lcand->compid);
 
-	switch (ice->lrole) {
+	switch (icem->lrole) {
 
 	case ICE_ROLE_CONTROLLING:
 		ctrl_attr = STUN_ATTR_CONTROLLING;
 
-		if (ice->conf.nom == ICE_NOMINATION_AGGRESSIVE)
+		if (icem->conf.nom == ICE_NOMINATION_AGGRESSIVE)
 			use_cand = true;
 		break;
 
@@ -279,7 +278,7 @@ int icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged)
 	case ICE_CAND_TYPE_SRFLX:
 	case ICE_CAND_TYPE_PRFLX:
 		cp->ct_conn = mem_deref(cp->ct_conn);
-		err = stun_request(&cp->ct_conn, ice->stun, icem->proto,
+		err = stun_request(&cp->ct_conn, icem->stun, icem->proto,
 				   cp->comp->sock, &cp->rcand->addr, presz,
 				   STUN_METHOD_BINDING,
 				   (uint8_t *)icem->rpwd, str_len(icem->rpwd),
@@ -287,7 +286,7 @@ int icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged)
 				   4,
 				   STUN_ATTR_USERNAME, username_buf,
 				   STUN_ATTR_PRIORITY, &prio_prflx,
-				   ctrl_attr, &ice->tiebrk,
+				   ctrl_attr, &icem->tiebrk,
 				   STUN_ATTR_USE_CAND,
 				   use_cand ? &use_cand : 0);
 		break;
@@ -308,7 +307,7 @@ static void abort_ice(struct icem *icem, int err)
 	tmr_cancel(&icem->tmr_pace);
 
 	if (icem->chkh) {
-		icem->chkh(err, icem->ice->lrole == ICE_ROLE_CONTROLLING,
+		icem->chkh(err, icem->lrole == ICE_ROLE_CONTROLLING,
 			   icem->arg);
 	}
 
@@ -391,7 +390,7 @@ int icem_conncheck_start(struct icem *icem)
 	if (!icem)
 		return EINVAL;
 
-	if (ICE_MODE_FULL != icem->ice->lmode)
+	if (ICE_MODE_FULL != icem->lmode)
 		return EINVAL;
 
 	err = icem_checklist_form(icem);

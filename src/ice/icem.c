@@ -21,43 +21,85 @@
 #include <re_dbg.h>
 
 
+/*
+ * ICE Implementation as of RFC 5245
+ */
+
+
+static const struct ice_conf conf_default = {
+	ICE_NOMINATION_REGULAR,
+	ICE_DEFAULT_RTO_RTP,
+	ICE_DEFAULT_RC,
+	false
+};
+
+
+/** Determining Role */
+static void ice_determine_role(struct icem *icem, enum ice_role role)
+{
+	if (!icem)
+		return;
+
+	if (icem->lmode == icem->rmode)
+		icem->lrole = role;
+	else if (icem->lmode == ICE_MODE_FULL)
+		icem->lrole = ICE_ROLE_CONTROLLING;
+	else
+		icem->lrole = ICE_ROLE_CONTROLLED;
+}
+
+
 static void icem_destructor(void *data)
 {
 	struct icem *icem = data;
 
-	list_unlink(&icem->le);
 	tmr_cancel(&icem->tmr_pace);
 	list_flush(&icem->compl);
 	list_flush(&icem->validl);
 	list_flush(&icem->checkl);
 	list_flush(&icem->lcandl);
 	list_flush(&icem->rcandl);
+	mem_deref(icem->lufrag);
+	mem_deref(icem->lpwd);
 	mem_deref(icem->rufrag);
 	mem_deref(icem->rpwd);
+	mem_deref(icem->stun);
 }
 
 
 /**
  * Add a new ICE Media object to the ICE Session
  *
- * @param icemp  Pointer to allocated ICE Media object
- * @param ice    ICE Session
- * @param proto  Transport protocol
- * @param layer  Protocol stack layer
- * @param gh     Gather handler
- * @param chkh   Connectivity check handler
- * @param arg    Handler argument
+ * @param icemp   Pointer to allocated ICE Media object
+ * @param mode    ICE mode
+ * @param role    Local ICE role
+ * @param proto   Transport protocol
+ * @param layer   Protocol stack layer
+ * @param tiebrk  Tie-breaker value, must be same for all media streams
+ * @param lufrag  Local username fragment
+ * @param lpwd    Local password
+ * @param gh      Gather handler
+ * @param chkh    Connectivity check handler
+ * @param arg     Handler argument
  *
  * @return 0 if success, otherwise errorcode
  */
-int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
-	       ice_gather_h *gh, ice_connchk_h *chkh, void *arg)
+int  icem_alloc(struct icem **icemp,
+		enum ice_mode mode, enum ice_role role,
+		int proto, int layer,
+		uint64_t tiebrk, const char *lufrag, const char *lpwd,
+		ice_gather_h *gh, ice_connchk_h *chkh, void *arg)
 {
 	struct icem *icem;
 	int err = 0;
 
-	if (!ice)
+	if (!icemp || !tiebrk || !lufrag || !lpwd)
 		return EINVAL;
+
+	if (str_len(lufrag) < 4 || str_len(lpwd) < 22) {
+		DEBUG_WARNING("alloc: lufrag/lpwd is too short\n");
+		return EINVAL;
+	}
 
 	if (proto != IPPROTO_UDP)
 		return EPROTONOSUPPORT;
@@ -66,13 +108,14 @@ int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 	if (!icem)
 		return ENOMEM;
 
+	icem->conf = conf_default;
+
 	tmr_init(&icem->tmr_pace);
 	list_init(&icem->lcandl);
 	list_init(&icem->rcandl);
 	list_init(&icem->checkl);
 	list_init(&icem->validl);
 
-	icem->ice   = ice;
 	icem->layer = layer;
 	icem->proto = proto;
 	icem->state = ICE_CHECKLIST_NULL;
@@ -84,7 +127,26 @@ int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 	if (err)
 		goto out;
 
-	list_append(&ice->ml, &icem->le, icem);
+	icem->lmode = mode;
+	icem->tiebrk = tiebrk;
+
+	err |= str_dup(&icem->lufrag, lufrag);
+	err |= str_dup(&icem->lpwd, lpwd);
+	if (err)
+		goto out;
+
+	ice_determine_role(icem, role);
+
+	if (ICE_MODE_FULL == icem->lmode) {
+
+		err = stun_alloc(&icem->stun, NULL, NULL, NULL);
+		if (err)
+			goto out;
+
+		/* Update STUN Transport */
+		stun_conf(icem->stun)->rto = icem->conf.rto;
+		stun_conf(icem->stun)->rc = icem->conf.rc;
+	}
 
  out:
 	if (err)
@@ -93,6 +155,56 @@ int icem_alloc(struct icem **icemp, struct ice *ice, int proto, int layer,
 		*icemp = icem;
 
 	return err;
+}
+
+
+/**
+ * Get the ICE Configuration
+ *
+ * @param icem  ICE Media object
+ *
+ * @return ICE Configuration
+ */
+struct ice_conf *icem_conf(struct icem *icem)
+{
+	return icem ? &icem->conf : NULL;
+}
+
+
+enum ice_role icem_local_role(const struct icem *icem)
+{
+	return icem ? icem->lrole : ICE_ROLE_UNKNOWN;
+}
+
+
+void icem_set_conf(struct icem *icem, const struct ice_conf *conf)
+{
+	if (!icem || !conf)
+		return;
+
+	icem->conf = *conf;
+
+	if (icem->stun) {
+
+		/* Update STUN Transport */
+		stun_conf(icem->stun)->rto = icem->conf.rto;
+		stun_conf(icem->stun)->rc = icem->conf.rc;
+	}
+}
+
+
+/**
+ * Set the local role on the ICE Session
+ *
+ * @param icem    ICE Media object
+ * @param role    Local ICE role
+ */
+void icem_set_role(struct icem *icem, enum ice_role role)
+{
+	if (!icem)
+		return;
+
+	ice_determine_role(icem, role);
 }
 
 
@@ -345,6 +457,13 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 
 	err |= re_hprintf(pf, "----- ICE Media <%s> -----\n", icem->name);
 
+	err |= re_hprintf(pf, " local_mode=%s, remote_mode=%s",
+			  ice_mode2name(icem->lmode),
+			  ice_mode2name(icem->rmode));
+	err |= re_hprintf(pf, ", local_role=%s\n", ice_role2name(icem->lrole));
+	err |= re_hprintf(pf, " local_ufrag=\"%s\" local_pwd=\"%s\"\n",
+			  icem->lufrag, icem->lpwd);
+
 	err |= re_hprintf(pf, " Components: (%u)\n", list_count(&icem->compl));
 	for (le = icem->compl.head; le; le = le->next) {
 		struct icem_comp *comp = le->data;
@@ -361,6 +480,8 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 			  icem_candpairs_debug, &icem->checkl);
 	err |= re_hprintf(pf, " Valid list: %H",
 			  icem_candpairs_debug, &icem->validl);
+
+	err |= stun_debug(pf, icem->stun);
 
 	return err;
 }
@@ -430,7 +551,7 @@ int icem_lite_set_default_candidates(struct icem *icem)
 	struct le *le;
 	int err = 0;
 
-	if (icem->ice->lmode != ICE_MODE_LITE)
+	if (icem->lmode != ICE_MODE_LITE)
 		return EINVAL;
 
 	for (le = icem->compl.head; le; le = le->next) {
@@ -448,7 +569,7 @@ void icem_printf(struct icem *icem, const char *fmt, ...)
 {
 	va_list ap;
 
-	if (!icem || !icem->ice->conf.debug)
+	if (!icem || !icem->conf.debug)
 		return;
 
 	va_start(ap, fmt);

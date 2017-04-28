@@ -17,15 +17,6 @@ enum ice_checkl_state {
 	ICE_CHECKLIST_FAILED
 };
 
-/** Candidate pair states */
-enum ice_candpair_state {
-	ICE_CANDPAIR_FROZEN = 0, /**< Frozen state (default)                 */
-	ICE_CANDPAIR_WAITING,    /**< Waiting to become highest on list      */
-	ICE_CANDPAIR_INPROGRESS, /**< In-Progress state;transac. in progress */
-	ICE_CANDPAIR_SUCCEEDED,  /**< Succeeded state; successful result     */
-	ICE_CANDPAIR_FAILED      /**< Failed state; check failed             */
-};
-
 enum ice_transp {
 	ICE_TRANSP_NONE = -1,
 	ICE_TRANSP_UDP  = IPPROTO_UDP
@@ -41,19 +32,6 @@ enum {
 	ICE_DEFAULT_RC          =   7  /**< Retransmission count            */
 };
 
-
-/** Defines an ICE session */
-struct ice {
-	enum ice_mode lmode;          /**< Local mode                       */
-	enum ice_mode rmode;          /**< Remote mode                      */
-	enum ice_role lrole;          /**< Local role                       */
-	char lufrag[5];               /**< Local Username fragment          */
-	char lpwd[23];                /**< Local Password                   */
-	struct list ml;               /**< Media list (struct icem)         */
-	uint64_t tiebrk;              /**< Tie-break value for roleconflict */
-	struct ice_conf conf;         /**< ICE Configuration                */
-	struct stun *stun;            /**< STUN Transport                   */
-};
 
 /** Defines a media-stream component */
 struct icem_comp {
@@ -74,20 +52,26 @@ struct icem_comp {
 
 /** Defines an ICE media-stream */
 struct icem {
-	struct le le;                /**< Linked-list element                */
-	struct ice *ice;             /**< Pointer to parent ICE-session      */
+	struct ice_conf conf;        /**< ICE Configuration                  */
+	struct stun *stun;           /**< STUN Transport                     */
 	struct sa stun_srv;          /**< STUN Server IP address and port    */
 	int nstun;                   /**< Number of pending STUN candidates  */
 	struct list lcandl;          /**< List of local candidates           */
 	struct list rcandl;          /**< List of remote candidates          */
 	struct list checkl;          /**< Check List of cand pairs (sorted)  */
 	struct list validl;          /**< Valid List of cand pairs (sorted)  */
+	uint64_t tiebrk;             /**< Tie-break value for roleconflict   */
 	bool mismatch;               /**< ICE mismatch flag                  */
+	enum ice_mode lmode;         /**< Local mode                         */
+	enum ice_mode rmode;         /**< Remote mode                        */
+	enum ice_role lrole;         /**< Local role                         */
 	struct tmr tmr_pace;         /**< Timer for pacing STUN requests     */
 	int proto;                   /**< Transport protocol                 */
 	int layer;                   /**< Protocol layer                     */
 	enum ice_checkl_state state; /**< State of the checklist             */
 	struct list compl;           /**< ICE media components               */
+	char *lufrag;                /**< Local Username fragment            */
+	char *lpwd;                  /**< Local Password                     */
 	char *rufrag;                /**< Remote Username fragment           */
 	char *rpwd;                  /**< Remote Password                    */
 	ice_gather_h *gh;            /**< Gather handler                     */
@@ -219,7 +203,6 @@ int  icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged);
 
 /* icestr */
 const char    *ice_mode2name(enum ice_mode mode);
-const char    *ice_candpair_state2name(enum ice_candpair_state st);
 const char    *ice_checkl_state2name(enum ice_checkl_state cst);
 
 
@@ -227,5 +210,5 @@ const char    *ice_checkl_state2name(enum ice_checkl_state cst);
 typedef void * (list_unique_h)(struct le *le1, struct le *le2);
 
 uint64_t ice_calc_pair_prio(uint32_t g, uint32_t d);
-void ice_switch_local_role(struct ice *ice);
+void ice_switch_local_role(struct icem *icem);
 uint32_t ice_list_unique(struct list *list, list_unique_h *uh);
