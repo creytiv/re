@@ -73,6 +73,7 @@ struct telev {
 	/* tx */
 	struct mbuf *mb;
 	uint32_t ptime;
+	uint32_t srate;
 	enum state state;
 	int event;
 	uint16_t dur;
@@ -141,15 +142,16 @@ static void destructor(void *arg)
  *
  * @param tp    Pointer to allocated object
  * @param ptime Packet time in [ms]
+ * @param srate Sampling rate in [Hz]
  *
  * @return 0 if success, otherwise errorcode
  */
-int telev_alloc(struct telev **tp, uint32_t ptime)
+int telev_alloc(struct telev **tp, uint32_t ptime, uint32_t srate)
 {
 	struct telev *t;
 	int err = 0;
 
-	if (!tp || !ptime)
+	if (!tp || !ptime || !srate)
 		return EINVAL;
 
 	t = mem_zalloc(sizeof(*t), destructor);
@@ -164,6 +166,7 @@ int telev_alloc(struct telev **tp, uint32_t ptime)
 
 	t->state = IDLE;
 	t->ptime = ptime;
+	t->srate = srate;
 	t->rx_event = -1;
 
  out:
@@ -173,6 +176,24 @@ int telev_alloc(struct telev **tp, uint32_t ptime)
 		*tp = t;
 
 	return err;
+}
+
+
+/**
+ * Sets the sampling rate
+ *
+ * @param srate Sampling rate in [Hz]
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int telev_set_srate(struct telev *tel, uint32_t srate)
+{
+	if (!tel)
+		return EINVAL;
+
+	tel->srate = srate;
+
+	return 0;
 }
 
 
@@ -275,7 +296,7 @@ int telev_poll(struct telev *tel, bool *marker, struct mbuf *mb)
 		mrk = true;
 
 		tel->event = mbuf_read_u8(tel->mb);
-		tel->dur   = tel->ptime * 8;
+		tel->dur   = tel->ptime * (tel->srate / 1000);
 		tel->state = SENDING;
 		tel->txc   = 1;
 
@@ -283,7 +304,7 @@ int telev_poll(struct telev *tel, bool *marker, struct mbuf *mb)
 		break;
 
 	case SENDING:
-		tel->dur += tel->ptime * 8;
+		tel->dur += tel->ptime * (tel->srate / 1000);
 
 		err = payload_encode(mb, tel->event, false, tel->dur);
 
