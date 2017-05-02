@@ -73,7 +73,7 @@ struct telev {
 	/* tx */
 	struct mbuf *mb;
 	uint32_t ptime;
-	uint32_t srate;
+	uint16_t pdur;
 	enum state state;
 	int event;
 	uint16_t dur;
@@ -142,16 +142,15 @@ static void destructor(void *arg)
  *
  * @param tp    Pointer to allocated object
  * @param ptime Packet time in [ms]
- * @param srate Sampling rate in [Hz]
  *
  * @return 0 if success, otherwise errorcode
  */
-int telev_alloc(struct telev **tp, uint32_t ptime, uint32_t srate)
+int telev_alloc(struct telev **tp, uint32_t ptime)
 {
 	struct telev *t;
 	int err = 0;
 
-	if (!tp || !ptime || !srate)
+	if (!tp || !ptime)
 		return EINVAL;
 
 	t = mem_zalloc(sizeof(*t), destructor);
@@ -166,7 +165,7 @@ int telev_alloc(struct telev **tp, uint32_t ptime, uint32_t srate)
 
 	t->state = IDLE;
 	t->ptime = ptime;
-	t->srate = srate;
+	t->pdur = ptime * 8;
 	t->rx_event = -1;
 
  out:
@@ -182,16 +181,17 @@ int telev_alloc(struct telev **tp, uint32_t ptime, uint32_t srate)
 /**
  * Sets the sampling rate
  *
+ * @param tel   Telephony Event state
  * @param srate Sampling rate in [Hz]
  *
  * @return 0 if success, otherwise errorcode
  */
 int telev_set_srate(struct telev *tel, uint32_t srate)
 {
-	if (!tel)
+	if (!tel || !srate)
 		return EINVAL;
 
-	tel->srate = srate;
+	tel->pdur = tel->ptime * srate / 1000;
 
 	return 0;
 }
@@ -296,7 +296,7 @@ int telev_poll(struct telev *tel, bool *marker, struct mbuf *mb)
 		mrk = true;
 
 		tel->event = mbuf_read_u8(tel->mb);
-		tel->dur   = tel->ptime * (tel->srate / 1000);
+		tel->dur   = tel->pdur;
 		tel->state = SENDING;
 		tel->txc   = 1;
 
@@ -304,7 +304,7 @@ int telev_poll(struct telev *tel, bool *marker, struct mbuf *mb)
 		break;
 
 	case SENDING:
-		tel->dur += tel->ptime * (tel->srate / 1000);
+		tel->dur += tel->pdur;
 
 		err = payload_encode(mb, tel->event, false, tel->dur);
 

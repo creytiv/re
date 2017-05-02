@@ -13,7 +13,7 @@ struct telev;
 
 extern const char telev_rtpfmt[];
 
-int telev_alloc(struct telev **tp, uint32_t ptime, uint32_t srate);
+int telev_alloc(struct telev **tp, uint32_t ptime);
 int telev_set_srate(struct telev *tel, uint32_t srate);
 int telev_send(struct telev *tel, int event, bool end);
 int telev_recv(struct telev *tel, struct mbuf *mb, int *event, bool *end);
