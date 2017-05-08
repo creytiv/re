@@ -245,7 +245,8 @@ static void invite_handler(struct sipsess_sock *sock,
 }
 
 
-static void update_handler(struct sipsess_sock *sock, const struct sip_msg *msg)
+static void update_handler(struct sipsess_sock *sock,
+			   const struct sip_msg *msg)
 {
 	struct sip *sip = sock->sip;
 	struct sipsess *sess;
