@@ -293,6 +293,9 @@ static void update_handler(struct sipsess_sock *sock,
 			 desc ? mbuf_get_left(desc) : (size_t)0,
 			 desc ? mbuf_buf(desc) : NULL,
 			 desc ? mbuf_get_left(desc) : (size_t)0);
+
+	sess->desc = mem_deref(sess->desc);
+	mem_deref(desc);
 }
 
 
