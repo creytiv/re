@@ -1,3 +1,17 @@
+2017-05-13 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.3
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: upgrade windows project to VS2015 (thanks Mikhail Barg)
+		 makefile improvements (thanks Lennart Grahl)
+
+	* ice: remove session object "struct ice"
+
+	* telev: add telev_set_srate (thanks Jan Hoffmann)
+
+
 2017-04-08 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.2
