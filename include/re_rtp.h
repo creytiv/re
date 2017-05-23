@@ -204,10 +204,10 @@ int   rtp_listen(struct rtp_sock **rsp, int proto, const struct sa *ip,
 		 rtp_recv_h *recvh, rtcp_recv_h *rtcph, void *arg);
 int   rtp_hdr_encode(struct mbuf *mb, const struct rtp_header *hdr);
 int   rtp_hdr_decode(struct rtp_header *hdr, struct mbuf *mb);
-int   rtp_encode(struct rtp_sock *rs, bool marker, uint8_t pt,
+int   rtp_encode(struct rtp_sock *rs, bool ext, bool marker, uint8_t pt,
 		 uint32_t ts, struct mbuf *mb);
 int   rtp_decode(struct rtp_sock *rs, struct mbuf *mb, struct rtp_header *hdr);
-int   rtp_send(struct rtp_sock *rs, const struct sa *dst,
+int   rtp_send(struct rtp_sock *rs, const struct sa *dst, bool ext,
 	       bool marker, uint8_t pt, uint32_t ts, struct mbuf *mb);
 int   rtp_debug(struct re_printf *pf, const struct rtp_sock *rs);
 void *rtp_sock(const struct rtp_sock *rs);
