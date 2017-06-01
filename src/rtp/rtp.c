@@ -358,8 +358,8 @@ int rtp_listen(struct rtp_sock **rsp, int proto, const struct sa *ip,
  *
  * @note The buffer must have enough space for the RTP header
  */
-int rtp_encode(struct rtp_sock *rs, bool ext, bool marker, uint8_t pt,
-	       uint32_t ts, struct mbuf *mb)
+static int rtp_encode_ext(struct rtp_sock *rs, bool ext, bool marker,
+			  uint8_t pt, uint32_t ts, struct mbuf *mb)
 {
 	struct rtp_header hdr;
 
@@ -377,6 +377,13 @@ int rtp_encode(struct rtp_sock *rs, bool ext, bool marker, uint8_t pt,
 	hdr.ssrc = rs->enc.ssrc;
 
 	return rtp_hdr_encode(mb, &hdr);
+}
+
+
+int rtp_encode(struct rtp_sock *rs, bool marker, uint8_t pt,
+	       uint32_t ts, struct mbuf *mb)
+{
+	return rtp_encode_ext(rs, false, marker, pt, ts, mb);
 }
 
 
@@ -421,8 +428,28 @@ int rtp_decode(struct rtp_sock *rs, struct mbuf *mb,
  *
  * @return 0 for success, otherwise errorcode
  */
-int rtp_send(struct rtp_sock *rs, const struct sa *dst, bool ext,
+int rtp_send(struct rtp_sock *rs, const struct sa *dst,
 	     bool marker, uint8_t pt, uint32_t ts, struct mbuf *mb)
+{
+	return rtp_send_ext(rs, dst, false, marker, pt, ts, mb);
+}
+
+
+/**
+ * Send an RTP packet with extension to a peer
+ *
+ * @param rs     RTP Socket
+ * @param dst    Destination address
+ * @param ext    Extension bit
+ * @param marker Marker bit
+ * @param pt     Payload type
+ * @param ts     Timestamp
+ * @param mb     Payload buffer
+ *
+ * @return 0 for success, otherwise errorcode
+ */
+int rtp_send_ext(struct rtp_sock *rs, const struct sa *dst, bool ext,
+		 bool marker, uint8_t pt, uint32_t ts, struct mbuf *mb)
 {
 	size_t pos;
 	int err;
@@ -441,7 +468,7 @@ int rtp_send(struct rtp_sock *rs, const struct sa *dst, bool ext,
 
 	pos = mb->pos;
 
-	err = rtp_encode(rs, ext, marker, pt, ts, mb);
+	err = rtp_encode_ext(rs, ext, marker, pt, ts, mb);
 	if (err)
 		return err;
 
