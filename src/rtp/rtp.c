@@ -349,6 +349,7 @@ int rtp_listen(struct rtp_sock **rsp, int proto, const struct sa *ip,
  * Encode a new RTP header into the beginning of the buffer
  *
  * @param rs     RTP Socket
+ * @param ext    Extension bit
  * @param marker Marker bit
  * @param pt     Payload type
  * @param ts     Timestamp
@@ -414,6 +415,7 @@ int rtp_decode(struct rtp_sock *rs, struct mbuf *mb,
  *
  * @param rs     RTP Socket
  * @param dst    Destination address
+ * @param ext    Extension bit
  * @param marker Marker bit
  * @param pt     Payload type
  * @param ts     Timestamp
