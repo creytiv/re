@@ -209,6 +209,8 @@ int   rtp_encode(struct rtp_sock *rs, bool marker, uint8_t pt,
 int   rtp_decode(struct rtp_sock *rs, struct mbuf *mb, struct rtp_header *hdr);
 int   rtp_send(struct rtp_sock *rs, const struct sa *dst,
 	       bool marker, uint8_t pt, uint32_t ts, struct mbuf *mb);
+int   rtp_send_ext(struct rtp_sock *rs, const struct sa *dst, bool ext,
+		   bool marker, uint8_t pt, uint32_t ts, struct mbuf *mb);
 int   rtp_debug(struct re_printf *pf, const struct rtp_sock *rs);
 void *rtp_sock(const struct rtp_sock *rs);
 uint32_t rtp_sess_ssrc(const struct rtp_sock *rs);
