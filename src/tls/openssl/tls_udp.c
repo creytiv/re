@@ -27,6 +27,11 @@
 
 
 enum {
+	ONE_PEER_HASH = 0x776f656d
+};
+
+
+enum {
 	MTU_DEFAULT  = 1400,
 	MTU_FALLBACK = 548,
 };
@@ -41,6 +46,7 @@ struct dtls_sock {
 	dtls_conn_h *connh;
 	void *arg;
 	size_t mtu;
+	bool one_peer;
 };
 
 
@@ -366,12 +372,12 @@ static void conn_recv(struct tls_conn *tc, struct mbuf *mb)
 
 			tc->estabh(tc->arg);
 
-                        nrefs = mem_nrefs(tc);
-                        mem_deref(tc);
+			nrefs = mem_nrefs(tc);
+			mem_deref(tc);
 
-                        /* check if connection was deref'd from handler */
-                        if (nrefs == 1)
-                                return;
+			/* check if connection was deref'd from handler */
+			if (nrefs == 1)
+				return;
 		}
 	}
 
@@ -433,13 +439,15 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 		      dtls_close_h *closeh, void *arg)
 {
 	struct tls_conn *tc;
+	uint32_t key;
 	int err = 0;
 
 	tc = mem_zalloc(sizeof(*tc), conn_destructor);
 	if (!tc)
 		return ENOMEM;
 
-	hash_append(sock->ht, sa_hash(peer, SA_ALL), &tc->he, tc);
+	key = sock->one_peer ? ONE_PEER_HASH : sa_hash(peer, SA_ALL);
+	hash_append(sock->ht, key, &tc->he, tc);
 
 	tc->sock   = mem_ref(sock);
 	tc->peer   = *peer;
@@ -705,8 +713,14 @@ static bool cmp_handler(struct le *le, void *arg)
 static struct tls_conn *conn_lookup(struct dtls_sock *sock,
 				    const struct sa *peer)
 {
-	return list_ledata(hash_lookup(sock->ht, sa_hash(peer, SA_ALL),
-                                       cmp_handler, (void *)peer));
+	if (sock->one_peer) {
+		return list_ledata(list_head(hash_list(sock->ht,
+				ONE_PEER_HASH)));
+	}
+	else {
+		return list_ledata(hash_lookup(sock->ht, sa_hash(peer, SA_ALL),
+				cmp_handler, (void *)peer));
+	}
 }
 
 
@@ -748,7 +762,8 @@ static bool recv_handler(struct sa *src, struct mbuf *mb, void *arg)
  * @param sockp  Pointer to returned DTLS Socket
  * @param laddr  Local listen address (optional)
  * @param us     External UDP socket (optional)
- * @param htsize Connection hash table size
+ * @param htsize Connection hash table size. Set to 0 if one DTLS session shall
+ * be used for all peers.
  * @param layer  UDP protocol layer
  * @param connh  Connect handler
  * @param arg    Handler argument
@@ -782,6 +797,14 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 				  NULL, recv_handler, sock);
 	if (err)
 		goto out;
+
+	if (htsize == 0) {
+		sock->one_peer = true;
+		htsize = 1;
+	}
+	else {
+		sock->one_peer = false;
+	}
 
 	err = hash_alloc(&sock->ht, hash_valid_size(htsize));
 	if (err)
