@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#define _BSD_SOURCE
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>

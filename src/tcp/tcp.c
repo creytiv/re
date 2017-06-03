@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#define _BSD_SOURCE
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
