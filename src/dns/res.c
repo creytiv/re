@@ -25,12 +25,13 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	uint32_t i;
 	int ret, err;
 
-#ifdef OPENBSD
-	ret = res_init();
-	state = _res;
-#else
+/* Reentrant API was introduced in BIND 8.2, which set __RES to 19980901. */
+#if __RES >= 19980901
 	memset(&state, 0, sizeof(state));
 	ret = res_ninit(&state);
+#else
+	ret = res_init();
+	state = _res;
 #endif
 	if (0 != ret)
 		return ENOENT;
@@ -56,9 +57,10 @@ int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 	*n = i;
 
  out:
-#ifdef OPENBSD
-#else
+#if __RES >= 19980901
 	res_nclose(&state);
+#elif !defined(OPENBSD)
+	res_close();
 #endif
 
 	return err;
