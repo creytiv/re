@@ -5,6 +5,7 @@
  */
 
 #include <sys/types.h>
+#include <stdint.h>
 
 #ifdef _MSC_VER
 #include <stdlib.h>
