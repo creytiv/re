@@ -143,6 +143,7 @@ int http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req)
 {
 	struct pl b, s, e, name, scode;
 	const char *p, *cv;
+	char *cm, *cmPtr;
 	struct http_msg *msg;
 	bool comsep, quote;
 	enum http_hdrid id = HTTP_HDR_NONE;
@@ -183,6 +184,19 @@ int http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req)
 
 		msg->scode = pl_u32(&scode);
 	}
+
+	if ( pl_strdup(&cm, &msg->prm) ) {
+		return EBADMSG;
+	}
+
+	for (cmPtr = cm; *cmPtr != '\0'; cmPtr++){
+	  if (*cmPtr == '+') {
+		 	*cmPtr = ' ';
+		}
+	}
+
+	pl_set_str(&msg->prm, cm);
+
 
 	l -= e.p + e.l - p;
 	p = e.p + e.l;
