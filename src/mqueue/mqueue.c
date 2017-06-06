@@ -36,9 +36,9 @@ struct mqueue {
 };
 
 struct msg {
-	int id;
 	void *data;
 	uint32_t magic;
+	int id;
 };
 
 
