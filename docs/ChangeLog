@@ -1,3 +1,12 @@
+2017-06-24 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.4
+
+	* Project URL: https://github.com/creytiv/re
+
+	* rtp: add extension bit to the api
+
+
 2017-05-13 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.3
