@@ -45,6 +45,7 @@ endif
 INCDIR  := $(PREFIX)/include/re
 MKDIR   := $(PREFIX)/share/re
 CFLAGS	+= -Iinclude
+LFLAGS  += -lssl -L/usr/local/lib
 
 MODMKS	:= $(patsubst %,src/%/mod.mk,$(MODULES))
 SHARED  := libre$(LIB_SUFFIX)
