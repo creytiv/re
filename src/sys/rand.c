@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
-#include <ctype.h>
 #include <stdlib.h>
 #ifdef USE_OPENSSL
 #include <openssl/rand.h>
@@ -25,6 +24,10 @@
 #define RAND_DEBUG 1  /**< Enable random debugging */
 #endif
 
+static const char alphanum[] =
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	"abcdefghijklmnopqrstuvwxyz"
+	"0123456789";
 
 #if RAND_DEBUG
 static bool inited = false;
@@ -117,15 +120,13 @@ uint64_t rand_u64(void)
  */
 char rand_char(void)
 {
-	char c;
+	char s[2];
 
 	RAND_CHECK;
 
-	do {
-		c = 0x30 + (rand_u16() % 0x4f);
-	} while (!isalpha(c) && !isdigit(c));
+	rand_str(s, sizeof(s));
 
-	return c;
+	return s[0];
 }
 
 
@@ -137,15 +138,21 @@ char rand_char(void)
  */
 void rand_str(char *str, size_t size)
 {
+	size_t i;
+
 	if (!str || !size)
 		return;
 
 	RAND_CHECK;
 
-	str[--size] = '\0';
-	while (size--) {
-		str[size] = rand_char();
-	}
+	--size;
+
+	rand_bytes((uint8_t *)str, size);
+
+	for (i=0; i<size; i++)
+		str[i] = alphanum[((uint8_t)str[i]) % (sizeof(alphanum)-1)];
+
+	str[size] = '\0';
 }
 
 
