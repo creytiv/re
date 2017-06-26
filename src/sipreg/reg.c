@@ -392,3 +392,16 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 
 	return err;
 }
+
+
+/**
+ * Get the local socket address for a SIP Registration client
+ *
+ * @param reg SIP Registration client
+ *
+ * @return Local socket address
+ */
+const struct sa *sipreg_laddr(const struct sipreg *reg)
+{
+	return reg ? &reg->laddr : NULL;
+}
