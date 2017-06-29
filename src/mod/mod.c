@@ -204,6 +204,17 @@ const struct mod_export *mod_export(const struct mod *m)
 
 
 /**
+ * Get the list of loaded modules
+ *
+ * @return Module list
+ */
+struct list *mod_list(void)
+{
+	return &modl;
+}
+
+
+/**
  * Debug loadable modules
  *
  * @param pf     Print handler for debug output
