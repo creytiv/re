@@ -71,4 +71,5 @@ int         mod_load(struct mod **mp, const char *name);
 int         mod_add(struct mod **mp, const struct mod_export *me);
 struct mod *mod_find(const char *name);
 const struct mod_export *mod_export(const struct mod *m);
+struct list *mod_list(void);
 int         mod_debug(struct re_printf *pf, void *unused);
