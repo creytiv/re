@@ -46,7 +46,6 @@ struct icem_comp {
 	unsigned id;                 /**< Component ID                      */
 	bool concluded;              /**< Concluded flag                    */
 	struct turnc *turnc;         /**< TURN Client                       */
-	struct stun_ctrans *ct_gath; /**< STUN Transaction for gathering    */
 	struct tmr tmr_ka;           /**< Keep-alive timer                  */
 };
 
@@ -55,7 +54,6 @@ struct icem {
 	struct ice_conf conf;        /**< ICE Configuration                  */
 	struct stun *stun;           /**< STUN Transport                     */
 	struct sa stun_srv;          /**< STUN Server IP address and port    */
-	int nstun;                   /**< Number of pending STUN candidates  */
 	struct list lcandl;          /**< List of local candidates           */
 	struct list rcandl;          /**< List of remote candidates          */
 	struct list checkl;          /**< Check List of cand pairs (sorted)  */
@@ -74,7 +72,6 @@ struct icem {
 	char *lpwd;                  /**< Local Password                     */
 	char *rufrag;                /**< Remote Username fragment           */
 	char *rpwd;                  /**< Remote Password                    */
-	ice_gather_h *gh;            /**< Gather handler                     */
 	ice_connchk_h *chkh;         /**< Connectivity check handler         */
 	void *arg;                   /**< Handler argument                   */
 	char name[32];               /**< Name of the media stream           */
@@ -118,17 +115,12 @@ struct ice_candpair {
 int icem_lcand_add_base(struct icem *icem, unsigned compid, uint16_t lprio,
 			const char *ifname, enum ice_transp transp,
 			const struct sa *addr);
-int icem_lcand_add(struct icem *icem, struct ice_cand *base,
-		   enum ice_cand_type type,
-		   const struct sa *addr);
 int icem_rcand_add(struct icem *icem, enum ice_cand_type type, unsigned compid,
 		   uint32_t prio, const struct sa *addr,
 		   const struct sa *rel_addr, const struct pl *foundation);
 int icem_rcand_add_prflx(struct ice_cand **rcp, struct icem *icem,
 			 unsigned compid, uint32_t prio,
 			 const struct sa *addr);
-struct ice_cand *icem_cand_find(const struct list *lst, unsigned compid,
-				const struct sa *addr);
 struct ice_cand *icem_lcand_find_checklist(const struct icem *icem,
 					   unsigned compid);
 int icem_cands_debug(struct re_printf *pf, const struct list *lst);
@@ -173,7 +165,6 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 
 
 /* ICE media */
-void icem_cand_redund_elim(struct icem *icem);
 void icem_printf(struct icem *icem, const char *fmt, ...);
 
 
