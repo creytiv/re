@@ -78,7 +78,6 @@ static void icem_destructor(void *data)
  * @param tiebrk  Tie-breaker value, must be same for all media streams
  * @param lufrag  Local username fragment
  * @param lpwd    Local password
- * @param gh      Gather handler
  * @param chkh    Connectivity check handler
  * @param arg     Handler argument
  *
@@ -88,7 +87,7 @@ int  icem_alloc(struct icem **icemp,
 		enum ice_mode mode, enum ice_role role,
 		int proto, int layer,
 		uint64_t tiebrk, const char *lufrag, const char *lpwd,
-		ice_gather_h *gh, ice_connchk_h *chkh, void *arg)
+		ice_connchk_h *chkh, void *arg)
 {
 	struct icem *icem;
 	int err = 0;
@@ -119,8 +118,6 @@ int  icem_alloc(struct icem **icemp,
 	icem->layer = layer;
 	icem->proto = proto;
 	icem->state = ICE_CHECKLIST_NULL;
-	icem->nstun = 0;
-	icem->gh    = gh;
 	icem->chkh  = chkh;
 	icem->arg   = arg;
 
@@ -562,6 +559,31 @@ int icem_lite_set_default_candidates(struct icem *icem)
 	}
 
 	return err;
+}
+
+
+int icem_comps_set_default_cand(struct icem *icem)
+{
+	struct le *le;
+	int err = 0;
+
+	if (!icem)
+		return EINVAL;
+
+	for (le = icem->compl.head; le; le = le->next) {
+
+		struct icem_comp *comp = le->data;
+
+		err |= icem_comp_set_default_cand(comp);
+	}
+
+	return err;
+}
+
+
+struct stun *icem_stun(struct icem *icem)
+{
+	return icem ? icem->stun : NULL;
 }
 
 

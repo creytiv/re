@@ -9,7 +9,6 @@ SRCS	+= ice/candpair.c
 SRCS	+= ice/chklist.c
 SRCS	+= ice/comp.c
 SRCS	+= ice/connchk.c
-SRCS	+= ice/gather.c
 SRCS	+= ice/icem.c
 SRCS	+= ice/icesdp.c
 SRCS	+= ice/icestr.c

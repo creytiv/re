@@ -56,6 +56,7 @@ enum ice_candpair_state {
 
 struct ice;
 struct icem;
+struct turnc;
 
 /** ICE Configuration */
 struct ice_conf {
@@ -65,8 +66,6 @@ struct ice_conf {
 	bool debug;               /**< Enable ICE debugging        */
 };
 
-typedef void (ice_gather_h)(int err, uint16_t scode, const char *reason,
-			    void *arg);
 typedef void (ice_connchk_h)(int err, bool update, void *arg);
 
 
@@ -74,7 +73,7 @@ typedef void (ice_connchk_h)(int err, bool update, void *arg);
 int  icem_alloc(struct icem **icemp, enum ice_mode mode,
 		enum ice_role role, int proto, int layer,
 		uint64_t tiebrk, const char *lufrag, const char *lpwd,
-		ice_gather_h *gh, ice_connchk_h *chkh, void *arg);
+		ice_connchk_h *chkh, void *arg);
 struct ice_conf *icem_conf(struct icem *icem);
 enum ice_role icem_local_role(const struct icem *icem);
 void icem_set_conf(struct icem *icem, const struct ice_conf *conf);
@@ -83,9 +82,7 @@ void icem_set_name(struct icem *icem, const char *name);
 int  icem_comp_add(struct icem *icem, unsigned compid, void *sock);
 int  icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
 		   const char *ifname, const struct sa *addr);
-int  icem_gather_srflx(struct icem *icem, const struct sa *stun_srv);
-int  icem_gather_relay(struct icem *icem, const struct sa *stun_srv,
-		       const char *username, const char *password);
+
 int  icem_lite_set_default_candidates(struct icem *icem);
 bool icem_verify_support(struct icem *icem, unsigned compid,
 			 const struct sa *raddr);
@@ -104,12 +101,24 @@ struct list *icem_validl(const struct icem *icem);
 const struct sa *icem_cand_default(struct icem *icem, unsigned compid);
 const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid);
 void ice_candpair_set_states(struct icem *icem);
+void icem_cand_redund_elim(struct icem *icem);
+int  icem_comps_set_default_cand(struct icem *icem);
+struct stun *icem_stun(struct icem *icem);
+int icem_set_turn_client(struct icem *icem, unsigned compid,
+			 struct turnc *turnc);
 
 
 struct ice_cand;
 bool ice_remotecands_avail(const struct icem *icem);
 int  ice_cand_encode(struct re_printf *pf, const struct ice_cand *cand);
 int  ice_remotecands_encode(struct re_printf *pf, const struct icem *icem);
+struct ice_cand *icem_cand_find(const struct list *lst, unsigned compid,
+				const struct sa *addr);
+int icem_lcand_add(struct icem *icem, struct ice_cand *base,
+		   enum ice_cand_type type,
+		   const struct sa *addr);
+struct ice_cand *icem_lcand_base(struct ice_cand *lcand);
+const struct sa *icem_lcand_addr(const struct ice_cand *cand);
 
 
 extern const char ice_attr_cand[];
