@@ -77,6 +77,8 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 		dtls_conn_h *connh, void *arg);
 struct udp_sock *dtls_udp_sock(struct dtls_sock *sock);
 void dtls_set_mtu(struct dtls_sock *sock, size_t mtu);
+size_t dtls_headroom(struct dtls_sock *sock);
+void dtls_set_headroom(struct dtls_sock *sock, size_t headroom);
 int dtls_connect(struct tls_conn **ptc, struct tls *tls,
 		 struct dtls_sock *sock, const struct sa *peer,
 		 dtls_estab_h *estabh, dtls_recv_h *recvh,

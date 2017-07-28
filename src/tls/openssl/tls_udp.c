@@ -27,8 +27,9 @@
 
 
 enum {
-	MTU_DEFAULT  = 1400,
-	MTU_FALLBACK = 548,
+	MTU_DEFAULT      = 1400,
+	MTU_FALLBACK     = 548,
+	HEADROOM_DEFAULT = 4,
 };
 
 
@@ -41,6 +42,7 @@ struct dtls_sock {
 	dtls_conn_h *connh;
 	void *arg;
 	size_t mtu;
+	size_t headroom;
 };
 
 
@@ -109,16 +111,15 @@ static int bio_write(BIO *b, const char *buf, int len)
 	struct tls_conn *tc = b->ptr;
 #endif
 	struct mbuf *mb;
-	enum {SPACE = 4};
 	int err;
 
-	mb = mbuf_alloc(SPACE + len);
+	mb = mbuf_alloc(tc->sock->headroom + len);
 	if (!mb)
 		return -1;
 
-	mb->pos = SPACE;
+	mb->pos = tc->sock->headroom;
 	(void)mbuf_write_mem(mb, (void *)buf, len);
-	mb->pos = SPACE;
+	mb->pos = tc->sock->headroom;
 
 	err = udp_send_helper(tc->sock->us, &tc->peer, mb, tc->sock->uh);
 
@@ -827,9 +828,10 @@ int dtls_listen(struct dtls_sock **sockp, const struct sa *laddr,
 	if (err)
 		goto out;
 
-	sock->mtu   = MTU_DEFAULT;
-	sock->connh = connh;
-	sock->arg   = arg;
+	sock->mtu      = MTU_DEFAULT;
+	sock->headroom = HEADROOM_DEFAULT;
+	sock->connh    = connh;
+	sock->arg      = arg;
 
  out:
 	if (err)
@@ -866,6 +868,34 @@ void dtls_set_mtu(struct dtls_sock *sock, size_t mtu)
 		return;
 
 	sock->mtu = mtu;
+}
+
+
+/*
+ * Get headroom of a DTLS Socket
+ *
+ * @param sock DTLS Socket
+ *
+ * @return Headroom value.
+ */
+size_t dtls_headroom(struct dtls_sock *sock)
+{
+	return sock ? sock->headroom : 0;
+}
+
+
+/**
+ * Set headroom on a DTLS Socket
+ *
+ * @param sock     DTLS Socket
+ * @param headroom Headroom value
+ */
+void dtls_set_headroom(struct dtls_sock *sock, size_t headroom)
+{
+	if (!sock)
+		return;
+
+	sock->headroom = headroom;
 }
 
 
