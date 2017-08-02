@@ -100,6 +100,7 @@ struct list *icem_checkl(const struct icem *icem);
 struct list *icem_validl(const struct icem *icem);
 const struct sa *icem_cand_default(struct icem *icem, unsigned compid);
 const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid);
+const struct sa *icem_selected_raddr(const struct icem *icem, unsigned compid);
 void ice_candpair_set_states(struct icem *icem);
 void icem_cand_redund_elim(struct icem *icem);
 int  icem_comps_set_default_cand(struct icem *icem);

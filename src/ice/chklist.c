@@ -300,3 +300,21 @@ const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid)
 
 	return &comp->cp_sel->lcand->addr;
 }
+
+
+/**
+ * Get the Remote address of the Selected Candidate pair, if available
+ *
+ * @param icem   ICE Media object
+ * @param compid Component ID
+ *
+ * @return Remote address if available, otherwise NULL
+ */
+const struct sa *icem_selected_raddr(const struct icem *icem, unsigned compid)
+{
+	const struct icem_comp *comp = icem_comp_find(icem, compid);
+	if (!comp || !comp->cp_sel)
+		return NULL;
+
+	return &comp->cp_sel->rcand->addr;
+}
