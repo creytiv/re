@@ -310,3 +310,8 @@ int icem_cand_print(struct re_printf *pf, const struct ice_cand *cand)
 
 	return err;
 }
+
+enum ice_cand_type icem_cand_type(const struct ice_cand *cand)
+{
+	return cand ? cand->type : (enum ice_cand_type)-1;
+}

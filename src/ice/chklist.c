@@ -294,9 +294,44 @@ void icem_checklist_update(struct icem *icem)
  */
 const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid)
 {
+	const struct ice_cand *cand = icem_selected_lcand(icem, compid);
+	return icem_lcand_addr(cand);
+}
+
+
+/**
+ * Get the Local candidate of the Selected Candidate pair, if available
+ *
+ * @param icem   ICE Media object
+ * @param compid Component ID
+ *
+ * @return Local candidate if available, otherwise NULL
+ */
+const struct ice_cand *icem_selected_lcand(const struct icem *icem,
+		unsigned compid)
+{
 	const struct icem_comp *comp = icem_comp_find(icem, compid);
 	if (!comp || !comp->cp_sel)
 		return NULL;
 
-	return &comp->cp_sel->lcand->addr;
+	return comp->cp_sel->lcand;
+}
+
+
+/**
+ * Get the Remote candidate of the Selected Candidate pair, if available
+ *
+ * @param icem   ICE Media object
+ * @param compid Component ID
+ *
+ * @return Remote candidate if available, otherwise NULL
+ */
+const struct ice_cand *icem_selected_rcand(const struct icem *icem,
+		unsigned compid)
+{
+	const struct icem_comp *comp = icem_comp_find(icem, compid);
+	if (!comp || !comp->cp_sel)
+		return NULL;
+
+	return comp->cp_sel->rcand;
 }
