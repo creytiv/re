@@ -55,6 +55,7 @@ enum ice_candpair_state {
 };
 
 struct ice;
+struct ice_cand;
 struct icem;
 struct turnc;
 
@@ -100,6 +101,10 @@ struct list *icem_checkl(const struct icem *icem);
 struct list *icem_validl(const struct icem *icem);
 const struct sa *icem_cand_default(struct icem *icem, unsigned compid);
 const struct sa *icem_selected_laddr(const struct icem *icem, unsigned compid);
+const struct ice_cand *icem_selected_lcand(const struct icem *icem,
+				unsigned compid);
+const struct ice_cand *icem_selected_rcand(const struct icem *icem,
+				unsigned compid);
 void ice_candpair_set_states(struct icem *icem);
 void icem_cand_redund_elim(struct icem *icem);
 int  icem_comps_set_default_cand(struct icem *icem);
@@ -108,7 +113,6 @@ int icem_set_turn_client(struct icem *icem, unsigned compid,
 			 struct turnc *turnc);
 
 
-struct ice_cand;
 bool ice_remotecands_avail(const struct icem *icem);
 int  ice_cand_encode(struct re_printf *pf, const struct ice_cand *cand);
 int  ice_remotecands_encode(struct re_printf *pf, const struct icem *icem);
@@ -119,6 +123,7 @@ int icem_lcand_add(struct icem *icem, struct ice_cand *base,
 		   const struct sa *addr);
 struct ice_cand *icem_lcand_base(struct ice_cand *lcand);
 const struct sa *icem_lcand_addr(const struct ice_cand *cand);
+enum ice_cand_type icem_cand_type(const struct ice_cand *cand);
 
 
 extern const char ice_attr_cand[];
