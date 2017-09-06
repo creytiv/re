@@ -55,6 +55,7 @@ enum ice_candpair_state {
 };
 
 struct ice;
+struct ice_cand;
 struct icem;
 struct turnc;
 
@@ -112,7 +113,6 @@ int icem_set_turn_client(struct icem *icem, unsigned compid,
 			 struct turnc *turnc);
 
 
-struct ice_cand;
 bool ice_remotecands_avail(const struct icem *icem);
 int  ice_cand_encode(struct re_printf *pf, const struct ice_cand *cand);
 int  ice_remotecands_encode(struct re_printf *pf, const struct icem *icem);
