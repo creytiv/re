@@ -237,7 +237,7 @@ ifeq ($(OS),linux)
 	MOD_LFLAGS	+=
 	APP_LFLAGS	+= -rdynamic
 	AR		:= ar
-	AFLAGS		:= cru
+	AFLAGS		:= crD
 endif
 ifeq ($(OS),gnu)
 	CFLAGS		+= -fPIC -DGNU
