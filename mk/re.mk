@@ -749,7 +749,7 @@ deb:
 debclean:
 	@rm -rf build-stamp configure-stamp debian/files debian/$(PROJECT) \
 		debian/lib$(PROJECT) debian/lib$(PROJECT)-dev debian/tmp \
-		debian/*.debhelper debian/*.debhelper.log debian/*.substvars
+		debian/.debhelper debian/*.debhelper.log debian/*.substvars
 
 # RPM
 RPM := $(shell [ -d /usr/src/rpm ] 2>/dev/null && echo "rpm")
