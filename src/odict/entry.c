@@ -38,7 +38,7 @@ static void destructor(void *arg)
 
 
 int odict_entry_add(struct odict *o, const char *key,
-		    enum odict_type type, ...)
+		    int type, ...)
 {
 	struct odict_entry *e;
 	va_list ap;
