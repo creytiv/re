@@ -602,11 +602,14 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 	struct sa dst;
 	struct pl pl;
 	int err;
+	bool sips_uri = false;
 
 	if (!sip || !met || !uri || !route || !mb)
 		return EINVAL;
 
-	if (pl_strcasecmp(&route->scheme, "sip"))
+	sips_uri = (pl_strcasecmp(&route->scheme, "sips") == 0);
+
+	if (pl_strcasecmp(&route->scheme, "sip") && !sips_uri)
 		return ENOSYS;
 
 	req = mem_zalloc(sizeof(*req), destructor);
@@ -638,9 +641,11 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 	req->resph = resph;
 	req->arg   = arg;
 
-	if (!msg_param_decode(&route->params, "transport", &pl)) {
+	if (sips_uri || !msg_param_decode(&route->params, "transport", &pl)) {
 
-		if (!pl_strcasecmp(&pl, "udp"))
+		if (sips_uri)
+			req->tp = SIP_TRANSP_TLS;
+		else if (!pl_strcasecmp(&pl, "udp"))
 			req->tp = SIP_TRANSP_UDP;
 		else if (!pl_strcasecmp(&pl, "tcp"))
 			req->tp = SIP_TRANSP_TCP;
