@@ -9,6 +9,7 @@ struct sip {
 	struct list transpl;
 	struct list lsnrl;
 	struct list reql;
+	struct sip_conf conf;
 	struct hash *ht_ctrans;
 	struct hash *ht_strans;
 	struct hash *ht_strans_mrg;

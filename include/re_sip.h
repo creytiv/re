@@ -221,6 +221,13 @@ struct sip_contact {
 	enum sip_transp tp;
 };
 
+/** SIP Configuration */
+struct sip_conf {
+	uint32_t timer_t1;  /**< Transaction Timer T1 [ms] */
+	uint32_t timer_t2;  /**< Transaction Timer T2 [ms] */
+	uint32_t timer_t4;  /**< Transaction Timer T4 [ms] */
+};
+
 struct sip;
 struct sip_lsnr;
 struct sip_request;
@@ -253,6 +260,8 @@ int  sip_listen(struct sip_lsnr **lsnrp, struct sip *sip, bool req,
 int  sip_debug(struct re_printf *pf, const struct sip *sip);
 int  sip_send(struct sip *sip, void *sock, enum sip_transp tp,
 	      const struct sa *dst, struct mbuf *mb);
+void sip_conf_set(struct sip *sip, const struct sip_conf *conf);
+const struct sip_conf *sip_conf(const struct sip *sip);
 
 
 /* transport */
@@ -368,3 +377,21 @@ int sip_cseq_decode(struct sip_cseq *cseq, const struct pl *pl);
 int sip_keepalive_start(struct sip_keepalive **kap, struct sip *sip,
 			const struct sip_msg *msg, uint32_t interval,
 			sip_keepalive_h *kah, void *arg);
+
+
+static inline uint32_t sip_t1(const struct sip *sip)
+{
+	return sip_conf(sip)->timer_t1;
+}
+
+
+static inline uint32_t sip_t2(const struct sip *sip)
+{
+	return sip_conf(sip)->timer_t2;
+}
+
+
+static inline uint32_t sip_t4(const struct sip *sip)
+{
+	return sip_conf(sip)->timer_t4;
+}
