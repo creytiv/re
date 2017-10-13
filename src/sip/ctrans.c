@@ -187,15 +187,15 @@ static void retransmit_handler(void *arg)
 	switch (ct->state) {
 
 	case TRYING:
-		timeout = MIN(SIP_T1<<ct->txc, SIP_T2);
+		timeout = MIN(sip_t1(ct->sip)<<ct->txc, sip_t2(ct->sip));
 		break;
 
 	case CALLING:
-		timeout = SIP_T1<<ct->txc;
+		timeout = sip_t1(ct->sip)<<ct->txc;
 		break;
 
 	case PROCEEDING:
-		timeout = SIP_T2;
+		timeout = sip_t2(ct->sip);
 		break;
 
 	default:
@@ -294,7 +294,7 @@ static bool response_handler(const struct sip_msg *msg, void *arg)
 				break;
 			}
 
-			tmr_start(&ct->tmr, SIP_T4, tmr_handler, ct);
+			tmr_start(&ct->tmr, sip_t4(ct->sip), tmr_handler, ct);
 			tmr_cancel(&ct->tmre);
 		}
 		break;
@@ -340,10 +340,11 @@ int sip_ctrans_request(struct sip_ctrans **ctp, struct sip *sip,
 	if (err)
 		goto out;
 
-	tmr_start(&ct->tmr, 64 * SIP_T1, tmr_handler, ct);
+	tmr_start(&ct->tmr, 64 * sip_t1(sip), tmr_handler, ct);
 
-	if (!sip_transp_reliable(ct->tp))
-		tmr_start(&ct->tmre, SIP_T1, retransmit_handler, ct);
+	if (!sip_transp_reliable(ct->tp)) {
+		tmr_start(&ct->tmre, sip_t1(sip), retransmit_handler, ct);
+	}
 
  out:
 	if (err)
@@ -370,7 +371,7 @@ int sip_ctrans_cancel(struct sip_ctrans *ct)
 	switch (ct->state) {
 
 	case PROCEEDING:
-		tmr_start(&ct->tmr, 64 * SIP_T1, tmr_handler, ct);
+		tmr_start(&ct->tmr, 64 * sip_t1(ct->sip), tmr_handler, ct);
 		break;
 
 	default:

@@ -27,6 +27,7 @@ struct sipsess_ack {
 	struct mbuf *mb;
 	enum sip_transp tp;
 	uint32_t cseq;
+	struct sip *sip;
 };
 
 
@@ -61,7 +62,7 @@ static int send_handler(enum sip_transp tp, const struct sa *src,
 	ack->dst = *dst;
 	ack->tp  = tp;
 
-	tmr_start(&ack->tmr, 64 * SIP_T1, tmr_handler, ack);
+	tmr_start(&ack->tmr, 64 * sip_t1(ack->sip), tmr_handler, ack);
 
 	return 0;
 }
@@ -94,6 +95,7 @@ int sipsess_ack(struct sipsess_sock *sock, struct sip_dialog *dlg,
 
 	ack->dlg  = mem_ref(dlg);
 	ack->cseq = cseq;
+	ack->sip  = sock->sip;
 
 	err = sip_drequestf(&ack->req, sock->sip, false, "ACK", dlg, cseq,
 			    auth, send_handler, resp_handler, ack,

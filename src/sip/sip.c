@@ -20,6 +20,13 @@
 #include "sip.h"
 
 
+static const struct sip_conf conf_default = {
+	SIP_T1,
+	SIP_T2,
+	SIP_T4
+};
+
+
 static void destructor(void *arg)
 {
 	struct sip *sip = arg;
@@ -126,6 +133,7 @@ int sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 	sip->dnsc  = mem_ref(dnsc);
 	sip->exith = exith;
 	sip->arg   = arg;
+	sip->conf  = conf_default;
 
  out:
 	if (err)
@@ -212,6 +220,37 @@ int sip_listen(struct sip_lsnr **lsnrp, struct sip *sip, bool req,
 	}
 
 	return 0;
+}
+
+
+/**
+ * Set SIP configuration object
+ *
+ * @param sip  SIP Stack instance
+ * @param conf SIP configuration
+ */
+void sip_conf_set(struct sip *sip, const struct sip_conf *conf)
+{
+	if (!sip || !conf)
+		return;
+
+	sip->conf = *conf;
+}
+
+
+/**
+ * Get SIP configuration object
+ *
+ * @param sip SIP Stack instance
+ *
+ * @return SIP configuration
+ */
+const struct sip_conf *sip_conf(const struct sip *sip)
+{
+	if (sip)
+		return &sip->conf;
+	else
+		return &conf_default;
 }
 
 

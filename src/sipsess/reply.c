@@ -72,7 +72,8 @@ static void retransmit_handler(void *arg)
 		       &reply->msg->src, reply->mb);
 
 	reply->txc++;
-	tmr_start(&reply->tmrg, MIN(SIP_T1<<reply->txc, SIP_T2),
+	tmr_start(&reply->tmrg, MIN(sip_t1(reply->sess->sip)<<reply->txc,
+				    sip_t2(reply->sess->sip)),
 		  retransmit_handler, reply);
 }
 
@@ -116,8 +117,8 @@ int sipsess_reply_2xx(struct sipsess *sess, const struct sip_msg *msg,
 	if (err)
 		goto out;
 
-	tmr_start(&reply->tmr, 64 * SIP_T1, tmr_handler, reply);
-	tmr_start(&reply->tmrg, SIP_T1, retransmit_handler, reply);
+	tmr_start(&reply->tmr, 64 * sip_t1(sess->sip), tmr_handler, reply);
+	tmr_start(&reply->tmrg, sip_t1(sess->sip), retransmit_handler, reply);
 
 	if (!mbuf_get_left(msg->mb) && desc) {
 		reply->awaiting_answer = true;
