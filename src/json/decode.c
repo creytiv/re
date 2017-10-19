@@ -15,10 +15,17 @@
 
 static inline uint64_t mypower10(uint64_t e)
 {
-	uint64_t i, n = 1;
+	uint64_t p, n = 1;
 
-	for (i=0; i<e; i++)
-		n *= 10;
+	p = 10;
+
+	while (e > 0) {
+		if (e & 1) {
+			n *= p;
+		}
+		p *= p;
+		e >>= 1;
+	}
 
 	return n;
 }
