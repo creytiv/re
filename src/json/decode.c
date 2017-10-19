@@ -13,12 +13,17 @@
 #include <re_json.h>
 
 
-static inline uint64_t mypower10(uint64_t e)
+static inline long double mypower10(uint64_t e)
 {
-	uint64_t i, n = 1;
+	long double p = 10, n = 1;
 
-	for (i=0; i<e; i++)
-		n *= 10;
+	while (e > 0) {
+		if (e & 1)
+			n *= p;
+
+		p *= p;
+		e >>= 1;
+	}
 
 	return n;
 }
@@ -94,7 +99,7 @@ static bool is_number(long double *d, bool *isfloat, const struct pl *pl)
 		}
 	}
 
-	*isfloat = (frac || (exp && e < 0));
+	*isfloat = (frac || exp);
 
 	if (exp) {
 		if (e < 0)
