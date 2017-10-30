@@ -90,6 +90,8 @@ void dtls_set_handlers(struct tls_conn *tc, dtls_estab_h *estabh,
 		       dtls_recv_h *recvh, dtls_close_h *closeh, void *arg);
 const struct sa *dtls_peer(const struct tls_conn *tc);
 void dtls_set_peer(struct tls_conn *tc, const struct sa *peer);
+void dtls_recv_packet(struct dtls_sock *sock, const struct sa *src,
+		      struct mbuf *mb);
 
 
 #ifdef USE_OPENSSL

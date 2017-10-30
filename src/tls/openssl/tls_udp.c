@@ -829,6 +829,20 @@ void dtls_set_mtu(struct dtls_sock *sock, size_t mtu)
 }
 
 
+void dtls_recv_packet(struct dtls_sock *sock, const struct sa *src,
+		      struct mbuf *mb)
+{
+	struct sa addr;
+
+	if (!sock || !src || !mb)
+		return;
+
+	addr = *src;
+
+	recv_handler(&addr, mb, sock);
+}
+
+
 #ifdef TLS_BIO_OPAQUE
 BIO_METHOD *tls_method_udp(void)
 {
