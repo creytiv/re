@@ -412,12 +412,7 @@ static void http_resp_handler(int err, const struct http_msg *msg, void *arg)
 	/* here we are ok */
 
 	conn->state = OPEN;
-	conn->tc = mem_ref(http_req_tcp(conn->req));
-	conn->sc = mem_ref(http_req_tls(conn->req));
 	(void)tcp_conn_peer_get(conn->tc, &conn->peer);
-
-	tcp_set_handlers(conn->tc, NULL, recv_handler, close_handler, conn);
-	conn->req = mem_deref(conn->req);
 
 	if (conn->kaint)
 		tmr_start(&conn->tmr, conn->kaint, keepalive_handler, conn);
@@ -430,13 +425,15 @@ static void http_resp_handler(int err, const struct http_msg *msg, void *arg)
 }
 
 
-/* dummy HTTP data handler, this must be here so that HTTP client
- * is not closing the underlying TCP-connection (which we need ..)
- */
-static void http_data_handler(struct mbuf *mb, void *arg)
+static void http_conn_handler(struct tcp_conn *tc, struct tls_conn *sc,
+			      void *arg)
 {
-	(void)mb;
-	(void)arg;
+	struct websock_conn *conn = arg;
+
+	conn->tc = mem_ref(tc);
+	conn->sc = mem_ref(sc);
+
+	tcp_set_handlers(conn->tc, NULL, recv_handler, close_handler, conn);
 }
 
 
@@ -480,7 +477,7 @@ int websock_connect(struct websock_conn **connp, struct websock *sock,
 	/* Protocol Handshake */
 	va_start(ap, fmt);
 	err = http_request(&conn->req, cli, "GET", uri,
-			   http_resp_handler, http_data_handler, conn,
+			   http_resp_handler, NULL, conn,
 			   "Upgrade: websocket\r\n"
 			   "Connection: upgrade\r\n"
 			   "Sec-WebSocket-Key: %b\r\n"
@@ -492,6 +489,8 @@ int websock_connect(struct websock_conn **connp, struct websock *sock,
 	va_end(ap);
 	if (err)
 		goto out;
+
+	http_req_set_conn_handler(conn->req, http_conn_handler);
 
  out:
 	if (err)

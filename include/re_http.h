@@ -82,7 +82,8 @@ struct http_msg {
 	struct pl reason;      /**< Response Reason phrase                 */
 	struct list hdrl;      /**< List of HTTP headers (struct http_hdr) */
 	struct msg_ctype ctyp; /**< Content-type                           */
-	struct mbuf *mb;       /**< Buffer containing the HTTP message     */
+	struct mbuf *_mb;      /**< Buffer containing the HTTP message     */
+	struct mbuf *mb;       /**< Buffer containing the HTTP body        */
 	uint32_t clen;         /**< Content length                         */
 };
 
@@ -114,16 +115,20 @@ int  http_msg_print(struct re_printf *pf, const struct http_msg *msg);
 struct http_cli;
 struct http_req;
 struct dnsc;
+struct tcp_conn;
+struct tls_conn;
 
 typedef void (http_resp_h)(int err, const struct http_msg *msg, void *arg);
-typedef void (http_data_h)(struct mbuf *mb, void *arg);
+typedef int  (http_data_h)(const uint8_t *buf, size_t size,
+			   const struct http_msg *msg, void *arg);
+typedef void (http_conn_h)(struct tcp_conn *tc, struct tls_conn *sc,
+			   void *arg);
 
 int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc);
 int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		 const char *uri, http_resp_h *resph, http_data_h *datah,
 		 void *arg, const char *fmt, ...);
-struct tcp_conn *http_req_tcp(struct http_req *req);
-struct tls_conn *http_req_tls(struct http_req *req);
+void http_req_set_conn_handler(struct http_req *req, http_conn_h *connh);
 
 
 /* Server */

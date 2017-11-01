@@ -32,6 +32,7 @@ static void destructor(void *arg)
 	struct http_msg *msg = arg;
 
 	list_flush(&msg->hdrl);
+	mem_deref(msg->_mb);
 	mem_deref(msg->mb);
 }
 
@@ -163,7 +164,13 @@ int http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req)
 	if (!msg)
 		return ENOMEM;
 
-	msg->mb = mem_ref(mb);
+	msg->_mb = mem_ref(mb);
+
+	msg->mb = mbuf_alloc(8192);
+	if (!msg->mb) {
+		err = ENOMEM;
+		goto out;
+	}
 
 	if (req) {
 		if (re_regex(s.p, s.l, "[a-z]+ [^? ]+[^ ]* HTTP/[0-9.]+",

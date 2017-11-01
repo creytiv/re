@@ -19,6 +19,7 @@
 #include <re_dns.h>
 #include <re_msg.h>
 #include <re_http.h>
+#include "http.h"
 
 
 enum {
@@ -39,10 +40,12 @@ struct http_cli {
 struct conn;
 
 struct http_req {
+	struct http_chunk chunk;
 	struct sa srvv[16];
 	struct le le;
 	struct http_req **reqp;
 	struct http_cli *cli;
+	struct http_msg *msg;
 	struct dns_query *dq;
 	struct conn *conn;
 	struct mbuf *mbreq;
@@ -50,14 +53,14 @@ struct http_req {
 	char *host;
 	http_resp_h *resph;
 	http_data_h *datah;
+	http_conn_h *connh;
 	void *arg;
-	size_t rx_bytes;
 	size_t rx_len;
 	unsigned srvc;
 	uint16_t port;
+	bool chunked;
 	bool secure;
 	bool close;
-	bool data;
 };
 
 
@@ -102,6 +105,7 @@ static void req_destructor(void *arg)
 	struct http_req *req = arg;
 
 	list_unlink(&req->le);
+	mem_deref(req->msg);
 	mem_deref(req->dq);
 	mem_deref(req->conn);
 	mem_deref(req->mbreq);
@@ -136,7 +140,10 @@ static void req_close(struct http_req *req, int err,
 	req->datah = NULL;
 
 	if (req->conn) {
-		if (err || req->close)
+		if (req->connh)
+			req->connh(req->conn->tc, req->conn->sc, req->arg);
+
+		if (err || req->close || req->connh)
 			mem_deref(req->conn);
 		else
 			conn_idle(req->conn);
@@ -144,12 +151,17 @@ static void req_close(struct http_req *req, int err,
 		req->conn = NULL;
 	}
 
+	req->connh = NULL;
+
 	if (req->reqp) {
 		*req->reqp = NULL;
 		req->reqp = NULL;
 	}
 
 	if (req->resph) {
+		if (msg)
+			msg->mb->pos = 0;
+
 		req->resph(err, msg, req->arg);
 		req->resph = NULL;
 	}
@@ -173,7 +185,7 @@ static void try_next(struct conn *conn, int err)
 	if (retry)
 		++req->srvc;
 
-	if (req->srvc > 0 && !req->data) {
+	if (req->srvc > 0 && !req->msg) {
 
 		err = req_connect(req);
 		if (!err)
@@ -184,27 +196,77 @@ static void try_next(struct conn *conn, int err)
 }
 
 
-static void req_recv(struct http_req *req, struct mbuf *mb)
+static int write_body_buf(struct http_msg *msg, const uint8_t *buf, size_t sz)
 {
-	uint32_t nrefs;
+	if ((msg->mb->pos + sz) > BUFSIZE_MAX)
+		return EOVERFLOW;
 
-	req->rx_bytes += mbuf_get_left(mb);
+	return mbuf_write_mem(msg->mb, buf, sz);
+}
 
-	mem_ref(req);
+
+static int write_body(struct http_req *req, struct mbuf *mb)
+{
+	const size_t size = min(mbuf_get_left(mb), req->rx_len);
+	int err;
+
+	if (size == 0)
+		return 0;
 
 	if (req->datah)
-		req->datah(mb, req->arg);
+		err = req->datah(mbuf_buf(mb), size, req->msg, req->arg);
+	else
+		err = write_body_buf(req->msg, mbuf_buf(mb), size);
 
-	nrefs = mem_nrefs(req);
-	mem_deref(req);
+	if (err)
+		return err;
 
-	if (nrefs == 1)
-		return;
+	req->rx_len -= size;
+	mb->pos     += size;
 
-	if (req->rx_bytes < req->rx_len)
-		return;
+	return 0;
+}
 
-	req_close(req, 0, NULL);
+
+static int req_recv(struct http_req *req, struct mbuf *mb, bool *last)
+{
+	int err;
+
+	*last = false;
+
+	if (!req->chunked) {
+
+		err = write_body(req, mb);
+		if (err)
+			return err;
+
+		if (req->rx_len == 0)
+			*last = true;
+
+		return 0;
+	}
+
+	while (mbuf_get_left(mb)) {
+
+		if (req->rx_len == 0) {
+
+			err = http_chunk_decode(&req->chunk, mb, &req->rx_len);
+			if (err == ENODATA)
+				return 0;
+			else if (err)
+				return err;
+			else if (req->rx_len == 0) {
+				*last = true;
+				return 0;
+			}
+		}
+
+		err = write_body(req, mb);
+		if (err)
+			return err;
+	}
+
+	return 0;
 }
 
 
@@ -237,18 +299,21 @@ static void estab_handler(void *arg)
 
 static void recv_handler(struct mbuf *mb, void *arg)
 {
-	struct http_msg *msg = NULL;
 	const struct http_hdr *hdr;
 	struct conn *conn = arg;
 	struct http_req *req = conn->req;
 	size_t pos;
+	bool last;
 	int err;
 
 	if (!req)
 		return;
 
-	if (req->data) {
-		req_recv(req, mb);
+	if (req->msg) {
+		err = req_recv(req, mb, &last);
+		if (err || last)
+			goto out;
+
 		return;
 	}
 
@@ -276,7 +341,7 @@ static void recv_handler(struct mbuf *mb, void *arg)
 
 	pos = req->mb->pos;
 
-	err = http_msg_decode(&msg, req->mb, false);
+	err = http_msg_decode(&req->msg, req->mb, false);
 	if (err) {
 		if (err == ENODATA) {
 			req->mb->pos = pos;
@@ -285,50 +350,27 @@ static void recv_handler(struct mbuf *mb, void *arg)
 		goto out;
 	}
 
-	hdr = http_msg_hdr(msg, HTTP_HDR_CONNECTION);
+	if (req->datah)
+		tmr_cancel(&conn->tmr);
 
+	hdr = http_msg_hdr(req->msg, HTTP_HDR_CONNECTION);
 	if (hdr && !pl_strcasecmp(&hdr->val, "close"))
 		req->close = true;
 
-	if (req->datah) {
+	if (http_msg_hdr_has_value(req->msg, HTTP_HDR_TRANSFER_ENCODING,
+				   "chunked"))
+		req->chunked = true;
+	else
+		req->rx_len = req->msg->clen;
 
-		uint32_t nrefs;
+	err = req_recv(req, req->mb, &last);
+	if (err || last)
+		goto out;
 
-		if (http_msg_hdr(msg, HTTP_HDR_CONTENT_LENGTH))
-			req->rx_len = msg->clen;
-		else
-			req->rx_len = -1;
-
-		tmr_cancel(&conn->tmr);
-		req->data = true;
-
-		mem_ref(req);
-
-		if (req->resph)
-			req->resph(0, msg, req->arg);
-
-		nrefs = mem_nrefs(req);
-		mem_deref(req);
-
-		mem_deref(msg);
-
-		if (nrefs > 1 && mbuf_get_left(req->mb))
-			req_recv(req, req->mb);
-
-		return;
-	}
-
-	if (mbuf_get_left(req->mb) < msg->clen) {
-		req->mb->pos = pos;
-		mem_deref(msg);
-		return;
-	}
-
-	req->mb->end = req->mb->pos + msg->clen;
+	return;
 
  out:
-	req_close(req, err, msg);
-	mem_deref(msg);
+	req_close(req, err, req->msg);
 }
 
 
@@ -601,6 +643,21 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 
 
 /**
+ * Set HTTP request connection handler
+ *
+ * @param req   HTTP request object
+ * @param connh Connection handler
+ */
+void http_req_set_conn_handler(struct http_req *req, http_conn_h *connh)
+{
+	if (!req)
+		return;
+
+	req->connh = connh;
+}
+
+
+/**
  * Allocate an HTTP client instance
  *
  * @param clip      Pointer to allocated HTTP client
@@ -641,22 +698,4 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 		*clip = cli;
 
 	return err;
-}
-
-
-struct tcp_conn *http_req_tcp(struct http_req *req)
-{
-	if (!req || !req->conn)
-		return NULL;
-
-	return req->conn->tc;
-}
-
-
-struct tls_conn *http_req_tls(struct http_req *req)
-{
-	if (!req || !req->conn)
-		return NULL;
-
-	return req->conn->sc;
 }
