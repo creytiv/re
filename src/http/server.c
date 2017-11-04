@@ -144,6 +144,9 @@ static void recv_handler(struct mbuf *mb, void *arg)
 			break;
 		}
 
+		mem_deref(msg->mb);
+		msg->mb = mem_ref(msg->_mb);
+
 		mb = conn->mb;
 
 		end     = mb->end;
