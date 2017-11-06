@@ -1,3 +1,27 @@
+2017-11-06 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.6
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: Update ar flags; use deterministic mode (#79)
+
+	* http: added support for chunked transfer encoding (#90)
+
+	* ice: Added functions to get selected candidates. (#72)
+	       (thanks Joachim Bauch)
+
+	* json: improved performance for mypower10 (#88)
+		(thanks Chris Owen)
+
+	* mqueue: Pack struct of mqueue messages. (#62)
+		  (thanks Joachim Bauch)
+
+	* odict: use int instead of enum to avoid vararg promotion (#81)
+
+	* tls: add dtls_recv_packet() (#89)
+
+
 2017-09-05 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.5
