@@ -29,17 +29,7 @@ struct tls {
 	SSL_CTX *ctx;
 	X509 *cert;
 	char *pass;  /* password for private key */
-#ifdef TLS_BIO_OPAQUE
-	BIO_METHOD *method_tcp;
-	BIO_METHOD *method_udp;
-#endif
 };
-
-
-#ifdef TLS_BIO_OPAQUE
-BIO_METHOD *tls_method_tcp(void);
-BIO_METHOD *tls_method_udp(void);
-#endif
 
 
 void tls_flush_error(void);

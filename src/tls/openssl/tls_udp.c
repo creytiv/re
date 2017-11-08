@@ -47,6 +47,9 @@ struct dtls_sock {
 /* NOTE: shadow struct defined in tls_*.c */
 struct tls_conn {
 	SSL *ssl;             /* inheritance */
+#ifdef TLS_BIO_OPAQUE
+	BIO_METHOD *biomet;
+#endif
 	BIO *sbio_out;
 	BIO *sbio_in;
 	struct tmr tmr;
@@ -156,7 +159,29 @@ static long bio_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 
-#ifndef TLS_BIO_OPAQUE
+#ifdef TLS_BIO_OPAQUE
+
+static BIO_METHOD *bio_method_udp(void)
+{
+	BIO_METHOD *method;
+
+	method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "udp_send");
+	if (!method) {
+		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
+		ERR_clear_error();
+		return NULL;
+	}
+
+	BIO_meth_set_write(method, bio_write);
+	BIO_meth_set_ctrl(method, bio_ctrl);
+	BIO_meth_set_create(method, bio_create);
+	BIO_meth_set_destroy(method, bio_destroy);
+
+	return method;
+}
+
+#else
+
 static struct bio_method_st bio_udp_send = {
 	BIO_TYPE_SOURCE_SINK,
 	"udp_send",
@@ -169,6 +194,7 @@ static struct bio_method_st bio_udp_send = {
 	bio_destroy,
 	0
 };
+
 #endif
 
 
@@ -195,6 +221,12 @@ static void conn_destructor(void *arg)
 	hash_unlink(&tc->he);
 	tmr_cancel(&tc->tmr);
 	tls_close(tc);
+
+#ifdef TLS_BIO_OPAQUE
+	if (tc->biomet)
+		BIO_meth_free(tc->biomet);
+#endif
+
 	mem_deref(tc->sock);
 }
 
@@ -448,6 +480,14 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	tc->closeh = closeh;
 	tc->arg    = arg;
 
+#ifdef TLS_BIO_OPAQUE
+	tc->biomet = bio_method_udp();
+	if (!tc->biomet) {
+		err = ENOMEM;
+		goto out;
+	}
+#endif
+
 	/* Connect the SSL socket */
 	tc->ssl = SSL_new(tls->ctx);
 	if (!tc->ssl) {
@@ -466,7 +506,7 @@ static int conn_alloc(struct tls_conn **ptc, struct tls *tls,
 	}
 
 #ifdef TLS_BIO_OPAQUE
-	tc->sbio_out = BIO_new(tls->method_udp);
+	tc->sbio_out = BIO_new(tc->biomet);
 #else
 	tc->sbio_out = BIO_new(&bio_udp_send);
 #endif
@@ -841,25 +881,3 @@ void dtls_recv_packet(struct dtls_sock *sock, const struct sa *src,
 
 	recv_handler(&addr, mb, sock);
 }
-
-
-#ifdef TLS_BIO_OPAQUE
-BIO_METHOD *tls_method_udp(void)
-{
-	BIO_METHOD *method;
-
-	method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "udp_send");
-	if (!method) {
-		DEBUG_WARNING("alloc: BIO_meth_new() failed\n");
-		ERR_clear_error();
-		return NULL;
-	}
-
-	BIO_meth_set_write(method, bio_write);
-	BIO_meth_set_ctrl(method, bio_ctrl);
-	BIO_meth_set_create(method, bio_create);
-	BIO_meth_set_destroy(method, bio_destroy);
-
-	return method;
-}
-#endif

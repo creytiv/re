@@ -52,13 +52,6 @@ static void destructor(void *data)
 		X509_free(tls->cert);
 
 	mem_deref(tls->pass);
-
-#ifdef TLS_BIO_OPAQUE
-	if (tls->method_tcp)
-		BIO_meth_free(tls->method_tcp);
-	if (tls->method_udp)
-		BIO_meth_free(tls->method_udp);
-#endif
 }
 
 
@@ -199,15 +192,6 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 			goto out;
 		}
 	}
-
-#ifdef TLS_BIO_OPAQUE
-	tls->method_tcp = tls_method_tcp();
-	tls->method_udp = tls_method_udp();
-	if (!tls->method_tcp || !tls->method_udp) {
-		err = ENOMEM;
-		goto out;
-	}
-#endif
 
 	err = 0;
  out:
