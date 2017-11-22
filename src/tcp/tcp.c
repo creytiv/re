@@ -10,7 +10,7 @@
 #ifdef HAVE_IO_H
 #include <io.h>
 #endif
-#if !defined(WIN32) && !defined (CYGWIN)
+#if !defined(WIN32)
 #define __USE_POSIX 1  /**< Use POSIX flag */
 #define __USE_XOPEN2K 1/**< Use POSIX.1:2001 code */
 #define __USE_MISC 1

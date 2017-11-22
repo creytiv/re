@@ -339,16 +339,6 @@ ifeq ($(OS),win32)
 	BIN_SUFFIX	:= .exe
 	SYSROOT		:= /usr/$(MACHINE)/
 endif
-ifeq ($(OS),cygwin)
-	CFLAGS		+= -DCYGWIN -D_WIN32_WINNT=0x0501
-	LIBS		+= -lwsock32 -lws2_32
-	LFLAGS		+=
-	SH_LFLAGS	+= -shared
-	MOD_LFLAGS	+=
-	APP_LFLAGS	+= -Wl,-E
-	AR		:= ar
-	AFLAGS		:= cru
-endif
 
 CFLAGS	+= -DOS=\"$(OS)\"
 
@@ -603,10 +593,8 @@ CFLAGS  += -DHAVE_KQUEUE
 endif
 CFLAGS  += -DHAVE_UNAME
 CFLAGS  += -DHAVE_UNISTD_H
-ifneq ($(OS),cygwin)
 CFLAGS  += -DHAVE_STRINGS_H
 CFLAGS  += -DHAVE_GAI_STRERROR
-endif
 endif
 
 ifneq ($(HAVE_ARC4RANDOM),)
