@@ -15,9 +15,7 @@ SRCS	+= net/sockopt.c
 
 # Platform dependant files
 ifneq ($(OS),win32)
-ifneq ($(OS),cygwin)
 SRCS	+= net/posix/pif.c
-endif
 else
 SRCS	+= net/win32/wif.c
 endif

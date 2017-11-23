@@ -13,9 +13,6 @@
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
 
-#ifdef CYGWIN
-#define RTLD_LOCAL   0
-#endif
 
 static const int dl_flag = RTLD_NOW | RTLD_LOCAL;
 
