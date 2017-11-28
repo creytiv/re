@@ -3,6 +3,14 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#ifdef HAVE_POLL
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <poll.h>
+#endif
+#endif
+
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -21,9 +29,7 @@
 #ifdef HAVE_SELECT_H
 #include <sys/select.h>
 #endif
-#ifdef HAVE_POLL
-#include <poll.h>
-#endif
+
 #ifdef HAVE_EPOLL
 #include <sys/epoll.h>
 #endif
@@ -101,7 +107,11 @@ struct re {
 	struct list tmrl;            /**< List of timers                    */
 
 #ifdef HAVE_POLL
+#ifdef WIN32
+	WSAPOLLFD *fds;
+#else
 	struct pollfd *fds;          /**< Event set for poll()              */
+#endif
 #endif
 
 #ifdef HAVE_EPOLL
@@ -669,7 +679,11 @@ static int fd_poll(struct re *re)
 #ifdef HAVE_POLL
 	case METHOD_POLL:
 		re_unlock(re);
+#ifdef WIN32
+		n = WSAPoll(re->fds, re->nfds, to ? (int)to : -1);
+#else
 		n = poll(re->fds, re->nfds, to ? (int)to : -1);
+#endif
 		re_lock(re);
 		break;
 #endif
@@ -755,11 +769,14 @@ static int fd_poll(struct re *re)
 			if (re->fds[fd].revents & (POLLERR|POLLHUP|POLLNVAL))
 				flags |= FD_EXCEPT;
 			if (re->fds[fd].revents & POLLNVAL) {
+#ifndef WIN32
 				DEBUG_WARNING("event: fd=%d POLLNVAL"
 					      " (fds.fd=%d,"
 					      " fds.events=0x%02x)\n",
 					      fd, re->fds[fd].fd,
 					      re->fds[fd].events);
+#endif
+				flags = 0;
 			}
 			/* Clear events */
 			re->fds[fd].revents = 0;
