@@ -24,7 +24,7 @@
  */
 static int if_list_gaa(net_ifaddr_h *ifh, void *arg)
 {
-	IP_ADAPTER_ADDRESSES addrv[16], *cur;
+	IP_ADAPTER_ADDRESSES addrv[16], *cur, *paddrv;
 	ULONG ret, len = sizeof(addrv);
 	const ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
 	HANDLE hLib;
@@ -35,6 +35,7 @@ static int if_list_gaa(net_ifaddr_h *ifh, void *arg)
 	} u;
 	bool stop = false;
 	int err = 0;
+	bool addrv_allocated;
 
 	hLib = LoadLibrary(TEXT("iphlpapi.dll"));
 	if (!hLib)
@@ -46,14 +47,24 @@ static int if_list_gaa(net_ifaddr_h *ifh, void *arg)
 		goto out;
 	}
 
-	ret = (*u.gaa)(AF_UNSPEC, flags, NULL, addrv, &len);
+	/* try with stack-allocated addrv at first */
+	paddrv = addrv;
+	addrv_allocated = false;
+retry:
+	ret = (*u.gaa)(AF_UNSPEC, flags, NULL, paddrv, &len);
+	if (ret == ERROR_BUFFER_OVERFLOW && !addrv_allocated) {
+		/* addrv buffer is too small */
+		paddrv = mem_alloc(len, NULL);
+		addrv_allocated = true;
+		goto retry;
+	}
 	if (ret != ERROR_SUCCESS) {
 		DEBUG_WARNING("if_list: GetAdaptersAddresses ret=%u\n", ret);
 		err = ENODEV;
 		goto out;
 	}
 
-	for (cur = addrv; cur && !stop; cur = cur->Next) {
+	for (cur = paddrv; cur && !stop; cur = cur->Next) {
 		PIP_ADAPTER_UNICAST_ADDRESS ip;
 
 		/* an interface can have many IP-addresses */
@@ -71,7 +82,9 @@ static int if_list_gaa(net_ifaddr_h *ifh, void *arg)
 
  out:
 	FreeLibrary(hLib);
-
+	if (addrv_allocated) {
+		mem_deref(paddrv);
+	}
 	return err;
 }
 
