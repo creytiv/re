@@ -24,7 +24,7 @@
  */
 static int if_list_gaa(net_ifaddr_h *ifh, void *arg)
 {
-	IP_ADAPTER_ADDRESSES addrv[16], *cur;
+	IP_ADAPTER_ADDRESSES addrv[64], *cur;
 	ULONG ret, len = sizeof(addrv);
 	const ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
 	HANDLE hLib;
