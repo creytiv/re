@@ -18,6 +18,12 @@
 #include <re_dns.h>
 #include "dns.h"
 
+#if defined(__linux__) && !defined(__GLIBC__) &&	\
+	!defined(__UCLIBC__) &&	!defined(__BIONIC__)
+/* Another popular libc for Linux offers OpenBSD's res_init() API */
+#define OPENBSD OPENBSD
+#endif
+
 
 int get_resolv_dns(char *domain, size_t dsize, struct sa *nsv, uint32_t *n)
 {

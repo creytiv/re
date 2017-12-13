@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #define __USE_MISC 1   /**< Use MISC code */
+#define _BSD_SOURCE
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <re_types.h>

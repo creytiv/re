@@ -11,6 +11,7 @@
 #define __USE_XOPEN2K 1/**< Use POSIX.1:2001 code */
 #include <netdb.h>
 #define __USE_MISC 1   /**< Use MISC code */
+#define _BSD_SOURCE
 #include <net/if.h>
 #include <arpa/inet.h>
 /*#include <net/if_arp.h>*/
