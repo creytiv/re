@@ -37,3 +37,9 @@ void     mem_threshold_set(ssize_t n);
 struct re_printf;
 int      mem_status(struct re_printf *pf, void *unused);
 int      mem_get_stat(struct memstat *mstat);
+
+
+/* Secure memory functions */
+int  mem_seccmp(const volatile uint8_t *volatile s1,
+		const volatile uint8_t *volatile s2,
+		size_t n);

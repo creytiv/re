@@ -5,3 +5,4 @@
 #
 
 SRCS	+= mem/mem.c
+SRCS	+= mem/secure.c
