@@ -27,7 +27,7 @@ int mem_seccmp(const volatile uint8_t *volatile s1,
 {
 	uint8_t val = 0;
 
-	if (!s1 || !s2 || !n)
+	if (!s1 || !s2)
 		return -1;
 
 	while (n--)
