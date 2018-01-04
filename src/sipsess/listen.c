@@ -245,6 +245,60 @@ static void invite_handler(struct sipsess_sock *sock,
 }
 
 
+static void update_handler(struct sipsess_sock *sock,
+			   const struct sip_msg *msg)
+{
+	struct sip *sip = sock->sip;
+	struct sipsess *sess;
+	struct mbuf *desc = NULL;
+	char m[256];
+	struct sip_contact contact;
+	int err;
+
+	sess = sipsess_find(sock, msg);
+	if (!sess || sess->terminated) {
+		(void)sip_treply(NULL, sip, msg, 481, "Call Does Not Exist");
+		return;
+	}
+
+	if (!sip_dialog_rseq_valid(sess->dlg, msg)) {
+		(void)sip_treply(NULL, sip, msg, 500, "Server Internal Error");
+		return;
+	}
+
+	/* call offer handler only if UPDATE has body */
+	if (mbuf_get_left(msg->mb)) {
+		err = sess->offerh(&desc, msg, sess->arg);
+		if (err) {
+			(void)sip_reply(sip, msg, 488,
+					str_error(err, m, sizeof(m)));
+			return;
+		}
+	}
+
+	(void)sip_dialog_update(sess->dlg, msg);
+
+	sip_contact_set(&contact, sess->cuser, &msg->dst, msg->tp);
+
+	(void)sip_replyf(sip, msg, 200, "OK",
+			 "%H"
+			 "%s%s%s"
+			 "Content-Length: %zu\r\n"
+			 "\r\n"
+			 "%b",
+			 sip_contact_print, &contact,
+			 desc ? "Content-Type: " : "",
+			 desc ? sess->ctype : "",
+			 desc ? "\r\n" : "",
+			 desc ? mbuf_get_left(desc) : (size_t)0,
+			 desc ? mbuf_buf(desc) : NULL,
+			 desc ? mbuf_get_left(desc) : (size_t)0);
+
+	sess->desc = mem_deref(sess->desc);
+	mem_deref(desc);
+}
+
+
 static bool request_handler(const struct sip_msg *msg, void *arg)
 {
 	struct sipsess_sock *sock = arg;
@@ -278,6 +332,11 @@ static bool request_handler(const struct sip_msg *msg, void *arg)
 		refer_handler(sock, msg);
 		return true;
 	}
+	else if (!pl_strcmp(&msg->met, "UPDATE")) {
+		update_handler(sock, msg);
+		return true;
+	}
+
 
 	return false;
 }
