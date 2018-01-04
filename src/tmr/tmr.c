@@ -139,9 +139,7 @@ uint64_t tmr_jiffies(void)
 	struct timespec now;
 	clockid_t clock_id;
 
-#if defined (CLOCK_MONOTONIC_RAW_APPROX)
-	clock_id = CLOCK_MONOTONIC_RAW_APPROX;
-#elif defined (CLOCK_BOOTTIME)
+#if defined (CLOCK_BOOTTIME)
 	clock_id = CLOCK_BOOTTIME;
 #else
 	clock_id = CLOCK_MONOTONIC;
