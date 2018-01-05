@@ -381,7 +381,7 @@ static int sipsub_alloc(struct sipsub **subp, struct sipevent_sock *sock,
 		sub->dlg = mem_ref(dlg);
 	}
 	else {
-		err = sip_dialog_alloc(&sub->dlg, uri, uri, from_name,
+		err = sip_dialog_alloc(&sub->dlg, uri, NULL, uri, from_name,
 				       from_uri, routev, routec);
 		if (err)
 			goto out;

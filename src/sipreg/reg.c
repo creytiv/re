@@ -340,7 +340,8 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 	if (!reg)
 		return ENOMEM;
 
-	err = sip_dialog_alloc(&reg->dlg, reg_uri, to_uri, NULL, from_uri,
+	err = sip_dialog_alloc(&reg->dlg, reg_uri,
+			       NULL, to_uri, NULL, from_uri,
 			       routev, routec);
 	if (err)
 		goto out;

@@ -222,8 +222,8 @@ int sipsess_connect(struct sipsess **sessp, struct sipsess_sock *sock,
 
 	sess->owner = true;
 
-	err = sip_dialog_alloc(&sess->dlg, to_uri, to_uri, from_name,
-			       from_uri, routev, routec);
+	err = sip_dialog_alloc(&sess->dlg, to_uri, NULL, to_uri, from_name,
+                               from_uri, routev, routec);
 	if (err)
 		goto out;
 
