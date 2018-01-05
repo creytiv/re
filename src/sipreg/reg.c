@@ -306,6 +306,7 @@ static int request(struct sipreg *reg, bool reset_ls)
  * @param sip      SIP Stack instance
  * @param reg_uri  SIP Request URI
  * @param to_uri   SIP To-header URI
+ * @param from_name  SIP From-header display name (optional)
  * @param from_uri SIP From-header URI
  * @param expires  Registration interval in [seconds]
  * @param cuser    Contact username
@@ -323,7 +324,8 @@ static int request(struct sipreg *reg, bool reset_ls)
  * @return 0 if success, otherwise errorcode
  */
 int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
-		    const char *to_uri, const char *from_uri, uint32_t expires,
+		    const char *to_uri, const char *from_name,
+		    const char *from_uri, uint32_t expires,
 		    const char *cuser, const char *routev[], uint32_t routec,
 		    int regid, sip_auth_h *authh, void *aarg, bool aref,
 		    sip_resp_h *resph, void *arg,
@@ -340,7 +342,7 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 	if (!reg)
 		return ENOMEM;
 
-	err = sip_dialog_alloc(&reg->dlg, reg_uri, to_uri, NULL, from_uri,
+	err = sip_dialog_alloc(&reg->dlg, reg_uri, to_uri, from_name, from_uri,
 			       routev, routec);
 	if (err)
 		goto out;
