@@ -320,8 +320,8 @@ int  sip_contact_print(struct re_printf *pf,
 
 
 /* dialog */
-int  sip_dialog_alloc(struct sip_dialog **dlgp,
-		      const char *uri, const char *to_uri,
+int  sip_dialog_alloc(struct sip_dialog **dlgp, const char *uri,
+		      const char *to_name, const char *to_uri,
 		      const char *from_name, const char *from_uri,
 		      const char *routev[], uint32_t routec);
 int  sip_dialog_accept(struct sip_dialog **dlgp, const struct sip_msg *msg);
