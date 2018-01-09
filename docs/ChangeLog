@@ -1,3 +1,21 @@
+2018-01-12 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.7
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: remove support for Cygwin (#95)
+		 remove support for splint (#96)
+
+	* mem: add secure memory functions (#102)
+
+	* net: larger buffer for net_if_list (#100)
+
+	* sipreg: add from_name (Display Name) (#104)
+
+	* tls: use per connection bio_method (fixes issue #92) (#93)
+
+
 2017-11-06 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.6
