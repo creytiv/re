@@ -749,8 +749,10 @@ int dnsc_query(struct dns_query **qp, struct dnsc *dnsc, const char *name,
 	       uint16_t type, uint16_t dnsclass,
 	       bool rd, dns_query_h *qh, void *arg)
 {
-	if (!dnsc)
+	if (!dnsc) {
+		DEBUG_WARNING("DNS query attempted but DNS client is unconfigured\n");
 		return EINVAL;
+	}
 
 	return query(qp, dnsc, DNS_OPCODE_QUERY, name, type, dnsclass, NULL,
 		     IPPROTO_UDP, dnsc->srvv, &dnsc->srvc, false, rd, qh, arg);
