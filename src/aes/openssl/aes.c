@@ -145,7 +145,7 @@ void aes_set_iv(struct aes *aes, const uint8_t *iv)
 	if (!aes || !iv)
 		return;
 
-	r = EVP_EncryptInit_ex(aes->ctx, NULL, NULL, NULL, iv);
+	r = EVP_CipherInit_ex(aes->ctx, NULL, NULL, NULL, iv, -1);
 	if (!r)
 		ERR_clear_error();
 }
