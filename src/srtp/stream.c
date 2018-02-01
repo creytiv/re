@@ -7,6 +7,7 @@
 #include <re_mem.h>
 #include <re_mbuf.h>
 #include <re_list.h>
+#include <re_aes.h>
 #include <re_srtp.h>
 #include "srtp.h"
 

@@ -10,6 +10,8 @@ enum srtp_suite {
 	SRTP_AES_CM_128_HMAC_SHA1_80,
 	SRTP_AES_256_CM_HMAC_SHA1_32,
 	SRTP_AES_256_CM_HMAC_SHA1_80,
+	SRTP_AES_128_GCM,
+	SRTP_AES_256_GCM,
 };
 
 enum srtp_flags {

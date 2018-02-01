@@ -5,11 +5,6 @@
  */
 
 
-enum {
-	SRTP_SALT_SIZE = 14
-};
-
-
 /** Defines a 128-bit vector in network order */
 union vect128 {
 	uint64_t u64[ 2];
@@ -40,8 +35,11 @@ struct srtp_stream {
 struct srtp {
 	struct comp {
 		struct aes *aes;    /**< AES Context                       */
+		enum aes_mode mode; /**< AES encryption mode               */
 		struct hmac *hmac;  /**< HMAC Context                      */
 		union vect128 k_s;  /**< Derived salting key (14 bytes)    */
+
+		// NOTE: only for HMAC-SHA1:
 		size_t tag_len;     /**< Authentication tag length [bytes] */
 	} rtp, rtcp;
 
@@ -59,6 +57,8 @@ int  srtp_derive(uint8_t *out, size_t out_len, uint8_t label,
 		 const uint8_t *master_salt, size_t salt_bytes);
 void srtp_iv_calc(union vect128 *iv, const union vect128 *k_s,
 		  uint32_t ssrc, uint64_t ix);
+void srtp_iv_calc_gcm(union vect128 *iv, const union vect128 *k_s,
+		      uint32_t ssrc, uint64_t ix);
 uint64_t srtp_get_index(uint32_t roc, uint16_t s_l, uint16_t seq);
 
 
