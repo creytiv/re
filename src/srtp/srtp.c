@@ -21,6 +21,7 @@
 /** SRTP protocol values */
 enum {
 	MAX_KEYLEN  = 32,  /**< Maximum keylength in bytes     */
+	GCM_TAGLEN  = 16,  /**< GCM taglength in bytes         */
 };
 
 
@@ -225,7 +226,7 @@ int srtp_encrypt(struct srtp *srtp, struct mbuf *mb)
 	if (comp->aes && comp->mode == AES_MODE_GCM) {
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
-		uint8_t tag[16];
+		uint8_t tag[GCM_TAGLEN];
 		size_t hdr_len = mb->pos - start;
 
 		srtp_iv_calc_gcm(&iv, &comp->k_s, strm->ssrc, ix);
@@ -388,8 +389,11 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		size_t hdr_len = mb->pos - start;
 
 		pld_start = mb->pos;
-		tag_start = mb->end - 16;
+		tag_start = mb->end - GCM_TAGLEN;
 		pld_len   = tag_start - pld_start;
+
+		if (mbuf_get_left(mb) < GCM_TAGLEN)
+			return EBADMSG;
 
 		srtp_iv_calc_gcm(&iv, &comp->k_s, strm->ssrc, ix);
 
@@ -404,7 +408,8 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		if (err)
 			return err;
 
-		err = aes_authenticate(comp->aes, &mb->buf[tag_start], 16);
+		err = aes_authenticate(comp->aes, &mb->buf[tag_start],
+				       GCM_TAGLEN);
 		if (err)
 			return err;
 
