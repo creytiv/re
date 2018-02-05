@@ -5,6 +5,11 @@
  */
 
 
+enum {
+	GCM_TAGLEN  = 16,  /**< GCM taglength in bytes         */
+};
+
+
 /** Defines a 128-bit vector in network order */
 union vect128 {
 	uint64_t u64[ 2];

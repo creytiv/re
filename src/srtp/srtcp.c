@@ -71,7 +71,7 @@ int srtcp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
-		uint8_t tag[16];
+		uint8_t tag[GCM_TAGLEN];
 		const uint32_t ix_be = htonl(1<<31 | strm->rtcp_index);
 
 		srtp_iv_calc_gcm(&iv, &rtcp->k_s, ssrc, strm->rtcp_index);
@@ -219,7 +219,7 @@ int srtcp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		size_t tag_start;
 		size_t pld_len;
 
-		tag_start = mb->end - 16;
+		tag_start = mb->end - GCM_TAGLEN;
 		pld_len   = tag_start - pld_start;
 
 		mb->pos = pld_start;
@@ -242,7 +242,8 @@ int srtcp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		if (err)
 			return err;
 
-		err = aes_authenticate(rtcp->aes, &mb->buf[tag_start], 16);
+		err = aes_authenticate(rtcp->aes, &mb->buf[tag_start],
+				       GCM_TAGLEN);
 		if (err)
 			return err;
 

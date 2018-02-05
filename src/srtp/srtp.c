@@ -21,7 +21,6 @@
 /** SRTP protocol values */
 enum {
 	MAX_KEYLEN  = 32,  /**< Maximum keylength in bytes     */
-	GCM_TAGLEN  = 16,  /**< GCM taglength in bytes         */
 };
 
 
