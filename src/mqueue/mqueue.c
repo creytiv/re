@@ -3,7 +3,10 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#ifdef __linux__
 #include <unistd.h>
+#endif
+
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
