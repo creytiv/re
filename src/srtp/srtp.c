@@ -412,6 +412,15 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		if (err)
 			return err;
 
+		/*
+		 * 3.3.2.  Replay Protection
+		 *
+		 * Secure replay protection is only possible when
+		 * integrity protection is present.
+		 */
+		if (!srtp_replay_check(&strm->replay_rtp, ix))
+			return EALREADY;
+
 		mb->end = tag_start;
 	}
 
