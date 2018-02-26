@@ -216,22 +216,26 @@ int srtcp_decrypt(struct srtp *srtp, struct mbuf *mb)
 	if (rtcp->aes && ep && rtcp->mode == AES_MODE_GCM) {
 		union vect128 iv;
 		uint8_t *p;
+		size_t hdr_len;
 		size_t tag_start;
 		size_t pld_len;
 
+		hdr_len   = pld_start - start;
 		tag_start = mb->end - GCM_TAGLEN;
 		pld_len   = tag_start - pld_start;
 
 		mb->pos = pld_start;
 		p = mbuf_buf(mb);
 
+		if (mbuf_get_left(mb) < GCM_TAGLEN)
+			return EBADMSG;
+
 		srtp_iv_calc_gcm(&iv, &rtcp->k_s, ssrc, ix);
 
 		aes_set_iv(rtcp->aes, iv.u8);
 
 		/* The RTP Header is Associated Data */
-		err = aes_decr(rtcp->aes, NULL, &mb->buf[start],
-				  pld_start - start);
+		err  = aes_decr(rtcp->aes, NULL, &mb->buf[start], hdr_len);
 		err |= aes_decr(rtcp->aes, NULL, &mb->buf[eix_start], 4);
 		if (err) {
 			re_fprintf(stderr, "set_aad failed\n");
