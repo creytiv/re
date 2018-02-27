@@ -88,7 +88,7 @@ int srtp_alloc(struct srtp **srtpp, enum srtp_suite suite,
 {
 	struct srtp *srtp;
 	const uint8_t *master_salt;
-	size_t cipher_bytes, auth_bytes, salt_bytes;
+	size_t cipher_bytes, salt_bytes, auth_bytes;
 	enum aes_mode mode;
 	bool hash;
 	int err = 0;
