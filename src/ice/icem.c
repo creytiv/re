@@ -284,7 +284,11 @@ static void *unique_handler(struct le *le1, struct le *le2)
 }
 
 
-/** Eliminating Redundant Candidates */
+/**
+ * Eliminating Redundant Candidates
+ *
+ * @param icem    ICE Media object
+ */
 void icem_cand_redund_elim(struct icem *icem)
 {
 	uint32_t n;

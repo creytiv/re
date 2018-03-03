@@ -109,6 +109,8 @@ static void candpair_prune(struct icem *icem)
 
 /**
  * Computing States
+ *
+ * @param icem    ICE Media object
  */
 void ice_candpair_set_states(struct icem *icem)
 {
@@ -239,6 +241,8 @@ static void concluding_ice(struct icem_comp *comp)
 
 /**
  * Check List and Timer State Updates
+ *
+ * @param icem    ICE Media object
  */
 void icem_checklist_update(struct icem *icem)
 {
