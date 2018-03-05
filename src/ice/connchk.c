@@ -335,6 +335,8 @@ static void do_check(struct ice_candpair *cp)
 
 /**
  * Scheduling Checks
+ *
+ * @param icem    ICE Media object
  */
 void icem_conncheck_schedule_check(struct icem *icem)
 {
@@ -382,6 +384,10 @@ static void pace_timeout(void *arg)
 
 /**
  * Scheduling Checks
+ *
+ * @param icem    ICE Media object
+ *
+ * @return 0 if success, otherwise errorcode
  */
 int icem_conncheck_start(struct icem *icem)
 {
@@ -419,6 +425,9 @@ void icem_conncheck_continue(struct icem *icem)
 
 /**
  * Stop checklist, cancel all connectivity checks
+ *
+ * @param icem    ICE Media object
+ * @param err     Error code
  */
 void icem_conncheck_stop(struct icem *icem, int err)
 {
