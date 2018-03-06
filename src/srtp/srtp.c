@@ -382,27 +382,24 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
-		size_t pld_start, tag_start;
-		size_t pld_len;
-		size_t hdr_len = mb->pos - start;
-
-		pld_start = mb->pos;
-		tag_start = mb->end - GCM_TAGLEN;
-		pld_len   = tag_start - pld_start;
-
-		if (mbuf_get_left(mb) < GCM_TAGLEN)
-			return EBADMSG;
+		size_t tag_start;
 
 		srtp_iv_calc_gcm(&iv, &comp->k_s, strm->ssrc, ix);
 
 		aes_set_iv(comp->aes, iv.u8);
 
 		/* The RTP Header is Associated Data */
-		err = aes_decr(comp->aes, NULL, &mb->buf[start], hdr_len);
+		err = aes_decr(comp->aes, NULL, &mb->buf[start],
+			       mb->pos - start);
 		if (err)
 			return err;
 
-		err = aes_decr(comp->aes, p, p, pld_len);
+		if (mbuf_get_left(mb) < GCM_TAGLEN)
+			return EBADMSG;
+
+		tag_start = mb->end - GCM_TAGLEN;
+
+		err = aes_decr(comp->aes, p, p, tag_start - mb->pos);
 		if (err)
 			return err;
 
@@ -410,6 +407,8 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 				       GCM_TAGLEN);
 		if (err)
 			return err;
+
+		mb->end = tag_start;
 
 		/*
 		 * 3.3.2.  Replay Protection
@@ -420,7 +419,6 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		if (!srtp_replay_check(&strm->replay_rtp, ix))
 			return EALREADY;
 
-		mb->end = tag_start;
 	}
 
 	if (hdr.seq > strm->s_l)
