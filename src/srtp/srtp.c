@@ -225,14 +225,14 @@ int srtp_encrypt(struct srtp *srtp, struct mbuf *mb)
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
 		uint8_t tag[GCM_TAGLEN];
-		size_t hdr_len = mb->pos - start;
 
 		srtp_iv_calc_gcm(&iv, &comp->k_s, strm->ssrc, ix);
 
 		aes_set_iv(comp->aes, iv.u8);
 
 		/* The RTP Header is Associated Data */
-		err = aes_encr(comp->aes, NULL, &mb->buf[start], hdr_len);
+		err = aes_encr(comp->aes, NULL, &mb->buf[start],
+			       mb->pos - start);
 		if (err)
 			return err;
 

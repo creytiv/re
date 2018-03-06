@@ -43,9 +43,7 @@ struct srtp {
 		enum aes_mode mode; /**< AES encryption mode               */
 		struct hmac *hmac;  /**< HMAC Context                      */
 		union vect128 k_s;  /**< Derived salting key (14 bytes)    */
-
-		// NOTE: only for HMAC-SHA1:
-		size_t tag_len;     /**< Authentication tag length [bytes] */
+		size_t tag_len;     /**< CTR Auth. tag length [bytes]      */
 	} rtp, rtcp;
 
 	struct list streaml;        /**< SRTP-streams (struct srtp_stream) */
