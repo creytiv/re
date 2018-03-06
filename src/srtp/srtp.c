@@ -221,8 +221,7 @@ int srtp_encrypt(struct srtp *srtp, struct mbuf *mb)
 		if (err)
 			return err;
 	}
-
-	if (comp->aes && comp->mode == AES_MODE_GCM) {
+	else if (comp->aes && comp->mode == AES_MODE_GCM) {
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
 		uint8_t tag[GCM_TAGLEN];

@@ -99,8 +99,8 @@ void srtp_iv_calc_gcm(union vect128 *iv, const union vect128 *k_s,
 	iv->u16[0] = k_s->u16[0];
 	iv->u16[1] = k_s->u16[1] ^ htons(ssrc >> 16);
 	iv->u16[2] = k_s->u16[2] ^ htons(ssrc & 0xffff);
-	iv->u16[3] = k_s->u16[3] ^ htons(ix >> 32);
-	iv->u16[4] = k_s->u16[4] ^ htons(ix >> 16);
+	iv->u16[3] = k_s->u16[3] ^ htons((ix >> 32) & 0xffff);
+	iv->u16[4] = k_s->u16[4] ^ htons((ix >> 16) & 0xffff);
 	iv->u16[5] = k_s->u16[5] ^ htons(ix & 0xffff);
 }
 

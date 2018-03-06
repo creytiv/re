@@ -66,8 +66,7 @@ int srtcp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 		ep = 1;
 	}
-
-	if (rtcp->aes && rtcp->mode == AES_MODE_GCM) {
+	else if (rtcp->aes && rtcp->mode == AES_MODE_GCM) {
 
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
@@ -212,8 +211,7 @@ int srtcp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		if (err)
 			return err;
 	}
-
-	if (rtcp->aes && ep && rtcp->mode == AES_MODE_GCM) {
+	else if (rtcp->aes && ep && rtcp->mode == AES_MODE_GCM) {
 		union vect128 iv;
 		uint8_t *p;
 		size_t hdr_len;
