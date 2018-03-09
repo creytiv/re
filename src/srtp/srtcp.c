@@ -53,7 +53,7 @@ int srtcp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 	strm->rtcp_index = (strm->rtcp_index+1) & 0x7fffffff;
 
-	if (rtcp->aes) {
+	if (rtcp->aes && rtcp->mode == AES_MODE_CTR) {
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
 
@@ -61,6 +61,40 @@ int srtcp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 		aes_set_iv(rtcp->aes, iv.u8);
 		err = aes_encr(rtcp->aes, p, p, mbuf_get_left(mb));
+		if (err)
+			return err;
+
+		ep = 1;
+	}
+	else if (rtcp->aes && rtcp->mode == AES_MODE_GCM) {
+
+		union vect128 iv;
+		uint8_t *p = mbuf_buf(mb);
+		uint8_t tag[GCM_TAGLEN];
+		const uint32_t ix_be = htonl(1<<31 | strm->rtcp_index);
+
+		srtp_iv_calc_gcm(&iv, &rtcp->k_s, ssrc, strm->rtcp_index);
+
+		aes_set_iv(rtcp->aes, iv.u8);
+
+		/* The RTCP Header and Index is Associated Data */
+		err  = aes_encr(rtcp->aes, NULL, &mb->buf[start],
+				mb->pos - start);
+		err |= aes_encr(rtcp->aes, NULL,
+				(void *)&ix_be, sizeof(ix_be));
+		if (err)
+			return err;
+
+		err = aes_encr(rtcp->aes, p, p, mbuf_get_left(mb));
+		if (err)
+			return err;
+
+		err = aes_get_authtag(rtcp->aes, tag, sizeof(tag));
+		if (err)
+			return err;
+
+		mb->pos = mb->end;
+		err = mbuf_write_mem(mb, tag, sizeof(tag));
 		if (err)
 			return err;
 
@@ -163,7 +197,7 @@ int srtcp_decrypt(struct srtp *srtp, struct mbuf *mb)
 
 	mb->end = eix_start;
 
-	if (rtcp->aes && ep) {
+	if (rtcp->aes && ep && rtcp->mode == AES_MODE_CTR) {
 		union vect128 iv;
 		uint8_t *p;
 
@@ -176,6 +210,42 @@ int srtcp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		err = aes_decr(rtcp->aes, p, p, mbuf_get_left(mb));
 		if (err)
 			return err;
+	}
+	else if (rtcp->aes && ep && rtcp->mode == AES_MODE_GCM) {
+
+		union vect128 iv;
+		size_t tag_start;
+		uint8_t *p;
+
+		srtp_iv_calc_gcm(&iv, &rtcp->k_s, ssrc, ix);
+
+		aes_set_iv(rtcp->aes, iv.u8);
+
+		/* The RTP Header is Associated Data */
+		err  = aes_decr(rtcp->aes, NULL, &mb->buf[start],
+				pld_start - start);
+		err |= aes_decr(rtcp->aes, NULL, &mb->buf[eix_start], 4);
+		if (err)
+			return err;
+
+		mb->pos = pld_start;
+		p = mbuf_buf(mb);
+
+		if (mbuf_get_left(mb) < GCM_TAGLEN)
+			return EBADMSG;
+
+		tag_start = mb->end - GCM_TAGLEN;
+
+		err = aes_decr(rtcp->aes, p, p, tag_start - pld_start);
+		if (err)
+			return err;
+
+		err = aes_authenticate(rtcp->aes, &mb->buf[tag_start],
+				       GCM_TAGLEN);
+		if (err)
+			return err;
+
+		mb->end = tag_start;
 	}
 
 	mb->pos = start;

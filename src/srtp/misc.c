@@ -59,6 +59,7 @@ int srtp_derive(uint8_t *out, size_t out_len, uint8_t label,
 	memcpy(x, master_salt, salt_bytes);
 	x[7] ^= label;
 
+	/* NOTE: Counter Mode is used for both CTR and GCM */
 	err = aes_alloc(&aes, AES_MODE_CTR, master_key, key_bytes*8, x);
 	if (err)
 		return err;
@@ -86,6 +87,24 @@ void srtp_iv_calc(union vect128 *iv, const union vect128 *k_s,
 }
 
 
+/*
+ * NOTE: The IV for AES-GCM is 12 bytes
+ */
+void srtp_iv_calc_gcm(union vect128 *iv, const union vect128 *k_s,
+		      uint32_t ssrc, uint64_t ix)
+{
+	if (!iv || !k_s)
+		return;
+
+	iv->u16[0] = k_s->u16[0];
+	iv->u16[1] = k_s->u16[1] ^ htons(ssrc >> 16);
+	iv->u16[2] = k_s->u16[2] ^ htons(ssrc & 0xffff);
+	iv->u16[3] = k_s->u16[3] ^ htons((ix >> 32) & 0xffff);
+	iv->u16[4] = k_s->u16[4] ^ htons((ix >> 16) & 0xffff);
+	iv->u16[5] = k_s->u16[5] ^ htons(ix & 0xffff);
+}
+
+
 const char *srtp_suite_name(enum srtp_suite suite)
 {
 	switch (suite) {
@@ -94,6 +113,8 @@ const char *srtp_suite_name(enum srtp_suite suite)
 	case SRTP_AES_CM_128_HMAC_SHA1_80:  return "AES_CM_128_HMAC_SHA1_80";
 	case SRTP_AES_256_CM_HMAC_SHA1_32:  return "AES_256_CM_HMAC_SHA1_32";
 	case SRTP_AES_256_CM_HMAC_SHA1_80:  return "AES_256_CM_HMAC_SHA1_80";
+	case SRTP_AES_128_GCM:              return "AEAD_AES_128_GCM";
+	case SRTP_AES_256_GCM:              return "AEAD_AES_256_GCM";
 	default:                            return "?";
 	}
 }

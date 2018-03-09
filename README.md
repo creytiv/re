@@ -198,6 +198,7 @@ legend:
 * [RFC 6455](https://tools.ietf.org/html/rfc6455) - The WebSocket Protocol
 * [RFC 7159](https://tools.ietf.org/html/rfc7159) - JavaScript Object Notation (JSON)
 * [RFC 7350](https://tools.ietf.org/html/rfc7350) - DTLS as Transport for STUN
+* [RFC 7714](https://tools.ietf.org/html/rfc7714) - AES-GCM Authenticated Encryption in SRTP
 
 
 ## Supported platforms

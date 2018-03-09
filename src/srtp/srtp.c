@@ -33,7 +33,8 @@ static inline int seq_diff(uint16_t x, uint16_t y)
 static int comp_init(struct comp *c, unsigned offs,
 		     const uint8_t *key, size_t key_b,
 		     const uint8_t *s, size_t s_b,
-		     size_t tag_len, bool encrypted)
+		     size_t tag_len, bool encrypted, bool hash,
+		     enum aes_mode mode)
 {
 	uint8_t k_e[MAX_KEYLEN], k_a[SHA_DIGEST_LENGTH];
 	int err = 0;
@@ -45,6 +46,7 @@ static int comp_init(struct comp *c, unsigned offs,
 		return EINVAL;
 
 	c->tag_len = tag_len;
+	c->mode = mode;
 
 	err |= srtp_derive(k_e, key_b,       0x00+offs, key, key_b, s, s_b);
 	err |= srtp_derive(k_a, sizeof(k_a), 0x01+offs, key, key_b, s, s_b);
@@ -53,14 +55,16 @@ static int comp_init(struct comp *c, unsigned offs,
 		return err;
 
 	if (encrypted) {
-		err = aes_alloc(&c->aes, AES_MODE_CTR, k_e, key_b*8, NULL);
+		err = aes_alloc(&c->aes, mode, k_e, key_b*8, NULL);
 		if (err)
 			return err;
 	}
 
-	err = hmac_create(&c->hmac, HMAC_HASH_SHA1, k_a, sizeof(k_a));
-	if (err)
-		return err;
+	if (hash) {
+		err = hmac_create(&c->hmac, HMAC_HASH_SHA1, k_a, sizeof(k_a));
+		if (err)
+			return err;
+	}
 
 	return err;
 }
@@ -84,7 +88,9 @@ int srtp_alloc(struct srtp **srtpp, enum srtp_suite suite,
 {
 	struct srtp *srtp;
 	const uint8_t *master_salt;
-	size_t cipher_bytes, auth_bytes;
+	size_t cipher_bytes, salt_bytes, auth_bytes;
+	enum aes_mode mode;
+	bool hash;
 	int err = 0;
 
 	if (!srtpp || !key)
@@ -93,30 +99,58 @@ int srtp_alloc(struct srtp **srtpp, enum srtp_suite suite,
 	switch (suite) {
 
 	case SRTP_AES_CM_128_HMAC_SHA1_80:
+		mode         = AES_MODE_CTR;
 		cipher_bytes = 16;
+		salt_bytes   = 14;
 		auth_bytes   = 10;
+		hash         = true;
 		break;
 
 	case SRTP_AES_CM_128_HMAC_SHA1_32:
+		mode         = AES_MODE_CTR;
 		cipher_bytes = 16;
+		salt_bytes   = 14;
 		auth_bytes   =  4;
+		hash         = true;
 		break;
 
 	case SRTP_AES_256_CM_HMAC_SHA1_80:
+		mode         = AES_MODE_CTR;
 		cipher_bytes = 32;
+		salt_bytes   = 14;
 		auth_bytes   = 10;
+		hash         = true;
 		break;
 
 	case SRTP_AES_256_CM_HMAC_SHA1_32:
+		mode         = AES_MODE_CTR;
 		cipher_bytes = 32;
+		salt_bytes   = 14;
 		auth_bytes   =  4;
+		hash         = true;
+		break;
+
+	case SRTP_AES_128_GCM:
+		mode         = AES_MODE_GCM;
+		cipher_bytes = 16;
+		salt_bytes   = 12;
+		auth_bytes   = 0;
+		hash         = false;
+		break;
+
+	case SRTP_AES_256_GCM:
+		mode         = AES_MODE_GCM;
+		cipher_bytes = 32;
+		salt_bytes   = 12;
+		auth_bytes   = 0;
+		hash         = false;
 		break;
 
 	default:
 		return ENOTSUP;
 	};
 
-	if ((cipher_bytes + SRTP_SALT_SIZE) != key_bytes)
+	if ((cipher_bytes + salt_bytes) != key_bytes)
 		return EINVAL;
 
 	master_salt = &key[cipher_bytes];
@@ -126,10 +160,11 @@ int srtp_alloc(struct srtp **srtpp, enum srtp_suite suite,
 		return ENOMEM;
 
 	err |= comp_init(&srtp->rtp,  0, key, cipher_bytes,
-			 master_salt, SRTP_SALT_SIZE, auth_bytes, true);
+			 master_salt, salt_bytes, auth_bytes,
+			 true, hash, mode);
 	err |= comp_init(&srtp->rtcp, 3, key, cipher_bytes,
-			 master_salt, SRTP_SALT_SIZE, auth_bytes,
-			 !(flags & SRTP_UNENCRYPTED_SRTCP));
+			 master_salt, salt_bytes, auth_bytes,
+			 !(flags & SRTP_UNENCRYPTED_SRTCP), hash, mode);
 	if (err)
 		goto out;
 
@@ -175,7 +210,7 @@ int srtp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 	ix = 65536ULL * strm->roc + hdr.seq;
 
-	if (comp->aes) {
+	if (comp->aes && comp->mode == AES_MODE_CTR) {
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
 
@@ -183,6 +218,34 @@ int srtp_encrypt(struct srtp *srtp, struct mbuf *mb)
 
 		aes_set_iv(comp->aes, iv.u8);
 		err = aes_encr(comp->aes, p, p, mbuf_get_left(mb));
+		if (err)
+			return err;
+	}
+	else if (comp->aes && comp->mode == AES_MODE_GCM) {
+		union vect128 iv;
+		uint8_t *p = mbuf_buf(mb);
+		uint8_t tag[GCM_TAGLEN];
+
+		srtp_iv_calc_gcm(&iv, &comp->k_s, strm->ssrc, ix);
+
+		aes_set_iv(comp->aes, iv.u8);
+
+		/* The RTP Header is Associated Data */
+		err = aes_encr(comp->aes, NULL, &mb->buf[start],
+			       mb->pos - start);
+		if (err)
+			return err;
+
+		err = aes_encr(comp->aes, p, p, mbuf_get_left(mb));
+		if (err)
+			return err;
+
+		err = aes_get_authtag(comp->aes, tag, sizeof(tag));
+		if (err)
+			return err;
+
+		mb->pos = mb->end;
+		err = mbuf_write_mem(mb, tag, sizeof(tag));
 		if (err)
 			return err;
 	}
@@ -303,7 +366,7 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 			return EALREADY;
 	}
 
-	if (comp->aes) {
+	if (comp->aes && comp->mode == AES_MODE_CTR) {
 
 		union vect128 iv;
 		uint8_t *p = mbuf_buf(mb);
@@ -314,6 +377,48 @@ int srtp_decrypt(struct srtp *srtp, struct mbuf *mb)
 		err = aes_decr(comp->aes, p, p, mbuf_get_left(mb));
 		if (err)
 			return err;
+	}
+	else if (comp->aes && comp->mode == AES_MODE_GCM) {
+
+		union vect128 iv;
+		uint8_t *p = mbuf_buf(mb);
+		size_t tag_start;
+
+		srtp_iv_calc_gcm(&iv, &comp->k_s, strm->ssrc, ix);
+
+		aes_set_iv(comp->aes, iv.u8);
+
+		/* The RTP Header is Associated Data */
+		err = aes_decr(comp->aes, NULL, &mb->buf[start],
+			       mb->pos - start);
+		if (err)
+			return err;
+
+		if (mbuf_get_left(mb) < GCM_TAGLEN)
+			return EBADMSG;
+
+		tag_start = mb->end - GCM_TAGLEN;
+
+		err = aes_decr(comp->aes, p, p, tag_start - mb->pos);
+		if (err)
+			return err;
+
+		err = aes_authenticate(comp->aes, &mb->buf[tag_start],
+				       GCM_TAGLEN);
+		if (err)
+			return err;
+
+		mb->end = tag_start;
+
+		/*
+		 * 3.3.2.  Replay Protection
+		 *
+		 * Secure replay protection is only possible when
+		 * integrity protection is present.
+		 */
+		if (!srtp_replay_check(&strm->replay_rtp, ix))
+			return EALREADY;
+
 	}
 
 	if (hdr.seq > strm->s_l)
