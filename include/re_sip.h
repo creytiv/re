@@ -281,6 +281,11 @@ int sip_drequestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 		  const char *met, struct sip_dialog *dlg, uint32_t cseq,
 		  struct sip_auth *auth, sip_send_h *sendh, sip_resp_h *resph,
 		  void *arg, const char *fmt, ...);
+int sip_drequestf_targeted(struct sip_request **reqp, struct sip *sip,
+		  bool stateful, const char *met, struct sip_dialog *dlg,
+		  const struct uri *route, uint32_t cseq,
+		  struct sip_auth *auth, sip_send_h *sendh, sip_resp_h *resph,
+		  void *arg, const char *fmt, ...);
 void sip_request_cancel(struct sip_request *req);
 bool sip_request_loops(struct sip_loopstate *ls, uint16_t scode);
 void sip_loopstate_reset(struct sip_loopstate *ls);
@@ -336,6 +341,7 @@ bool sip_dialog_established(const struct sip_dialog *dlg);
 bool sip_dialog_cmp(const struct sip_dialog *dlg, const struct sip_msg *msg);
 bool sip_dialog_cmp_half(const struct sip_dialog *dlg,
 			 const struct sip_msg *msg);
+const struct uri *sip_dialog_route(const struct sip_dialog *dlg);
 
 
 /* msg */

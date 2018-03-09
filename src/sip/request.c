@@ -687,7 +687,7 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 		err = srv_lookup(req, req->host);
 	}
 	else {
-	        err = dnsc_query(&req->dnsq, sip->dnsc, req->host,
+		err = dnsc_query(&req->dnsq, sip->dnsc, req->host,
 				 DNS_TYPE_NAPTR, DNS_CLASS_IN, true,
 				 naptr_handler, req);
 	}
@@ -778,6 +778,55 @@ int sip_requestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 	return err;
 }
 
+static int sip_drequestf_common(struct sip_request **reqp, struct sip *sip,
+				bool stateful, const char *met,
+				struct sip_dialog *dlg,
+				const struct uri *route, uint32_t cseq,
+				struct sip_auth *auth, sip_send_h *sendh,
+				sip_resp_h *resph, void *arg, const char *fmt)
+{
+	struct mbuf *mb;
+	int err;
+
+	if (!sip || !met || !dlg || !fmt)
+		return EINVAL;
+
+	mb = mbuf_alloc(2048);
+	if (!mb)
+		return ENOMEM;
+
+	err = mbuf_write_str(mb, "Max-Forwards: 70\r\n");
+
+	if (auth)
+		err |= sip_auth_encode(mb, auth, met, sip_dialog_uri(dlg));
+
+	err |= sip_dialog_encode(mb, dlg, cseq, met);
+
+	if (sip->software)
+		err |= mbuf_printf(mb, "User-Agent: %s\r\n", sip->software);
+
+	if (err)
+		goto out;
+
+	err = mbuf_write_str(mb, fmt);
+
+	if (err)
+		goto out;
+
+	mb->pos = 0;
+
+	err = sip_request(reqp, sip, stateful, met, -1, sip_dialog_uri(dlg),
+			  -1, route, mb, sip_dialog_hash(dlg),
+			  sendh, resph, arg);
+	if (err)
+		goto out;
+
+ out:
+	mem_deref(mb);
+
+	return err;
+}
+
 
 /**
  * Send a SIP dialog request with formatted arguments
@@ -801,48 +850,68 @@ int sip_drequestf(struct sip_request **reqp, struct sip *sip, bool stateful,
 		  struct sip_auth *auth, sip_send_h *sendh, sip_resp_h *resph,
 		  void *arg, const char *fmt, ...)
 {
-	struct mbuf *mb;
+	char* fmt_str = NULL;
 	va_list ap;
 	int err;
 
-	if (!sip || !met || !dlg || !fmt)
-		return EINVAL;
-
-	mb = mbuf_alloc(2048);
-	if (!mb)
-		return ENOMEM;
-
-	err = mbuf_write_str(mb, "Max-Forwards: 70\r\n");
-
-	if (auth)
-		err |= sip_auth_encode(mb, auth, met, sip_dialog_uri(dlg));
-
-	err |= sip_dialog_encode(mb, dlg, cseq, met);
-
-	if (sip->software)
-		err |= mbuf_printf(mb, "User-Agent: %s\r\n", sip->software);
-
-	if (err)
-		goto out;
-
 	va_start(ap, fmt);
-	err = mbuf_vprintf(mb, fmt, ap);
+	err = re_vsdprintf(&fmt_str, fmt, ap);
 	va_end(ap);
 
 	if (err)
 		goto out;
 
-	mb->pos = 0;
+	err = sip_drequestf_common(reqp, sip, stateful, met, dlg,
+				   sip_dialog_route(dlg), cseq, auth, sendh,
+				   resph, arg, fmt_str);
+ out:
+	mem_deref(fmt_str);
+	return err;
+}
 
-	err = sip_request(reqp, sip, stateful, met, -1, sip_dialog_uri(dlg),
-			  -1, sip_dialog_route(dlg), mb, sip_dialog_hash(dlg),
-			  sendh, resph, arg);
+
+/**
+ * Send a SIP dialog request with formatted arguments, but to a specific
+ * target
+ *
+ * @param reqp     Pointer to allocated SIP request object
+ * @param sip      SIP Stack
+ * @param stateful Stateful client transaction
+ * @param met      Null-terminated SIP Method string
+ * @param dlg      SIP Dialog state
+ * @param route    Next hop route URI
+ * @param cseq     CSeq number
+ * @param auth     SIP authentication state
+ * @param sendh    Send handler
+ * @param resph    Response handler
+ * @param arg      Handler argument
+ * @param fmt      Formatted SIP headers and body
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sip_drequestf_targeted(struct sip_request **reqp, struct sip *sip,
+			   bool stateful, const char *met,
+			   struct sip_dialog *dlg, const struct uri *route,
+			   uint32_t cseq, struct sip_auth *auth,
+			   sip_send_h *sendh, sip_resp_h *resph, void *arg,
+			   const char *fmt, ...)
+{
+	char* fmt_str = NULL;
+	va_list ap;
+	int err;
+
+	va_start(ap, fmt);
+	err = re_vsdprintf(&fmt_str, fmt, ap);
+	va_end(ap);
+
 	if (err)
 		goto out;
 
- out:
-	mem_deref(mb);
-
+	err = sip_drequestf_common(reqp, sip, stateful, met, dlg, route, cseq,
+				   auth, sendh, resph, arg, fmt_str);
+out:
+	if (fmt_str)
+		mem_deref(fmt_str);
 	return err;
 }
 
