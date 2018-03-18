@@ -67,7 +67,7 @@ the main [website](http://creytiv.com/doxygen/re-dox/html/)
 ### Examples
 
 Coding examples are available from the
-[redemo](http://creytiv.com/pub/redemo-0.4.1.tar.gz) project
+[redemo](http://creytiv.com/pub/redemo-0.5.0.tar.gz) project
 
 
 ## License
