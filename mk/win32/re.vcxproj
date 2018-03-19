@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -121,7 +121,6 @@
     <ClCompile Include="..\..\src\ice\chklist.c" />
     <ClCompile Include="..\..\src\ice\comp.c" />
     <ClCompile Include="..\..\src\ice\connchk.c" />
-    <ClCompile Include="..\..\src\ice\gather.c" />
     <ClCompile Include="..\..\src\ice\ice.c" />
     <ClCompile Include="..\..\src\ice\icem.c" />
     <ClCompile Include="..\..\src\ice\icesdp.c" />
@@ -316,7 +315,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\include;..\..\..\misc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_CONSOLE;HAVE_INET_PTON;HAVE_INET_NTOP;FD_SETSIZE=1024;HAVE_SELECT;HAVE_IO_H;_CRT_SECURE_NO_DEPRECATE;WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

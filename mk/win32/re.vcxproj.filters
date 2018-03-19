@@ -731,9 +731,6 @@
     <ClCompile Include="..\..\src\ice\connchk.c">
       <Filter>src\ice</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ice\gather.c">
-      <Filter>src\ice</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\ice\ice.c">
       <Filter>src\ice</Filter>
     </ClCompile>
