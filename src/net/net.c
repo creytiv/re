@@ -24,6 +24,7 @@
 #include <re_dbg.h>
 
 
+#if defined(WIN32)
 /**
  * Get the IP address of the host
  *
@@ -32,28 +33,38 @@
  *
  * @return 0 if success, otherwise errorcode
  */
-int net_hostaddr(int af, struct sa *ip)
+static int net_hostaddr_win32(int af, struct sa *ip)
 {
 	char hostname[256];
-	struct in_addr in;
-	struct hostent *he;
 
 	if (-1 == gethostname(hostname, sizeof(hostname)))
 		return errno;
 
-	he = gethostbyname(hostname);
-	if (!he)
+	struct addrinfo *result = NULL;
+	struct addrinfo *ptr = NULL;
+	bool ip_family_match = false;
+
+	/*gethostbyname is deprecated. It's better to use GetAddrInfo instead*/
+	GetAddrInfo(hostname, NULL, NULL, &result);
+	if (!result)
 		return ENOENT;
 
-	if (af != he->h_addrtype)
+	/*Get entry which have similar to af ip family (for example IPv4)*/
+	/*Previously net_hostaddr set ip address of the first adapter*/
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+		if (ptr->ai_family == af)
+		{
+			ip_family_match = true;
+			struct sockaddr_in * addr_ipv4 = ptr->ai_addr;
+			sa_set_in(ip, ntohl(addr_ipv4->sin_addr.s_addr), 0);
+		}
+	}
+
+	if (!ip_family_match)
 		return EAFNOSUPPORT;
-
-	/* Get the first entry */
-	memcpy(&in, he->h_addr_list[0], sizeof(in));
-	sa_set_in(ip, ntohl(in.s_addr), 0);
-
 	return 0;
 }
+#endif
 
 
 /**
@@ -67,7 +78,7 @@ int net_hostaddr(int af, struct sa *ip)
 int net_default_source_addr_get(int af, struct sa *ip)
 {
 #if defined(WIN32)
-	return net_hostaddr(af, ip);
+	return net_hostaddr_win32(af, ip);
 #else
 	char ifname[64] = "";
 
