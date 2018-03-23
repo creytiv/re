@@ -10,6 +10,7 @@
 #include <re_fmt.h>
 #include <re_mem.h>
 #include <re_main.h>
+#include <re_net.h>
 #include <re_mqueue.h>
 #include "mqueue.h"
 
@@ -115,6 +116,14 @@ int mqueue_alloc(struct mqueue **mqp, mqueue_h *h, void *arg)
 		err = errno;
 		goto out;
 	}
+
+	err = net_sockopt_blocking_set(mq->pfd[0], false);
+	if (err)
+		goto out;
+
+	err = net_sockopt_blocking_set(mq->pfd[1], false);
+	if (err)
+		goto out;
 
 	err = fd_listen(mq->pfd[0], FD_READ, event_handler, mq);
 	if (err)
