@@ -26,7 +26,12 @@
 #define UNIX_NTP_OFFSET 0x83aa7e80
 
 
-/** Convert from Unix time to NTP time */
+/**
+ * Convert from Unix time to NTP time
+ *
+ * @param ntp NTP time to convert to (output)
+ * @param tv  Unix time to convert from (input)
+ */
 void unix2ntp(struct ntp_time *ntp, const struct timeval *tv)
 {
 	ntp->hi = (uint32_t)(tv->tv_sec + UNIX_NTP_OFFSET);
@@ -34,7 +39,12 @@ void unix2ntp(struct ntp_time *ntp, const struct timeval *tv)
 }
 
 
-/** Convert from NTP time to Unix time */
+/**
+ * Convert from NTP time to Unix time
+ *
+ * @param tv  Unix time to convert to (output)
+ * @param ntp NTP time to convert from (input)
+ */
 void ntp2unix(struct timeval *tv, const struct ntp_time *ntp)
 {
 	tv->tv_sec  = ntp->hi - UNIX_NTP_OFFSET;
@@ -64,14 +74,26 @@ int ntp_time_get(struct ntp_time *ntp)
 }
 
 
-/** Convert NTP time to middle 32-bits (compact representation) */
+/**
+ * Convert NTP time to middle 32-bits (compact representation)
+ *
+ * @param ntp NTP time
+ *
+ * @return NTP time in compact representation
+ */
 uint32_t ntp_compact(const struct ntp_time *ntp)
 {
 	return ntp ? ((ntp->hi & 0xffff) << 16 | (ntp->lo >> 16)) : 0;
 }
 
 
-/** Convert NTP compact representation to microseconds */
+/**
+ * Convert NTP compact representation to microseconds
+ *
+ * @param ntpc  NTP time in compact representation
+ *
+ * @return NTP time in microseconds
+ */
 uint64_t ntp_compact2us(uint32_t ntpc)
 {
 	const uint32_t hi = (ntpc >> 16) & 0xffff;

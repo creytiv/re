@@ -36,7 +36,7 @@ void source_init_seq(struct rtp_source *s, uint16_t seq)
 }
 
 
-/**
+/*
  * See RFC 3550 - A.1 RTP Data Header Validity Checks
  */
 int source_update_seq(struct rtp_source *s, uint16_t seq)

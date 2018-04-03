@@ -5,6 +5,7 @@
  */
 
 
+/** SRTP Protocol values */
 enum {
 	GCM_TAGLEN  = 16,  /**< GCM taglength in bytes         */
 };
