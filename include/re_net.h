@@ -46,7 +46,6 @@ struct sa;
 
 
 /* Net generic */
-int  net_hostaddr(int af, struct sa *ip);
 int  net_default_source_addr_get(int af, struct sa *ip);
 int  net_default_gateway_get(int af, struct sa *gw);
 
