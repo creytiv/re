@@ -8,7 +8,9 @@
 #include "../mqueue.h"
 
 
-/** Emulate pipe on Windows -- pipe() with select() is not working */
+/*
+ * Emulate pipe on Windows -- pipe() with select() is not working
+ */
 int pipe(int fds[2])
 {
 	SOCKET s, rd, wr;

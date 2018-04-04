@@ -158,7 +158,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
 #endif
 
 
-/**
+/*
  * Implementation of inet_ntop()
  */
 const char* inet_ntop(int af, const void *src, char *dst, size_t size);
