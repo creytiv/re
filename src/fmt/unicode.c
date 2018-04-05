@@ -86,6 +86,7 @@ int utf8_encode(struct re_printf *pf, const char *str)
  */
 int utf8_decode(struct re_printf *pf, const struct pl *pl)
 {
+	int uhi = -1;
 	size_t i;
 
 	if (!pf)
@@ -101,7 +102,9 @@ int utf8_decode(struct re_printf *pf, const struct pl *pl)
 
 		if (ch == '\\') {
 
-			uint16_t u = 0;
+			unsigned u = 0;
+			char ubuf[4];
+			size_t ulen;
 
 			++i;
 
@@ -147,17 +150,31 @@ int utf8_decode(struct re_printf *pf, const struct pl *pl)
 				u |= ((uint16_t)ch_hex(pl->p[++i])) << 4;
 				u |= ((uint16_t)ch_hex(pl->p[++i])) << 0;
 
-				if (u > 255) {
-					ch  = u>>8;
-					err = pf->vph(&ch, 1, pf->arg);
-					if (err)
-						return err;
+				/* UTF-16 surrogate pair */
+				if (u >= 0xd800 && u <= 0xdbff) {
+					uhi = (u - 0xd800) * 0x400;
+					continue;
+				}
+				else if (u >= 0xdc00 && u <= 0xdfff) {
+					if (uhi < 0)
+						continue;
+
+					u = uhi + u - 0xdc00 + 0x10000;
 				}
 
-				ch = u & 0xff;
-				break;
+				uhi = -1;
+
+				ulen = utf8_byteseq(ubuf, u);
+
+				err = pf->vph(ubuf, ulen, pf->arg);
+				if (err)
+					return err;
+
+				continue;
 			}
 		}
+
+		uhi = -1;
 
 		err = pf->vph(&ch, 1, pf->arg);
 		if (err)
@@ -165,4 +182,49 @@ int utf8_decode(struct re_printf *pf, const struct pl *pl)
 	}
 
 	return 0;
+}
+
+
+/**
+ * Encode Unicode code point into binary UTF-8
+ *
+ * @param u  Binary UTF-8 buffer
+ * @param cp Unicode code point
+ *
+ * @return length of UTF-8 byte sequence
+ */
+size_t utf8_byteseq(char u[4], unsigned cp)
+{
+	if (!u)
+		return 0;
+
+	if (cp <= 0x7f) {
+		u[0] = cp;
+		return 1;
+	}
+	else if (cp <= 0x7ff) {
+		u[0] = 0xc0 | (cp>>6 & 0x1f);
+		u[1] = 0x80 | (cp    & 0x3f);
+		return 2;
+	}
+	else if (cp <= 0xffff) {
+		u[0] = 0xe0 | (cp>>12 & 0x0f);
+		u[1] = 0x80 | (cp>>6  & 0x3f);
+		u[2] = 0x80 | (cp     & 0x3f);
+		return 3;
+	}
+	else if (cp <= 0x10ffff) {
+		u[0] = 0xf0 | (cp>>18 & 0x07);
+		u[1] = 0x80 | (cp>>12 & 0x3f);
+		u[2] = 0x80 | (cp>>6  & 0x3f);
+		u[3] = 0x80 | (cp     & 0x3f);
+		return 4;
+	}
+	else {
+		/* The replacement character (U+FFFD) */
+		u[0] = (char)0xef;
+		u[1] = (char)0xbf;
+		u[2] = (char)0xbd;
+		return 3;
+	}
 }
