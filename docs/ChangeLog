@@ -1,3 +1,21 @@
+2018-04-20 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.5.8
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: update win32 files (thanks Encamy)
+
+	* aes: add support for AES-GCM (Galois Counter Mode)
+
+	* fmt: json/utf8: fix unescaping of unicode code points (#127)
+	       add utf8_byteseq
+
+	* mqueue: set non-blocking mode for read/write file descriptors (#122)
+
+	* srtp: add support for AES-GCM cipher suite (RFC 7714)
+
+
 2018-01-12 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.7
