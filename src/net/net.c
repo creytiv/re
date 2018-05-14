@@ -23,50 +23,6 @@
 #define DEBUG_LEVEL 5
 #include <re_dbg.h>
 
-
-#if defined(WIN32)
-/**
- * Get the IP address of the host
- *
- * @param af  Address Family
- * @param ip  Returned IP address
- *
- * @return 0 if success, otherwise errorcode
- */
-static int net_hostaddr_win32(int af, struct sa *ip)
-{
-	char hostname[256];
-
-	if (-1 == gethostname(hostname, sizeof(hostname)))
-		return errno;
-
-	struct addrinfo *result = NULL;
-	struct addrinfo *ptr = NULL;
-	bool ip_family_match = false;
-
-	/*gethostbyname is deprecated. It's better to use GetAddrInfo instead*/
-	GetAddrInfo(hostname, NULL, NULL, &result);
-	if (!result)
-		return ENOENT;
-
-	/*Get entry which have similar to af ip family (for example IPv4)*/
-	/*Previously net_hostaddr set ip address of the first adapter*/
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
-		if (ptr->ai_family == af)
-		{
-			ip_family_match = true;
-			struct sockaddr_in * addr_ipv4 = ptr->ai_addr;
-			sa_set_in(ip, ntohl(addr_ipv4->sin_addr.s_addr), 0);
-		}
-	}
-
-	if (!ip_family_match)
-		return EAFNOSUPPORT;
-	return 0;
-}
-#endif
-
-
 /**
  * Get the default source IP address
  *
@@ -78,7 +34,7 @@ static int net_hostaddr_win32(int af, struct sa *ip)
 int net_default_source_addr_get(int af, struct sa *ip)
 {
 #if defined(WIN32)
-	return net_hostaddr_win32(af, ip);
+	return net_hostaddr(af, ip);
 #else
 	char ifname[64] = "";
 
