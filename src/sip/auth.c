@@ -37,6 +37,7 @@ struct realm {
 	char *opaque;
 	char *user;
 	char *pass;
+	char *algorithm;
 	uint32_t nc;
 	enum sip_hdrid hdr;
 };
@@ -182,6 +183,9 @@ static bool auth_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
 	if (pl_isset(&ch.opaque))
 		err |= pl_strdup(&realm->opaque, &ch.opaque);
 
+	if (pl_isset(&ch.algorithm))
+		err |= pl_strdup(&realm->algorithm, &ch.algorithm);
+
  out:
 	if (err) {
 		mem_deref(realm);
@@ -267,6 +271,9 @@ int sip_auth_encode(struct mbuf *mb, struct sip_auth *auth, const char *met,
 			err |= mbuf_write_str(mb, ", qop=auth");
 			err |= mbuf_printf(mb, ", nc=%08x", realm->nc);
 		}
+
+		if (realm->algorithm )
+			err |= mbuf_printf(mb, ", algorithm=%s", realm->algorithm );
 
 		++realm->nc;
 
