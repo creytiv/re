@@ -38,17 +38,19 @@ int net_hostaddr(int af, struct sa *ip)
 	if (!result)
 		return ENOENT;
 
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
-	{
-		if (ptr->ai_family == af)
-		{
-			ip_family_match = true;
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next){
+		if (ptr->ai_family == af){
 			struct sockaddr * addr = ptr->ai_addr;
-			sa_set_sa(ip, addr);
+			err = sa_set_sa(ip, addr);
+			if (!err) {
+				ip_family_match = true;
+				break;
+			}
 		}
 	}
 
 	if (!ip_family_match)
 		return EAFNOSUPPORT;
+
 	return 0;
 }

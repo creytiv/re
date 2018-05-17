@@ -18,6 +18,7 @@ ifneq ($(OS),win32)
 SRCS	+= net/posix/pif.c
 else
 SRCS	+= net/win32/wif.c
+SRCS	+= net/win32/hostaddr.c
 endif
 
 
