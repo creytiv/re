@@ -272,8 +272,9 @@ int sip_auth_encode(struct mbuf *mb, struct sip_auth *auth, const char *met,
 			err |= mbuf_printf(mb, ", nc=%08x", realm->nc);
 		}
 
-		if (realm->algorithm )
-			err |= mbuf_printf(mb, ", algorithm=%s", realm->algorithm );
+		if (realm->algorithm)
+			err |= mbuf_printf(mb, 
+				", algorithm=%s", realm->algorithm);
 
 		++realm->nc;
 
