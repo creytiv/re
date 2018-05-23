@@ -866,6 +866,9 @@
     <ClCompile Include="..\..\src\sha\sha1.c">
       <Filter>src\sha</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\net\win32\hostaddr.c">
+      <Filter>src\net\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\srtp\README">

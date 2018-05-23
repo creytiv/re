@@ -158,6 +158,7 @@
     <ClCompile Include="..\..\src\net\rt.c" />
     <ClCompile Include="..\..\src\net\sock.c" />
     <ClCompile Include="..\..\src\net\sockopt.c" />
+    <ClCompile Include="..\..\src\net\win32\hostaddr.c" />
     <ClCompile Include="..\..\src\net\win32\wif.c" />
     <ClCompile Include="..\..\src\odict\entry.c" />
     <ClCompile Include="..\..\src\odict\odict.c" />
