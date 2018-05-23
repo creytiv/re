@@ -735,6 +735,22 @@ int tls_srtp_keyinfo(const struct tls_conn *tc, enum srtp_suite *suite,
 		salt_size = 14;
 		break;
 
+#ifdef SRTP_AEAD_AES_128_GCM
+	case SRTP_AEAD_AES_128_GCM:
+		*suite = SRTP_AES_128_GCM;
+		key_size  = 16;
+		salt_size = 12;
+		break;
+#endif
+
+#ifdef SRTP_AEAD_AES_256_GCM
+	case SRTP_AEAD_AES_256_GCM:
+		*suite = SRTP_AES_256_GCM;
+		key_size  = 32;
+		salt_size = 12;
+		break;
+#endif
+
 	default:
 		return ENOSYS;
 	}
