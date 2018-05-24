@@ -82,20 +82,27 @@ static int parse_resolv_conf(char *domain, size_t dsize,
 #ifdef __ANDROID__
 static int get_android_dns(struct sa *nsv, uint32_t *n)
 {
-	char prop[PROP_NAME_MAX] = {0}, value[PROP_VALUE_MAX] = {0};
-	uint32_t i, count = 0;
+	FILE *f;
+	char value[PROP_VALUE_MAX] = {0};
+	char prop_name[32], address[32];
+	uint32_t count = 0;
 	int err;
 
-	for (i=0; i<*n; i++) {
-		re_snprintf(prop, sizeof(prop), "net.dns%u", 1+i);
+	/* Open the command for reading. */
+	f = popen("getprop | grep '\\.dns*.\\]\\:'", "r");
+	if (!f)
+		return errno;
 
-		if (__system_property_get(prop, value)) {
-
-			err = sa_set_str(&nsv[count], value, DNS_PORT);
+	while (NULL != fgets(value, PROP_VALUE_MAX, f)) {
+		if (sscanf(value, "%s [%[^]]]", prop_name, address) == 2) {
+			err = sa_set_str(&nsv[count], address, DNS_PORT);
 			if (!err)
 				++count;
 		}
 	}
+
+	pclose(f);
+
 	if (count == 0)
 		return ENOENT;
 
