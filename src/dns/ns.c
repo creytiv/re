@@ -89,7 +89,7 @@ static int get_android_dns(struct sa *nsv, uint32_t *n)
 	int err;
 
 	/* Open the command for reading. */
-	f = popen("getprop | grep '\\.dns*.\\]\\:'", "r");
+	f = popen("getprop | grep '\\..*\\.dns[0-9]\\]:'", "r");
 	if (!f)
 		return errno;
 
