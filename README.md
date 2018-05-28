@@ -210,7 +210,7 @@ legend:
 * Solaris 11
 * Windows
 * Apple Mac OS X and iOS
-* Android
+* Android (5.0 or later)
 
 ### Supported versions of C Standard library
 
