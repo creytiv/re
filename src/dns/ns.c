@@ -13,6 +13,7 @@
 #include "dns.h"
 #ifdef __ANDROID__
 #include <sys/system_properties.h>
+#include <stdlib.h>
 #endif
 
 
@@ -22,7 +23,7 @@
 
 
 static int parse_resolv_conf(char *domain, size_t dsize,
-			     struct sa *srvv, uint32_t *n)
+				 struct sa *srvv, uint32_t *n)
 {
 	FILE *f;
 	struct pl dom = pl_null;
@@ -62,7 +63,7 @@ static int parse_resolv_conf(char *domain, size_t dsize,
 
 		/* Use the first entry */
 		if (i < *n && 0 == re_regex(line, len, "nameserver [^\n]+",
-					    &srv)) {
+						&srv)) {
 			err = sa_set(&srvv[i], &srv, DNS_PORT);
 			if (err) {
 				DEBUG_WARNING("sa_set: %r (%m)\n", &srv, err);
@@ -82,25 +83,48 @@ static int parse_resolv_conf(char *domain, size_t dsize,
 #ifdef __ANDROID__
 static int get_android_dns(struct sa *nsv, uint32_t *n)
 {
-	char prop[PROP_NAME_MAX] = {0}, value[PROP_VALUE_MAX] = {0};
+	FILE *f;
+	char value[PROP_VALUE_MAX] = {0}, prop[PROP_NAME_MAX] = {0};
+	char prop_name[32], address[32], sdk_version_string[PROP_VALUE_MAX];
 	uint32_t i, count = 0;
-	int err;
+	int err, sdk_version;
 
-	for (i=0; i<*n; i++) {
-		re_snprintf(prop, sizeof(prop), "net.dns%u", 1+i);
+	__system_property_get("ro.build.version.sdk", sdk_version_string);
+	sdk_version = atoi(sdk_version_string);
 
-		if (__system_property_get(prop, value)) {
+	if (sdk_version >= 26) {
+		/* Open the command for reading. */
+		f = popen("getprop | grep '\\..*\\.dns[0-9]\\]:'", "r");
+		if (!f)
+			return errno;
 
-			err = sa_set_str(&nsv[count], value, DNS_PORT);
-			if (!err)
-				++count;
+		while (NULL != fgets(value, PROP_VALUE_MAX, f)) {
+			if (sscanf(value, "%s [%[^]]]", prop_name, address)
+			    == 2) {
+				err = sa_set_str(&nsv[count], address,
+				                 DNS_PORT);
+				if (!err) {
+					++count;
+				}
+			}
+		}
+		pclose(f);
+	}
+	else {
+		for (i=0; i<*n; i++) {
+			re_snprintf(prop, sizeof(prop), "net.dns%u", 1+i);
+			if (__system_property_get(prop, value)) {
+				err = sa_set_str(&nsv[count], value, DNS_PORT);
+				if (!err) {
+					++count;
+				}
+			}
 		}
 	}
 	if (count == 0)
 		return ENOENT;
 
 	*n = count;
-
 	return 0;
 }
 #endif
