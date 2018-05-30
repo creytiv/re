@@ -33,7 +33,7 @@ static bool if_getname_handler(const char *ifname, const struct sa *sa,
 	if (ife->af != sa_af(sa))
 		return false;
 
-	if (0 == sa_cmp(sa, ife->ip, SA_ADDR)) {
+	if (sa_cmp(sa, ife->ip, SA_ADDR)) {
 		str_ncpy(ife->ifname, ifname, ife->sz);
 		ife->found = true;
 		return true;
