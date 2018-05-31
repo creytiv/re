@@ -109,20 +109,6 @@ int net_rt_default_get(int af, char *ifname, size_t size);
 int net_rt_debug(struct re_printf *pf, void *unused);
 
 
-/* Network connection */
-
-/**
- * Defines the network connection handler
- *
- * @param err  Error code
- * @param id   Associated ID
- */
-typedef void (net_conn_h)(int err, uint32_t id);
-
-int  net_conn_start(net_conn_h *ch, uint32_t id, bool prompt);
-void net_conn_stop(void);
-
-
 /* Net strings */
 const char *net_proto2name(int proto);
 const char *net_af2name(int af);
