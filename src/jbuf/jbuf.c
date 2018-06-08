@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#include <string.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_list.h>
@@ -336,6 +337,9 @@ int jbuf_get(struct jbuf *jb, struct rtp_header *hdr, void **mem)
 void jbuf_flush(struct jbuf *jb)
 {
 	struct le *le;
+#if JBUF_STAT
+	uint32_t n_flush;
+#endif
 
 	if (!jb)
 		return;
@@ -355,7 +359,13 @@ void jbuf_flush(struct jbuf *jb)
 	jb->n       = 0;
 	jb->running = false;
 
-	STAT_INC(n_flush);
+#if JBUF_STAT
+	n_flush = STAT_INC(n_flush);
+	jb->seq_get = 0;
+	memset(&jb->stat, 0, sizeof(jb->stat));
+	jb->stat.n_flush = n_flush;
+#endif
+
 }
 
 
