@@ -459,6 +459,10 @@ static void tcp_estab_handler(void *arg)
 	struct le *le;
 	int err;
 
+#ifdef WIN32
+	tcp_conn_local_get(conn->tc, &conn->laddr);
+#endif
+
 	conn->established = true;
 
 	le = list_head(&conn->ql);

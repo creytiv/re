@@ -93,7 +93,9 @@ typedef bool _Bool;
 
 /* Needed for MS compiler */
 #ifdef _MSC_VER
+#ifndef __cplusplus
 #define inline _inline
+#endif
 #endif
 
 
