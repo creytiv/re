@@ -69,7 +69,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		return EINVAL;
 
 	if (mbuf_get_left(mb) < 1)
-		return EBADMSG;
+		return ENODATA;
 
 	pos = mb->pos;
 
@@ -82,7 +82,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 	case 0:
 		if (mbuf_get_left(mb) < 11)
-			return EBADMSG;
+			return ENODATA;
 
 		hdr->timestamp         = mbuf_read_u24_ntoh(mb);
 		hdr->message_length    = mbuf_read_u24_ntoh(mb);
