@@ -8,6 +8,7 @@
 enum {
 	RTMP_PROTOCOL_VERSION =    3,
 	RTMP_SIG_SIZE         = 1536,
+	RTMP_PORT             = 1935,
 };
 
 
@@ -17,3 +18,29 @@ enum rtmp_handshake_state {
 	RTMP_STATE_ACK_SENT,
 	RTMP_STATE_HANDSHAKE_DONE
 };
+
+enum rtmp_packet_type {
+	RTMP_TYPE_AMF0   = 20  /* AMF version 0 (Invoke) */
+};
+
+
+struct rtmp_header {
+	unsigned format:2;
+	unsigned chunk_stream_id:6;
+
+	unsigned timestamp:24;
+	unsigned message_length:24;
+	uint8_t message_type_id;
+	uint32_t message_stream_id;
+};
+
+
+/*
+ * RTMP Header
+ */
+
+int rtmp_header_encode(struct mbuf *mb, uint8_t chunk_stream_id,
+		       uint32_t timestamp, uint32_t msg_length,
+		       uint8_t msg_type_id, uint32_t msg_stream_id);
+int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
+int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr);
