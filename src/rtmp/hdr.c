@@ -163,8 +163,12 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->message_type_id   = mbuf_read_u8(mb);
 		break;
 
+	case 3:
+		break;
+
 	default:
-		re_printf("rtmp: format not supported (%d)\n", hdr->format);
+		re_printf("rtmp: header format not supported (%d)\n",
+			  hdr->format);
 		return ENOTSUP;
 	}
 
@@ -183,10 +187,16 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 
 	err |= re_hprintf(pf, "format:     %u\n", hdr->format);
 	err |= re_hprintf(pf, "chunk_id:   %u\n", hdr->chunk_id);
-	err |= re_hprintf(pf, "timestamp:  %u\n", hdr->timestamp);
-	err |= re_hprintf(pf, "msg_length: %u\n", hdr->message_length);
-	err |= re_hprintf(pf, "msg_type:   %u\n", hdr->message_type_id);
-	err |= re_hprintf(pf, "stream_id:  %u\n", hdr->message_stream_id);
+
+	if (hdr->format != 3) {
+
+		err |= re_hprintf(pf, "timestamp:  %u\n", hdr->timestamp);
+		err |= re_hprintf(pf, "msg_length: %u\n", hdr->message_length);
+		err |= re_hprintf(pf, "msg_type:   %u\n",
+				  hdr->message_type_id);
+		err |= re_hprintf(pf, "stream_id:  %u\n",
+				  hdr->message_stream_id);
+	}
 
 	return err;
 }
