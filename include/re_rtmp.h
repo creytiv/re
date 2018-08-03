@@ -21,7 +21,8 @@ enum rtmp_handshake_state {
 };
 
 enum rtmp_packet_type {
-	RTMP_TYPE_AMF0   = 20  /* AMF version 0 (Invoke) */
+	RTMP_TYPE_AUDIO  =  8,  /* Audio Message          */
+	RTMP_TYPE_AMF0   = 20,  /* AMF version 0 (Invoke) */
 };
 
 
@@ -29,7 +30,8 @@ struct rtmp_header {
 	unsigned format:2;
 	uint32_t chunk_id;           /* from 3-65599 */
 
-	unsigned timestamp:24;
+	uint32_t timestamp;          /* 24-bit */
+	uint32_t timestamp_delta;    /* 24-bit */
 	unsigned message_length:24;
 	uint8_t message_type_id;
 	uint32_t message_stream_id;

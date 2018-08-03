@@ -153,6 +153,15 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->message_stream_id = mbuf_read_u32(mb);
 		break;
 
+	case 1:
+		if (mbuf_get_left(mb) < 7)
+			return ENODATA;
+
+		hdr->timestamp_delta   = mbuf_read_u24_ntoh(mb);
+		hdr->message_length    = mbuf_read_u24_ntoh(mb);
+		hdr->message_type_id   = mbuf_read_u8(mb);
+		break;
+
 	default:
 		re_printf("rtmp: format not supported (%d)\n", hdr->format);
 		return ENOTSUP;
