@@ -6,9 +6,10 @@
 
 
 enum {
-	RTMP_PROTOCOL_VERSION =    3,
-	RTMP_SIG_SIZE         = 1536,
-	RTMP_PORT             = 1935,
+	RTMP_PROTOCOL_VERSION  =    3,
+	RTMP_DEFAULT_CHUNKSIZE =  128,
+	RTMP_SIG_SIZE          = 1536,
+	RTMP_PORT              = 1935,
 };
 
 
@@ -26,7 +27,7 @@ enum rtmp_packet_type {
 
 struct rtmp_header {
 	unsigned format:2;
-	unsigned chunk_stream_id:6;
+	uint32_t chunk_id;           /* from 3-65599 */
 
 	unsigned timestamp:24;
 	unsigned message_length:24;
@@ -39,7 +40,7 @@ struct rtmp_header {
  * RTMP Header
  */
 
-int rtmp_header_encode(struct mbuf *mb, uint8_t chunk_stream_id,
+int rtmp_header_encode(struct mbuf *mb, uint32_t chunk_id,
 		       uint32_t timestamp, uint32_t msg_length,
 		       uint8_t msg_type_id, uint32_t msg_stream_id);
 int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
