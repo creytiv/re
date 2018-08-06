@@ -54,3 +54,16 @@ int rtmp_header_encode_type3(struct mbuf *mb, uint32_t chunk_id);
 
 int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
 int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr);
+
+
+/*
+ * RTMP Chunk
+ */
+
+typedef void (rtmp_chunk_h)(const uint8_t *hdr, size_t hdr_len,
+			    const uint8_t *pld, size_t pld_len, void *arg);
+
+int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
+		 uint8_t msg_type_id, uint32_t msg_stream_id,
+		 const uint8_t *payload, size_t payload_len,
+		 rtmp_chunk_h *chunkh, void *arg);
