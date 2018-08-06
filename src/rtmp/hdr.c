@@ -46,12 +46,43 @@ static uint32_t mbuf_read_u24_ntoh(struct mbuf *mb)
 }
 
 
-int rtmp_header_encode(struct mbuf *mb, uint32_t chunk_id,
-		       uint32_t timestamp, uint32_t msg_length,
-		       uint8_t msg_type_id, uint32_t msg_stream_id)
+static int encode_basic_hdr(struct mbuf *mb, unsigned fmt,
+			    uint32_t chunk_id)
 {
-	uint8_t format = 0;
 	uint8_t v, v2;
+	int err = 0;
+
+	if (chunk_id >= 320) {
+
+		uint32_t cs_id = chunk_id - 64;
+
+		v = fmt<<6 | 1;
+
+		err |= mbuf_write_u8(mb, v);
+		err |= mbuf_write_u16(mb, htons(cs_id));
+	}
+	else if (chunk_id >= 64) {
+
+		v = fmt<<6 | 0;
+		v2 = chunk_id - 64;
+
+		err |= mbuf_write_u8(mb, v);
+		err |= mbuf_write_u8(mb, v2);
+	}
+	else {
+		v = fmt<<6 | chunk_id;
+
+		err |= mbuf_write_u8(mb, v);
+	}
+
+	return err;
+}
+
+
+int rtmp_header_encode_type0(struct mbuf *mb, uint32_t chunk_id,
+			     uint32_t timestamp, uint32_t msg_length,
+			     uint8_t msg_type_id, uint32_t msg_stream_id)
+{
 	int err = 0;
 
 	if (!mb)
@@ -60,33 +91,77 @@ int rtmp_header_encode(struct mbuf *mb, uint32_t chunk_id,
 	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
 		return ERANGE;
 
-	if (chunk_id >= 320) {
-
-		uint32_t cs_id = chunk_id - 64;
-
-		v = format<<6 | 1;
-
-		err |= mbuf_write_u8(mb, v);
-		err |= mbuf_write_u16(mb, htons(cs_id));
-	}
-	else if (chunk_id >= 64) {
-
-		v = format<<6 | 0;
-		v2 = chunk_id - 64;
-
-		err |= mbuf_write_u8(mb, v);
-		err |= mbuf_write_u8(mb, v2);
-	}
-	else {
-		v = format<<6 | chunk_id;
-
-		err |= mbuf_write_u8(mb, v);
-	}
+	err = encode_basic_hdr(mb, 0, chunk_id);
+	if (err)
+		return err;
 
 	err |= mbuf_write_u24_hton(mb, timestamp);
 	err |= mbuf_write_u24_hton(mb, msg_length);
 	err |= mbuf_write_u8(mb, msg_type_id);
 	err |= mbuf_write_u32(mb, msg_stream_id);
+
+	return err;
+}
+
+
+int rtmp_header_encode_type1(struct mbuf *mb, uint32_t chunk_id,
+			     uint32_t timestamp_delta, uint32_t msg_length,
+			     uint8_t msg_type_id)
+{
+	int err = 0;
+
+	if (!mb)
+		return EINVAL;
+
+	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
+		return ERANGE;
+
+	err = encode_basic_hdr(mb, 1, chunk_id);
+	if (err)
+		return err;
+
+	err |= mbuf_write_u24_hton(mb, timestamp_delta);
+	err |= mbuf_write_u24_hton(mb, msg_length);
+	err |= mbuf_write_u8(mb, msg_type_id);
+
+	return err;
+}
+
+
+int rtmp_header_encode_type2(struct mbuf *mb, uint32_t chunk_id,
+			     uint32_t timestamp_delta)
+{
+	int err = 0;
+
+	if (!mb)
+		return EINVAL;
+
+	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
+		return ERANGE;
+
+	err = encode_basic_hdr(mb, 2, chunk_id);
+	if (err)
+		return err;
+
+	err |= mbuf_write_u24_hton(mb, timestamp_delta);
+
+	return err;
+}
+
+
+int rtmp_header_encode_type3(struct mbuf *mb, uint32_t chunk_id)
+{
+	int err = 0;
+
+	if (!mb)
+		return EINVAL;
+
+	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
+		return ERANGE;
+
+	err = encode_basic_hdr(mb, 3, chunk_id);
+	if (err)
+		return err;
 
 	return err;
 }
@@ -108,7 +183,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 	v = mbuf_read_u8(mb);
 
-	hdr->format          = v>>6;
+	hdr->format = v>>6;
 
 	chunk_magic = v & 0x3f;
 
@@ -142,6 +217,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		return EBADMSG;
 	}
 
+	re_printf("hdr: type %u\n", hdr->format);
 	switch (hdr->format) {
 
 	case 0:
@@ -163,16 +239,25 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->message_type_id   = mbuf_read_u8(mb);
 		break;
 
+	case 2:
+		if (mbuf_get_left(mb) < 3)
+			return ENODATA;
+
+		hdr->timestamp_delta   = mbuf_read_u24_ntoh(mb);
+		break;
+
 	case 3:
 		break;
 
 	default:
-		re_printf("rtmp: header format not supported (%d)\n",
+		re_printf("rtmp: decode: header format not supported (%d)\n",
 			  hdr->format);
 		return ENOTSUP;
 	}
 
-	re_printf("rtmp header: %zu bytes\n", mb->pos - pos);
+	re_printf("rtmp header ok: format type %u, %zu bytes\n",
+		  hdr->format, mb->pos - pos);
+	re_printf("%H\n", rtmp_header_print, hdr);
 
 	return 0;
 }
@@ -188,14 +273,33 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 	err |= re_hprintf(pf, "format:     %u\n", hdr->format);
 	err |= re_hprintf(pf, "chunk_id:   %u\n", hdr->chunk_id);
 
-	if (hdr->format != 3) {
+	switch (hdr->format) {
 
+	case 0:
 		err |= re_hprintf(pf, "timestamp:  %u\n", hdr->timestamp);
 		err |= re_hprintf(pf, "msg_length: %u\n", hdr->message_length);
 		err |= re_hprintf(pf, "msg_type:   %u\n",
 				  hdr->message_type_id);
 		err |= re_hprintf(pf, "stream_id:  %u\n",
 				  hdr->message_stream_id);
+		break;
+
+	case 1:
+		err |= re_hprintf(pf, "timestamp_delta:  %u\n",
+				  hdr->timestamp_delta);
+		err |= re_hprintf(pf, "msg_length: %u\n", hdr->message_length);
+		err |= re_hprintf(pf, "msg_type:   %u\n",
+				  hdr->message_type_id);
+		break;
+
+	case 2:
+		err |= re_hprintf(pf, "timestamp_delta:  %u\n",
+				  hdr->timestamp_delta);
+		break;
+
+	case 3:
+		err |= re_hprintf(pf, "(no payload)\n");
+		break;
 	}
 
 	return err;
