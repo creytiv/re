@@ -13,7 +13,7 @@
 
 
 enum {
-	RTMP_CHUNK_ID_RESERVED = 2,
+	RTMP_CHUNK_ID_CONTROL = 2,
 
 	RTMP_CHUNK_ID_MIN  =     3,
 	RTMP_CHUNK_ID_MAX  = 65599,
@@ -211,6 +211,10 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 		hdr->chunk_id = chunk_magic;
 	}
+	else if (chunk_magic == RTMP_CHUNK_ID_CONTROL) {
+
+		hdr->chunk_id = chunk_magic;
+	}
 	else {
 		re_printf("rtmp: decode: chunk magic not supported (%d)\n",
 			  chunk_magic);
@@ -286,8 +290,9 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 	case 1:
 		err |= re_hprintf(pf, "timestamp_delta:  %u\n",
 				  hdr->timestamp_delta);
-		err |= re_hprintf(pf, "msg_length: %u\n", hdr->message_length);
-		err |= re_hprintf(pf, "msg_type:   %u\n",
+		err |= re_hprintf(pf, "msg_length:       %u\n",
+				  hdr->message_length);
+		err |= re_hprintf(pf, "msg_type:         %u\n",
 				  hdr->message_type_id);
 		break;
 
