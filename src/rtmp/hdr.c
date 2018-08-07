@@ -212,12 +212,11 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->chunk_id = chunk_magic;
 	}
 	else {
-		re_printf("rtmp: chunk magic not supported (%d)\n",
+		re_printf("rtmp: decode: chunk magic not supported (%d)\n",
 			  chunk_magic);
 		return EBADMSG;
 	}
 
-	re_printf("hdr: type %u\n", hdr->format);
 	switch (hdr->format) {
 
 	case 0:

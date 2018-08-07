@@ -1,0 +1,19 @@
+RTMP module
+-----------
+
+This module implements Real Time Messaging Protocol (RTMP) [1].
+
+
+The following logical blocks are supported/planned:
+
+- RTMP Handshake
+- RTMP Header encoding and decoding
+- RTMP Chunking and De-chunking
+- RTMP Transport via TCP
+- RTMP Client
+- RTMP Server
+
+
+References:
+
+[1] http://wwwimages.adobe.com/www.adobe.com/content/dam/acom/en/devnet/rtmp/pdf/rtmp_specification_1.0.pdf

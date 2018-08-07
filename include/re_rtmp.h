@@ -33,7 +33,7 @@ struct rtmp_header {
 	uint32_t timestamp;          /* 24-bit */
 	uint32_t timestamp_delta;    /* 24-bit */
 	uint32_t message_length;     /* 24-bit */
-	uint8_t message_type_id;
+	uint8_t message_type_id;     /* enum rtmp_packet_type */
 	uint32_t message_stream_id;
 };
 
@@ -75,7 +75,8 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 
 struct rtmp_dechunker;
 
-typedef void (rtmp_msg_h)(const uint8_t *msg, size_t len, void *arg);
+typedef void (rtmp_msg_h)(enum rtmp_packet_type type,
+			  const uint8_t *msg, size_t len, void *arg);
 
 int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 			 rtmp_msg_h *msgh, void *arg);

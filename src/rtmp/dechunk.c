@@ -19,6 +19,7 @@ struct rtmp_chunk {
 	uint32_t message_length;
 	uint8_t *buf;
 	size_t len;             /* how many bytes received so far */
+	uint8_t type;
 };
 
 
@@ -133,14 +134,24 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		chunk = find_chunk(&rd->chunkl, hdr.chunk_id);
 		if (chunk) {
 			re_printf("rtmp: dechunker: unexpected"
-				  " chunk found\n");
+				  " chunk found (id=%u)\n", hdr.chunk_id);
 			return EPROTO;
 		}
 
 		chunk = create_chunk(&rd->chunkl, hdr.chunk_id,
 				     hdr.message_length);
 
+		chunk->type = hdr.message_type_id;
+
 		chunk_sz = min(hdr.message_length, RTMP_DEFAULT_CHUNKSIZE);
+
+		if (mbuf_get_left(mb) < chunk_sz) {
+			re_printf("more data..\n");
+
+			/* rollback */
+			mem_deref(chunk);
+			return ENODATA;
+		}
 
 		err = mbuf_read_mem(mb, chunk->buf, chunk_sz);
 		if (err)
@@ -160,6 +171,11 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		chunk_sz = min(left, RTMP_DEFAULT_CHUNKSIZE);
 
+		if (mbuf_get_left(mb) < chunk_sz) {
+			re_printf("more data..\n");
+			return ENODATA;
+		}
+
 		err = mbuf_read_mem(mb, &chunk->buf[chunk->len], chunk_sz);
 		if (err)
 			return err;
@@ -177,8 +193,10 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	if (complete) {
 
-		if (rd->msgh)
-			rd->msgh(chunk->buf, chunk->message_length, rd->arg);
+		if (rd->msgh) {
+			rd->msgh(chunk->type, chunk->buf,
+				 chunk->message_length, rd->arg);
+		}
 
 		mem_deref(chunk);
 	}
