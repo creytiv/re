@@ -13,10 +13,10 @@
 
 
 enum {
-	RTMP_CHUNK_ID_CONTROL = 2,
+	RTMP_CHUNK_ID_CONTROL =     2,
 
-	RTMP_CHUNK_ID_MIN  =     3,
-	RTMP_CHUNK_ID_MAX  = 65599,
+	RTMP_CHUNK_ID_MIN     =     3,
+	RTMP_CHUNK_ID_MAX     = 65599,  /* 65535 + 64*/
 };
 
 
@@ -49,12 +49,12 @@ static uint32_t mbuf_read_u24_ntoh(struct mbuf *mb)
 static int encode_basic_hdr(struct mbuf *mb, unsigned fmt,
 			    uint32_t chunk_id)
 {
-	uint8_t v, v2;
+	uint8_t v;
 	int err = 0;
 
 	if (chunk_id >= 320) {
 
-		uint32_t cs_id = chunk_id - 64;
+		const uint16_t cs_id = chunk_id - 64;
 
 		v = fmt<<6 | 1;
 
@@ -63,11 +63,12 @@ static int encode_basic_hdr(struct mbuf *mb, unsigned fmt,
 	}
 	else if (chunk_id >= 64) {
 
+		const uint8_t cs_id = chunk_id - 64;
+
 		v = fmt<<6 | 0;
-		v2 = chunk_id - 64;
 
 		err |= mbuf_write_u8(mb, v);
-		err |= mbuf_write_u8(mb, v2);
+		err |= mbuf_write_u8(mb, cs_id);
 	}
 	else {
 		v = fmt<<6 | chunk_id;
@@ -207,18 +208,12 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 		hdr->chunk_id = cs + 64;
 	}
-	else if (chunk_magic >= 3) {
-
-		hdr->chunk_id = chunk_magic;
-	}
 	else if (chunk_magic == RTMP_CHUNK_ID_CONTROL) {
 
 		hdr->chunk_id = chunk_magic;
 	}
 	else {
-		re_printf("rtmp: decode: chunk magic not supported (%d)\n",
-			  chunk_magic);
-		return EBADMSG;
+		hdr->chunk_id = chunk_magic;
 	}
 
 	switch (hdr->format) {
@@ -250,6 +245,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		break;
 
 	case 3:
+		/* no payload */
 		break;
 
 	default:
@@ -258,9 +254,11 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		return ENOTSUP;
 	}
 
+#if 0
 	re_printf("rtmp header ok: format type %u, %zu bytes\n",
 		  hdr->format, mb->pos - pos);
 	re_printf("%H\n", rtmp_header_print, hdr);
+#endif
 
 	return 0;
 }

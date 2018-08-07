@@ -48,7 +48,7 @@ static void chunk_destructor(void *data)
 
 
 static struct rtmp_chunk *create_chunk(struct list *chunkl, uint32_t id,
-				       uint32_t message_length)
+				       uint32_t message_length, uint8_t type)
 {
 	struct rtmp_chunk *chunk;
 
@@ -58,6 +58,7 @@ static struct rtmp_chunk *create_chunk(struct list *chunkl, uint32_t id,
 
 	chunk->chunk_id = id;
 	chunk->message_length = message_length;
+	chunk->type = type;
 
 	chunk->buf = mem_alloc(message_length, NULL);
 	if (!chunk->buf)
@@ -140,9 +141,9 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		}
 
 		chunk = create_chunk(&rd->chunkl, hdr.chunk_id,
-				     hdr.message_length);
-
-		chunk->type = hdr.message_type_id;
+				     hdr.message_length, hdr.message_type_id);
+		if (!chunk)
+			return ENOMEM;
 
 		chunk_sz = min(hdr.message_length, RTMP_DEFAULT_CHUNKSIZE);
 
