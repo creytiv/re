@@ -58,9 +58,9 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 		if (err)
 			goto out;
 
-		p += chunk_sz;
-
 		chunkh(mb->buf, mb->end, p, chunk_sz, arg);
+
+		p += chunk_sz;
 	}
 
  out:

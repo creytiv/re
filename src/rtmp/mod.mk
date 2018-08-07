@@ -5,4 +5,5 @@
 #
 
 SRCS	+= rtmp/chunk.c
+SRCS	+= rtmp/dechunk.c
 SRCS	+= rtmp/hdr.c
