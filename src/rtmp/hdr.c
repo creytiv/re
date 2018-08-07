@@ -172,15 +172,12 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 {
 	uint8_t chunk_magic;
 	uint8_t v;
-	size_t pos;
 
 	if (!hdr || !mb)
 		return EINVAL;
 
 	if (mbuf_get_left(mb) < 1)
 		return ENODATA;
-
-	pos = mb->pos;
 
 	v = mbuf_read_u8(mb);
 
@@ -253,12 +250,6 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 			  hdr->format);
 		return ENOTSUP;
 	}
-
-#if 0
-	re_printf("rtmp header ok: format type %u, %zu bytes\n",
-		  hdr->format, mb->pos - pos);
-	re_printf("%H\n", rtmp_header_print, hdr);
-#endif
 
 	return 0;
 }
