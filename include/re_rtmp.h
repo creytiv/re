@@ -42,16 +42,7 @@ struct rtmp_header {
  * RTMP Header
  */
 
-int rtmp_header_encode_type0(struct mbuf *mb, uint32_t chunk_id,
-			     uint32_t timestamp, uint32_t msg_length,
-			     uint8_t msg_type_id, uint32_t msg_stream_id);
-int rtmp_header_encode_type1(struct mbuf *mb, uint32_t chunk_id,
-			     uint32_t timestamp_delta, uint32_t msg_length,
-			     uint8_t msg_type_id);
-int rtmp_header_encode_type2(struct mbuf *mb, uint32_t chunk_id,
-			     uint32_t timestamp_delta);
-int rtmp_header_encode_type3(struct mbuf *mb, uint32_t chunk_id);
-
+int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr);
 int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
 int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr);
 

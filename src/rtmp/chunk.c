@@ -22,6 +22,7 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 		 rtmp_chunk_h *chunkh, void *arg)
 {
 	const uint8_t *pend = payload + payload_len;
+	struct rtmp_header hdr;
 	struct mbuf *mb;
 	size_t chunk_sz;
 	int err;
@@ -29,14 +30,23 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 	if (!payload || !payload_len || !chunkh)
 		return EINVAL;
 
+	memset(&hdr, 0, sizeof(hdr));
+
 	mb = mbuf_alloc(512);
 	if (!mb)
 		return ENOMEM;
 
 	/* XXX: add support for type1, type2 */
-	err = rtmp_header_encode_type0(mb, chunk_id, timestamp,
-				       (uint32_t)payload_len,
-				       msg_type_id, msg_stream_id);
+
+	hdr.format = 0;
+	hdr.chunk_id = chunk_id;
+
+	hdr.timestamp = timestamp;
+	hdr.length    = (uint32_t)payload_len;
+	hdr.type_id   = msg_type_id;
+	hdr.stream_id = msg_stream_id;
+
+	err = rtmp_header_encode(mb, &hdr);
 	if (err)
 		goto out;
 
@@ -49,6 +59,8 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 
 	payload += chunk_sz;
 
+	hdr.format = 3;
+
 	while (payload < pend) {
 
 		const size_t len = pend - payload;
@@ -58,7 +70,7 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 		mb->pos = 0;
 		mb->end = 0;
 
-		err = rtmp_header_encode_type3(mb, chunk_id);
+		err = rtmp_header_encode(mb, &hdr);
 		if (err)
 			goto out;
 

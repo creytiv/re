@@ -81,89 +81,39 @@ static int encode_basic_hdr(struct mbuf *mb, unsigned fmt,
 }
 
 
-int rtmp_header_encode_type0(struct mbuf *mb, uint32_t chunk_id,
-			     uint32_t timestamp, uint32_t msg_length,
-			     uint8_t msg_type_id, uint32_t msg_stream_id)
+int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 {
 	int err = 0;
 
-	if (!mb)
+	if (!mb || !hdr)
 		return EINVAL;
 
-	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
-		return ERANGE;
-
-	err = encode_basic_hdr(mb, 0, chunk_id);
+	err = encode_basic_hdr(mb, hdr->format, hdr->chunk_id);
 	if (err)
 		return err;
 
-	err |= mbuf_write_u24_hton(mb, timestamp);
-	err |= mbuf_write_u24_hton(mb, msg_length);
-	err |= mbuf_write_u8(mb, msg_type_id);
-	err |= mbuf_write_u32(mb, htonl(msg_stream_id));
+	switch (hdr->format) {
 
-	return err;
-}
+	case 0:
+		err |= mbuf_write_u24_hton(mb, hdr->timestamp);
+		err |= mbuf_write_u24_hton(mb, hdr->length);
+		err |= mbuf_write_u8(mb, hdr->type_id);
+		err |= mbuf_write_u32(mb, htonl(hdr->stream_id));
+		break;
 
+	case 1:
+		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
+		err |= mbuf_write_u24_hton(mb, hdr->length);
+		err |= mbuf_write_u8(mb, hdr->type_id);
+		break;
 
-int rtmp_header_encode_type1(struct mbuf *mb, uint32_t chunk_id,
-			     uint32_t timestamp_delta, uint32_t msg_length,
-			     uint8_t msg_type_id)
-{
-	int err = 0;
+	case 2:
+		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
+		break;
 
-	if (!mb)
-		return EINVAL;
-
-	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
-		return ERANGE;
-
-	err = encode_basic_hdr(mb, 1, chunk_id);
-	if (err)
-		return err;
-
-	err |= mbuf_write_u24_hton(mb, timestamp_delta);
-	err |= mbuf_write_u24_hton(mb, msg_length);
-	err |= mbuf_write_u8(mb, msg_type_id);
-
-	return err;
-}
-
-
-int rtmp_header_encode_type2(struct mbuf *mb, uint32_t chunk_id,
-			     uint32_t timestamp_delta)
-{
-	int err = 0;
-
-	if (!mb)
-		return EINVAL;
-
-	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
-		return ERANGE;
-
-	err = encode_basic_hdr(mb, 2, chunk_id);
-	if (err)
-		return err;
-
-	err |= mbuf_write_u24_hton(mb, timestamp_delta);
-
-	return err;
-}
-
-
-int rtmp_header_encode_type3(struct mbuf *mb, uint32_t chunk_id)
-{
-	int err = 0;
-
-	if (!mb)
-		return EINVAL;
-
-	if (chunk_id < RTMP_CHUNK_ID_MIN || chunk_id > RTMP_CHUNK_ID_MAX)
-		return ERANGE;
-
-	err = encode_basic_hdr(mb, 3, chunk_id);
-	if (err)
-		return err;
+	case 3:
+		break;
+	}
 
 	return err;
 }
