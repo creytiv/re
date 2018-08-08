@@ -21,8 +21,6 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 		 const uint8_t *payload, size_t payload_len,
 		 rtmp_chunk_h *chunkh, void *arg)
 {
-	const uint32_t msg_length = (uint32_t)payload_len;
-	const uint8_t *p    = payload;
 	const uint8_t *pend = payload + payload_len;
 	struct mbuf *mb;
 	size_t chunk_sz;
@@ -36,24 +34,24 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 		return ENOMEM;
 
 	/* XXX: add support for type1, type2 */
-	err = rtmp_header_encode_type0(mb, chunk_id, timestamp, msg_length,
+	err = rtmp_header_encode_type0(mb, chunk_id, timestamp,
+				       (uint32_t)payload_len,
 				       msg_type_id, msg_stream_id);
 	if (err)
 		goto out;
 
 	chunk_sz = min(payload_len, RTMP_DEFAULT_CHUNKSIZE);
 
-
 	/* XXX: send rtmp_header as param */
-	err = chunkh(mb->buf, mb->end, p, chunk_sz, arg);
+	err = chunkh(mb->buf, mb->end, payload, chunk_sz, arg);
 	if (err)
 		goto out;
 
-	p += chunk_sz;
+	payload += chunk_sz;
 
-	while (p < pend) {
+	while (payload < pend) {
 
-		const size_t len = pend - p;
+		const size_t len = pend - payload;
 
 		chunk_sz = min(len, RTMP_DEFAULT_CHUNKSIZE);
 
@@ -64,11 +62,11 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 		if (err)
 			goto out;
 
-		err = chunkh(mb->buf, mb->end, p, chunk_sz, arg);
+		err = chunkh(mb->buf, mb->end, payload, chunk_sz, arg);
 		if (err)
 			break;
 
-		p += chunk_sz;
+		payload += chunk_sz;
 	}
 
  out:
