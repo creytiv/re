@@ -10,6 +10,7 @@
 #include <re_mbuf.h>
 #include <re_net.h>
 #include <re_rtmp.h>
+#include "rtmp.h"
 
 
 enum {
@@ -220,26 +221,26 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		if (mbuf_get_left(mb) < 11)
 			return ENODATA;
 
-		hdr->timestamp         = mbuf_read_u24_ntoh(mb);
-		hdr->message_length    = mbuf_read_u24_ntoh(mb);
-		hdr->message_type_id   = mbuf_read_u8(mb);
-		hdr->message_stream_id = ntohl(mbuf_read_u32(mb));
+		hdr->timestamp = mbuf_read_u24_ntoh(mb);
+		hdr->length    = mbuf_read_u24_ntoh(mb);
+		hdr->type_id   = mbuf_read_u8(mb);
+		hdr->stream_id = ntohl(mbuf_read_u32(mb));
 		break;
 
 	case 1:
 		if (mbuf_get_left(mb) < 7)
 			return ENODATA;
 
-		hdr->timestamp_delta   = mbuf_read_u24_ntoh(mb);
-		hdr->message_length    = mbuf_read_u24_ntoh(mb);
-		hdr->message_type_id   = mbuf_read_u8(mb);
+		hdr->timestamp_delta = mbuf_read_u24_ntoh(mb);
+		hdr->length          = mbuf_read_u24_ntoh(mb);
+		hdr->type_id         = mbuf_read_u8(mb);
 		break;
 
 	case 2:
 		if (mbuf_get_left(mb) < 3)
 			return ENODATA;
 
-		hdr->timestamp_delta   = mbuf_read_u24_ntoh(mb);
+		hdr->timestamp_delta = mbuf_read_u24_ntoh(mb);
 		break;
 
 	case 3:
@@ -270,20 +271,18 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 
 	case 0:
 		err |= re_hprintf(pf, "timestamp:  %u\n", hdr->timestamp);
-		err |= re_hprintf(pf, "msg_length: %u\n", hdr->message_length);
-		err |= re_hprintf(pf, "msg_type:   %u\n",
-				  hdr->message_type_id);
-		err |= re_hprintf(pf, "stream_id:  %u\n",
-				  hdr->message_stream_id);
+		err |= re_hprintf(pf, "msg_length: %u\n", hdr->length);
+		err |= re_hprintf(pf, "msg_type:   %u\n", hdr->type_id);
+		err |= re_hprintf(pf, "stream_id:  %u\n", hdr->stream_id);
 		break;
 
 	case 1:
 		err |= re_hprintf(pf, "timestamp_delta:  %u\n",
 				  hdr->timestamp_delta);
 		err |= re_hprintf(pf, "msg_length:       %u\n",
-				  hdr->message_length);
+				  hdr->length);
 		err |= re_hprintf(pf, "msg_type:         %u\n",
-				  hdr->message_type_id);
+				  hdr->type_id);
 		break;
 
 	case 2:

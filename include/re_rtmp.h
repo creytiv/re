@@ -6,10 +6,9 @@
 
 
 enum {
-	RTMP_PROTOCOL_VERSION  =    3,
-	RTMP_DEFAULT_CHUNKSIZE =  128,
-	RTMP_SIG_SIZE          = 1536,
-	RTMP_PORT              = 1935,
+	RTMP_PROTOCOL_VERSION = 3,
+	RTMP_SIG_SIZE         = 1536,
+	RTMP_PORT             = 1935
 };
 
 
@@ -33,9 +32,9 @@ struct rtmp_header {
 
 	uint32_t timestamp;          /* 24-bit */
 	uint32_t timestamp_delta;    /* 24-bit */
-	uint32_t message_length;     /* 24-bit */
-	uint8_t message_type_id;     /* enum rtmp_packet_type */
-	uint32_t message_stream_id;
+	uint32_t length;             /* 24-bit */
+	uint8_t type_id;             /* enum rtmp_packet_type */
+	uint32_t stream_id;
 };
 
 

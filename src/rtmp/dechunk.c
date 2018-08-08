@@ -11,6 +11,7 @@
 #include <re_mbuf.h>
 #include <re_net.h>
 #include <re_rtmp.h>
+#include "rtmp.h"
 
 
 /*
@@ -150,11 +151,11 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		}
 
 		chunk = create_chunk(&rd->chunkl, hdr.chunk_id,
-				     hdr.message_length, hdr.message_type_id);
+				     hdr.length, hdr.type_id);
 		if (!chunk)
 			return ENOMEM;
 
-		chunk_sz = min(hdr.message_length, RTMP_DEFAULT_CHUNKSIZE);
+		chunk_sz = min(hdr.length, RTMP_DEFAULT_CHUNKSIZE);
 
 		if (mbuf_get_left(mb) < chunk_sz) {
 			re_printf("more data..\n");

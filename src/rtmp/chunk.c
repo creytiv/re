@@ -10,6 +10,7 @@
 #include <re_mbuf.h>
 #include <re_net.h>
 #include <re_rtmp.h>
+#include "rtmp.h"
 
 
 /**
