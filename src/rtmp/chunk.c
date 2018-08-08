@@ -34,6 +34,7 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 	if (!mb)
 		return ENOMEM;
 
+	/* XXX: add support for type1, type2 */
 	err = rtmp_header_encode_type0(mb, chunk_id, timestamp, msg_length,
 				       msg_type_id, msg_stream_id);
 	if (err)
@@ -41,6 +42,8 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 
 	chunk_sz = min(payload_len, RTMP_DEFAULT_CHUNKSIZE);
 
+
+	/* XXX: send rtmp_header as param */
 	err = chunkh(mb->buf, mb->end, p, chunk_sz, arg);
 	if (err)
 		goto out;

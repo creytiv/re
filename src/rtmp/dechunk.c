@@ -13,6 +13,13 @@
 #include <re_rtmp.h>
 
 
+/*
+ * XXX: add limit for max chunks
+ * XXX: add max message length
+ */
+
+
+/* XXX rename to rtmp_msg */
 struct rtmp_chunk {
 	struct le le;
 	uint32_t chunk_id;
@@ -130,9 +137,11 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	switch (hdr.format) {
 
-		/* only type 0 can create a new chunk */
+		/* only type 0 and 1 can create a new chunk */
 	case 0:
 	case 1:
+		/* XXX: add case 2 */
+
 		chunk = find_chunk(&rd->chunkl, hdr.chunk_id);
 		if (chunk) {
 			re_printf("rtmp: dechunker: unexpected"
@@ -196,6 +205,8 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	if (complete) {
 
 		if (rd->msgh) {
+
+			/* XXX: send struct rtmp_msg  */
 			rd->msgh(chunk->type, chunk->buf,
 				 chunk->message_length, rd->arg);
 		}

@@ -99,7 +99,7 @@ int rtmp_header_encode_type0(struct mbuf *mb, uint32_t chunk_id,
 	err |= mbuf_write_u24_hton(mb, timestamp);
 	err |= mbuf_write_u24_hton(mb, msg_length);
 	err |= mbuf_write_u8(mb, msg_type_id);
-	err |= mbuf_write_u32(mb, msg_stream_id);
+	err |= mbuf_write_u32(mb, htonl(msg_stream_id));
 
 	return err;
 }
@@ -185,6 +185,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 	chunk_magic = v & 0x3f;
 
+	/* XXX: use switch */
 	if (chunk_magic == 0) {
 
 		if (mbuf_get_left(mb) < 1)
@@ -222,7 +223,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->timestamp         = mbuf_read_u24_ntoh(mb);
 		hdr->message_length    = mbuf_read_u24_ntoh(mb);
 		hdr->message_type_id   = mbuf_read_u8(mb);
-		hdr->message_stream_id = mbuf_read_u32(mb);
+		hdr->message_stream_id = ntohl(mbuf_read_u32(mb));
 		break;
 
 	case 1:
