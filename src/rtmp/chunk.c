@@ -41,7 +41,9 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 
 	chunk_sz = min(payload_len, RTMP_DEFAULT_CHUNKSIZE);
 
-	chunkh(mb->buf, mb->end, p, chunk_sz, arg);
+	err = chunkh(mb->buf, mb->end, p, chunk_sz, arg);
+	if (err)
+		goto out;
 
 	p += chunk_sz;
 
@@ -58,7 +60,9 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 		if (err)
 			goto out;
 
-		chunkh(mb->buf, mb->end, p, chunk_sz, arg);
+		err = chunkh(mb->buf, mb->end, p, chunk_sz, arg);
+		if (err)
+			break;
 
 		p += chunk_sz;
 	}
