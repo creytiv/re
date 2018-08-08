@@ -21,7 +21,6 @@ enum {
 };
 
 
-/* XXX: move to utils */
 static int mbuf_write_u24_hton(struct mbuf *mb, uint32_t u)
 {
 	int err = 0;
@@ -34,7 +33,6 @@ static int mbuf_write_u24_hton(struct mbuf *mb, uint32_t u)
 }
 
 
-/* XXX: move to utils */
 static uint32_t mbuf_read_u24_ntoh(struct mbuf *mb)
 {
 	uint32_t u;
@@ -121,6 +119,7 @@ int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 
 int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 {
+	uint16_t cs;
 	uint8_t chunk_magic;
 	uint8_t v;
 
@@ -136,33 +135,29 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 	chunk_magic = v & 0x3f;
 
-	/* XXX: use switch */
-	if (chunk_magic == 0) {
+	switch (chunk_magic) {
 
+	case 0:
 		if (mbuf_get_left(mb) < 1)
 			return ENODATA;
 
 		v = mbuf_read_u8(mb);
 
 		hdr->chunk_id = v + 64;
-	}
-	else if (chunk_magic == 1) {
+		break;
 
-		uint16_t cs;
-
+	case 1:
 		if (mbuf_get_left(mb) < 2)
 			return ENODATA;
 
 		cs = ntohs(mbuf_read_u16(mb));
 
 		hdr->chunk_id = cs + 64;
-	}
-	else if (chunk_magic == RTMP_CHUNK_ID_CONTROL) {
+		break;
 
+	default:
 		hdr->chunk_id = chunk_magic;
-	}
-	else {
-		hdr->chunk_id = chunk_magic;
+		break;
 	}
 
 	switch (hdr->format) {
