@@ -14,10 +14,6 @@
 #include "rtmp.h"
 
 
-/*
- * XXX: add limit for max chunks
- * XXX: add max message length
- */
 enum {
 	MAX_PENDING = 16,
 	MESSAGE_LEN_MAX = 524288,
@@ -25,7 +21,7 @@ enum {
 
 
 struct rtmp_dechunker {
-	struct list chunkl;
+	struct list msgl;  /* struct rtmp_message */
 	rtmp_msg_h *msgh;
 	void *arg;
 };
@@ -35,7 +31,7 @@ static void destructor(void *data)
 {
 	struct rtmp_dechunker *rd = data;
 
-	list_flush(&rd->chunkl);
+	list_flush(&rd->msgl);
 }
 
 
@@ -48,7 +44,7 @@ static void chunk_destructor(void *data)
 }
 
 
-static struct rtmp_message *create_message(struct list *chunkl,
+static struct rtmp_message *create_message(struct list *msgl,
 					   uint32_t chunk_id, uint32_t length,
 					   uint8_t type)
 {
@@ -66,18 +62,18 @@ static struct rtmp_message *create_message(struct list *chunkl,
 	if (!msg->buf)
 		return mem_deref(msg);
 
-	list_append(chunkl, &msg->le, msg);
+	list_append(msgl, &msg->le, msg);
 
 	return msg;
 }
 
 
-static struct rtmp_message *find_message(const struct list *chunkl,
+static struct rtmp_message *find_message(const struct list *msgl,
 					 uint32_t chunk_id)
 {
 	struct le *le;
 
-	for (le = list_head(chunkl); le; le = le->next) {
+	for (le = list_head(msgl); le; le = le->next) {
 
 		struct rtmp_message *msg = le->data;
 
@@ -90,7 +86,7 @@ static struct rtmp_message *find_message(const struct list *chunkl,
 
 
 /**
- * Stateful RTMP de-chunker for receiving
+ * Stateful RTMP de-chunker for receiving complete messages
  */
 int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 			 rtmp_msg_h *msgh, void *arg)
@@ -134,7 +130,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	case 0:
 	case 1:
 	case 2:
-		msg = find_message(&rd->chunkl, hdr.chunk_id);
+		msg = find_message(&rd->msgl, hdr.chunk_id);
 		if (msg) {
 			re_printf("rtmp: dechunker: unexpected"
 				  " message found (chunk_id=%u)\n",
@@ -143,7 +139,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		}
 
 		/* limits */
-		if (list_count(&rd->chunkl) > MAX_PENDING)
+		if (list_count(&rd->msgl) > MAX_PENDING)
 			return EOVERFLOW;
 
 		if (hdr.length > MESSAGE_LEN_MAX)
@@ -151,14 +147,10 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		chunk_sz = min(hdr.length, RTMP_DEFAULT_CHUNKSIZE);
 
-		if (mbuf_get_left(mb) < chunk_sz) {
-			re_printf("more data..\n");
-
-			/* rollback */
+		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
-		}
 
-		msg = create_message(&rd->chunkl, hdr.chunk_id,
+		msg = create_message(&rd->msgl, hdr.chunk_id,
 				     hdr.length, hdr.type_id);
 		if (!msg)
 			return ENOMEM;
@@ -171,7 +163,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		break;
 
 	case 3:
-		msg = find_message(&rd->chunkl, hdr.chunk_id);
+		msg = find_message(&rd->msgl, hdr.chunk_id);
 		if (!msg) {
 			re_printf("rtmp: dechunker: no chunk found\n");
 			return EPROTO;
@@ -181,10 +173,8 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		chunk_sz = min(left, RTMP_DEFAULT_CHUNKSIZE);
 
-		if (mbuf_get_left(mb) < chunk_sz) {
-			re_printf("more data..\n");
+		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
-		}
 
 		err = mbuf_read_mem(mb, &msg->buf[msg->pos], chunk_sz);
 		if (err)
