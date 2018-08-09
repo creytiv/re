@@ -15,20 +15,22 @@
 
 
 enum {
-	RTMP_CHUNK_ID_CONTROL =     2,
+	RTMP_CHUNK_ID_CONTROL = 2,
 
-	RTMP_CHUNK_ID_MIN     =     3,
-	RTMP_CHUNK_ID_MAX     = 65599,  /* 65535 + 64*/
+	RTMP_CHUNK_ID_MIN     = 3,
+	RTMP_CHUNK_ID_MAX     = 65599,  /* 65535 + 64 */
+
+	RTMP_CHUNK_OFFSET     = 64,
 };
 
 
-static int mbuf_write_u24_hton(struct mbuf *mb, uint32_t u)
+static int mbuf_write_u24_hton(struct mbuf *mb, uint32_t u24)
 {
 	int err = 0;
 
-	err |= mbuf_write_u8(mb, u >> 16);
-	err |= mbuf_write_u8(mb, u >> 8);
-	err |= mbuf_write_u8(mb, u >> 0);
+	err |= mbuf_write_u8(mb, u24 >> 16);
+	err |= mbuf_write_u8(mb, u24 >> 8);
+	err |= mbuf_write_u8(mb, u24 >> 0);
 
 	return err;
 }
@@ -36,13 +38,13 @@ static int mbuf_write_u24_hton(struct mbuf *mb, uint32_t u)
 
 static uint32_t mbuf_read_u24_ntoh(struct mbuf *mb)
 {
-	uint32_t u;
+	uint32_t u24;
 
-	u  = (uint32_t)mbuf_read_u8(mb) << 16;
-	u |= (uint32_t)mbuf_read_u8(mb) << 8;
-	u |= (uint32_t)mbuf_read_u8(mb) << 0;
+	u24  = (uint32_t)mbuf_read_u8(mb) << 16;
+	u24 |= (uint32_t)mbuf_read_u8(mb) << 8;
+	u24 |= (uint32_t)mbuf_read_u8(mb) << 0;
 
-	return u;
+	return u24;
 }
 
 
@@ -54,16 +56,16 @@ static int encode_basic_hdr(struct mbuf *mb, unsigned fmt,
 
 	if (chunk_id >= 320) {
 
-		const uint16_t cs_id = chunk_id - 64;
+		const uint16_t cs_id = chunk_id - RTMP_CHUNK_OFFSET;
 
 		v = fmt<<6 | 1;
 
 		err |= mbuf_write_u8(mb, v);
 		err |= mbuf_write_u16(mb, htons(cs_id));
 	}
-	else if (chunk_id >= 64) {
+	else if (chunk_id >= RTMP_CHUNK_OFFSET) {
 
-		const uint8_t cs_id = chunk_id - 64;
+		const uint8_t cs_id = chunk_id - RTMP_CHUNK_OFFSET;
 
 		v = fmt<<6 | 0;
 
@@ -118,14 +120,10 @@ int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 }
 
 
-int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
+static int decode_basic_hdr(struct rtmp_header *hdr, struct mbuf *mb)
 {
-	uint16_t cs;
-	uint8_t chunk_magic;
+	uint8_t cs_id;
 	uint8_t v;
-
-	if (!hdr || !mb)
-		return EINVAL;
 
 	if (mbuf_get_left(mb) < 1)
 		return ENODATA;
@@ -134,32 +132,43 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 	hdr->format = v>>6;
 
-	chunk_magic = v & 0x3f;
+	cs_id = v & 0x3f;
 
-	switch (chunk_magic) {
+	switch (cs_id) {
 
 	case 0:
 		if (mbuf_get_left(mb) < 1)
 			return ENODATA;
 
-		v = mbuf_read_u8(mb);
-
-		hdr->chunk_id = v + 64;
+		hdr->chunk_id = mbuf_read_u8(mb) + RTMP_CHUNK_OFFSET;
 		break;
 
 	case 1:
 		if (mbuf_get_left(mb) < 2)
 			return ENODATA;
 
-		cs = ntohs(mbuf_read_u16(mb));
-
-		hdr->chunk_id = cs + 64;
+		hdr->chunk_id = ntohs(mbuf_read_u16(mb)) + RTMP_CHUNK_OFFSET;
 		break;
 
 	default:
-		hdr->chunk_id = chunk_magic;
+		hdr->chunk_id = cs_id;
 		break;
 	}
+
+	return 0;
+}
+
+
+int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
+{
+	int err;
+
+	if (!hdr || !mb)
+		return EINVAL;
+
+	err = decode_basic_hdr(hdr, mb);
+	if (err)
+		return err;
 
 	switch (hdr->format) {
 
@@ -192,11 +201,6 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 	case 3:
 		/* no payload */
 		break;
-
-	default:
-		re_printf("rtmp: decode: header format not supported (%d)\n",
-			  hdr->format);
-		return ENOTSUP;
 	}
 
 	return 0;
