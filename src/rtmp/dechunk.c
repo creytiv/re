@@ -24,16 +24,6 @@ enum {
 };
 
 
-struct rtmp_message {
-	struct le le;
-	uint32_t chunk_id;
-	uint32_t length;
-	uint8_t *buf;
-	size_t pos;             /* how many bytes received so far */
-	uint8_t type;
-};
-
-
 struct rtmp_dechunker {
 	struct list chunkl;
 	rtmp_msg_h *msgh;
@@ -177,7 +167,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (err)
 			return err;
 
-		msg->pos += chunk_sz;
+		msg->pos = chunk_sz;
 		break;
 
 	case 3:
@@ -208,9 +198,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	if (complete) {
 
-		/* XXX: send struct rtmp_msg  */
-		rd->msgh(msg->type, msg->buf,
-			 msg->length, rd->arg);
+		rd->msgh(msg, rd->arg);
 
 		mem_deref(msg);
 	}

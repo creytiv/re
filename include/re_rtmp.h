@@ -64,10 +64,18 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
  * RTMP De-chunker
  */
 
+struct rtmp_message {
+	struct le le;
+	uint32_t chunk_id;
+	uint32_t length;
+	uint8_t *buf;
+	size_t pos;             /* how many bytes received so far */
+	uint8_t type;
+};
+
 struct rtmp_dechunker;
 
-typedef void (rtmp_msg_h)(enum rtmp_packet_type type,
-			  const uint8_t *msg, size_t len, void *arg);
+typedef void (rtmp_msg_h)(struct rtmp_message *msg, void *arg);
 
 int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 			 rtmp_msg_h *msgh, void *arg);
