@@ -27,9 +27,9 @@ enum {
 struct rtmp_message {
 	struct le le;
 	uint32_t chunk_id;
-	uint32_t message_length;
+	uint32_t length;
 	uint8_t *buf;
-	size_t len;             /* how many bytes received so far */
+	size_t pos;             /* how many bytes received so far */
 	uint8_t type;
 };
 
@@ -58,8 +58,9 @@ static void chunk_destructor(void *data)
 }
 
 
-static struct rtmp_message *create_chunk(struct list *chunkl, uint32_t id,
-				       uint32_t message_length, uint8_t type)
+static struct rtmp_message *create_message(struct list *chunkl,
+					   uint32_t chunk_id, uint32_t length,
+					   uint8_t type)
 {
 	struct rtmp_message *msg;
 
@@ -67,24 +68,22 @@ static struct rtmp_message *create_chunk(struct list *chunkl, uint32_t id,
 	if (!msg)
 		return NULL;
 
-	msg->chunk_id    = id;
-	msg->message_length = message_length;
-	msg->type      = type;
+	msg->chunk_id = chunk_id;
+	msg->length   = length;
+	msg->type     = type;
 
-	msg->buf = mem_alloc(message_length, NULL);
+	msg->buf = mem_alloc(length, NULL);
 	if (!msg->buf)
-		goto error;
+		return mem_deref(msg);
 
 	list_append(chunkl, &msg->le, msg);
 
 	return msg;
-
- error:
-	return mem_deref(msg);
 }
 
 
-static struct rtmp_message *find_chunk(const struct list *chunkl, uint32_t id)
+static struct rtmp_message *find_message(const struct list *chunkl,
+					 uint32_t chunk_id)
 {
 	struct le *le;
 
@@ -92,7 +91,7 @@ static struct rtmp_message *find_chunk(const struct list *chunkl, uint32_t id)
 
 		struct rtmp_message *msg = le->data;
 
-		if (id == msg->chunk_id)
+		if (chunk_id == msg->chunk_id)
 			return msg;
 	}
 
@@ -108,7 +107,7 @@ int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 {
 	struct rtmp_dechunker *rd;
 
-	if (!rdp)
+	if (!rdp || !msgh)
 		return EINVAL;
 
 	rd = mem_zalloc(sizeof(*rd), destructor);
@@ -146,7 +145,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	case 1:
 		/* XXX: add case 2 */
 
-		msg = find_chunk(&rd->chunkl, hdr.chunk_id);
+		msg = find_message(&rd->chunkl, hdr.chunk_id);
 		if (msg) {
 			re_printf("rtmp: dechunker: unexpected"
 				  " message found (chunk_id=%u)\n",
@@ -161,7 +160,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (hdr.length > MESSAGE_LEN_MAX)
 			return EOVERFLOW;
 
-		msg = create_chunk(&rd->chunkl, hdr.chunk_id,
+		msg = create_message(&rd->chunkl, hdr.chunk_id,
 				     hdr.length, hdr.type_id);
 		if (!msg)
 			return ENOMEM;
@@ -180,17 +179,17 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (err)
 			return err;
 
-		msg->len += chunk_sz;
+		msg->pos += chunk_sz;
 		break;
 
 	case 3:
-		msg = find_chunk(&rd->chunkl, hdr.chunk_id);
+		msg = find_message(&rd->chunkl, hdr.chunk_id);
 		if (!msg) {
 			re_printf("rtmp: dechunker: no chunk found\n");
 			return EPROTO;
 		}
 
-		left = msg->message_length - msg->len;
+		left = msg->length - msg->pos;
 
 		chunk_sz = min(left, RTMP_DEFAULT_CHUNKSIZE);
 
@@ -199,11 +198,11 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			return ENODATA;
 		}
 
-		err = mbuf_read_mem(mb, &msg->buf[msg->len], chunk_sz);
+		err = mbuf_read_mem(mb, &msg->buf[msg->pos], chunk_sz);
 		if (err)
 			return err;
 
-		msg->len += chunk_sz;
+		msg->pos += chunk_sz;
 		break;
 
 	default:
@@ -212,16 +211,13 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		return EPROTO;
 	}
 
-	complete = (msg->len >= msg->message_length);
+	complete = (msg->pos >= msg->length);
 
 	if (complete) {
 
-		if (rd->msgh) {
-
-			/* XXX: send struct rtmp_msg  */
-			rd->msgh(msg->type, msg->buf,
-				 msg->message_length, rd->arg);
-		}
+		/* XXX: send struct rtmp_msg  */
+		rd->msgh(msg->type, msg->buf,
+			 msg->length, rd->arg);
 
 		mem_deref(msg);
 	}
