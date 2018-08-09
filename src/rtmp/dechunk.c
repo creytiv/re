@@ -140,11 +140,10 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	switch (hdr.format) {
 
-		/* only type 0 and 1 can create a new chunk */
+		/* only types 0-2 can create a new chunk */
 	case 0:
 	case 1:
-		/* XXX: add case 2 */
-
+	case 2:
 		msg = find_message(&rd->chunkl, hdr.chunk_id);
 		if (msg) {
 			re_printf("rtmp: dechunker: unexpected"
@@ -160,20 +159,19 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (hdr.length > MESSAGE_LEN_MAX)
 			return EOVERFLOW;
 
-		msg = create_message(&rd->chunkl, hdr.chunk_id,
-				     hdr.length, hdr.type_id);
-		if (!msg)
-			return ENOMEM;
-
 		chunk_sz = min(hdr.length, RTMP_DEFAULT_CHUNKSIZE);
 
 		if (mbuf_get_left(mb) < chunk_sz) {
 			re_printf("more data..\n");
 
 			/* rollback */
-			mem_deref(msg);
 			return ENODATA;
 		}
+
+		msg = create_message(&rd->chunkl, hdr.chunk_id,
+				     hdr.length, hdr.type_id);
+		if (!msg)
+			return ENOMEM;
 
 		err = mbuf_read_mem(mb, msg->buf, chunk_sz);
 		if (err)
@@ -204,11 +202,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		msg->pos += chunk_sz;
 		break;
-
-	default:
-		re_printf("rtmp: dechunker: format type %d not handled\n",
-			  hdr.format);
-		return EPROTO;
 	}
 
 	complete = (msg->pos >= msg->length);
