@@ -10,6 +10,7 @@
 #include <re_mbuf.h>
 #include <re_net.h>
 #include <re_list.h>
+#include <re_sys.h>
 #include <re_rtmp.h>
 #include "rtmp.h"
 
@@ -99,7 +100,7 @@ int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 		err |= mbuf_write_u24_hton(mb, hdr->timestamp);
 		err |= mbuf_write_u24_hton(mb, hdr->length);
 		err |= mbuf_write_u8(mb, hdr->type_id);
-		err |= mbuf_write_u32(mb, htonl(hdr->stream_id));
+		err |= mbuf_write_u32(mb, sys_htoll(hdr->stream_id));
 		break;
 
 	case 1:
@@ -179,7 +180,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->timestamp = mbuf_read_u24_ntoh(mb);
 		hdr->length    = mbuf_read_u24_ntoh(mb);
 		hdr->type_id   = mbuf_read_u8(mb);
-		hdr->stream_id = ntohl(mbuf_read_u32(mb));
+		hdr->stream_id = sys_ltohl(mbuf_read_u32(mb));
 		break;
 
 	case 1:
