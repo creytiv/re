@@ -11,6 +11,10 @@ enum {
 	RTMP_PORT             = 1935
 };
 
+/* Chunk IDs */
+enum {
+	RTMP_CHUNK_ID_CONTROL = 2,
+};
 
 enum rtmp_handshake_state {
 	RTMP_STATE_UNINITIALIZED = 0,
@@ -20,9 +24,10 @@ enum rtmp_handshake_state {
 };
 
 enum rtmp_packet_type {
-	RTMP_TYPE_WINDOW_ACK_SIZE =  5,  /* Window Acknowledgement Size  */
-	RTMP_TYPE_AUDIO           =  8,  /* Audio Message                */
-	RTMP_TYPE_AMF0            = 20,  /* Action Message Format (AMF)  */
+	RTMP_TYPE_USER_CONTROL_MSG = 4,   /* User Control Messages        */
+	RTMP_TYPE_WINDOW_ACK_SIZE  = 5,   /* Window Acknowledgement Size  */
+	RTMP_TYPE_AUDIO            = 8,   /* Audio Message                */
+	RTMP_TYPE_AMF0             = 20,  /* Action Message Format (AMF)  */
 };
 
 
@@ -45,6 +50,7 @@ struct rtmp_header {
 int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr);
 int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
 int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr);
+const char *rtmp_packet_type_name(enum rtmp_packet_type type);
 
 
 /*
@@ -67,7 +73,7 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 struct rtmp_message {
 	struct le le;
 	uint32_t chunk_id;
-	uint32_t length;
+	size_t length;
 	uint8_t *buf;
 	size_t pos;             /* how many bytes received so far */
 	uint8_t type;

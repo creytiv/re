@@ -16,8 +16,6 @@
 
 
 enum {
-	RTMP_CHUNK_ID_CONTROL = 2,
-
 	RTMP_CHUNK_ID_MIN     = 3,
 	RTMP_CHUNK_ID_MAX     = 65599,  /* 65535 + 64 */
 
@@ -223,7 +221,9 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 	case 0:
 		err |= re_hprintf(pf, "timestamp:  %u\n", hdr->timestamp);
 		err |= re_hprintf(pf, "msg_length: %u\n", hdr->length);
-		err |= re_hprintf(pf, "msg_type:   %u\n", hdr->type_id);
+		err |= re_hprintf(pf, "msg_type:   %u (%s)\n",
+				  hdr->type_id,
+				  rtmp_packet_type_name(hdr->type_id));
 		err |= re_hprintf(pf, "stream_id:  %u\n", hdr->stream_id);
 		break;
 
@@ -232,8 +232,9 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 				  hdr->timestamp_delta);
 		err |= re_hprintf(pf, "msg_length:       %u\n",
 				  hdr->length);
-		err |= re_hprintf(pf, "msg_type:         %u\n",
-				  hdr->type_id);
+		err |= re_hprintf(pf, "msg_type:         %u (%s)\n",
+				  hdr->type_id,
+				  rtmp_packet_type_name(hdr->type_id));
 		break;
 
 	case 2:
@@ -247,4 +248,17 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 	}
 
 	return err;
+}
+
+
+const char *rtmp_packet_type_name(enum rtmp_packet_type type)
+{
+	switch (type) {
+
+	case RTMP_TYPE_USER_CONTROL_MSG: return "User Control Message";
+	case RTMP_TYPE_WINDOW_ACK_SIZE:  return "Window Acknowledgement Size";
+	case RTMP_TYPE_AUDIO:            return "Audio Message";
+	case RTMP_TYPE_AMF0:             return "AMF";
+	default: return "?";
+	}
 }
