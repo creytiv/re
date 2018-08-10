@@ -16,7 +16,6 @@
 
 enum {
 	MAX_PENDING = 16,
-	MESSAGE_LEN_MAX = 524288,
 };
 
 

@@ -188,6 +188,13 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->timestamp_delta = mbuf_read_u24_ntoh(mb);
 		hdr->length          = mbuf_read_u24_ntoh(mb);
 		hdr->type_id         = mbuf_read_u8(mb);
+
+		if (hdr->length > MESSAGE_LEN_MAX) {
+			re_fprintf(stderr, "rtmp: header decode:"
+				   " message length too large"
+				   " (%u > %u)\n",
+				   hdr->length, MESSAGE_LEN_MAX);
+		}
 		break;
 
 	case 2:
@@ -255,10 +262,12 @@ const char *rtmp_packet_type_name(enum rtmp_packet_type type)
 {
 	switch (type) {
 
-	case RTMP_TYPE_USER_CONTROL_MSG: return "User Control Message";
-	case RTMP_TYPE_WINDOW_ACK_SIZE:  return "Window Acknowledgement Size";
-	case RTMP_TYPE_AUDIO:            return "Audio Message";
-	case RTMP_TYPE_AMF0:             return "AMF";
+	case RTMP_TYPE_SET_CHUNK_SIZE:    return "Set Chunk Size";
+	case RTMP_TYPE_USER_CONTROL_MSG:  return "User Control Message";
+	case RTMP_TYPE_WINDOW_ACK_SIZE:   return "Window Acknowledgement Size";
+	case RTMP_TYPE_SET_PEER_BANDWIDTH:return "Set Peer Bandwidth";
+	case RTMP_TYPE_AUDIO:             return "Audio Message";
+	case RTMP_TYPE_AMF0:              return "AMF";
 	default: return "?";
 	}
 }
