@@ -29,6 +29,7 @@ enum rtmp_packet_type {
 	RTMP_TYPE_WINDOW_ACK_SIZE    = 5,   /* Window Acknowledgement Size  */
 	RTMP_TYPE_SET_PEER_BANDWIDTH = 6,   /* Set Peer Bandwidth           */
 	RTMP_TYPE_AUDIO              = 8,   /* Audio Message                */
+	RTMP_TYPE_VIDEO              = 9,   /* Video Message                */
 	RTMP_TYPE_AMF0               = 20,  /* Action Message Format (AMF)  */
 };
 
