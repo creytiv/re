@@ -21,6 +21,7 @@ enum {
 
 struct rtmp_dechunker {
 	struct list msgl;  /* struct rtmp_message */
+	size_t chunk_sz;
 	rtmp_msg_h *msgh;
 	void *arg;
 };
@@ -99,6 +100,8 @@ int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 	if (!rd)
 		return ENOMEM;
 
+	rd->chunk_sz = RTMP_DEFAULT_CHUNKSIZE;
+
 	rd->msgh = msgh;
 	rd->arg  = arg;
 
@@ -144,7 +147,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (hdr.length > MESSAGE_LEN_MAX)
 			return EOVERFLOW;
 
-		chunk_sz = min(hdr.length, RTMP_DEFAULT_CHUNKSIZE);
+		chunk_sz = min(hdr.length, rd->chunk_sz);
 
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
@@ -170,7 +173,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		left = msg->length - msg->pos;
 
-		chunk_sz = min(left, RTMP_DEFAULT_CHUNKSIZE);
+		chunk_sz = min(left, rd->chunk_sz);
 
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
@@ -193,4 +196,13 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	}
 
 	return err;
+}
+
+
+void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz)
+{
+	if (!rd)
+		return;
+
+	rd->chunk_sz = chunk_sz;
 }
