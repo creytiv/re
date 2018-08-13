@@ -268,6 +268,7 @@ const char *rtmp_packet_type_name(enum rtmp_packet_type type)
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:return "Set Peer Bandwidth";
 	case RTMP_TYPE_AUDIO:             return "Audio Message";
 	case RTMP_TYPE_VIDEO:             return "Video Message";
+	case RTMP_TYPE_DATA:              return "Data Message";
 	case RTMP_TYPE_AMF0:              return "AMF";
 	default: return "?";
 	}
