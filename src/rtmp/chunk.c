@@ -17,7 +17,8 @@
 /**
  * Stateless RTMP chunker
  */
-int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
+int rtmp_chunker(unsigned format, uint32_t chunk_id,
+		 uint32_t timestamp, uint32_t timestamp_delta,
 		 uint8_t msg_type_id, uint32_t msg_stream_id,
 		 const uint8_t *payload, size_t payload_len,
 		 rtmp_chunk_h *chunkh, void *arg)
@@ -34,10 +35,11 @@ int rtmp_chunker(uint32_t chunk_id, uint32_t timestamp,
 
 	/* XXX: add support for type1, type2 */
 
-	hdr.format = 0;
+	hdr.format = format;
 	hdr.chunk_id = chunk_id;
 
 	hdr.timestamp = timestamp;
+	hdr.timestamp_delta = timestamp_delta;
 	hdr.length    = (uint32_t)payload_len;
 	hdr.type_id   = msg_type_id;
 	hdr.stream_id = msg_stream_id;
