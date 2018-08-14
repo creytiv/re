@@ -99,11 +99,14 @@ void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
  */
 
 enum amf_type {
-	AMF_TYPE_NUMBER = 0x00,
-	AMF_TYPE_STRING = 0x02,
-	AMF_TYPE_NULL   = 0x05,
+	AMF_TYPE_NUMBER  = 0x00,
+	AMF_TYPE_BOOLEAN = 0x01,
+	AMF_TYPE_STRING  = 0x02,
+	AMF_TYPE_OBJECT  = 0x03,
+	AMF_TYPE_NULL    = 0x05,
 };
 
 int amf_encode_number(struct mbuf *mb, double val);
+int amf_encode_boolean(struct mbuf *mb, bool boolean);
 int amf_encode_string(struct mbuf *mb, const char *str);
 int amf_encode_null(struct mbuf *mb);

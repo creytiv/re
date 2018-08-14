@@ -32,6 +32,17 @@ int amf_encode_number(struct mbuf *mb, double val)
 }
 
 
+int amf_encode_boolean(struct mbuf *mb, bool boolean)
+{
+	int err;
+
+	err  = mbuf_write_u8(mb, AMF_TYPE_BOOLEAN);
+	err |= mbuf_write_u8(mb, !!boolean);
+
+	return err;
+}
+
+
 int amf_encode_string(struct mbuf *mb, const char *str)
 {
 	size_t len = str_len(str);
