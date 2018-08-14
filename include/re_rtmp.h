@@ -92,3 +92,18 @@ int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 			  rtmp_msg_h *msgh, void *arg);
 int  rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb);
 void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
+
+
+/*
+ * AMF (Action Message Format)
+ */
+
+enum amf_type {
+	AMF_TYPE_NUMBER = 0x00,
+	AMF_TYPE_STRING = 0x02,
+	AMF_TYPE_NULL   = 0x05,
+};
+
+int amf_encode_number(struct mbuf *mb, double val);
+int amf_encode_string(struct mbuf *mb, const char *str);
+int amf_encode_null(struct mbuf *mb);

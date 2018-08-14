@@ -14,6 +14,12 @@ The following logical blocks are supported/planned:
 - RTMP Server
 
 
+
+
 References:
 
 [1] http://wwwimages.adobe.com/www.adobe.com/content/dam/acom/en/devnet/rtmp/pdf/rtmp_specification_1.0.pdf
+
+[2] https://wwwimages2.adobe.com/content/dam/acom/en/devnet/flv/video_file_format_spec_v10_1.pdf
+
+[3] https://en.wikipedia.org/wiki/Action_Message_Format
