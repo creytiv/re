@@ -145,10 +145,18 @@ static int amf_decode_object(struct odict *dict, struct mbuf *mb)
 
 		/* Property name */
 
+		if (mbuf_get_left(mb) < 2)
+			return ENODATA;
+
 		len = ntohs(mbuf_read_u16(mb));
 
 		if (len == 0) {
-			uint8_t val = mbuf_read_u8(mb);
+			uint8_t val;
+
+			if (mbuf_get_left(mb) < 1)
+				return ENODATA;
+
+			val = mbuf_read_u8(mb);
 
 			if (val == 0x09) {
 				re_printf("-- object end --\n");
@@ -156,19 +164,21 @@ static int amf_decode_object(struct odict *dict, struct mbuf *mb)
 			}
 		}
 
+		if (mbuf_get_left(mb) < len)
+			return ENODATA;
+
 		err = mbuf_strdup(mb, &prop_name, len);
 		if (err)
 			goto out;
 
-		re_printf("  prop name = '%s'\n", prop_name);
-
 		/* Property value */
 
 		err = amf_decode_value(dict, prop_name, mb);
-		if (err)
-			goto out;
 
 		prop_name = mem_deref(prop_name);
+
+		if (err)
+			goto out;
 	}
 
  out:
@@ -185,20 +195,25 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		uint64_t i;
 		double f;
 	} num;
+	struct odict *object = NULL;
 	uint8_t type;
 	uint16_t len;
 	char *str = 0;
 	bool boolean;
 	int err = 0;
 
+	if (mbuf_get_left(mb) < 1)
+		return ENODATA;
+
 	type = mbuf_read_u8(mb);
 
 	switch (type) {
 
 	case AMF_TYPE_NUMBER: /* number */
-		num.i = sys_ntohll(mbuf_read_u64(mb));
+		if (mbuf_get_left(mb) < 8)
+			return ENODATA;
 
-		re_printf("number: %f\n", num.f, num.i);
+		num.i = sys_ntohll(mbuf_read_u64(mb));
 
 		err = odict_entry_add(dict, key, ODICT_DOUBLE, num.f);
 		if (err)
@@ -206,9 +221,10 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		break;
 
 	case AMF_TYPE_BOOLEAN: /* boolean */
-		boolean = mbuf_read_u8(mb);
+		if (mbuf_get_left(mb) < 1)
+			return ENODATA;
 
-		re_printf("boolean: %s\n", boolean ? "true" : "false");
+		boolean = mbuf_read_u8(mb);
 
 		err = odict_entry_add(dict, key, ODICT_BOOL, boolean);
 		if (err)
@@ -216,12 +232,17 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		break;
 
 	case AMF_TYPE_STRING: /* string */
+		if (mbuf_get_left(mb) < 2)
+			return ENODATA;
+
 		len = ntohs(mbuf_read_u16(mb));
+
+		if (mbuf_get_left(mb) < len)
+			return ENODATA;
 
 		err = mbuf_strdup(mb, &str, len);
 		if (err)
 			goto out;
-		re_printf("string: %u bytes (%s)\n", len, str);
 
 		err = odict_entry_add(dict, key, ODICT_STRING, str);
 		if (err)
@@ -230,8 +251,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 	case AMF_TYPE_OBJECT:      /* object */
 		re_printf("-- object start --\n");
-
-		struct odict *object;
 
 		err = odict_alloc(&object, 32);
 
@@ -243,23 +262,24 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		if (err)
 			goto out;
 
-		mem_deref(object);
+		object = mem_deref(object);
 		break;
 
 	case AMF_TYPE_NULL: /* null */
-		re_printf("null\n");
 		err = odict_entry_add(dict, key, ODICT_NULL);
 		if (err)
 			goto out;
 		break;
 
 	default:
-		re_printf("unknown amf type: %u\n", type);
+		re_printf("rtmp: amf decode: unknown amf type %u"
+			  " for key='%s'\n", type, key);
 		err = EPROTO;
 		goto out;
 	}
 
  out:
+	mem_deref(object);
 	mem_deref(str);
 
 	return err;
