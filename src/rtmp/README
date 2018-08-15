@@ -12,11 +12,39 @@ The following logical blocks are supported/planned:
 - RTMP Transport via TCP
 - RTMP Client
 - RTMP Server
+- AMF (Action Message Format) Encoding/Decoding
+
+- RTMPS (RTMP over TLS)
+- RTMPE (RTMP over Adobe Encryption)
+- RTMPT (RTMP over HTTP)
+- RTMFP (RTMP over UDP)
+
+
+
+
+Protocol stack:
+--------------
+
+    .-------.  .-------.
+    |  AMF  |  |  FLV  |
+    '-------'  '-------'
+        |          |
+        +----------'
+        |
+    .-------.
+    |  RTMP |
+    '-------'
+        |
+        |
+    .-------.
+    |  TCP  |
+    '-------'
 
 
 
 
 References:
+----------
 
 [1] http://wwwimages.adobe.com/www.adobe.com/content/dam/acom/en/devnet/rtmp/pdf/rtmp_specification_1.0.pdf
 
