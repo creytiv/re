@@ -106,7 +106,11 @@ enum amf_type {
 	AMF_TYPE_NULL    = 0x05,
 };
 
+struct odict;
+
 int amf_encode_number(struct mbuf *mb, double val);
 int amf_encode_boolean(struct mbuf *mb, bool boolean);
 int amf_encode_string(struct mbuf *mb, const char *str);
 int amf_encode_null(struct mbuf *mb);
+
+int amf_decode(struct odict *dict, struct mbuf *mb);
