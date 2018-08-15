@@ -47,9 +47,9 @@ int amf_encode_boolean(struct mbuf *mb, bool boolean)
 int amf_encode_string(struct mbuf *mb, const char *str)
 {
 	size_t len = str_len(str);
-	int err;
+	int err = 0;
 
-	err  = mbuf_write_u8(mb, AMF_TYPE_STRING);
+	err |= mbuf_write_u8(mb, AMF_TYPE_STRING);
 	err |= mbuf_write_u16(mb, htons(len));
 	err |= mbuf_write_str(mb, str);
 
@@ -60,6 +60,74 @@ int amf_encode_string(struct mbuf *mb, const char *str)
 int amf_encode_null(struct mbuf *mb)
 {
 	return mbuf_write_u8(mb, AMF_TYPE_NULL);
+}
+
+
+int amf_encode_object(struct mbuf *mb, struct odict *dict)
+{
+
+	struct odict_entry *entry;
+	struct le *le;
+	size_t key_len;
+	int err = 0;
+
+	for (le = dict->lst.head; le; le = le->next) {
+
+		entry = le->data;
+
+		key_len = str_len(entry->key);
+
+		switch (entry->type) {
+
+		case ODICT_STRING:
+			if (key_len) {
+				err |= mbuf_write_u16(mb, htons(key_len));
+				err |= mbuf_write_str(mb, entry->key);
+			}
+
+			err = amf_encode_string(mb, entry->u.str);
+			break;
+
+		case ODICT_DOUBLE:
+			if (key_len) {
+				err |= mbuf_write_u16(mb, htons(key_len));
+				err |= mbuf_write_str(mb, entry->key);
+			}
+
+			err = amf_encode_number(mb, entry->u.dbl);
+			break;
+
+		case ODICT_OBJECT:
+			/* NOTE: recursive function */
+
+			err  = mbuf_write_u8(mb, AMF_TYPE_OBJECT);
+
+			err |= amf_encode_object(mb, entry->u.odict);
+
+			err |= mbuf_write_u16(mb, 0);
+			err |= mbuf_write_u8(mb, 0x09);
+			break;
+
+		case ODICT_BOOL:
+			if (key_len) {
+				err |= mbuf_write_u16(mb, htons(key_len));
+				err |= mbuf_write_str(mb, entry->key);
+			}
+
+			err = amf_encode_boolean(mb, entry->u.boolean);
+			break;
+
+		default:
+			re_printf("unknown type %d (%s)\n", entry->type,
+				  odict_type_name(entry->type));
+			return ENOTSUP;
+		}
+
+		if (err)
+			break;
+	}
+
+	return err;
 }
 
 

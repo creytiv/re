@@ -111,6 +111,7 @@ struct odict;
 int amf_encode_number(struct mbuf *mb, double val);
 int amf_encode_boolean(struct mbuf *mb, bool boolean);
 int amf_encode_string(struct mbuf *mb, const char *str);
+int amf_encode_object(struct mbuf *mb, struct odict *dict);
 int amf_encode_null(struct mbuf *mb);
 
 int amf_decode(struct odict *dict, struct mbuf *mb);
