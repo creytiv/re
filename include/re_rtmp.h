@@ -104,6 +104,7 @@ enum amf_type {
 	AMF_TYPE_STRING  = 0x02,
 	AMF_TYPE_OBJECT  = 0x03,
 	AMF_TYPE_NULL    = 0x05,
+	AMF_TYPE_ARRAY   = 0x08,
 };
 
 struct odict;

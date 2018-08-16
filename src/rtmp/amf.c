@@ -133,6 +133,24 @@ int amf_encode_object(struct mbuf *mb, struct odict *dict)
 			err |= mbuf_write_u8(mb, 0x09);
 			break;
 
+		case ODICT_ARRAY:
+			/* NOTE: recursive function */
+
+			if (key_len) {
+				err |= mbuf_write_u16(mb, htons(key_len));
+				err |= mbuf_write_str(mb, entry->key);
+			}
+
+			err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
+
+			err |= mbuf_write_u32(mb, 0x00000000); /* length */
+
+			err |= amf_encode_object(mb, entry->u.odict);
+
+			err |= mbuf_write_u16(mb, 0);
+			err |= mbuf_write_u8(mb, 0x09);
+			break;
+
 		case ODICT_BOOL:
 			if (key_len) {
 				err |= mbuf_write_u16(mb, htons(key_len));
@@ -143,7 +161,8 @@ int amf_encode_object(struct mbuf *mb, struct odict *dict)
 			break;
 
 		default:
-			re_printf("unknown type %d (%s)\n", entry->type,
+			re_printf("encode: unknown type %d (%s)\n",
+				  entry->type,
 				  odict_type_name(entry->type));
 			return ENOTSUP;
 		}
@@ -180,7 +199,6 @@ static int amf_decode_object(struct odict *dict, struct mbuf *mb)
 			val = mbuf_read_u8(mb);
 
 			if (val == 0x09) {
-				re_printf("-- object end --\n");
 				return 0;
 			}
 		}
@@ -284,12 +302,43 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			goto out;
 
 		object = mem_deref(object);
+		re_printf("-- object end --\n");
 		break;
 
 	case AMF_TYPE_NULL: /* null */
 		err = odict_entry_add(dict, key, ODICT_NULL);
 		if (err)
 			goto out;
+		break;
+
+	case AMF_TYPE_ARRAY: {
+		uint32_t array_len;
+
+		re_printf("-- array start (key=%s) --\n", key);
+
+		if (mbuf_get_left(mb) < 4) {
+			err = ENODATA;
+			goto out;
+		}
+
+		array_len = ntohl(mbuf_read_u32(mb));
+
+		re_printf("array:  len=%u (ignored)\n", array_len);
+
+		err = odict_alloc(&object, 32);
+
+		err = amf_decode_object(object, mb);
+		if (err)
+			goto out;
+
+		err = odict_entry_add(dict, key, ODICT_ARRAY, object);
+		if (err)
+			goto out;
+
+		object = mem_deref(object);
+
+		re_printf("-- array end --\n");
+	}
 		break;
 
 	default:
