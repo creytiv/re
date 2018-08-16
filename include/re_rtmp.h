@@ -115,3 +115,10 @@ int amf_encode_object(struct mbuf *mb, struct odict *dict);
 int amf_encode_null(struct mbuf *mb);
 
 int amf_decode(struct odict *dict, struct mbuf *mb);
+
+
+/*
+ * RTMP Handshake
+ */
+
+const char *rtmp_handshake_name(enum rtmp_handshake_state state);

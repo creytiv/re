@@ -16,15 +16,22 @@
 #include "rtmp.h"
 
 
+static int amf_decode_value(struct odict *dict, const char *key,
+			    struct mbuf *mb);
+
+
 int amf_encode_number(struct mbuf *mb, double val)
 {
-	union {
+	const union {
 		uint64_t i;
 		double f;
-	} num;
+	} num = {
+		.f = val
+	};
 	int err;
 
-	num.f = val;
+	if (!mb)
+		return EINVAL;
 
 	err  = mbuf_write_u8(mb, AMF_TYPE_NUMBER);
 	err |= mbuf_write_u64(mb, sys_htonll(num.i));
@@ -37,6 +44,9 @@ int amf_encode_boolean(struct mbuf *mb, bool boolean)
 {
 	int err;
 
+	if (!mb)
+		return EINVAL;
+
 	err  = mbuf_write_u8(mb, AMF_TYPE_BOOLEAN);
 	err |= mbuf_write_u8(mb, !!boolean);
 
@@ -46,11 +56,17 @@ int amf_encode_boolean(struct mbuf *mb, bool boolean)
 
 int amf_encode_string(struct mbuf *mb, const char *str)
 {
-	size_t len = str_len(str);
+	const size_t len = str_len(str);
 	int err = 0;
 
+	if (!mb)
+		return EINVAL;
+
+	if (len > 65535)
+		return EOVERFLOW;
+
 	err |= mbuf_write_u8(mb, AMF_TYPE_STRING);
-	err |= mbuf_write_u16(mb, htons(len));
+	err |= mbuf_write_u16(mb, htons((uint16_t)len));
 	err |= mbuf_write_str(mb, str);
 
 	return err;
@@ -59,21 +75,25 @@ int amf_encode_string(struct mbuf *mb, const char *str)
 
 int amf_encode_null(struct mbuf *mb)
 {
+	if (!mb)
+		return EINVAL;
+
 	return mbuf_write_u8(mb, AMF_TYPE_NULL);
 }
 
 
 int amf_encode_object(struct mbuf *mb, struct odict *dict)
 {
-
-	struct odict_entry *entry;
 	struct le *le;
 	size_t key_len;
 	int err = 0;
 
-	for (le = dict->lst.head; le; le = le->next) {
+	if (!mb || !dict)
+		return EINVAL;
 
-		entry = le->data;
+	for (le = list_head(&dict->lst); le; le = le->next) {
+
+		struct odict_entry *entry = le->data;
 
 		key_len = str_len(entry->key);
 
@@ -99,6 +119,11 @@ int amf_encode_object(struct mbuf *mb, struct odict *dict)
 
 		case ODICT_OBJECT:
 			/* NOTE: recursive function */
+
+			if (key_len) {
+				err |= mbuf_write_u16(mb, htons(key_len));
+				err |= mbuf_write_str(mb, entry->key);
+			}
 
 			err  = mbuf_write_u8(mb, AMF_TYPE_OBJECT);
 
@@ -129,10 +154,6 @@ int amf_encode_object(struct mbuf *mb, struct odict *dict)
 
 	return err;
 }
-
-
-static int amf_decode_value(struct odict *dict, const char *key,
-			    struct mbuf *mb);
 
 
 static int amf_decode_object(struct odict *dict, struct mbuf *mb)
@@ -289,6 +310,9 @@ static int amf_decode_value(struct odict *dict, const char *key,
 int amf_decode(struct odict *dict, struct mbuf *mb)
 {
 	int err = 0;
+
+	if (!dict || !mb)
+		return EINVAL;
 
 	while (mbuf_get_left(mb) > 0) {
 
