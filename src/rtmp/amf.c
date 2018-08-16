@@ -16,6 +16,15 @@
 #include "rtmp.h"
 
 
+/*
+ * The AMF data types is very similar to JSON or Ordered Dictionary
+ *
+ * The AMF types are mapped to Ordered Dictionary (odict).
+ * The key field is empty/unused for basic types, but used for
+ * object properties.
+ */
+
+
 static int amf_decode_value(struct odict *dict, const char *key,
 			    struct mbuf *mb);
 
@@ -235,6 +244,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		double f;
 	} num;
 	struct odict *object = NULL;
+	uint32_t array_len;
 	uint8_t type;
 	uint16_t len;
 	char *str = 0;
@@ -288,10 +298,10 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			goto out;
 		break;
 
-	case AMF_TYPE_OBJECT:      /* object */
-		re_printf("-- object start --\n");
-
+	case AMF_TYPE_OBJECT:
 		err = odict_alloc(&object, 32);
+		if (err)
+			goto out;
 
 		err = amf_decode_object(object, mb);
 		if (err)
@@ -302,20 +312,15 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			goto out;
 
 		object = mem_deref(object);
-		re_printf("-- object end --\n");
 		break;
 
-	case AMF_TYPE_NULL: /* null */
+	case AMF_TYPE_NULL:
 		err = odict_entry_add(dict, key, ODICT_NULL);
 		if (err)
 			goto out;
 		break;
 
-	case AMF_TYPE_ARRAY: {
-		uint32_t array_len;
-
-		re_printf("-- array start (key=%s) --\n", key);
-
+	case AMF_TYPE_ARRAY:
 		if (mbuf_get_left(mb) < 4) {
 			err = ENODATA;
 			goto out;
@@ -326,6 +331,8 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		re_printf("array:  len=%u (ignored)\n", array_len);
 
 		err = odict_alloc(&object, 32);
+		if (err)
+			goto out;
 
 		err = amf_decode_object(object, mb);
 		if (err)
@@ -336,9 +343,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			goto out;
 
 		object = mem_deref(object);
-
-		re_printf("-- array end --\n");
-	}
 		break;
 
 	default:
