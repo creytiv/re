@@ -258,7 +258,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 	switch (type) {
 
-	case AMF_TYPE_NUMBER: /* number */
+	case AMF_TYPE_NUMBER:
 		if (mbuf_get_left(mb) < 8)
 			return ENODATA;
 
@@ -269,7 +269,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			goto out;
 		break;
 
-	case AMF_TYPE_BOOLEAN: /* boolean */
+	case AMF_TYPE_BOOLEAN:
 		if (mbuf_get_left(mb) < 1)
 			return ENODATA;
 
@@ -280,7 +280,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			goto out;
 		break;
 
-	case AMF_TYPE_STRING: /* string */
+	case AMF_TYPE_STRING:
 		if (mbuf_get_left(mb) < 2)
 			return ENODATA;
 
