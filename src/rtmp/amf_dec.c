@@ -22,13 +22,11 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 static int amf_decode_object(struct odict *dict, struct mbuf *mb)
 {
-	char *prop_name = NULL;
+	char *key = NULL;
 	uint16_t len;
 	int err = 0;
 
 	while (mbuf_get_left(mb) > 0) {
-
-		/* Property name */
 
 		if (mbuf_get_left(mb) < 2)
 			return ENODATA;
@@ -52,24 +50,19 @@ static int amf_decode_object(struct odict *dict, struct mbuf *mb)
 		if (mbuf_get_left(mb) < len)
 			return ENODATA;
 
-		err = mbuf_strdup(mb, &prop_name, len);
+		err = mbuf_strdup(mb, &key, len);
 		if (err)
-			goto out;
+			return err;
 
-		/* Property value */
+		err = amf_decode_value(dict, key, mb);
 
-		err = amf_decode_value(dict, prop_name, mb);
-
-		prop_name = mem_deref(prop_name);
+		key = mem_deref(key);
 
 		if (err)
-			goto out;
+			return err;
 	}
 
- out:
-	mem_deref(prop_name);
-
-	return err;
+	return 0;
 }
 
 
@@ -81,10 +74,10 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		double f;
 	} num;
 	struct odict *object = NULL;
+	char *str = NULL;
 	uint32_t array_len;
 	uint8_t type;
 	uint16_t len;
-	char *str = NULL;
 	bool boolean;
 	int err = 0;
 
@@ -135,22 +128,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			goto out;
 		break;
 
-	case AMF_TYPE_OBJECT:
-		err = odict_alloc(&object, 32);
-		if (err)
-			goto out;
-
-		err = amf_decode_object(object, mb);
-		if (err)
-			goto out;
-
-		err = odict_entry_add(dict, key, ODICT_OBJECT, object);
-		if (err)
-			goto out;
-
-		object = mem_deref(object);
-		break;
-
 	case AMF_TYPE_NULL:
 		err = odict_entry_add(dict, key, ODICT_NULL);
 		if (err)
@@ -167,6 +144,9 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 		re_printf("array:  len=%u (ignored)\n", array_len);
 
+		/* fallthrough */
+
+	case AMF_TYPE_OBJECT:
 		err = odict_alloc(&object, 32);
 		if (err)
 			goto out;
@@ -175,7 +155,9 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		if (err)
 			goto out;
 
-		err = odict_entry_add(dict, key, ODICT_ARRAY, object);
+		type = (type == AMF_TYPE_ARRAY) ? ODICT_ARRAY : ODICT_OBJECT;
+
+		err = odict_entry_add(dict, key, type, object);
 		if (err)
 			goto out;
 
