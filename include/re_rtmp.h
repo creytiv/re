@@ -99,12 +99,13 @@ void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
  */
 
 enum amf_type {
-	AMF_TYPE_NUMBER  = 0x00,
-	AMF_TYPE_BOOLEAN = 0x01,
-	AMF_TYPE_STRING  = 0x02,
-	AMF_TYPE_OBJECT  = 0x03,
-	AMF_TYPE_NULL    = 0x05,
-	AMF_TYPE_ARRAY   = 0x08,
+	AMF_TYPE_NUMBER     = 0x00,
+	AMF_TYPE_BOOLEAN    = 0x01,
+	AMF_TYPE_STRING     = 0x02,
+	AMF_TYPE_OBJECT     = 0x03,
+	AMF_TYPE_NULL       = 0x05,
+	AMF_TYPE_ARRAY      = 0x08,
+	AMF_TYPE_OBJECT_END = 0x09,
 };
 
 struct odict;
@@ -112,7 +113,7 @@ struct odict;
 int amf_encode_number(struct mbuf *mb, double val);
 int amf_encode_boolean(struct mbuf *mb, bool boolean);
 int amf_encode_string(struct mbuf *mb, const char *str);
-int amf_encode_object(struct mbuf *mb, struct odict *dict);
+int amf_encode_object(struct mbuf *mb, const struct odict *dict);
 int amf_encode_null(struct mbuf *mb);
 
 int amf_decode(struct odict *dict, struct mbuf *mb);
