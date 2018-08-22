@@ -95,8 +95,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		num.i = sys_ntohll(mbuf_read_u64(mb));
 
 		err = odict_entry_add(dict, key, ODICT_DOUBLE, num.f);
-		if (err)
-			goto out;
 		break;
 
 	case AMF_TYPE_BOOLEAN:
@@ -106,8 +104,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		boolean = !!mbuf_read_u8(mb);
 
 		err = odict_entry_add(dict, key, ODICT_BOOL, boolean);
-		if (err)
-			goto out;
 		break;
 
 	case AMF_TYPE_STRING:
@@ -121,24 +117,20 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 		err = mbuf_strdup(mb, &str, len);
 		if (err)
-			goto out;
+			return err;
 
 		err = odict_entry_add(dict, key, ODICT_STRING, str);
-		if (err)
-			goto out;
+
+		mem_deref(str);
 		break;
 
 	case AMF_TYPE_NULL:
 		err = odict_entry_add(dict, key, ODICT_NULL);
-		if (err)
-			goto out;
 		break;
 
 	case AMF_TYPE_ARRAY:
-		if (mbuf_get_left(mb) < 4) {
-			err = ENODATA;
-			goto out;
-		}
+		if (mbuf_get_left(mb) < 4)
+			return ENODATA;
 
 		array_len = ntohl(mbuf_read_u32(mb));
 
@@ -149,17 +141,15 @@ static int amf_decode_value(struct odict *dict, const char *key,
 	case AMF_TYPE_OBJECT:
 		err = odict_alloc(&object, 32);
 		if (err)
-			goto out;
+			return err;
 
 		err = amf_decode_object(object, mb);
 		if (err)
-			goto out;
+			return err;
 
 		type = (type == AMF_TYPE_ARRAY) ? ODICT_ARRAY : ODICT_OBJECT;
 
 		err = odict_entry_add(dict, key, type, object);
-		if (err)
-			goto out;
 
 		object = mem_deref(object);
 		break;
@@ -168,12 +158,8 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		re_printf("rtmp: amf decode: unknown amf type %u"
 			  " \n", type);
 		err = EPROTO;
-		goto out;
+		break;
 	}
-
- out:
-	mem_deref(object);
-	mem_deref(str);
 
 	return err;
 }
