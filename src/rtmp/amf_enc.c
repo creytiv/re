@@ -16,7 +16,7 @@
 #include "rtmp.h"
 
 
-int amf_encode_number(struct mbuf *mb, double val)
+int rtmp_amf_encode_number(struct mbuf *mb, double val)
 {
 	const union {
 		uint64_t i;
@@ -36,7 +36,7 @@ int amf_encode_number(struct mbuf *mb, double val)
 }
 
 
-int amf_encode_boolean(struct mbuf *mb, bool boolean)
+int rtmp_amf_encode_boolean(struct mbuf *mb, bool boolean)
 {
 	int err;
 
@@ -50,7 +50,7 @@ int amf_encode_boolean(struct mbuf *mb, bool boolean)
 }
 
 
-int amf_encode_string(struct mbuf *mb, const char *str)
+int rtmp_amf_encode_string(struct mbuf *mb, const char *str)
 {
 	size_t len;
 	int err;
@@ -71,7 +71,9 @@ int amf_encode_string(struct mbuf *mb, const char *str)
 }
 
 
-int amf_encode_null(struct mbuf *mb)
+
+
+int rtmp_amf_encode_null(struct mbuf *mb)
 {
 	if (!mb)
 		return EINVAL;
@@ -80,8 +82,8 @@ int amf_encode_null(struct mbuf *mb)
 }
 
 
-/* TODO: replace with print handlers */
-int amf_encode_object(struct mbuf *mb, const struct odict *dict)
+/* TODO: replace with print handlers ? */
+int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 {
 	struct le *le;
 	size_t key_len;
@@ -104,7 +106,7 @@ int amf_encode_object(struct mbuf *mb, const struct odict *dict)
 				err |= mbuf_write_str(mb, entry->key);
 			}
 
-			err = amf_encode_string(mb, entry->u.str);
+			err = rtmp_amf_encode_string(mb, entry->u.str);
 			break;
 
 		case ODICT_DOUBLE:
@@ -113,7 +115,7 @@ int amf_encode_object(struct mbuf *mb, const struct odict *dict)
 				err |= mbuf_write_str(mb, entry->key);
 			}
 
-			err = amf_encode_number(mb, entry->u.dbl);
+			err = rtmp_amf_encode_number(mb, entry->u.dbl);
 			break;
 
 		case ODICT_OBJECT:
@@ -126,7 +128,7 @@ int amf_encode_object(struct mbuf *mb, const struct odict *dict)
 
 			err  = mbuf_write_u8(mb, AMF_TYPE_OBJECT);
 
-			err |= amf_encode_object(mb, entry->u.odict);
+			err |= rtmp_amf_encode_object(mb, entry->u.odict);
 
 			err |= mbuf_write_u16(mb, 0);
 			err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
@@ -144,7 +146,7 @@ int amf_encode_object(struct mbuf *mb, const struct odict *dict)
 
 			err |= mbuf_write_u32(mb, 0x00000000); /* length */
 
-			err |= amf_encode_object(mb, entry->u.odict);
+			err |= rtmp_amf_encode_object(mb, entry->u.odict);
 
 			err |= mbuf_write_u16(mb, 0);
 			err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
@@ -156,7 +158,7 @@ int amf_encode_object(struct mbuf *mb, const struct odict *dict)
 				err |= mbuf_write_str(mb, entry->key);
 			}
 
-			err = amf_encode_boolean(mb, entry->u.boolean);
+			err = rtmp_amf_encode_boolean(mb, entry->u.boolean);
 			break;
 
 		default:
