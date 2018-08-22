@@ -80,7 +80,7 @@ int rtmp_amf_encode_null(struct mbuf *mb)
 }
 
 
-static int amf_encode_key(struct mbuf *mb, const char *key)
+int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
 {
 	size_t len;
 	int err;
@@ -97,71 +97,24 @@ static int amf_encode_key(struct mbuf *mb, const char *key)
 }
 
 
-/* TODO: replace with print handlers ? */
-int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
+int rtmp_amf_encode_object_start(struct mbuf *mb)
 {
-	struct le *le;
-	size_t key_len;
-	int err = 0;
+	return mbuf_write_u8(mb, AMF_TYPE_OBJECT);
+}
 
-	if (!mb || !dict)
-		return EINVAL;
 
-	for (le = list_head(&dict->lst); le; le = le->next) {
+int rtmp_amf_encode_object_end(struct mbuf *mb)
+{
+	int err;
 
-		const struct odict_entry *entry = le->data;
-
-		key_len = str_len(entry->key);
-
-		if (key_len)
-			err = amf_encode_key(mb, entry->key);
-
-		switch (entry->type) {
-
-		case ODICT_STRING:
-			err = rtmp_amf_encode_string(mb, entry->u.str);
-			break;
-
-		case ODICT_DOUBLE:
-			err = rtmp_amf_encode_number(mb, entry->u.dbl);
-			break;
-
-		case ODICT_BOOL:
-			err = rtmp_amf_encode_boolean(mb, entry->u.boolean);
-			break;
-
-		case ODICT_OBJECT:
-			/* NOTE: recursive function */
-			err  = mbuf_write_u8(mb, AMF_TYPE_OBJECT);
-
-			err |= rtmp_amf_encode_object(mb, entry->u.odict);
-
-			err |= mbuf_write_u16(mb, 0);
-			err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
-			break;
-
-		case ODICT_ARRAY:
-			/* NOTE: recursive function */
-			err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
-
-			err |= mbuf_write_u32(mb, 0x00000000); /* length */
-
-			err |= rtmp_amf_encode_object(mb, entry->u.odict);
-
-			err |= mbuf_write_u16(mb, 0);
-			err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
-			break;
-
-		default:
-			re_printf("encode: unknown type %d (%s)\n",
-				  entry->type,
-				  odict_type_name(entry->type));
-			return ENOTSUP;
-		}
-
-		if (err)
-			break;
-	}
+	err  = mbuf_write_u16(mb, 0);
+	err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
 
 	return err;
+}
+
+
+int rtmp_amf_encode_type(struct mbuf *mb, uint8_t type)
+{
+	return mbuf_write_u8(mb, type);
 }
