@@ -119,8 +119,6 @@ int rtmp_amf_encode_null(struct mbuf *mb);
 int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
 
 
-
-
 /*
  * RTMP Handshake
  */

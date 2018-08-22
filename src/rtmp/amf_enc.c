@@ -71,8 +71,6 @@ int rtmp_amf_encode_string(struct mbuf *mb, const char *str)
 }
 
 
-
-
 int rtmp_amf_encode_null(struct mbuf *mb)
 {
 	if (!mb)
