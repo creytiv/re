@@ -123,19 +123,15 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 			break;
 
 		case ODICT_DOUBLE:
-			if (key_len) {
-				err |= mbuf_write_u16(mb, htons(key_len));
-				err |= mbuf_write_str(mb, entry->key);
-			}
+			if (key_len)
+				err = amf_encode_key(mb, entry->key);
 
 			err = rtmp_amf_encode_number(mb, entry->u.dbl);
 			break;
 
 		case ODICT_BOOL:
-			if (key_len) {
-				err |= mbuf_write_u16(mb, htons(key_len));
-				err |= mbuf_write_str(mb, entry->key);
-			}
+			if (key_len)
+				err = amf_encode_key(mb, entry->key);
 
 			err = rtmp_amf_encode_boolean(mb, entry->u.boolean);
 			break;
@@ -143,10 +139,8 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 		case ODICT_OBJECT:
 			/* NOTE: recursive function */
 
-			if (key_len) {
-				err |= mbuf_write_u16(mb, htons(key_len));
-				err |= mbuf_write_str(mb, entry->key);
-			}
+			if (key_len)
+				err = amf_encode_key(mb, entry->key);
 
 			err  = mbuf_write_u8(mb, AMF_TYPE_OBJECT);
 
@@ -159,10 +153,8 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 		case ODICT_ARRAY:
 			/* NOTE: recursive function */
 
-			if (key_len) {
-				err |= mbuf_write_u16(mb, htons(key_len));
-				err |= mbuf_write_str(mb, entry->key);
-			}
+			if (key_len)
+				err = amf_encode_key(mb, entry->key);
 
 			err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
 
@@ -173,7 +165,6 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 			err |= mbuf_write_u16(mb, 0);
 			err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
 			break;
-
 
 		default:
 			re_printf("encode: unknown type %d (%s)\n",
