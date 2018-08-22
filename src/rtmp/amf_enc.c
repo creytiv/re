@@ -113,35 +113,25 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 
 		key_len = str_len(entry->key);
 
+		if (key_len)
+			err = amf_encode_key(mb, entry->key);
+
 		switch (entry->type) {
 
 		case ODICT_STRING:
-			if (key_len)
-				err = amf_encode_key(mb, entry->key);
-
 			err = rtmp_amf_encode_string(mb, entry->u.str);
 			break;
 
 		case ODICT_DOUBLE:
-			if (key_len)
-				err = amf_encode_key(mb, entry->key);
-
 			err = rtmp_amf_encode_number(mb, entry->u.dbl);
 			break;
 
 		case ODICT_BOOL:
-			if (key_len)
-				err = amf_encode_key(mb, entry->key);
-
 			err = rtmp_amf_encode_boolean(mb, entry->u.boolean);
 			break;
 
 		case ODICT_OBJECT:
 			/* NOTE: recursive function */
-
-			if (key_len)
-				err = amf_encode_key(mb, entry->key);
-
 			err  = mbuf_write_u8(mb, AMF_TYPE_OBJECT);
 
 			err |= rtmp_amf_encode_object(mb, entry->u.odict);
@@ -152,10 +142,6 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 
 		case ODICT_ARRAY:
 			/* NOTE: recursive function */
-
-			if (key_len)
-				err = amf_encode_key(mb, entry->key);
-
 			err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
 
 			err |= mbuf_write_u32(mb, 0x00000000); /* length */
