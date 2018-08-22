@@ -80,6 +80,23 @@ int rtmp_amf_encode_null(struct mbuf *mb)
 }
 
 
+static int amf_encode_key(struct mbuf *mb, const char *key)
+{
+	size_t len;
+	int err;
+
+	len = str_len(key);
+
+	if (len > 65535)
+		return EOVERFLOW;
+
+	err  = mbuf_write_u16(mb, htons((uint16_t)len));
+	err |= mbuf_write_str(mb, key);
+
+	return err;
+}
+
+
 /* TODO: replace with print handlers ? */
 int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 {
@@ -99,10 +116,8 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 		switch (entry->type) {
 
 		case ODICT_STRING:
-			if (key_len) {
-				err |= mbuf_write_u16(mb, htons(key_len));
-				err |= mbuf_write_str(mb, entry->key);
-			}
+			if (key_len)
+				err = amf_encode_key(mb, entry->key);
 
 			err = rtmp_amf_encode_string(mb, entry->u.str);
 			break;
@@ -114,6 +129,15 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 			}
 
 			err = rtmp_amf_encode_number(mb, entry->u.dbl);
+			break;
+
+		case ODICT_BOOL:
+			if (key_len) {
+				err |= mbuf_write_u16(mb, htons(key_len));
+				err |= mbuf_write_str(mb, entry->key);
+			}
+
+			err = rtmp_amf_encode_boolean(mb, entry->u.boolean);
 			break;
 
 		case ODICT_OBJECT:
@@ -150,14 +174,6 @@ int rtmp_amf_encode_object(struct mbuf *mb, const struct odict *dict)
 			err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
 			break;
 
-		case ODICT_BOOL:
-			if (key_len) {
-				err |= mbuf_write_u16(mb, htons(key_len));
-				err |= mbuf_write_str(mb, entry->key);
-			}
-
-			err = rtmp_amf_encode_boolean(mb, entry->u.boolean);
-			break;
 
 		default:
 			re_printf("encode: unknown type %d (%s)\n",
