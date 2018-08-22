@@ -116,7 +116,7 @@ int amf_encode_string(struct mbuf *mb, const char *str);
 int amf_encode_object(struct mbuf *mb, const struct odict *dict);
 int amf_encode_null(struct mbuf *mb);
 
-int amf_decode(struct odict *dict, struct mbuf *mb);
+int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
 
 
 /*

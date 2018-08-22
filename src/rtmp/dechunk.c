@@ -85,7 +85,7 @@ static struct rtmp_message *find_message(const struct list *msgl,
 }
 
 
-/**
+/*
  * Stateful RTMP de-chunker for receiving complete messages
  */
 int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,

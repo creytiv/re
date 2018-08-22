@@ -14,7 +14,7 @@
 #include "rtmp.h"
 
 
-/**
+/*
  * Stateless RTMP chunker
  */
 int rtmp_chunker(unsigned format, uint32_t chunk_id,
