@@ -127,3 +127,40 @@ int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
  */
 
 const char *rtmp_handshake_name(enum rtmp_handshake_state state);
+
+
+/*
+ * RTMP High-level API (socket, connection, stream)
+ */
+
+
+#if 0
+struct rtmp_sock;
+
+int rtmp_listen(struct rtmp_sock **sockp, rtmp_conn_h *connh);
+#endif
+
+
+struct rtmp_conn;
+struct tcp_sock;
+
+typedef void (rtmp_estab_h)(void *arg);
+typedef void (rtmp_close_h)(int err, void *arg);
+
+
+int rtmp_connect(struct rtmp_conn **connp, const char *uri,
+		 rtmp_estab_h *estabh, rtmp_close_h *closeh, void *arg);
+int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
+		rtmp_estab_h *estabh, rtmp_close_h *closeh, void *arg);
+
+
+#if 0
+int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
+	      const char *name,
+	      rtmp_audio_h *auh, rtmp_video_h *vidh);
+int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
+		 const char *name);
+int rtmp_send_audio(struct rtmp_stream *stream, ...);
+int rtmp_send_video(struct rtmp_stream *stream, ...);
+
+#endif

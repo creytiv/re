@@ -41,6 +41,35 @@ Protocol stack:
     '-------'
 
 
+Message Sequence:
+----------------
+
+
+Client                                      Server
+
+|----------------- TCP Connect -------------->|
+|                                             |
+|                                             |
+|                                             |
+|<-------------- 3-way Handshake ------------>|
+|                                             |
+|                                             |
+|                                             |
+|----------- Command Message(connect) ------->| chunkid=3, streamid=0, tid=1
+|                                             |
+|<------- Window Acknowledgement Size --------| chunkid=2, streamid=0
+|                                             |
+|<----------- Set Peer Bandwidth -------------| chunkid=2, streamid=0
+|                                             |
+|-------- Window Acknowledgement Size ------->|
+|                                             |
+|<------ User Control Message(StreamBegin) ---| chunkid=2, streamid=0
+|                                             |
+|<------------ Command Message ---------------| chunkid=3, streamid=0, tid=1
+|        (_result- connect response)          |
+
+
+
 
 
 References:
