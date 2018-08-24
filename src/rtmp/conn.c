@@ -32,6 +32,7 @@ struct rtmp_conn {
 	enum rtmp_handshake_state state;
 	struct mbuf *mb;                  /* TCP reassembly buffer */
 	struct rtmp_dechunker *dechunk;
+	bool estab;
 	bool term;
 	rtmp_estab_h *estabh;
 	rtmp_close_h *closeh;
@@ -43,10 +44,6 @@ struct rtmp_conn {
 };
 
 
-static int send_amf_command(struct rtmp_conn *conn,
-			    unsigned format, uint32_t chunk_id,
-			    uint32_t msg_stream_id,
-			    const uint8_t *cmd, size_t len);
 static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 			      const uint8_t *pld, size_t pld_len, void *arg);
 
@@ -137,7 +134,7 @@ static int reply(struct rtmp_conn *conn, uint64_t transaction_id)
 	/* XXX: add Information object */
 
 
-	err = send_amf_command(conn, 0, CONN_CHUNK_ID, CONN_STREAM_ID,
+	err = rtmp_send_amf_command(conn, 0, CONN_CHUNK_ID, CONN_STREAM_ID,
 			       mb->buf, mb->end);
 	if (err)
 		goto out;
@@ -219,7 +216,12 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 
 	if (0 == str_casecmp(cmd_hdr->name, "_result")) {
 
+		if (conn->estab)
+			return;
+
 		re_printf("client: Established\n");
+
+		conn->estab = true;
 
 		conn->estabh(conn->arg);
 	}
@@ -238,6 +240,9 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 	if (0 == str_casecmp(cmd_hdr->name, "connect")) {
 
+		if (conn->estab)
+			return;
+
 		control_send_was(conn, WINDOW_ACK_SIZE);
 
 		control_send_set_peer_bw(conn, WINDOW_ACK_SIZE, 2);
@@ -246,6 +251,8 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 		reply(conn, cmd_hdr->transaction_id);
 
+
+		conn->estab = true;
 
 		conn->estabh(conn->arg);
 	}
@@ -547,7 +554,7 @@ static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 }
 
 
-static int send_amf_command(struct rtmp_conn *conn,
+int rtmp_send_amf_command(struct rtmp_conn *conn,
 			    unsigned format, uint32_t chunk_id,
 			    uint32_t msg_stream_id,
 			    const uint8_t *cmd, size_t len)
@@ -586,9 +593,8 @@ static int send_connect(struct rtmp_conn *conn)
 	if (err)
 		goto out;
 
-	err = send_amf_command(conn, 0,
-			       CONN_CHUNK_ID, CONN_STREAM_ID,
-			       mb->buf, mb->end);
+	err = rtmp_send_amf_command(conn, 0, CONN_CHUNK_ID, CONN_STREAM_ID,
+				    mb->buf, mb->end);
 	if (err) {
 		re_printf("rtmp: failed to send AMF command (%m)\n", err);
 		goto out;

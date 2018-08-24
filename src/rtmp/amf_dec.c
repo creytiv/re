@@ -144,14 +144,16 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			return err;
 
 		err = amf_decode_object(object, mb);
-		if (err)
+		if (err) {
+			mem_deref(object);
 			return err;
+		}
 
 		type = (type == AMF_TYPE_ARRAY) ? ODICT_ARRAY : ODICT_OBJECT;
 
 		err = odict_entry_add(dict, key, type, object);
 
-		object = mem_deref(object);
+		mem_deref(object);
 		break;
 
 	default:

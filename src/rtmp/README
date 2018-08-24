@@ -20,6 +20,13 @@ The following logical blocks are supported/planned:
 - RTMFP (RTMP over UDP)
 
 
+TODO:
+----
+
+[ ] improve AMF encoding API
+[ ] implement AMF transaction matching
+
+
 
 
 Protocol stack:
