@@ -22,6 +22,9 @@
 #define CONN_STREAM_ID (0)  /* always zero for netconn */
 
 
+#define WINDOW_ACK_SIZE 2500000
+
+
 struct rtmp_conn {
 	struct tcp_conn *tc;
 	bool is_client;
@@ -44,6 +47,8 @@ static int send_amf_command(struct rtmp_conn *conn,
 			    unsigned format, uint32_t chunk_id,
 			    uint32_t msg_stream_id,
 			    const uint8_t *cmd, size_t len);
+static int rtmp_chunk_handler(const struct rtmp_header *hdr,
+			      const uint8_t *pld, size_t pld_len, void *arg);
 
 
 static int build_connect(struct mbuf *mb, const char *app, const char *url)
@@ -144,6 +149,69 @@ static int reply(struct rtmp_conn *conn, uint64_t transaction_id)
 }
 
 
+static int control_send_was(struct rtmp_conn *conn, size_t was)
+{
+	struct mbuf *mb = mbuf_alloc(4);
+	uint32_t chunk_id = RTMP_CHUNK_ID_CONTROL;
+	uint32_t timestamp = 0;
+	uint32_t timestamp_delta = 0;
+	int err;
+
+	(void)mbuf_write_u32(mb, htonl(was));
+
+	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
+			   RTMP_TYPE_WINDOW_ACK_SIZE, CONN_STREAM_ID,
+			   mb->buf, mb->end, rtmp_chunk_handler, conn);
+
+	mem_deref(mb);
+
+	return err;
+}
+
+
+static int control_send_set_peer_bw(struct rtmp_conn *conn,
+				    size_t was, uint8_t limit_type)
+{
+	struct mbuf *mb = mbuf_alloc(5);
+	uint32_t chunk_id = RTMP_CHUNK_ID_CONTROL;
+	uint32_t timestamp = 0;
+	uint32_t timestamp_delta = 0;
+	int err;
+
+	(void)mbuf_write_u32(mb, htonl(was));
+	(void)mbuf_write_u8(mb, limit_type);
+
+	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
+			   RTMP_TYPE_SET_PEER_BANDWIDTH, CONN_STREAM_ID,
+			   mb->buf, mb->end, rtmp_chunk_handler, conn);
+
+	mem_deref(mb);
+
+	return err;
+}
+
+
+static int control_send_user_control_msg(struct rtmp_conn *conn)
+{
+	struct mbuf *mb = mbuf_alloc(6);
+	uint32_t chunk_id = RTMP_CHUNK_ID_CONTROL;
+	uint32_t timestamp = 0;
+	uint32_t timestamp_delta = 0;
+	int err;
+
+	(void)mbuf_write_u16(mb, 0);
+	(void)mbuf_write_u32(mb, 0);
+
+	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
+			   RTMP_TYPE_USER_CONTROL_MSG, CONN_STREAM_ID,
+			   mb->buf, mb->end, rtmp_chunk_handler, conn);
+
+	mem_deref(mb);
+
+	return err;
+}
+
+
 static void client_handle_amf_command(struct rtmp_conn *conn,
 				      const struct command_header *cmd_hdr,
 				      struct odict *dict)
@@ -170,7 +238,14 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 	if (0 == str_casecmp(cmd_hdr->name, "connect")) {
 
+		control_send_was(conn, WINDOW_ACK_SIZE);
+
+		control_send_set_peer_bw(conn, WINDOW_ACK_SIZE, 2);
+
+		control_send_user_control_msg(conn);
+
 		reply(conn, cmd_hdr->transaction_id);
+
 
 		conn->estabh(conn->arg);
 	}
@@ -234,6 +309,15 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	struct rtmp_conn *conn = arg;
 	void *p;
 	uint32_t val;
+	struct mbuf mb = {
+		.pos = 0,
+		.end = msg->length,
+		.size = msg->length,
+		.buf = msg->buf
+	};
+	uint32_t was;
+	uint16_t event;
+	uint8_t limit;
 
 	if (conn->term)
 		return;
@@ -257,6 +341,32 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 	case RTMP_TYPE_AMF0:
 		handle_amf_command(conn, msg->buf, msg->length);
+		break;
+
+	case RTMP_TYPE_WINDOW_ACK_SIZE:
+		was = ntohl(mbuf_read_u32(&mb));
+		re_printf("[%s] got Window Ack Size from peer: %u\n",
+			  conn->is_client ? "Client" : "Server", was);
+		break;
+
+	case RTMP_TYPE_SET_PEER_BANDWIDTH:
+		was = ntohl(mbuf_read_u32(&mb));
+		limit = mbuf_read_u8(&mb);
+		re_printf("[%s] got Set Peer Bandwidth from peer:"
+			  " was=%u, limit_type=%u\n",
+			  conn->is_client ? "Client" : "Server",
+			  was, limit);
+
+		control_send_was(conn, WINDOW_ACK_SIZE);
+
+		break;
+
+	case RTMP_TYPE_USER_CONTROL_MSG:
+		event = ntohs(mbuf_read_u16(&mb));
+
+		re_printf("[%s] got User Control Message: event_type=%u\n",
+			  conn->is_client ? "Client" : "Server",
+			  event);
 		break;
 
 #if 0
