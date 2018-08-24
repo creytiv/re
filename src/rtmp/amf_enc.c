@@ -103,6 +103,17 @@ int rtmp_amf_encode_object_start(struct mbuf *mb)
 }
 
 
+int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length)
+{
+	int err;
+
+	err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
+	err |= mbuf_write_u32(mb, htonl(length));
+
+	return err;
+}
+
+
 int rtmp_amf_encode_object_end(struct mbuf *mb)
 {
 	int err;
