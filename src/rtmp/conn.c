@@ -52,6 +52,8 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 {
 	double transaction_id = 1.0;
 	int err;
+	const int aucodecs  = 0x0400;  /* AAC  */
+	const int vidcodecs = 0x0080;  /* H264 */
 
 	err  = rtmp_amf_encode_string(mb, "connect");
 	err |= rtmp_amf_encode_number(mb, transaction_id);
@@ -74,10 +76,10 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 		err |= rtmp_amf_encode_number(mb, 15.0);
 
 		err |= rtmp_amf_encode_key(mb, "audioCodecs");
-		err |= rtmp_amf_encode_number(mb, 4071.0);
+		err |= rtmp_amf_encode_number(mb, aucodecs);
 
 		err |= rtmp_amf_encode_key(mb, "videoCodecs");
-		err |= rtmp_amf_encode_number(mb, 252.0);
+		err |= rtmp_amf_encode_number(mb, vidcodecs);
 
 		err |= rtmp_amf_encode_key(mb, "videoFunction");
 		err |= rtmp_amf_encode_number(mb, 1.0);
@@ -314,7 +316,6 @@ static void handle_amf_command(struct rtmp_conn *conn,
 
 static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 {
-#if 1
 	struct rtmp_conn *conn = arg;
 	void *p;
 	uint32_t val;
@@ -378,22 +379,35 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			  event);
 		break;
 
-#if 0
-	case RTMP_TYPE_AUDIO:
-		++cli->n_audio;
+	case RTMP_TYPE_AUDIO: {
+		uint8_t v = msg->buf[0];
+
+		unsigned format = (v >> 4) & 0x0f;
+		unsigned srate  = (v >> 2) & 0x03;
+		unsigned sampsz = (v >> 1) & 0x01;
+		unsigned chan   = (v >> 0) & 0x01;
+
+		re_printf("audio: format=%u, srate=%u, sz=%u, chan=%u\n",
+			  format, srate, sampsz, chan);
+	}
+		/* XXX: pass to application */
 		break;
 
-	case RTMP_TYPE_VIDEO:
-		++cli->n_video;
+	case RTMP_TYPE_VIDEO: {
+		uint8_t v = msg->buf[0];
+
+		unsigned type   = (v >> 4) & 0x0f;
+		unsigned format = (v >> 0) & 0x0f;
+
+		re_printf("video: type=%u, format=%u\n",
+			  type, format);
+	}
 		break;
-#endif
 
 	default:
 		re_printf("!!! unhandled message: type=%d\n", msg->type);
 		break;
 	}
-
-#endif
 }
 
 
