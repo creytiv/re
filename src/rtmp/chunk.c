@@ -33,20 +33,17 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 
 	memset(&hdr, 0, sizeof(hdr));
 
-	/* XXX: add support for type1, type2 */
-
 	hdr.format = format;
 	hdr.chunk_id = chunk_id;
 
-	hdr.timestamp = timestamp;
+	hdr.timestamp       = timestamp;
 	hdr.timestamp_delta = timestamp_delta;
-	hdr.length    = (uint32_t)payload_len;
-	hdr.type_id   = msg_type_id;
-	hdr.stream_id = msg_stream_id;
+	hdr.length          = (uint32_t)payload_len;
+	hdr.type_id         = msg_type_id;
+	hdr.stream_id       = msg_stream_id;
 
 	chunk_sz = min(payload_len, RTMP_DEFAULT_CHUNKSIZE);
 
-	/* XXX: send rtmp_header as param */
 	err = chunkh(&hdr, payload, chunk_sz, arg);
 	if (err)
 		goto out;
