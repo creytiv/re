@@ -139,8 +139,8 @@ int rtmp_amf_encode_type(struct mbuf *mb, uint8_t type)
  * NULL      NULL
  * ARRAY     const char *key    sub-count
  */
-int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
-			    unsigned propc, va_list *ap)
+static int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
+				   unsigned propc, va_list *ap)
 {
 	unsigned i;
 	int err;
@@ -191,7 +191,7 @@ int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
 			err = rtmp_amf_encode_null(mb);
 			break;
 
-		case AMF_TYPE_ARRAY:
+		case AMF_TYPE_ARRAY:  /* recursive */
 			subcount = va_arg(*ap, int);
 			err = rtmp_amf_vencode_object(mb, true, subcount, ap);
 			break;

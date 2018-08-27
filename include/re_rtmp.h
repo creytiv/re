@@ -121,8 +121,6 @@ int rtmp_amf_encode_key(struct mbuf *mb, const char *key);
 int rtmp_amf_encode_type(struct mbuf *mb, uint8_t type);
 
 int rtmp_amf_encode_object(struct mbuf *mb, bool array, unsigned propc, ...);
-int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
-			    unsigned propc, va_list *ap);
 
 int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
 
