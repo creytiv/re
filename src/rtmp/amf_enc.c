@@ -129,3 +129,96 @@ int rtmp_amf_encode_type(struct mbuf *mb, uint8_t type)
 {
 	return mbuf_write_u8(mb, type);
 }
+
+
+/*
+ * NUMBER    double
+ * BOOLEAN   bool
+ * STRING    const char *
+ * OBJECT    const char *key    sub-count
+ * NULL      NULL
+ * ARRAY     const char *key    sub-count
+ */
+int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
+			    unsigned propc, va_list *ap)
+{
+	unsigned i;
+	int err;
+
+	if (!mb)
+		return EINVAL;
+
+	if (array)
+		err = rtmp_amf_encode_array_start(mb, propc);
+	else
+		err = rtmp_amf_encode_object_start(mb);
+
+	for (i=0; i<propc; i++) {
+
+		int type        = va_arg(*ap, int);
+		const char *key = va_arg(*ap, const char *);
+		const char *str;
+		int subcount;
+		double dbl;
+		bool b;
+
+		if (!key)
+			return EINVAL;
+
+		err = rtmp_amf_encode_key(mb, key);
+		if (err)
+			break;
+
+		switch (type) {
+
+		case AMF_TYPE_NUMBER:
+			dbl = va_arg(*ap, double);
+			err = rtmp_amf_encode_number(mb, dbl);
+			break;
+
+		case AMF_TYPE_BOOLEAN:
+			b = va_arg(*ap, int);
+			err = rtmp_amf_encode_boolean(mb, b);
+			break;
+
+		case AMF_TYPE_STRING:
+			str = va_arg(*ap, const char *);
+			err = rtmp_amf_encode_string(mb, str);
+			break;
+
+		case AMF_TYPE_NULL:
+			(void)va_arg(*ap, const void *);
+			err = rtmp_amf_encode_null(mb);
+			break;
+
+		case AMF_TYPE_ARRAY:
+			subcount = va_arg(*ap, int);
+			err = rtmp_amf_vencode_object(mb, true, subcount, ap);
+			break;
+
+		default:
+			re_printf("type not supported (%d)\n", type);
+			return ENOTSUP;
+		}
+
+		if (err)
+			break;
+	}
+
+	err |= rtmp_amf_encode_object_end(mb);
+
+	return err;
+}
+
+
+int rtmp_amf_encode_object(struct mbuf *mb, bool array, unsigned propc, ...)
+{
+	va_list ap;
+	int err;
+
+	va_start(ap, propc);
+	err = rtmp_amf_vencode_object(mb, array, propc, &ap);
+	va_end(ap);
+
+	return err;
+}
