@@ -446,7 +446,7 @@ static void set_state(struct rtmp_conn *conn, enum rtmp_handshake_state state)
 static int send_packet(struct rtmp_conn *conn,
 		       const uint8_t *pkt, size_t len)
 {
-	struct mbuf *mb = mbuf_alloc(2048);
+	struct mbuf *mb = mbuf_alloc(len);
 	int err;
 
 	if (!conn || !pkt || !len)
@@ -726,6 +726,7 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return err;
 
 		/* XXX memcpy(c2, s1, sizeof(c2)); */
+		memset(s2, 0, sizeof(s2));
 
 		err = send_packet(conn, s2, sizeof(s2));
 		if (err)
