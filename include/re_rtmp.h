@@ -160,14 +160,15 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 			  uint32_t msg_stream_id,
 			  const uint8_t *cmd, size_t len);
 
+struct rtmp_stream;
 
-#if 0
+typedef void (rtmp_audio_h)(const uint8_t *pld, size_t len, void *arg);
+typedef void (rtmp_video_h)(const uint8_t *pld, size_t len, void *arg);
+
 int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-	      const char *name,
-	      rtmp_audio_h *auh, rtmp_video_h *vidh);
+	      const char *name, uint32_t stream_id,
+	      rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg);
 int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 		 const char *name);
 int rtmp_send_audio(struct rtmp_stream *stream, ...);
 int rtmp_send_video(struct rtmp_stream *stream, ...);
-
-#endif

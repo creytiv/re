@@ -25,25 +25,6 @@
 #define WINDOW_ACK_SIZE 2500000
 
 
-struct rtmp_conn {
-	struct tcp_conn *tc;
-	bool is_client;
-	uint8_t x1[RTMP_SIG_SIZE];        /* C1 or S1 */
-	enum rtmp_handshake_state state;
-	struct mbuf *mb;                  /* TCP reassembly buffer */
-	struct rtmp_dechunker *dechunk;
-	bool estab;
-	bool term;
-	rtmp_estab_h *estabh;
-	rtmp_close_h *closeh;
-	void *arg;
-
-	/* client specific: */
-	char *app;
-	char *uri;
-};
-
-
 static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 			      const uint8_t *pld, size_t pld_len, void *arg);
 
@@ -93,6 +74,8 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
+
+	list_flush(&conn->streaml);
 
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
@@ -394,13 +377,15 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_VIDEO: {
-		uint8_t v = msg->buf[0];
+		struct rtmp_stream *strm;
 
-		unsigned type   = (v >> 4) & 0x0f;
-		unsigned format = (v >> 0) & 0x0f;
+		/* XXX: lookup stream */
+		strm = list_ledata(conn->streaml.head);
+		if (strm) {
 
-		re_printf("video: type=%u, format=%u\n",
-			  type, format);
+			if (strm->vidh)
+				strm->vidh(msg->buf, msg->length, strm->arg);
+		}
 	}
 		break;
 
