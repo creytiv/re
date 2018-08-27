@@ -213,6 +213,7 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 				      const struct command_header *cmd_hdr,
 				      struct odict *dict)
 {
+	(void)dict;
 
 	if (0 == str_casecmp(cmd_hdr->name, "_result")) {
 
@@ -237,6 +238,7 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 				      const struct command_header *cmd_hdr,
 				      struct odict *dict)
 {
+	(void)dict;
 
 	if (0 == str_casecmp(cmd_hdr->name, "connect")) {
 
