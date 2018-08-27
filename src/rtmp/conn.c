@@ -36,8 +36,7 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 	const int aucodecs  = 0x0400;  /* AAC  */
 	const int vidcodecs = 0x0080;  /* H264 */
 
-	err  = rtmp_amf_encode_string(mb, "connect");
-	err |= rtmp_amf_encode_number(mb, transaction_id);
+	err = rtmp_command_header_encode(mb, "connect", transaction_id);
 
 	err |= rtmp_amf_encode_object_start(mb);
 	{
@@ -98,8 +97,7 @@ static int reply(struct rtmp_conn *conn, uint64_t transaction_id)
 		  conn->is_client ? "Client" : "Server",
 		  transaction_id);
 
-	err  = rtmp_amf_encode_string(mb, "_result");
-	err |= rtmp_amf_encode_number(mb, transaction_id);
+	err = rtmp_command_header_encode(mb, "_result", transaction_id);
 
 	err |= rtmp_amf_encode_object_start(mb);
 	{

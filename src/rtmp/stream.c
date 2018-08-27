@@ -27,8 +27,8 @@ static int send_amf_play(struct rtmp_conn *conn, const char *stream_name,
 	struct mbuf *mb = mbuf_alloc(512);
 	int err;
 
-	err  = rtmp_amf_encode_string(mb, "play");
-	err |= rtmp_amf_encode_number(mb, 4);
+	err = rtmp_command_header_encode(mb, "play", 4);
+
 	err |= rtmp_amf_encode_null(mb);
 	err |= rtmp_amf_encode_string(mb, stream_name);
 	err |= rtmp_amf_encode_number(mb, -2000);
