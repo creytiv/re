@@ -158,6 +158,9 @@ static int control_send_was(struct rtmp_conn *conn, size_t was)
 	uint32_t timestamp_delta = 0;
 	int err;
 
+	if (!mb)
+		return ENOMEM;
+
 	(void)mbuf_write_u32(mb, htonl(was));
 
 	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
@@ -179,6 +182,9 @@ static int control_send_set_peer_bw(struct rtmp_conn *conn,
 	uint32_t timestamp_delta = 0;
 	int err;
 
+	if (!mb)
+		return ENOMEM;
+
 	(void)mbuf_write_u32(mb, htonl(was));
 	(void)mbuf_write_u8(mb, limit_type);
 
@@ -199,6 +205,9 @@ static int control_send_user_control_msg(struct rtmp_conn *conn)
 	uint32_t timestamp = 0;
 	uint32_t timestamp_delta = 0;
 	int err;
+
+	if (!mb)
+		return ENOMEM;
 
 	(void)mbuf_write_u16(mb, 0);
 	(void)mbuf_write_u32(mb, 0);
