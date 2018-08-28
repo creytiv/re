@@ -39,36 +39,6 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 
 	err = rtmp_command_header_encode(mb, "connect", transaction_id);
 
-#if 0
-	err |= rtmp_amf_encode_object_start(mb);
-	{
-		err |= rtmp_amf_encode_key(mb, "app");
-		err |= rtmp_amf_encode_string(mb, app);
-
-		err |= rtmp_amf_encode_key(mb, "flashVer");
-		err |= rtmp_amf_encode_string(mb, "LNX 9,0,124,2");
-
-		err |= rtmp_amf_encode_key(mb, "tcUrl");
-		err |= rtmp_amf_encode_string(mb, url);
-
-		err |= rtmp_amf_encode_key(mb, "fpad");
-		err |= rtmp_amf_encode_boolean(mb, false);
-
-		err |= rtmp_amf_encode_key(mb, "capabilities");
-		err |= rtmp_amf_encode_number(mb, 15.0);
-
-		err |= rtmp_amf_encode_key(mb, "audioCodecs");
-		err |= rtmp_amf_encode_number(mb, aucodecs);
-
-		err |= rtmp_amf_encode_key(mb, "videoCodecs");
-		err |= rtmp_amf_encode_number(mb, vidcodecs);
-
-		err |= rtmp_amf_encode_key(mb, "videoFunction");
-		err |= rtmp_amf_encode_number(mb, 1.0);
-	}
-	err |= rtmp_amf_encode_object_end(mb);
-#endif
-
 	err |= rtmp_amf_encode_object(mb, false, 8,
 		     AMF_TYPE_STRING, "app", app,
 		     AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
