@@ -157,6 +157,8 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 			  unsigned format, uint32_t chunk_id,
 			  uint32_t msg_stream_id,
 			  const uint8_t *cmd, size_t len);
+uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn);
+
 
 struct rtmp_stream;
 

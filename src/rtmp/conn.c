@@ -182,6 +182,27 @@ static int control_send_user_control_msg(struct rtmp_conn *conn)
 }
 
 
+static bool is_established(const struct rtmp_conn *conn)
+{
+	return conn->estab && conn->window_ack_size;
+}
+
+
+static void check_established(struct rtmp_conn *conn)
+{
+	rtmp_estab_h *estabh;
+
+	if (!is_established(conn))
+		return;
+
+	estabh = conn->estabh;
+	if (estabh) {
+		conn->estabh = NULL;
+		estabh(conn->arg);
+	}
+}
+
+
 static void client_handle_amf_command(struct rtmp_conn *conn,
 				      const struct command_header *cmd_hdr,
 				      struct odict *dict)
@@ -197,13 +218,12 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 
 		conn->estab = true;
 
-		conn->estabh(conn->arg);
+		check_established(conn);
 	}
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
 			  cmd_hdr->name);
 	}
-
 }
 
 
@@ -220,11 +240,17 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 		if (conn->estab)
 			return;
 
-		control_send_was(conn, WINDOW_ACK_SIZE);
+		err = control_send_was(conn, WINDOW_ACK_SIZE);
+		if (err)
+			goto error;
 
-		control_send_set_peer_bw(conn, WINDOW_ACK_SIZE, 2);
+		err = control_send_set_peer_bw(conn, WINDOW_ACK_SIZE, 2);
+		if (err)
+			goto error;
 
-		control_send_user_control_msg(conn);
+		err = control_send_user_control_msg(conn);
+		if (err)
+			goto error;
 
 		err = send_reply(conn, cmd_hdr->transaction_id);
 		if (err) {
@@ -232,10 +258,9 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 			goto error;
 		}
 
-
 		conn->estab = true;
 
-		conn->estabh(conn->arg);
+		check_established(conn);
 	}
 	else {
 		re_printf("rtmp: server: command not handled (%s)\n",
@@ -311,6 +336,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	uint32_t was;
 	uint16_t event;
 	uint8_t limit;
+	int err = 0;
 
 	if (conn->term)
 		return;
@@ -340,6 +366,9 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		was = ntohl(mbuf_read_u32(&mb));
 		re_printf("[%s] got Window Ack Size from peer: %u\n",
 			  conn->is_client ? "Client" : "Server", was);
+		conn->window_ack_size = was;
+
+		check_established(conn);
 		break;
 
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:
@@ -350,8 +379,9 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			  conn->is_client ? "Client" : "Server",
 			  was, limit);
 
-		control_send_was(conn, WINDOW_ACK_SIZE);
-
+		err = control_send_was(conn, WINDOW_ACK_SIZE);
+		if (err)
+			goto error;
 		break;
 
 	case RTMP_TYPE_USER_CONTROL_MSG:
@@ -393,6 +423,12 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		re_printf("!!! unhandled message: type=%d\n", msg->type);
 		break;
 	}
+
+	return;
+
+ error:
+	if (err)
+		conn_close(conn, err);
 }
 
 
@@ -905,4 +941,13 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		*connp = conn;
 
 	return err;
+}
+
+
+uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn)
+{
+	if (!conn)
+		return 0;
+
+	return conn->window_ack_size;
 }

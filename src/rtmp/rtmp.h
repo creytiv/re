@@ -18,6 +18,7 @@ struct rtmp_conn {
 	struct mbuf *mb;                  /* TCP reassembly buffer */
 	enum rtmp_handshake_state state;
 	uint8_t x1[RTMP_SIG_SIZE];        /* C1 or S1 */
+	uint32_t window_ack_size;
 	bool is_client;
 	bool estab;
 	bool term;
