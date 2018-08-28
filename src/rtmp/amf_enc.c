@@ -80,7 +80,7 @@ int rtmp_amf_encode_null(struct mbuf *mb)
 }
 
 
-int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
+static int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
 {
 	size_t len;
 	int err;
@@ -114,7 +114,7 @@ int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length)
 }
 
 
-int rtmp_amf_encode_object_end(struct mbuf *mb)
+static int rtmp_amf_encode_object_end(struct mbuf *mb)
 {
 	int err;
 

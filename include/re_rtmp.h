@@ -115,9 +115,7 @@ int rtmp_amf_encode_boolean(struct mbuf *mb, bool boolean);
 int rtmp_amf_encode_string(struct mbuf *mb, const char *str);
 int rtmp_amf_encode_null(struct mbuf *mb);
 int rtmp_amf_encode_object_start(struct mbuf *mb);
-int rtmp_amf_encode_object_end(struct mbuf *mb);
 int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length);
-int rtmp_amf_encode_key(struct mbuf *mb, const char *key);
 int rtmp_amf_encode_type(struct mbuf *mb, uint8_t type);
 
 int rtmp_amf_encode_object(struct mbuf *mb, bool array, unsigned propc, ...);

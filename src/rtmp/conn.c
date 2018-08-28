@@ -25,6 +25,7 @@
 #define WINDOW_ACK_SIZE 2500000
 
 
+static void conn_close(struct rtmp_conn *conn, int err);
 static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 			      const uint8_t *pld, size_t pld_len, void *arg);
 
@@ -38,6 +39,7 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 
 	err = rtmp_command_header_encode(mb, "connect", transaction_id);
 
+#if 0
 	err |= rtmp_amf_encode_object_start(mb);
 	{
 		err |= rtmp_amf_encode_key(mb, "app");
@@ -65,6 +67,17 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 		err |= rtmp_amf_encode_number(mb, 1.0);
 	}
 	err |= rtmp_amf_encode_object_end(mb);
+#endif
+
+	err |= rtmp_amf_encode_object(mb, false, 8,
+		     AMF_TYPE_STRING, "app", app,
+		     AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
+		     AMF_TYPE_STRING, "tcUrl", url,
+		     AMF_TYPE_BOOLEAN, "fpad", false,
+		     AMF_TYPE_NUMBER, "capabilities", 15.0,
+		     AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
+		     AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodecs,
+		     AMF_TYPE_NUMBER, "videoFunction", 1.0);
 
 	return err;
 }
@@ -84,7 +97,7 @@ static void conn_destructor(void *data)
 }
 
 
-static int reply(struct rtmp_conn *conn, uint64_t transaction_id)
+static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 {
 	struct mbuf *mb;
 	int err;
@@ -99,6 +112,7 @@ static int reply(struct rtmp_conn *conn, uint64_t transaction_id)
 
 	err = rtmp_command_header_encode(mb, "_result", transaction_id);
 
+#if 0
 	err |= rtmp_amf_encode_object_start(mb);
 	{
 		err |= rtmp_amf_encode_key(mb, "fmsVer");
@@ -112,7 +126,14 @@ static int reply(struct rtmp_conn *conn, uint64_t transaction_id)
 
 	}
 	err |= rtmp_amf_encode_object_end(mb);
+#endif
 
+	err |= rtmp_amf_encode_object(mb, false, 3,
+		     AMF_TYPE_STRING, "fmsVer", "FMS/3,5,7,7009",
+		     AMF_TYPE_NUMBER, "capabilities", 31.0,
+		     AMF_TYPE_NUMBER, "mode", 1.0);
+	if (err)
+		goto out;
 
 	/* XXX: add Information object */
 
@@ -221,6 +242,8 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 				      const struct command_header *cmd_hdr,
 				      struct odict *dict)
 {
+	int err = 0;
+
 	(void)dict;
 
 	if (0 == str_casecmp(cmd_hdr->name, "connect")) {
@@ -234,7 +257,11 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 		control_send_user_control_msg(conn);
 
-		reply(conn, cmd_hdr->transaction_id);
+		err = send_reply(conn, cmd_hdr->transaction_id);
+		if (err) {
+			re_printf("rtmp: reply failed (%m)\n", err);
+			goto error;
+		}
 
 
 		conn->estab = true;
@@ -245,6 +272,12 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 		re_printf("rtmp: server: command not handled (%s)\n",
 			  cmd_hdr->name);
 	}
+
+	return;
+
+ error:
+	if (err)
+		conn_close(conn, err);
 }
 
 
