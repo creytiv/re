@@ -329,6 +329,7 @@ static void handle_amf_command(struct rtmp_conn *conn,
 static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 {
 	struct rtmp_conn *conn = arg;
+	struct rtmp_stream *strm;
 	void *p;
 	uint32_t val;
 	struct mbuf mb = {
@@ -396,34 +397,22 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			  event);
 		break;
 
-	case RTMP_TYPE_AUDIO: {
-		uint8_t v = msg->buf[0];
-
-		unsigned format = (v >> 4) & 0x0f;
-		unsigned srate  = (v >> 2) & 0x03;
-		unsigned sampsz = (v >> 1) & 0x01;
-		unsigned chan   = (v >> 0) & 0x01;
-
-#if 0
-		re_printf("audio: format=%u, srate=%u, sz=%u, chan=%u\n",
-			  format, srate, sampsz, chan);
-#endif
-
-	}
-		/* XXX: pass to application */
-		break;
-
-	case RTMP_TYPE_VIDEO: {
-		struct rtmp_stream *strm;
-
+	case RTMP_TYPE_AUDIO:
 		/* XXX: lookup stream */
 		strm = list_ledata(conn->streaml.head);
 		if (strm) {
+			if (strm->auh)
+				strm->auh(msg->buf, msg->length, strm->arg);
+		}
+		break;
 
+	case RTMP_TYPE_VIDEO:
+		/* XXX: lookup stream */
+		strm = list_ledata(conn->streaml.head);
+		if (strm) {
 			if (strm->vidh)
 				strm->vidh(msg->buf, msg->length, strm->arg);
 		}
-	}
 		break;
 
 	case RTMP_TYPE_DATA:
