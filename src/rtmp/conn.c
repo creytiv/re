@@ -840,16 +840,14 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 	struct pl pl_addr;
 	struct pl pl_port;
 	struct pl pl_app;
-	struct pl pl_stream;
 	struct sa addr;
-	char *stream = NULL;
 	int err = 0;
 
 	if (!connp || !uri)
 		return EINVAL;
 
 	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+:[0-9]+/[^/]+/[^]+",
-		     &pl_addr, &pl_port, &pl_app, &pl_stream)) {
+		     &pl_addr, &pl_port, &pl_app, NULL)) {
 		re_printf("invalid uri '%s'\n", uri);
 		return EINVAL;
 	}
@@ -862,17 +860,8 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 	if (!conn)
 		return ENOMEM;
 
-	re_printf("  addr:   %r\n", &pl_addr);
-	re_printf("  port:   %r\n", &pl_port);
-	re_printf("  app:    %r\n", &pl_app);
-	re_printf("  stream: %r\n", &pl_stream);
-
-	err |= pl_strdup(&conn->app,         &pl_app);
-	err |= pl_strdup(&stream, &pl_stream);
-	if (err)
-		goto out;
-
-	err = str_dup(&conn->uri, uri);
+	err |= pl_strdup(&conn->app, &pl_app);
+	err |= str_dup(&conn->uri, uri);
 	if (err)
 		goto out;
 
@@ -882,8 +871,6 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 		goto out;
 
  out:
-	mem_deref(stream);
-
 	if (err)
 		mem_deref(conn);
 	else

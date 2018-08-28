@@ -12,18 +12,18 @@ enum {
 
 
 struct rtmp_conn {
-	struct tcp_conn *tc;
-	bool is_client;
-	uint8_t x1[RTMP_SIG_SIZE];        /* C1 or S1 */
-	enum rtmp_handshake_state state;
-	struct mbuf *mb;                  /* TCP reassembly buffer */
+	struct list streaml;
 	struct rtmp_dechunker *dechunk;
+	struct tcp_conn *tc;
+	struct mbuf *mb;                  /* TCP reassembly buffer */
+	enum rtmp_handshake_state state;
+	uint8_t x1[RTMP_SIG_SIZE];        /* C1 or S1 */
+	bool is_client;
 	bool estab;
 	bool term;
 	rtmp_estab_h *estabh;
 	rtmp_close_h *closeh;
 	void *arg;
-	struct list streaml;
 
 	/* client specific: */
 	char *app;
