@@ -134,7 +134,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 		array_len = ntohl(mbuf_read_u32(mb));
 
-		re_printf("array:  len=%u (ignored)\n", array_len);
+		(void)array_len;  /* ignore array length */
 
 		/* fallthrough */
 

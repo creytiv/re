@@ -220,6 +220,10 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 
 		check_established(conn);
 	}
+	else if (0 == str_casecmp(cmd_hdr->name, "onStatus")) {
+
+		re_printf("rtmp: client: recv onStatus\n");
+	}
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
 			  cmd_hdr->name);
@@ -400,8 +404,11 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		unsigned sampsz = (v >> 1) & 0x01;
 		unsigned chan   = (v >> 0) & 0x01;
 
+#if 0
 		re_printf("audio: format=%u, srate=%u, sz=%u, chan=%u\n",
 			  format, srate, sampsz, chan);
+#endif
+
 	}
 		/* XXX: pass to application */
 		break;
@@ -419,8 +426,14 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	}
 		break;
 
+	case RTMP_TYPE_DATA:
+		/* XXX: pass to app */
+		break;
+
 	default:
-		re_printf("!!! unhandled message: type=%d\n", msg->type);
+		re_printf("rtmp: conn: unhandled message:"
+			  " type=%d (%s)\n",
+			  msg->type, rtmp_packet_type_name(msg->type));
 		break;
 	}
 
@@ -795,7 +808,7 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	struct rtmp_conn *conn = arg;
 	int err;
 
-#if 1
+#if 0
 	re_printf("[%s] tcp recv %zu bytes\n",
 		  conn->is_client ? "Client" : "Server",
 		  mbuf_get_left(mb_pkt));
@@ -836,9 +849,11 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 			conn->mb->pos = pos;
 
 			if (err == ENODATA) {
-				re_printf(".. wait for more data"
+#if 0
+				re_printf("rtmp: conn: wait for more data"
 					  " (%zu bytes in buffer)\n",
 					  conn->mb->end - conn->mb->pos);
+#endif
 				err = 0;
 			}
 			break;
