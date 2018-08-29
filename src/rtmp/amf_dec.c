@@ -157,8 +157,10 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		break;
 
 	default:
+#if 0
 		re_printf("rtmp: amf decode: unknown amf type %u"
 			  " \n", type);
+#endif
 		err = EPROTO;
 		break;
 	}
