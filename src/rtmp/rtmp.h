@@ -26,6 +26,8 @@ struct rtmp_conn {
 	rtmp_close_h *closeh;
 	void *arg;
 
+	bool stream_begin;  /* XXX: move to stream */
+
 	/* client specific: */
 	char *app;
 	char *uri;

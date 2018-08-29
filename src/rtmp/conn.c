@@ -57,6 +57,8 @@ static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
 
+	re_printf("%H\n", rtmp_conn_debug, conn);
+
 	list_flush(&conn->streaml);
 
 	mem_deref(conn->tc);
@@ -169,7 +171,7 @@ static int control_send_user_control_msg(struct rtmp_conn *conn)
 	if (!mb)
 		return ENOMEM;
 
-	(void)mbuf_write_u16(mb, 0);
+	(void)mbuf_write_u16(mb, 0);  /* Stream begin */
 	(void)mbuf_write_u32(mb, 0);
 
 	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
@@ -341,6 +343,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	uint32_t was;
 	uint16_t event;
 	uint8_t limit;
+	uint32_t stream_id;
 	int err = 0;
 
 	if (conn->term)
@@ -395,6 +398,20 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		re_printf("[%s] got User Control Message: event_type=%u\n",
 			  conn->is_client ? "Client" : "Server",
 			  event);
+
+
+		switch (event) {
+
+		case 0:
+			stream_id = ntohl(mbuf_read_u32(&mb));
+			re_printf("Stream Begin (id=%u)\n", stream_id);
+			conn->stream_begin = true;
+			break;
+
+		default:
+			break;
+		}
+
 		break;
 
 	case RTMP_TYPE_AUDIO:
@@ -963,4 +980,23 @@ uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn)
 		return 0;
 
 	return conn->window_ack_size;
+}
+
+
+int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
+{
+	int err = 0;
+
+	if (!conn)
+		return 0;
+
+	err |= re_hprintf(pf, "role:          %s\n",
+			  conn->is_client ? "Client" : "Server");
+	err |= re_hprintf(pf, "state:         %s\n",
+			  rtmp_handshake_name(conn->state));
+	err |= re_hprintf(pf, "estab:         %d\n", conn->estab);
+
+	err |= re_hprintf(pf, "stream_begin:  %d\n", conn->stream_begin);
+
+	return err;
 }
