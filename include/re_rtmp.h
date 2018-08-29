@@ -82,6 +82,7 @@ struct rtmp_message {
 	uint8_t *buf;
 	size_t pos;             /* how many bytes received so far */
 	uint8_t type;
+	uint32_t stream_id;
 };
 
 struct rtmp_dechunker;

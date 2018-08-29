@@ -157,6 +157,8 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (!msg)
 			return ENOMEM;
 
+		msg->stream_id = hdr.stream_id;
+
 		err = mbuf_read_mem(mb, msg->buf, chunk_sz);
 		if (err)
 			return err;

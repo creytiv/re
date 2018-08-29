@@ -98,3 +98,20 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 
 	return err;
 }
+
+
+struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
+				     uint32_t stream_id)
+{
+	struct le *le;
+
+	for (le = list_head(streaml); le; le = le->next) {
+
+		struct rtmp_stream *strm = le->data;
+
+		if (stream_id == strm->stream_id)
+			return strm;
+	}
+
+	return NULL;
+}

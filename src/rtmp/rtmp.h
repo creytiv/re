@@ -55,3 +55,9 @@ int rtmp_command_header_decode(struct command_header *hdr,
 			       const struct odict *dict);
 int rtmp_command_header_print(struct re_printf *pf,
 			      const struct command_header *hdr);
+
+
+/* Stream */
+
+struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
+				     uint32_t stream_id);

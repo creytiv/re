@@ -398,20 +398,26 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_AUDIO:
-		/* XXX: lookup stream */
-		strm = list_ledata(conn->streaml.head);
+		strm = rtmp_stream_find(&conn->streaml, msg->stream_id);
 		if (strm) {
 			if (strm->auh)
 				strm->auh(msg->buf, msg->length, strm->arg);
 		}
+		else {
+			re_printf("rtmp: audio: stream not found (%u)\n",
+				  msg->stream_id);
+		}
 		break;
 
 	case RTMP_TYPE_VIDEO:
-		/* XXX: lookup stream */
-		strm = list_ledata(conn->streaml.head);
+		strm = rtmp_stream_find(&conn->streaml, msg->stream_id);
 		if (strm) {
 			if (strm->vidh)
 				strm->vidh(msg->buf, msg->length, strm->arg);
+		}
+		else {
+			re_printf("rtmp: video: stream not found (%u)\n",
+				  msg->stream_id);
 		}
 		break;
 
