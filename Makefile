@@ -7,10 +7,10 @@
 # Master version number
 VER_MAJOR := 0
 VER_MINOR := 5
-VER_PATCH := 8
+VER_PATCH := 9
 
 PROJECT   := re
-VERSION   := 0.5.8
+VERSION   := 0.5.9
 
 MK	:= mk/re.mk
 
