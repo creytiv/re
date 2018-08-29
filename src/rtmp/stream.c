@@ -68,6 +68,8 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	if (!conn || !name)
 		return EINVAL;
 
+	re_printf("rtmp: stream: play '%s'\n", name);
+
 	strm = mem_zalloc(sizeof(*strm), destructor);
 	if (!strm)
 		return ENOMEM;

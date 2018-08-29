@@ -878,21 +878,24 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 {
 	struct rtmp_conn *conn;
 	struct pl pl_addr;
-	struct pl pl_port;
+	struct pl pl_port = pl_null;
 	struct pl pl_app;
 	struct sa addr;
+	uint16_t port;
 	int err = 0;
 
 	if (!connp || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+:[0-9]+/[^/]+/[^]+",
-		     &pl_addr, &pl_port, &pl_app, NULL)) {
-		re_printf("invalid uri '%s'\n", uri);
+	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+[:]*[0-9]*/[^/]+/[^]+",
+		     &pl_addr, NULL, &pl_port, &pl_app, NULL)) {
+		re_printf("rtmp: invalid uri '%s'\n", uri);
 		return EINVAL;
 	}
 
-	err = sa_set(&addr, &pl_addr, pl_u32(&pl_port));
+	port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
+
+	err = sa_set(&addr, &pl_addr, port);
 	if (err)
 		return err;
 
