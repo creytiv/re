@@ -182,6 +182,10 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 			goto out;
 		}
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+		SSL_CTX_set_verify(tls->ctx, SSL_VERIFY_PEER, NULL);
+#endif
+
 		r = SSL_CTX_use_PrivateKey_file(tls->ctx, keyfile,
 						SSL_FILETYPE_PEM);
 		if (r <= 0) {
