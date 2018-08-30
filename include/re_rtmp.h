@@ -154,6 +154,7 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_close_h *closeh, void *arg);
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_estab_h *estabh, rtmp_close_h *closeh, void *arg);
+int rtmp_createstream(struct rtmp_conn *conn);
 int rtmp_send_amf_command(struct rtmp_conn *conn,
 			  unsigned format, uint32_t chunk_id,
 			  uint32_t msg_stream_id,

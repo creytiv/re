@@ -268,6 +268,13 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 		check_established(conn);
 	}
+	else if (0 == str_casecmp(cmd_hdr->name, "createStream")) {
+
+		re_printf("got createStream\n");
+		conn->createstream = true;
+
+		/* XXX send_reply();*/
+	}
 	else {
 		re_printf("rtmp: server: command not handled (%s)\n",
 			  cmd_hdr->name);
@@ -984,6 +991,35 @@ uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn)
 }
 
 
+int rtmp_createstream(struct rtmp_conn *conn)
+{
+	struct mbuf *mb;
+	int err;
+
+	if (!conn)
+		return EINVAL;
+
+	mb = mbuf_alloc(512);
+	if (!mb)
+		return ENOMEM;
+
+	err  = rtmp_command_header_encode(mb, "createStream", 2);
+	err |= rtmp_amf_encode_null(mb);
+	if (err)
+		goto out;
+
+	err = rtmp_send_amf_command(conn, 1, CONN_CHUNK_ID, CONN_STREAM_ID,
+				    mb->buf, mb->end);
+	if (err)
+		goto out;
+
+ out:
+	mem_deref(mb);
+
+	return err;
+}
+
+
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 {
 	int err = 0;
@@ -997,6 +1033,7 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 			  rtmp_handshake_name(conn->state));
 	err |= re_hprintf(pf, "estab:         %d\n", conn->estab);
 
+	err |= re_hprintf(pf, "createstream:  %d\n", conn->createstream);
 	err |= re_hprintf(pf, "stream_begin:  %d\n", conn->stream_begin);
 
 	return err;
