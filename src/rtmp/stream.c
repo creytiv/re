@@ -49,12 +49,70 @@ static int send_amf_play(struct rtmp_conn *conn, const char *stream_name,
 }
 
 
+static int send_amf_publish(struct rtmp_conn *conn, const char *stream_name,
+			    uint32_t stream_id)
+{
+	struct mbuf *mb = mbuf_alloc(512);
+	int err;
+
+	/* XXX: select transaction ID from TID counter */
+
+	err = rtmp_command_header_encode(mb, "publish", 5);
+
+	err |= rtmp_amf_encode_null(mb);
+	err |= rtmp_amf_encode_string(mb, stream_name);
+	err |= rtmp_amf_encode_string(mb, "live");
+	if (err)
+		goto out;
+
+	err = rtmp_send_amf_command(conn, 0, STREAM_CHUNK_ID, stream_id,
+				    mb->buf, mb->end);
+	if (err) {
+		re_printf("rtmp: play amf command error %m\n", err);
+		goto out;
+	}
+
+ out:
+	mem_deref(mb);
+
+	return err;
+}
+
+
 static void destructor(void *data)
 {
 	struct rtmp_stream *strm = data;
 
 	list_unlink(&strm->le);
 	mem_deref(strm->name);
+}
+
+
+static struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
+					     const char *name,
+					     uint32_t stream_id)
+{
+	struct rtmp_stream *strm;
+	int err;
+
+	strm = mem_zalloc(sizeof(*strm), destructor);
+	if (!strm)
+		return NULL;
+
+	strm->conn      = conn;
+	strm->stream_id = stream_id;
+
+	err = str_dup(&strm->name, name);
+	if (err)
+		goto out;
+
+	list_append(&conn->streaml, &strm->le, strm);
+
+ out:
+	if (err)
+		return mem_deref(strm);
+
+	return strm;
 }
 
 
@@ -70,21 +128,13 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 
 	re_printf("rtmp: stream: play '%s'\n", name);
 
-	strm = mem_zalloc(sizeof(*strm), destructor);
+	strm = rtmp_stream_alloc(conn, name, stream_id);
 	if (!strm)
 		return ENOMEM;
 
-	err = str_dup(&strm->name, name);
-	if (err)
-		goto out;
-
-	strm->conn      = conn;
-	strm->stream_id = stream_id;
 	strm->auh       = auh;
 	strm->vidh      = vidh;
 	strm->arg       = arg;
-
-	list_append(&conn->streaml, &strm->le, strm);
 
 	err = send_amf_play(conn, name, stream_id);
 	if (err)
@@ -99,6 +149,34 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	return err;
 }
 
+
+int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
+		 const char *name, uint32_t stream_id)
+{
+	struct rtmp_stream *strm;
+	int err;
+
+	if (!conn || !name)
+		return EINVAL;
+
+	re_printf("rtmp: stream: publish '%s'\n", name);
+
+	strm = rtmp_stream_alloc(conn, name, stream_id);
+	if (!strm)
+		return ENOMEM;
+
+	err = send_amf_publish(conn, name, stream_id);
+	if (err)
+		goto out;
+
+ out:
+	if (err)
+		mem_deref(strm);
+	else if (streamp)
+		*streamp = strm;
+
+	return err;
+}
 
 struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
 				     uint32_t stream_id)

@@ -399,16 +399,17 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			  conn->is_client ? "Client" : "Server",
 			  event);
 
-
 		switch (event) {
 
+			/* Stream Begin */
 		case 0:
 			stream_id = ntohl(mbuf_read_u32(&mb));
-			re_printf("Stream Begin (id=%u)\n", stream_id);
+			re_printf("Stream Begin (stream_id=%u)\n", stream_id);
 			conn->stream_begin = true;
 			break;
 
 		default:
+			re_printf("*** unhandled event %u\n", event);
 			break;
 		}
 

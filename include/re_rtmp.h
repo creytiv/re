@@ -171,6 +171,6 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	      const char *name, uint32_t stream_id,
 	      rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg);
 int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-		 const char *name);
+		 const char *name, uint32_t stream_id);
 int rtmp_send_audio(struct rtmp_stream *stream, ...);
 int rtmp_send_video(struct rtmp_stream *stream, ...);
