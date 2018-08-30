@@ -64,3 +64,11 @@ int rtmp_command_header_print(struct re_printf *pf,
 
 struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
 				     uint32_t stream_id);
+
+/* Connection */
+
+int rtmp_conn_send_msg(struct rtmp_conn *conn,
+		       unsigned format, uint32_t chunk_id,
+		       uint32_t timestamp, uint32_t timestamp_delta,
+		       uint8_t msg_type_id, uint32_t msg_stream_id,
+		       const uint8_t *payload, size_t payload_len);

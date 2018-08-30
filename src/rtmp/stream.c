@@ -178,6 +178,28 @@ int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	return err;
 }
 
+
+int rtmp_send_video(struct rtmp_stream *strm, const uint8_t *pld, size_t len)
+{
+	unsigned format = 0;           /* XXX: format 0 or 1 */
+	uint32_t chunk_id = 6;         /* XXX: how to choose? */
+	uint32_t timestamp = 0;        /* XXX: move to API */
+	uint32_t timestamp_delta = 0;  /* XXX: move to API */
+	int err;
+
+	if (!strm || !pld || !len)
+		return EINVAL;
+
+	re_printf("send_video:  %zu bytes\n", len);
+
+	err = rtmp_conn_send_msg(strm->conn, format, chunk_id, timestamp,
+				 timestamp_delta, RTMP_TYPE_VIDEO,
+				 strm->stream_id, pld, len);
+
+	return err;
+}
+
+
 struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
 				     uint32_t stream_id)
 {
