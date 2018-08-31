@@ -126,12 +126,9 @@ static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 }
 
 
-static int control_send_was(struct rtmp_conn *conn, size_t was)
+static int control_send_was(struct rtmp_conn *conn, uint32_t was)
 {
 	struct mbuf *mb = mbuf_alloc(4);
-	uint32_t chunk_id = RTMP_CHUNK_ID_CONTROL;
-	uint32_t timestamp = 0;
-	uint32_t timestamp_delta = 0;
 	int err;
 
 	if (!mb)
@@ -139,9 +136,9 @@ static int control_send_was(struct rtmp_conn *conn, size_t was)
 
 	(void)mbuf_write_u32(mb, htonl(was));
 
-	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
-			   RTMP_TYPE_WINDOW_ACK_SIZE, CONN_STREAM_ID,
-			   mb->buf, mb->end, rtmp_chunk_handler, conn);
+	err = rtmp_conn_send_msg(conn, 0, RTMP_CHUNK_ID_CONTROL, 0, 0,
+				 RTMP_TYPE_WINDOW_ACK_SIZE, CONN_STREAM_ID,
+				 mb->buf, mb->end);
 
 	mem_deref(mb);
 
