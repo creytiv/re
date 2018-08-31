@@ -522,17 +522,16 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 					 void *arg)
 {
 	struct rtmp_conn *conn;
-	int err = 0;
+	int err;
 
 	conn = mem_zalloc(sizeof(*conn), conn_destructor);
 	if (!conn)
 		return NULL;
 
 	conn->is_client = is_client;
+	conn->state = RTMP_STATE_UNINITIALIZED;
 
 	rand_bytes(conn->x1, sizeof(conn->x1));
-
-	conn->state = RTMP_STATE_UNINITIALIZED;
 
 	err = rtmp_dechunker_alloc(&conn->dechunk, rtmp_msg_handler, conn);
 	if (err)
@@ -595,12 +594,12 @@ static int send_packet(struct rtmp_conn *conn,
 
 static int handshake_start(struct rtmp_conn *conn)
 {
-	uint8_t x0 = RTMP_PROTOCOL_VERSION;
+	const uint8_t x0 = RTMP_PROTOCOL_VERSION;
 	int err;
 
 	err = send_packet(conn, &x0, sizeof(x0));
 	if (err)
-		goto out;
+		return err;
 
 	err = send_packet(conn, conn->x1, sizeof(conn->x1));
 	if (err)
@@ -608,8 +607,7 @@ static int handshake_start(struct rtmp_conn *conn)
 
 	set_state(conn, RTMP_STATE_VERSION_SENT);
 
- out:
-	return err;
+	return 0;
 }
 
 
@@ -701,14 +699,14 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 	if (err)
 		return err;
 
-	return err;
+	return 0;
 }
 
 
 static int send_connect(struct rtmp_conn *conn)
 {
 	struct mbuf *mb;
-	int err = 0;
+	int err;
 
 	mb = mbuf_alloc(512);
 
@@ -732,7 +730,7 @@ static int send_connect(struct rtmp_conn *conn)
 
 static int handshake_done(struct rtmp_conn *conn)
 {
-	int err = 0;
+	int err;
 
 	re_printf("[%s] ** handshake done **\n",
 		  conn->is_client ? "Client" : "Server");
@@ -740,9 +738,11 @@ static int handshake_done(struct rtmp_conn *conn)
 	if (conn->is_client) {
 
 		err = send_connect(conn);
+		if (err)
+			return err;
 	}
 
-	return err;
+	return 0;
 }
 
 
@@ -939,11 +939,8 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	}
 
  out:
-	if (err) {
-		re_printf("ERROR!\n");
+	if (err)
 		conn_close(conn, err);
-	}
-
 }
 
 
@@ -1089,8 +1086,10 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 	err = rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
 			   msg_type_id, msg_stream_id, payload, payload_len,
 			   rtmp_chunk_handler, conn);
+	if (err)
+		return err;
 
-	return err;
+	return 0;
 }
 
 
