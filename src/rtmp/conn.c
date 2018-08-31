@@ -22,7 +22,20 @@
 #define CONN_STREAM_ID (0)  /* always zero for netconn */
 
 
+/* User Control messages SHOULD use message stream ID 0
+   (known as the control stream)*/
+#define RTMP_CONTROL_STREAM_ID (0)
+
+
 #define WINDOW_ACK_SIZE 2500000
+
+
+enum event_type {
+	EVENT_STREAM_BEGIN       = 0,
+	EVENT_STREAM_IS_RECORDED = 4,
+	EVENT_PING_REQUEST       = 6,
+	EVENT_PING_RESPONSE      = 7,
+};
 
 
 static void conn_close(struct rtmp_conn *conn, int err);
@@ -69,6 +82,7 @@ static void conn_destructor(void *data)
 }
 
 
+/* Server */
 static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 {
 	struct mbuf *mb;
@@ -85,18 +99,18 @@ static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 	err  = rtmp_command_header_encode(mb, "_result", transaction_id);
 
 	err |= rtmp_amf_encode_object(mb, false, 3,
-		     AMF_TYPE_STRING, "fmsVer", "FMS/3,5,7,7009",
+		     AMF_TYPE_STRING, "fmsVer",       "FMS/3,5,7,7009",
 		     AMF_TYPE_NUMBER, "capabilities", 31.0,
-		     AMF_TYPE_NUMBER, "mode", 1.0);
+		     AMF_TYPE_NUMBER, "mode",         1.0);
 
 	err |= rtmp_amf_encode_object(mb, false, 6,
-		      AMF_TYPE_STRING, "level", "status",
-		      AMF_TYPE_STRING, "code", "NetConnection.Connect.Success",
-		      AMF_TYPE_STRING, "description", "Connection succeeded.",
-		      AMF_TYPE_ARRAY, "data", 1,
-		      AMF_TYPE_STRING, "version", "3,5,7,7009",
-		      AMF_TYPE_NUMBER, "clientid", 734806661.0,
-		      AMF_TYPE_NUMBER, "objectEncoding", 0.0);
+	      AMF_TYPE_STRING, "level",        "status",
+	      AMF_TYPE_STRING, "code",         "NetConnection.Connect.Success",
+	      AMF_TYPE_STRING, "description",  "Connection succeeded.",
+	      AMF_TYPE_ARRAY,  "data",         1,
+	      AMF_TYPE_STRING, "version",      "3,5,7,7009",
+	      AMF_TYPE_NUMBER, "clientid",     734806661.0,
+	      AMF_TYPE_NUMBER, "objectEncoding", 0.0);
 	if (err)
 		goto out;
 
@@ -160,7 +174,9 @@ static int control_send_set_peer_bw(struct rtmp_conn *conn,
 }
 
 
-static int control_send_user_control_msg(struct rtmp_conn *conn)
+/* Stream Begin */
+static int control_send_user_control_msg(struct rtmp_conn *conn,
+					 uint32_t stream_id)
 {
 	struct mbuf *mb = mbuf_alloc(6);
 	uint32_t chunk_id = RTMP_CHUNK_ID_CONTROL;
@@ -171,8 +187,8 @@ static int control_send_user_control_msg(struct rtmp_conn *conn)
 	if (!mb)
 		return ENOMEM;
 
-	(void)mbuf_write_u16(mb, 0);  /* Stream begin */
-	(void)mbuf_write_u32(mb, 0);
+	(void)mbuf_write_u16(mb, htons(EVENT_STREAM_BEGIN));
+	(void)mbuf_write_u32(mb, htonl(stream_id));
 
 	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
 			   RTMP_TYPE_USER_CONTROL_MSG, CONN_STREAM_ID,
@@ -254,7 +270,8 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 		if (err)
 			goto error;
 
-		err = control_send_user_control_msg(conn);
+		err = control_send_user_control_msg(conn,
+						    RTMP_CONTROL_STREAM_ID);
 		if (err)
 			goto error;
 
@@ -335,6 +352,55 @@ static void handle_amf_command(struct rtmp_conn *conn,
 }
 
 
+static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
+{
+	struct rtmp_stream *strm;
+	enum event_type event;
+	uint32_t stream_id;
+
+	event = ntohs(mbuf_read_u16(mb));
+
+	re_printf("[%s] got User Control Message:"
+		  " event_type=%u event_data=%zu bytes\n",
+		  conn->is_client ? "Client" : "Server",
+		  event, mbuf_get_left(mb));
+
+	switch (event) {
+
+	case EVENT_STREAM_BEGIN:
+		stream_id = ntohl(mbuf_read_u32(mb));
+
+		re_printf("rtmp: Stream Begin (stream_id=%u)\n", stream_id);
+
+		if (stream_id == RTMP_CONTROL_STREAM_ID) {
+			conn->stream_begin = true;
+		}
+		else {
+			strm = rtmp_stream_find(&conn->streaml, stream_id);
+			if (!strm) {
+				re_printf("rtmp: stream_begin:"
+					  " stream %u not found\n", stream_id);
+				return ENOSTR;
+			}
+		}
+		break;
+
+	case EVENT_STREAM_IS_RECORDED:
+		stream_id = ntohl(mbuf_read_u32(mb));
+		re_printf("rtmp: StreamIsRecorded (stream_id=%u)\n",
+			  stream_id);
+		break;
+
+	default:
+		re_printf("rtmp: user_control:"
+			  " unhandled event %u\n", event);
+		return EPROTO;  /* XXX: for development */
+	}
+
+	return 0;
+}
+
+
 static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 {
 	struct rtmp_conn *conn = arg;
@@ -348,9 +414,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		.buf = msg->buf
 	};
 	uint32_t was;
-	uint16_t event;
 	uint8_t limit;
-	uint32_t stream_id;
 	int err = 0;
 
 	if (conn->term)
@@ -400,26 +464,9 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_USER_CONTROL_MSG:
-		event = ntohs(mbuf_read_u16(&mb));
-
-		re_printf("[%s] got User Control Message: event_type=%u\n",
-			  conn->is_client ? "Client" : "Server",
-			  event);
-
-		switch (event) {
-
-			/* Stream Begin */
-		case 0:
-			stream_id = ntohl(mbuf_read_u32(&mb));
-			re_printf("Stream Begin (stream_id=%u)\n", stream_id);
-			conn->stream_begin = true;
-			break;
-
-		default:
-			re_printf("*** unhandled event %u\n", event);
-			break;
-		}
-
+		err = handle_user_control_msg(conn, &mb);
+		if (err)
+			goto error;
 		break;
 
 	case RTMP_TYPE_AUDIO:
