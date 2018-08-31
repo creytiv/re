@@ -23,6 +23,7 @@ struct rtmp_conn {
 	bool estab;
 	bool term;
 	rtmp_estab_h *estabh;
+	rtmp_status_h *statush;
 	rtmp_close_h *closeh;
 	void *arg;
 

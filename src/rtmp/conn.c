@@ -241,6 +241,9 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 	else if (0 == str_casecmp(cmd_hdr->name, "onStatus")) {
 
 		re_printf("rtmp: client: recv onStatus\n");
+
+		if (conn->statush)
+			conn->statush(dict, conn->arg);
 	}
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
@@ -514,7 +517,9 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 					 rtmp_estab_h *estabh,
-					 rtmp_close_h *closeh, void *arg)
+					 rtmp_status_h *statush,
+					 rtmp_close_h *closeh,
+					 void *arg)
 {
 	struct rtmp_conn *conn;
 	int err = 0;
@@ -534,6 +539,7 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 		goto out;
 
 	conn->estabh = estabh;
+	conn->statush = statush;
 	conn->closeh = closeh;
 	conn->arg = arg;
 
@@ -952,7 +958,8 @@ static void tcp_close_handler(int err, void *arg)
 
 
 int rtmp_connect(struct rtmp_conn **connp, const char *uri,
-		 rtmp_estab_h *estabh, rtmp_close_h *closeh, void *arg)
+		 rtmp_estab_h *estabh, rtmp_status_h *statush,
+		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
 	struct pl pl_addr;
@@ -977,7 +984,7 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 	if (err)
 		return err;
 
-	conn = rtmp_conn_alloc(true, estabh, closeh, arg);
+	conn = rtmp_conn_alloc(true, estabh, statush, closeh, arg);
 	if (!conn)
 		return ENOMEM;
 
@@ -1002,7 +1009,8 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 
 
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
-		rtmp_estab_h *estabh, rtmp_close_h *closeh, void *arg)
+		rtmp_estab_h *estabh, rtmp_status_h *statush,
+		rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
 	int err;
@@ -1010,7 +1018,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 	if (!connp || !ts)
 		return EINVAL;
 
-	conn = rtmp_conn_alloc(false, estabh, closeh, arg);
+	conn = rtmp_conn_alloc(false, estabh, statush, closeh, arg);
 	if (!conn)
 		return ENOMEM;
 
