@@ -97,13 +97,13 @@ static int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
 }
 
 
-int rtmp_amf_encode_object_start(struct mbuf *mb)
+static int rtmp_amf_encode_object_start(struct mbuf *mb)
 {
 	return mbuf_write_u8(mb, AMF_TYPE_OBJECT);
 }
 
 
-int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length)
+static int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length)
 {
 	int err;
 
@@ -122,12 +122,6 @@ static int rtmp_amf_encode_object_end(struct mbuf *mb)
 	err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
 
 	return err;
-}
-
-
-int rtmp_amf_encode_type(struct mbuf *mb, uint8_t type)
-{
-	return mbuf_write_u8(mb, type);
 }
 
 
