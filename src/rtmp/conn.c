@@ -43,6 +43,26 @@ static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 			      const uint8_t *pld, size_t pld_len, void *arg);
 
 
+static void get_version(uint8_t version[4])
+{
+	const char *ver_str = sys_libre_version_get();
+	struct pl plv[3];
+	int i;
+
+	memset(version, 0, 4);
+
+	if (0 == re_regex(ver_str, str_len(ver_str),
+			  "[0-9]+.[0-9]+.[0-9]+",
+			  &plv[0], &plv[1], &plv[2])) {
+
+		for (i=0; i<3; i++) {
+
+			version[i] = pl_u32(&plv[i]);
+		}
+	}
+}
+
+
 static int build_connect(struct mbuf *mb, const char *app, const char *url)
 {
 	double transaction_id = 1.0;
@@ -126,6 +146,7 @@ static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 }
 
 
+/* XXX: move to control.c ? */
 static int control_send_was(struct rtmp_conn *conn, uint32_t was)
 {
 	struct mbuf *mb = mbuf_alloc(4);
@@ -358,6 +379,9 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 	enum event_type event;
 	uint32_t stream_id;
 
+	if (mbuf_get_left(mb) < 2)
+		return EBADMSG;
+
 	event = ntohs(mbuf_read_u16(mb));
 
 	re_printf("[%s] got User Control Message:"
@@ -368,6 +392,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 	switch (event) {
 
 	case EVENT_STREAM_BEGIN:
+		if (mbuf_get_left(mb) < 4)
+			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
 
 		re_printf("rtmp: Stream Begin (stream_id=%u)\n", stream_id);
@@ -386,6 +412,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	case EVENT_STREAM_IS_RECORDED:
+		if (mbuf_get_left(mb) < 4)
+			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
 		re_printf("rtmp: StreamIsRecorded (stream_id=%u)\n",
 			  stream_id);
@@ -405,14 +433,13 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 {
 	struct rtmp_conn *conn = arg;
 	struct rtmp_stream *strm;
-	void *p;
-	uint32_t val;
 	struct mbuf mb = {
-		.pos = 0,
-		.end = msg->length,
+		.pos  = 0,
+		.end  = msg->length,
 		.size = msg->length,
-		.buf = msg->buf
+		.buf  = msg->buf
 	};
+	uint32_t val;
 	uint32_t was;
 	uint8_t limit;
 	int err = 0;
@@ -427,12 +454,14 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	switch (msg->type) {
 
 	case RTMP_TYPE_SET_CHUNK_SIZE:
-		p = msg->buf;
-		val = *(uint32_t *)p;
+		if (mbuf_get_left(&mb) < 4)
+			return;
 
-		val = ntohl(val) & 0x7fffffff;
+		val = ntohl(mbuf_read_u32(&mb));
 
-		re_printf("set chunk size:  %u bytes\n", val);
+		val = val & 0x7fffffff;
+
+		re_printf("rtmp: set chunk size:  %u bytes\n", val);
 
 		rtmp_dechunker_set_chunksize(conn->dechunk, val);
 		break;
@@ -442,6 +471,9 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
+		if (mbuf_get_left(&mb) < 4)
+			return;
+
 		was = ntohl(mbuf_read_u32(&mb));
 		re_printf("[%s] got Window Ack Size from peer: %u\n",
 			  conn->is_client ? "Client" : "Server", was);
@@ -451,6 +483,9 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:
+		if (mbuf_get_left(&mb) < 5)
+			return;
+
 		was = ntohl(mbuf_read_u32(&mb));
 		limit = mbuf_read_u8(&mb);
 		re_printf("[%s] got Set Peer Bandwidth from peer:"
@@ -519,6 +554,7 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 					 void *arg)
 {
 	struct rtmp_conn *conn;
+	uint32_t uptime;
 	int err;
 
 	conn = mem_zalloc(sizeof(*conn), conn_destructor);
@@ -528,7 +564,11 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	conn->is_client = is_client;
 	conn->state = RTMP_STATE_UNINITIALIZED;
 
-	rand_bytes(conn->x1, sizeof(conn->x1));
+	/* XXX check this */
+	uptime = 0;
+	memcpy(conn->x1, &uptime, 4);
+	get_version(&conn->x1[4]);
+	rand_bytes(conn->x1 + 8, sizeof(conn->x1) - 8);
 
 	err = rtmp_dechunker_alloc(&conn->dechunk, rtmp_msg_handler, conn);
 	if (err)
@@ -767,6 +807,10 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
+		re_printf("got S1: [ %w ]\n", s1, 16);
+		re_printf("        server version: %u.%u.%u.%u\n",
+			  s1[4], s1[5], s1[6], s1[7]);
+
 		memcpy(c2, s1, sizeof(c2));
 
 		err = send_packet(conn, c2, sizeof(c2));
@@ -784,7 +828,7 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
-		/* XXX: compare */
+		/* XXX: compare C1 and S2 */
 
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 
@@ -811,15 +855,15 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	uint8_t c0;
-	uint8_t s2[RTMP_SIG_SIZE];
 	uint8_t c1[RTMP_SIG_SIZE];
 	uint8_t c2[RTMP_SIG_SIZE];
+	uint8_t s2[RTMP_SIG_SIZE];
 	int err = 0;
 
 	switch (conn->state) {
 
 	case RTMP_STATE_UNINITIALIZED:
-		if (mbuf_get_left(mb) < (1+RTMP_SIG_SIZE))
+		if (mbuf_get_left(mb) < 1)
 			return ENODATA;
 
 		c0 = mbuf_read_u8(mb);
@@ -828,14 +872,39 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return EPROTO;
 		}
 
+		re_printf("got C0\n");
+
+		/* Send S0 + S1 */
+		err = handshake_start(conn);
+		if (err)
+			return err;
+		break;
+
+	case RTMP_STATE_VERSION_SENT:
+		if (mbuf_get_left(mb) < (RTMP_SIG_SIZE))
+			return ENODATA;
+
 		err = mbuf_read_mem(mb, c1, sizeof(c1));
 		if (err)
 			return err;
 
-		err = handshake_start(conn);
+		re_printf("got C1: [ %w ]\n", c1, 16);
+		re_printf("        client version: %u.%u.%u.%u\n",
+			  c1[4], c1[5], c1[6], c1[7]);
+
+		/* Send S2 */
+
+		/* Copy C1 to S2 */
+		memcpy(s2, c1, sizeof(s2));
+
+		err = send_packet(conn, s2, sizeof(s2));
+		if (err)
+			return err;
+
+		set_state(conn, RTMP_STATE_ACK_SENT);
 		break;
 
-	case RTMP_STATE_VERSION_SENT:
+	case RTMP_STATE_ACK_SENT:
 		if (mbuf_get_left(mb) < (RTMP_SIG_SIZE))
 			return ENODATA;
 
@@ -843,14 +912,6 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
-		/* XXX memcpy(c2, s1, sizeof(c2)); */
-		memset(s2, 0, sizeof(s2));
-
-		err = send_packet(conn, s2, sizeof(s2));
-		if (err)
-			return err;
-
-		set_state(conn, RTMP_STATE_ACK_SENT);
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 
 		handshake_done(conn);
