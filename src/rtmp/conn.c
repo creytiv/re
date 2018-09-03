@@ -22,20 +22,7 @@
 #define CONN_STREAM_ID (0)  /* always zero for netconn */
 
 
-/* User Control messages SHOULD use message stream ID 0
-   (known as the control stream)*/
-#define RTMP_CONTROL_STREAM_ID (0)
-
-
 #define WINDOW_ACK_SIZE 2500000
-
-
-enum event_type {
-	EVENT_STREAM_BEGIN       = 0,
-	EVENT_STREAM_IS_RECORDED = 4,
-	EVENT_PING_REQUEST       = 6,
-	EVENT_PING_RESPONSE      = 7,
-};
 
 
 static void conn_close(struct rtmp_conn *conn, int err);
@@ -146,78 +133,6 @@ static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 }
 
 
-/* XXX: move to control.c ? */
-static int control_send_was(struct rtmp_conn *conn, uint32_t was)
-{
-	struct mbuf *mb = mbuf_alloc(4);
-	int err;
-
-	if (!mb)
-		return ENOMEM;
-
-	(void)mbuf_write_u32(mb, htonl(was));
-
-	err = rtmp_conn_send_msg(conn, 0, RTMP_CHUNK_ID_CONTROL, 0, 0,
-				 RTMP_TYPE_WINDOW_ACK_SIZE, CONN_STREAM_ID,
-				 mb->buf, mb->end);
-
-	mem_deref(mb);
-
-	return err;
-}
-
-
-static int control_send_set_peer_bw(struct rtmp_conn *conn,
-				    size_t was, uint8_t limit_type)
-{
-	struct mbuf *mb = mbuf_alloc(5);
-	uint32_t chunk_id = RTMP_CHUNK_ID_CONTROL;
-	uint32_t timestamp = 0;
-	uint32_t timestamp_delta = 0;
-	int err;
-
-	if (!mb)
-		return ENOMEM;
-
-	(void)mbuf_write_u32(mb, htonl(was));
-	(void)mbuf_write_u8(mb, limit_type);
-
-	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
-			   RTMP_TYPE_SET_PEER_BANDWIDTH, CONN_STREAM_ID,
-			   mb->buf, mb->end, rtmp_chunk_handler, conn);
-
-	mem_deref(mb);
-
-	return err;
-}
-
-
-/* Stream Begin */
-static int control_send_user_control_msg(struct rtmp_conn *conn,
-					 uint32_t stream_id)
-{
-	struct mbuf *mb = mbuf_alloc(6);
-	uint32_t chunk_id = RTMP_CHUNK_ID_CONTROL;
-	uint32_t timestamp = 0;
-	uint32_t timestamp_delta = 0;
-	int err;
-
-	if (!mb)
-		return ENOMEM;
-
-	(void)mbuf_write_u16(mb, htons(EVENT_STREAM_BEGIN));
-	(void)mbuf_write_u32(mb, htonl(stream_id));
-
-	err = rtmp_chunker(0, chunk_id, timestamp, timestamp_delta,
-			   RTMP_TYPE_USER_CONTROL_MSG, CONN_STREAM_ID,
-			   mb->buf, mb->end, rtmp_chunk_handler, conn);
-
-	mem_deref(mb);
-
-	return err;
-}
-
-
 static bool is_established(const struct rtmp_conn *conn)
 {
 	return conn->estab && conn->window_ack_size;
@@ -283,15 +198,15 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 		if (conn->estab)
 			return;
 
-		err = control_send_was(conn, WINDOW_ACK_SIZE);
+		err = rtmp_control_send_was(conn, WINDOW_ACK_SIZE);
 		if (err)
 			goto error;
 
-		err = control_send_set_peer_bw(conn, WINDOW_ACK_SIZE, 2);
+		err = rtmp_control_send_set_peer_bw(conn, WINDOW_ACK_SIZE, 2);
 		if (err)
 			goto error;
 
-		err = control_send_user_control_msg(conn,
+		err = rtmp_control_send_user_control_msg(conn,
 						    RTMP_CONTROL_STREAM_ID);
 		if (err)
 			goto error;
@@ -493,7 +408,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			  conn->is_client ? "Client" : "Server",
 			  was, limit);
 
-		err = control_send_was(conn, WINDOW_ACK_SIZE);
+		err = rtmp_control_send_was(conn, WINDOW_ACK_SIZE);
 		if (err)
 			goto error;
 		break;

@@ -5,9 +5,22 @@
  */
 
 
+/* User Control messages SHOULD use message stream ID 0
+   (known as the control stream)*/
+#define RTMP_CONTROL_STREAM_ID (0)
+
+
 enum {
 	RTMP_DEFAULT_CHUNKSIZE = 128,
 	MESSAGE_LEN_MAX = 524288,
+};
+
+
+enum event_type {
+	EVENT_STREAM_BEGIN       = 0,
+	EVENT_STREAM_IS_RECORDED = 4,
+	EVENT_PING_REQUEST       = 6,
+	EVENT_PING_RESPONSE      = 7,
 };
 
 
@@ -73,3 +86,12 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 		       uint32_t timestamp, uint32_t timestamp_delta,
 		       uint8_t msg_type_id, uint32_t msg_stream_id,
 		       const uint8_t *payload, size_t payload_len);
+
+
+/* Control */
+
+int rtmp_control_send_was(struct rtmp_conn *conn, uint32_t was);
+int rtmp_control_send_set_peer_bw(struct rtmp_conn *conn,
+				  size_t was, uint8_t limit_type);
+int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
+				       uint32_t stream_id);
