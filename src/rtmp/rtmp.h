@@ -131,3 +131,8 @@ struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid);
 
 int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
 			    unsigned propc, va_list *ap);
+
+
+const struct odict_entry *odict_lookup_index(const struct odict *o,
+					     unsigned ix,
+					     int type);

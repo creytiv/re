@@ -21,6 +21,11 @@
 #define WINDOW_ACK_SIZE 2500000
 
 
+enum {
+	BUFSIZE_MAX  = 524288,
+};
+
+
 static void conn_close(struct rtmp_conn *conn, int err);
 static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 			      const uint8_t *pld, size_t pld_len, void *arg);
@@ -77,7 +82,7 @@ static void conn_destructor(void *data)
 
 
 /* Server */
-static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
+static int server_send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 {
 	struct mbuf *mb;
 	int err;
@@ -86,11 +91,12 @@ static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 	if (!mb)
 		return ENOMEM;
 
-	re_printf("[%s] reply: tid=%llu\n",
-		  conn->is_client ? "Client" : "Server",
+	re_printf("server reply: tid=%llu\n",
 		  transaction_id);
 
 	err  = rtmp_command_header_encode(mb, "_result", transaction_id);
+
+	/* XXX: command specific response, make generic */
 
 	err |= rtmp_amf_encode_object(mb, false, 3,
 		     AMF_TYPE_STRING, "fmsVer",       "FMS/3,5,7,7009",
@@ -197,7 +203,7 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 		if (err)
 			goto error;
 
-		err = send_reply(conn, cmd_hdr->transaction_id);
+		err = server_send_reply(conn, cmd_hdr->transaction_id);
 		if (err) {
 			re_printf("rtmp: reply failed (%m)\n", err);
 			goto error;
@@ -255,7 +261,7 @@ static void handle_amf_command(struct rtmp_conn *conn,
 		goto out;
 	}
 
-#if 1
+#if 0
 	re_printf("[%s] Command: %H\n",
 		  conn->is_client ? "Client" : "Server",
 		  rtmp_command_header_print, &cmd_hdr);
@@ -737,8 +743,7 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
-		re_printf("got S1: [ %w ]\n", s1, 16);
-		re_printf("        server version: %u.%u.%u.%u\n",
+		re_printf("server version: %u.%u.%u.%u\n",
 			  s1[4], s1[5], s1[6], s1[7]);
 
 		memcpy(c2, s1, sizeof(c2));
@@ -877,9 +882,12 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 
 	/* re-assembly of fragments */
 	if (conn->mb) {
-		size_t pos;
+		const size_t len = mbuf_get_left(mb_pkt), pos = conn->mb->pos;
 
-		pos = conn->mb->pos;
+		if ((mbuf_get_left(conn->mb) + len) > BUFSIZE_MAX) {
+			err = EOVERFLOW;
+			goto out;
+		}
 
 		conn->mb->pos = conn->mb->end;
 
@@ -1036,8 +1044,8 @@ static void createstream_resp_handler(int err,
 				      struct odict *dict, void *arg)
 {
 	struct rtmp_conn *conn = arg;
-
-	re_printf("createstream resp: %m\n", err);
+	const struct odict_entry *entry;
+	uint32_t stream_id;
 
 	if (err) {
 		re_printf("### createStream failed (%m)\n", err);
@@ -1046,6 +1054,15 @@ static void createstream_resp_handler(int err,
 	}
 
 	/* XXX: use stream_id from response, pass to struct rtmp_stream */
+	entry = odict_lookup_index(dict, 3, ODICT_DOUBLE);
+	if (!entry) {
+		re_printf("missing entry\n");
+		return;
+	}
+
+	stream_id = (uint32_t)entry->u.dbl;
+
+	re_printf("createStream resp:  stream_id=%u\n", stream_id);
 }
 
 

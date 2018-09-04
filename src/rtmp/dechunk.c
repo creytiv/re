@@ -22,6 +22,7 @@ enum {
 struct rtmp_dechunker {
 	struct list msgl;  /* struct rtmp_message */
 	size_t chunk_sz;
+	uint32_t last_stream_id;    /* XXX: per chunk ? */
 	rtmp_msg_h *msgh;
 	void *arg;
 };
@@ -159,7 +160,16 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (!msg)
 			return ENOMEM;
 
-		msg->stream_id = hdr.stream_id;
+		/* type 1 and 2 does not contain stream id */
+		if (hdr.format == 0) {
+			msg->stream_id = hdr.stream_id;
+			rd->last_stream_id = hdr.stream_id;
+			re_printf("set last stream_id: %u\n",
+				  rd->last_stream_id);
+		}
+		else {
+			msg->stream_id = rd->last_stream_id;
+		}
 
 		err = mbuf_read_mem(mb, msg->buf, chunk_sz);
 		if (err)

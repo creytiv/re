@@ -120,6 +120,19 @@ static int decode_basic_hdr(struct rtmp_header *hdr, struct mbuf *mb)
 }
 
 
+void rtmp_header_init(struct rtmp_header *hdr, unsigned fmt, uint32_t chunk_id)
+{
+	if (!hdr)
+		return;
+
+	/* XXX magic pattern for debugging */
+	memset(hdr, 0xff, sizeof(*hdr));
+
+	hdr->format   = fmt;
+	hdr->chunk_id = chunk_id;
+}
+
+
 int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 {
 	int err = 0;
@@ -165,7 +178,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 	if (!hdr || !mb)
 		return EINVAL;
 
-	memset(hdr, 0, sizeof(*hdr));
+	rtmp_header_init(hdr, 0, 0xffffffff);
 
 	err = decode_basic_hdr(hdr, mb);
 	if (err)

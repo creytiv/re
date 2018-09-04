@@ -42,8 +42,10 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 	uint64_t tid;
 	int err;
 
-	re_printf("### new ctrans: command=\"%s\", propc=%u\n",
-		  command, body_propc);
+	if (!conn || !command)
+		return EINVAL;
+	if (!mb)
+		return ENOMEM;
 
 	tid = ++conn->tid_counter;
 
@@ -61,8 +63,6 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 
 	list_append(&conn->ctransl, &ct->le, ct);
 
-#if 1
-
 	err = rtmp_command_header_encode(mb, command, tid);
 	if (err)
 		goto out;
@@ -71,19 +71,16 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 		va_start(ap, body_propc);
 		err = rtmp_amf_vencode_object(mb, CLASS_ROOT, body_propc, &ap);
 		va_end(ap);
+		if (err)
+			goto out;
 	}
 
+	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+				    stream_id, mb->buf, mb->end);
 	if (err)
 		goto out;
 
-	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID, stream_id,
-				    mb->buf, mb->end);
-	if (err)
-		goto out;
-
-#endif
-
-	DEBUG_NOTICE("### new ctrans (command=%s, tid=%llu)"
+	DEBUG_NOTICE("### new ctrans (command=\"%s\", tid=%llu)"
 		  " stream_id=%u, propc=%u\n",
 		  command, tid, stream_id, body_propc);
 
@@ -127,6 +124,8 @@ void rtmp_ctrans_response(const struct list *ctransl, bool success,
 			      cmd_hdr->name, cmd_hdr->transaction_id);
 		return;
 	}
+
+	DEBUG_NOTICE("### ctrans response (%s)\n", ct->command);
 
 	if (success)
 		++ct->replies;

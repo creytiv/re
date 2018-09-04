@@ -17,9 +17,9 @@
 #include "rtmp.h"
 
 
-static const struct odict_entry *odict_lookup_index(const struct odict *o,
+const struct odict_entry *odict_lookup_index(const struct odict *o,
 					     unsigned ix,
-					     enum odict_type type)
+					     int type)
 {
 	struct le *le;
 	unsigned i;
