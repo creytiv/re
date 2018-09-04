@@ -46,31 +46,6 @@ static void get_version(uint8_t version[4])
 }
 
 
-#if 0
-static int build_connect(struct mbuf *mb, const char *app, const char *url)
-{
-	double transaction_id = 1.0;
-	int err;
-	const int aucodecs  = 0x0400;  /* AAC  */
-	const int vidcodecs = 0x0080;  /* H264 */
-
-	err = rtmp_command_header_encode(mb, "connect", transaction_id);
-
-	err |= rtmp_amf_encode_object(mb, false, 8,
-		     AMF_TYPE_STRING, "app", app,
-		     AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
-		     AMF_TYPE_STRING, "tcUrl", url,
-		     AMF_TYPE_BOOLEAN, "fpad", false,
-		     AMF_TYPE_NUMBER, "capabilities", 15.0,
-		     AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
-		     AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodecs,
-		     AMF_TYPE_NUMBER, "videoFunction", 1.0);
-
-	return err;
-}
-#endif
-
-
 static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
@@ -718,31 +693,6 @@ static int send_connect(struct rtmp_conn *conn)
 
 	return 0;
 }
-
-
-#if 0
-static int build_connect(struct mbuf *mb, const char *app, const char *url)
-{
-	double transaction_id = 1.0;
-	int err;
-	const int aucodecs  = 0x0400;  /* AAC  */
-	const int vidcodecs = 0x0080;  /* H264 */
-
-	err = rtmp_command_header_encode(mb, "connect", transaction_id);
-
-	err |= rtmp_amf_encode_object(mb, false, 8,
-		     AMF_TYPE_STRING, "app", app,
-		     AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
-		     AMF_TYPE_STRING, "tcUrl", url,
-		     AMF_TYPE_BOOLEAN, "fpad", false,
-		     AMF_TYPE_NUMBER, "capabilities", 15.0,
-		     AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
-		     AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodecs,
-		     AMF_TYPE_NUMBER, "videoFunction", 1.0);
-
-	return err;
-}
-#endif
 
 
 static int handshake_done(struct rtmp_conn *conn)

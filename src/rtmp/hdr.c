@@ -81,44 +81,6 @@ static int encode_basic_hdr(struct mbuf *mb, unsigned fmt,
 }
 
 
-int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
-{
-	int err = 0;
-
-	if (!mb || !hdr)
-		return EINVAL;
-
-	err = encode_basic_hdr(mb, hdr->format, hdr->chunk_id);
-	if (err)
-		return err;
-
-	switch (hdr->format) {
-
-	case 0:
-		err |= mbuf_write_u24_hton(mb, hdr->timestamp);
-		err |= mbuf_write_u24_hton(mb, hdr->length);
-		err |= mbuf_write_u8(mb, hdr->type_id);
-		err |= mbuf_write_u32(mb, sys_htoll(hdr->stream_id));
-		break;
-
-	case 1:
-		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
-		err |= mbuf_write_u24_hton(mb, hdr->length);
-		err |= mbuf_write_u8(mb, hdr->type_id);
-		break;
-
-	case 2:
-		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
-		break;
-
-	case 3:
-		break;
-	}
-
-	return err;
-}
-
-
 static int decode_basic_hdr(struct rtmp_header *hdr, struct mbuf *mb)
 {
 	uint8_t cs_id;
@@ -158,12 +120,52 @@ static int decode_basic_hdr(struct rtmp_header *hdr, struct mbuf *mb)
 }
 
 
+int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
+{
+	int err = 0;
+
+	if (!mb || !hdr)
+		return EINVAL;
+
+	err = encode_basic_hdr(mb, hdr->format, hdr->chunk_id);
+	if (err)
+		return err;
+
+	switch (hdr->format) {
+
+	case 0:
+		err |= mbuf_write_u24_hton(mb, hdr->timestamp);
+		err |= mbuf_write_u24_hton(mb, hdr->length);
+		err |= mbuf_write_u8(mb, hdr->type_id);
+		err |= mbuf_write_u32(mb, sys_htoll(hdr->stream_id));
+		break;
+
+	case 1:
+		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
+		err |= mbuf_write_u24_hton(mb, hdr->length);
+		err |= mbuf_write_u8(mb, hdr->type_id);
+		break;
+
+	case 2:
+		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
+		break;
+
+	case 3:
+		break;
+	}
+
+	return err;
+}
+
+
 int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 {
 	int err;
 
 	if (!hdr || !mb)
 		return EINVAL;
+
+	memset(hdr, 0, sizeof(*hdr));
 
 	err = decode_basic_hdr(hdr, mb);
 	if (err)
