@@ -32,7 +32,7 @@ const struct odict_entry *odict_lookup_index(const struct odict *o,
 		const struct odict_entry *entry = le->data;
 
 		if (ix == i) {
-			if (entry->type == type)
+			if ((int)entry->type == type)
 				return entry;
 			else {
 				re_printf("invalid type at index %u\n",
