@@ -109,13 +109,21 @@ enum amf_type {
 	AMF_TYPE_OBJECT_END = 0x09,
 };
 
+/* XXX: find a better name */
+enum class {
+	CLASS_OBJECT = 0,
+	CLASS_ARRAY  = 1,
+	CLASS_ROOT   = 2
+};
+
 struct odict;
 
 int rtmp_amf_encode_number(struct mbuf *mb, double val);
 int rtmp_amf_encode_boolean(struct mbuf *mb, bool boolean);
 int rtmp_amf_encode_string(struct mbuf *mb, const char *str);
 int rtmp_amf_encode_null(struct mbuf *mb);
-int rtmp_amf_encode_object(struct mbuf *mb, bool array, unsigned propc, ...);
+int rtmp_amf_encode_object(struct mbuf *mb, enum class class,
+			   unsigned propc, ...);
 
 int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
 

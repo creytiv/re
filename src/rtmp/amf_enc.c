@@ -16,6 +16,14 @@
 #include "rtmp.h"
 
 
+#define DEBUG_MODULE "rtmp"
+#define DEBUG_LEVEL 5
+#include <re_dbg.h>
+
+
+#define PROPC_MAX 8
+
+
 int rtmp_amf_encode_number(struct mbuf *mb, double val)
 {
 	const union {
@@ -133,35 +141,60 @@ static int rtmp_amf_encode_object_end(struct mbuf *mb)
  * NULL      NULL
  * ARRAY     const char *key    sub-count
  */
-static int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
-				   unsigned propc, va_list *ap)
+int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
+			    unsigned propc, va_list *ap)
 {
+	bool is_root = false;
 	unsigned i;
-	int err;
+	int err = 0;
 
-	if (!mb)
+	if (!mb || !propc)
 		return EINVAL;
 
-	if (array)
-		err = rtmp_amf_encode_array_start(mb, propc);
-	else
+	if (propc > PROPC_MAX) {
+		DEBUG_WARNING("amf_enc: too many properties (%u > %u)\n",
+			      propc, PROPC_MAX);
+		return EOVERFLOW;
+	}
+
+	switch (class) {
+
+	case CLASS_OBJECT:
 		err = rtmp_amf_encode_object_start(mb);
+		break;
+
+	case CLASS_ARRAY:
+		err = rtmp_amf_encode_array_start(mb, propc);
+		break;
+
+	case CLASS_ROOT:
+		is_root = true;
+		break;
+
+	default:
+		return ENOTSUP;
+	}
 
 	for (i=0; i<propc; i++) {
 
 		int type        = va_arg(*ap, int);
-		const char *key = va_arg(*ap, const char *);
+		const char *key;
 		const char *str;
 		int subcount;
 		double dbl;
 		bool b;
 
-		if (!key)
-			return EINVAL;
+		/* add key if ARRAY or OBJECT container */
+		if (!is_root) {
+			key = va_arg(*ap, const char *);
 
-		err = rtmp_amf_encode_key(mb, key);
-		if (err)
-			break;
+			if (!key)
+				return EINVAL;
+
+			err = rtmp_amf_encode_key(mb, key);
+			if (err)
+				break;
+		}
 
 		switch (type) {
 
@@ -187,11 +220,19 @@ static int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
 
 		case AMF_TYPE_ARRAY:  /* recursive */
 			subcount = va_arg(*ap, int);
-			err = rtmp_amf_vencode_object(mb, true, subcount, ap);
+			err = rtmp_amf_vencode_object(mb, CLASS_ARRAY,
+						      subcount, ap);
+			break;
+
+		case AMF_TYPE_OBJECT:  /* recursive */
+			subcount = va_arg(*ap, int);
+			err = rtmp_amf_vencode_object(mb, CLASS_OBJECT,
+						      subcount, ap);
 			break;
 
 		default:
-			re_printf("type not supported (%d)\n", type);
+			re_printf("rtmp: amf_enc: type not supported"
+				  " (propc=%u, type=%d)\n", propc, type);
 			return ENOTSUP;
 		}
 
@@ -199,19 +240,21 @@ static int rtmp_amf_vencode_object(struct mbuf *mb, bool array,
 			break;
 	}
 
-	err |= rtmp_amf_encode_object_end(mb);
+	if (!is_root)
+		err |= rtmp_amf_encode_object_end(mb);
 
 	return err;
 }
 
 
-int rtmp_amf_encode_object(struct mbuf *mb, bool array, unsigned propc, ...)
+int rtmp_amf_encode_object(struct mbuf *mb, enum class class,
+			   unsigned propc, ...)
 {
 	va_list ap;
 	int err;
 
 	va_start(ap, propc);
-	err = rtmp_amf_vencode_object(mb, array, propc, &ap);
+	err = rtmp_amf_vencode_object(mb, class, propc, &ap);
 	va_end(ap);
 
 	return err;

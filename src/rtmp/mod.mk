@@ -14,3 +14,4 @@ SRCS	+= rtmp/dechunk.c
 SRCS	+= rtmp/handshake.c
 SRCS	+= rtmp/hdr.c
 SRCS	+= rtmp/stream.c
+SRCS	+= rtmp/ctrans.c

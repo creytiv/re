@@ -18,10 +18,6 @@
 #include "rtmp.h"
 
 
-#define CONN_CHUNK_ID  (3)
-#define CONN_STREAM_ID (0)  /* always zero for netconn */
-
-
 #define WINDOW_ACK_SIZE 2500000
 
 
@@ -50,6 +46,7 @@ static void get_version(uint8_t version[4])
 }
 
 
+#if 0
 static int build_connect(struct mbuf *mb, const char *app, const char *url)
 {
 	double transaction_id = 1.0;
@@ -71,13 +68,28 @@ static int build_connect(struct mbuf *mb, const char *app, const char *url)
 
 	return err;
 }
+#endif
 
 
 static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
+	struct le *le;
 
 	re_printf("%H\n", rtmp_conn_debug, conn);
+
+	le = conn->ctransl.head;
+	while (le) {
+		struct rtmp_ctrans *ct = le->data;
+		le = le->next;
+
+		re_printf("### flush transaction"
+			  " [command=%-12s    tid=%llu"
+			  "    replies=%u    errors=%u]\n",
+			  ct->command, ct->tid, ct->replies, ct->errors);
+
+		mem_deref(ct);
+	}
 
 	list_flush(&conn->streaml);
 
@@ -121,8 +133,8 @@ static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 	if (err)
 		goto out;
 
-	err = rtmp_send_amf_command(conn, 0, CONN_CHUNK_ID, CONN_STREAM_ID,
-			       mb->buf, mb->end);
+	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+				    RTMP_CONTROL_STREAM_ID, mb->buf, mb->end);
 	if (err)
 		goto out;
 
@@ -135,7 +147,7 @@ static int send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 
 static bool is_established(const struct rtmp_conn *conn)
 {
-	return conn->estab && conn->window_ack_size;
+	return conn->connected && conn->window_ack_size;
 }
 
 
@@ -160,20 +172,19 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 {
 	(void)dict;
 
-	if (0 == str_casecmp(cmd_hdr->name, "_result")) {
+	if (0 == str_casecmp(cmd_hdr->name, "_result") ||
+	    0 == str_casecmp(cmd_hdr->name, "_error")) {
 
-		if (conn->estab)
-			return;
+		bool success = (0 == str_casecmp(cmd_hdr->name, "_result"));
 
-		re_printf("client: Established\n");
-
-		conn->estab = true;
-
-		check_established(conn);
+		/* forward response to transaction layer */
+		rtmp_ctrans_response(&conn->ctransl, success, cmd_hdr, dict);
 	}
 	else if (0 == str_casecmp(cmd_hdr->name, "onStatus")) {
 
 		re_printf("rtmp: client: recv onStatus\n");
+
+		/* XXX: lookup stream_id, pass to struct rtmp_stream ? */
 
 		if (conn->statush)
 			conn->statush(dict, conn->arg);
@@ -195,7 +206,7 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 	if (0 == str_casecmp(cmd_hdr->name, "connect")) {
 
-		if (conn->estab)
+		if (conn->connected)
 			return;
 
 		err = rtmp_control_send_was(conn, WINDOW_ACK_SIZE);
@@ -217,7 +228,7 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 			goto error;
 		}
 
-		conn->estab = true;
+		conn->connected = true;
 
 		check_established(conn);
 	}
@@ -655,29 +666,83 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 }
 
 
-static int send_connect(struct rtmp_conn *conn)
+static void connect_resp_handler(int err, const struct command_header *cmd_hdr,
+				 struct odict *dict, void *arg)
 {
-	struct mbuf *mb;
-	int err;
+	struct rtmp_conn *conn = arg;
+	(void)conn;
 
-	mb = mbuf_alloc(512);
-
-	err = build_connect(mb, conn->app, conn->uri);
-	if (err)
-		goto out;
-
-	err = rtmp_send_amf_command(conn, 0, CONN_CHUNK_ID, CONN_STREAM_ID,
-				    mb->buf, mb->end);
 	if (err) {
-		re_printf("rtmp: failed to send AMF command (%m)\n", err);
-		goto out;
+		re_printf("### connect failed (%m)\n", err);
+		conn_close(conn, err);
+		return;
 	}
 
- out:
-	mem_deref(mb);
+	re_printf("connect resp: success\n");
+
+	if (conn->connected)
+		return;
+
+	re_printf("client: Connected\n");
+
+	conn->connected = true;
+
+	check_established(conn);
+}
+
+
+static int send_connect(struct rtmp_conn *conn)
+{
+	const int aucodecs  = 0x0400;  /* AAC  */
+	const int vidcodecs = 0x0080;  /* H264 */
+	int err;
+
+	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "connect",
+			       connect_resp_handler, conn,
+			       1,
+		       AMF_TYPE_OBJECT, 8,
+		         AMF_TYPE_STRING, "app", conn->app,
+		         AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
+		         AMF_TYPE_STRING, "tcUrl", conn->uri,
+		         AMF_TYPE_BOOLEAN, "fpad", false,
+		         AMF_TYPE_NUMBER, "capabilities", 15.0,
+		         AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
+		         AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodecs,
+		         AMF_TYPE_NUMBER, "videoFunction", 1.0
+
+			       );
+	if (err) {
+		re_printf("rtmp: ctrans failed (%m)\n", err);
+		return err;
+	}
+
+	return 0;
+}
+
+
+#if 0
+static int build_connect(struct mbuf *mb, const char *app, const char *url)
+{
+	double transaction_id = 1.0;
+	int err;
+	const int aucodecs  = 0x0400;  /* AAC  */
+	const int vidcodecs = 0x0080;  /* H264 */
+
+	err = rtmp_command_header_encode(mb, "connect", transaction_id);
+
+	err |= rtmp_amf_encode_object(mb, false, 8,
+		     AMF_TYPE_STRING, "app", app,
+		     AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
+		     AMF_TYPE_STRING, "tcUrl", url,
+		     AMF_TYPE_BOOLEAN, "fpad", false,
+		     AMF_TYPE_NUMBER, "capabilities", 15.0,
+		     AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
+		     AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodecs,
+		     AMF_TYPE_NUMBER, "videoFunction", 1.0);
 
 	return err;
 }
+#endif
 
 
 static int handshake_done(struct rtmp_conn *conn)
@@ -1016,32 +1081,39 @@ uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn)
 }
 
 
+static void createstream_resp_handler(int err,
+				      const struct command_header *cmd_hdr,
+				      struct odict *dict, void *arg)
+{
+	struct rtmp_conn *conn = arg;
+
+	re_printf("createstream resp: %m\n", err);
+
+	if (err) {
+		re_printf("### createStream failed (%m)\n", err);
+		conn_close(conn, err);
+		return;
+	}
+
+	/* XXX: use stream_id from response, pass to struct rtmp_stream */
+}
+
+
 int rtmp_createstream(struct rtmp_conn *conn)
 {
-	struct mbuf *mb;
 	int err;
 
-	if (!conn)
-		return EINVAL;
+	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
+			       createstream_resp_handler, conn,
+			       1,
+			         AMF_TYPE_NULL, NULL
+			       );
+	if (err) {
+		re_printf("rtmp: create_stream: ctrans failed (%m)\n", err);
+		return err;
+	}
 
-	mb = mbuf_alloc(512);
-	if (!mb)
-		return ENOMEM;
-
-	err  = rtmp_command_header_encode(mb, "createStream", 2);
-	err |= rtmp_amf_encode_null(mb);
-	if (err)
-		goto out;
-
-	err = rtmp_send_amf_command(conn, 1, CONN_CHUNK_ID, CONN_STREAM_ID,
-				    mb->buf, mb->end);
-	if (err)
-		goto out;
-
- out:
-	mem_deref(mb);
-
-	return err;
+	return 0;
 }
 
 
@@ -1077,7 +1149,7 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 			  conn->is_client ? "Client" : "Server");
 	err |= re_hprintf(pf, "state:         %s\n",
 			  rtmp_handshake_name(conn->state));
-	err |= re_hprintf(pf, "estab:         %d\n", conn->estab);
+	err |= re_hprintf(pf, "connected:     %d\n", conn->connected);
 
 	err |= re_hprintf(pf, "createstream:  %d\n", conn->createstream);
 	err |= re_hprintf(pf, "stream_begin:  %d\n", conn->stream_begin);
