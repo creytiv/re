@@ -91,6 +91,10 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 		       uint32_t timestamp, uint32_t timestamp_delta,
 		       uint8_t msg_type_id, uint32_t msg_stream_id,
 		       const uint8_t *payload, size_t payload_len);
+int rtmp_send_amf_command(struct rtmp_conn *conn,
+			  unsigned format, uint32_t chunk_id,
+			  uint32_t msg_stream_id,
+			  const uint8_t *cmd, size_t len);
 
 
 /* Control */

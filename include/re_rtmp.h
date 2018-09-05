@@ -170,10 +170,6 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_estab_h *estabh, rtmp_status_h *statush,
 		rtmp_close_h *closeh, void *arg);
 int rtmp_createstream(struct rtmp_conn *conn);
-int rtmp_send_amf_command(struct rtmp_conn *conn,
-			  unsigned format, uint32_t chunk_id,
-			  uint32_t msg_stream_id,
-			  const uint8_t *cmd, size_t len);
 uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn);
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
