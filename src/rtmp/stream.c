@@ -46,30 +46,21 @@ static int send_amf_play(struct rtmp_conn *conn, const char *stream_name,
 static int send_amf_publish(struct rtmp_conn *conn, const char *stream_name,
 			    uint32_t stream_id)
 {
-	struct mbuf *mb = mbuf_alloc(512);
 	int err;
 
-	/* XXX: select transaction ID from TID counter */
-
-	err = rtmp_command_header_encode(mb, "publish", 5);
-
-	err |= rtmp_amf_encode_null(mb);
-	err |= rtmp_amf_encode_string(mb, stream_name);
-	err |= rtmp_amf_encode_string(mb, "live");
-	if (err)
-		goto out;
-
-	err = rtmp_send_amf_command(conn, 0, STREAM_CHUNK_ID, stream_id,
-				    mb->buf, mb->end);
+	/* NOTE: the publish command does not have a response */
+	err = rtmp_ctrans_send(conn, stream_id, "publish",
+			       NULL, NULL,
+			       3,
+			       AMF_TYPE_NULL, NULL,
+			       AMF_TYPE_STRING, stream_name,
+			       AMF_TYPE_STRING, "live");
 	if (err) {
-		re_printf("rtmp: play amf command error %m\n", err);
-		goto out;
+		re_printf("rtmp: publish: ctrans failed (%m)\n", err);
+		return err;
 	}
 
- out:
-	mem_deref(mb);
-
-	return err;
+	return 0;
 }
 
 
