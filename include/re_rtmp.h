@@ -35,6 +35,11 @@ enum rtmp_packet_type {
 };
 
 
+/* forward declarations */
+struct sa;
+struct tcp_sock;
+
+
 struct rtmp_header {
 	unsigned format:2;           /* type 0-3 */
 	uint32_t chunk_id;           /* from 3-65599 */
@@ -142,15 +147,15 @@ const char *rtmp_handshake_name(enum rtmp_handshake_state state);
  */
 
 
-#if 0
+typedef void (rtmp_conn_h)(struct tcp_sock *ts, void *arg);
+
 struct rtmp_sock;
 
-int rtmp_listen(struct rtmp_sock **sockp, rtmp_conn_h *connh);
-#endif
+int rtmp_listen(struct rtmp_sock **sockp, const struct sa *laddr,
+		rtmp_conn_h *connh, void *arg);
 
 
 struct rtmp_conn;
-struct tcp_sock;
 
 typedef void (rtmp_estab_h)(void *arg);
 typedef void (rtmp_status_h)(struct odict *dict, void *arg);
