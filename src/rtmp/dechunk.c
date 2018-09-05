@@ -23,6 +23,7 @@ struct rtmp_dechunker {
 	struct list msgl;  /* struct rtmp_message */
 	size_t chunk_sz;
 	uint32_t last_stream_id;    /* XXX: per chunk ? */
+	size_t last_msg_len;        /* XXX: per chunk ? */
 	rtmp_msg_h *msgh;
 	void *arg;
 };
@@ -46,7 +47,7 @@ static void chunk_destructor(void *data)
 
 
 static struct rtmp_message *create_message(struct list *msgl,
-					   uint32_t chunk_id, uint32_t length,
+					   uint32_t chunk_id, size_t length,
 					   uint8_t type)
 {
 	struct rtmp_message *msg;
@@ -116,7 +117,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 {
 	struct rtmp_header hdr;
 	struct rtmp_message *msg;
-	size_t chunk_sz, left;
+	size_t chunk_sz, left, msg_len;
 	bool complete;
 	int err;
 
@@ -147,16 +148,26 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (list_count(&rd->msgl) > MAX_PENDING)
 			return EOVERFLOW;
 
-		if (hdr.length > MESSAGE_LEN_MAX)
+		/* Type 2 -- this chunk has the same stream ID and
+		   message length as the preceding chunk. */
+		if (hdr.format == 2) {
+			msg_len = rd->last_msg_len;
+		}
+		else {
+			msg_len          = hdr.length;
+			rd->last_msg_len = hdr.length;
+		}
+
+		if (msg_len > MESSAGE_LEN_MAX)
 			return EOVERFLOW;
 
-		chunk_sz = min(hdr.length, rd->chunk_sz);
+		chunk_sz = min(msg_len, rd->chunk_sz);
 
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
 
 		msg = create_message(&rd->msgl, hdr.chunk_id,
-				     hdr.length, hdr.type_id);
+				     msg_len, hdr.type_id);
 		if (!msg)
 			return ENOMEM;
 
