@@ -21,7 +21,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 		 uint32_t timestamp, uint32_t timestamp_delta,
 		 uint8_t msg_type_id, uint32_t msg_stream_id,
 		 const uint8_t *payload, size_t payload_len,
-		 rtmp_chunk_h *chunkh, void *arg)
+		 size_t max_chunk_sz, rtmp_chunk_h *chunkh, void *arg)
 {
 	const uint8_t *pend = payload + payload_len;
 	struct rtmp_header hdr;
@@ -42,7 +42,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 	hdr.type_id         = msg_type_id;
 	hdr.stream_id       = msg_stream_id;
 
-	chunk_sz = min(payload_len, RTMP_DEFAULT_CHUNKSIZE);
+	chunk_sz = min(payload_len, max_chunk_sz);
 
 	err = chunkh(&hdr, payload, chunk_sz, arg);
 	if (err)
@@ -56,7 +56,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 
 		const size_t len = pend - payload;
 
-		chunk_sz = min(len, RTMP_DEFAULT_CHUNKSIZE);
+		chunk_sz = min(len, max_chunk_sz);
 
 		err = chunkh(&hdr, payload, chunk_sz, arg);
 		if (err)

@@ -638,7 +638,7 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 	err = rtmp_chunker(format, chunk_id,
 			   timestamp, 0,
 			   RTMP_TYPE_AMF0, msg_stream_id,
-			   cmd, len,
+			   cmd, len, RTMP_DEFAULT_CHUNKSIZE,
 			   rtmp_chunk_handler, conn);
 	if (err)
 		return err;
@@ -1097,7 +1097,7 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 
 	err = rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
 			   msg_type_id, msg_stream_id, payload, payload_len,
-			   rtmp_chunk_handler, conn);
+			   RTMP_DEFAULT_CHUNKSIZE, rtmp_chunk_handler, conn);
 	if (err)
 		return err;
 

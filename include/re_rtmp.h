@@ -8,7 +8,8 @@
 enum {
 	RTMP_PROTOCOL_VERSION = 3,
 	RTMP_SIG_SIZE         = 1536,
-	RTMP_PORT             = 1935
+	RTMP_PORT             = 1935,
+	RTMP_DEFAULT_CHUNKSIZE = 128,
 };
 
 /* Chunk IDs */
@@ -75,7 +76,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 		 uint32_t timestamp, uint32_t timestamp_delta,
 		 uint8_t msg_type_id, uint32_t msg_stream_id,
 		 const uint8_t *payload, size_t payload_len,
-		 rtmp_chunk_h *chunkh, void *arg);
+		 size_t max_chunk_sz, rtmp_chunk_h *chunkh, void *arg);
 
 
 /*

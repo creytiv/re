@@ -14,7 +14,6 @@
 
 
 enum {
-	RTMP_DEFAULT_CHUNKSIZE = 128,
 	MESSAGE_LEN_MAX = 524288,
 };
 
