@@ -448,6 +448,10 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 		was = ntohl(mbuf_read_u32(&mb));
 		limit = mbuf_read_u8(&mb);
+
+		(void)was;
+		(void)limit;
+
 #if 0
 		re_printf("[%s] got Set Peer Bandwidth from peer:"
 			  " was=%u, limit_type=%u\n",
