@@ -16,14 +16,23 @@
 
 enum {
 	MAX_PENDING = 16,
+	MAX_CHUNK_ID = 64
 };
 
 
+struct chunk_cache {
+
+	size_t msg_len;
+	bool   msg_len_set;
+
+	uint32_t stream_id;
+	bool     stream_id_set;
+};
+
 struct rtmp_dechunker {
 	struct list msgl;  /* struct rtmp_message */
+	struct chunk_cache chunkv[MAX_CHUNK_ID];  /* chunk_id is index */
 	size_t chunk_sz;
-	uint32_t last_stream_id;    /* XXX: per chunk ? */
-	size_t last_msg_len;        /* XXX: per chunk ? */
 	rtmp_msg_h *msgh;
 	void *arg;
 };
@@ -32,6 +41,20 @@ struct rtmp_dechunker {
 static void destructor(void *data)
 {
 	struct rtmp_dechunker *rd = data;
+	size_t i;
+
+	re_printf("*** Dechunker cache:\n");
+	for (i=0; i<ARRAY_SIZE(rd->chunkv); i++) {
+		struct chunk_cache *cache = &rd->chunkv[i];
+
+		if (cache->stream_id_set || cache->msg_len_set) {
+			re_printf(".... chunk_id=%u    len=%zu"
+				  "    stream_id=%u\n",
+				  i,
+				  cache->msg_len,
+				  cache->stream_id);
+		}
+	}
 
 	list_flush(&rd->msgl);
 }
@@ -120,6 +143,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	size_t chunk_sz, left, msg_len;
 	bool complete;
 	int err;
+	struct chunk_cache *cache;
 
 	if (!rd)
 		return EINVAL;
@@ -134,6 +158,11 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	case 0:
 	case 1:
 	case 2:
+		if (hdr.chunk_id > MAX_CHUNK_ID)
+			return ERANGE;
+
+		cache = &rd->chunkv[hdr.chunk_id];
+
 		/* XXX: check format 2 and header length */
 
 		msg = find_message(&rd->msgl, hdr.chunk_id);
@@ -151,11 +180,16 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		/* Type 2 -- this chunk has the same stream ID and
 		   message length as the preceding chunk. */
 		if (hdr.format == 2) {
-			msg_len = rd->last_msg_len;
+			if (!cache->msg_len_set)
+				return EPROTO;
+
+			msg_len = cache->msg_len;
 		}
 		else {
-			msg_len          = hdr.length;
-			rd->last_msg_len = hdr.length;
+			cache->msg_len = hdr.length;
+			cache->msg_len_set = true;
+
+			msg_len = hdr.length;
 		}
 
 		if (msg_len > MESSAGE_LEN_MAX)
@@ -173,13 +207,19 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		/* type 1 and 2 does not contain stream id */
 		if (hdr.format == 0) {
+
 			msg->stream_id = hdr.stream_id;
-			rd->last_stream_id = hdr.stream_id;
-			re_printf("set last stream_id: %u\n",
-				  rd->last_stream_id);
+
+			cache->stream_id     = hdr.stream_id;
+			cache->stream_id_set = true;
+
+			re_printf("set last stream_id=%u for chunk %u\n",
+				  cache->stream_id, hdr.chunk_id);
 		}
 		else {
-			msg->stream_id = rd->last_stream_id;
+			if (!cache->stream_id_set)
+				return EPROTO;
+			msg->stream_id = cache->stream_id;
 		}
 
 		err = mbuf_read_mem(mb, msg->buf, chunk_sz);

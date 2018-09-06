@@ -198,8 +198,10 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 		if (err)
 			goto error;
 
+		/* Stream Begin */
 		err = rtmp_control_send_user_control_msg(conn,
-						    RTMP_CONTROL_STREAM_ID);
+						 EVENT_STREAM_BEGIN,
+						 RTMP_CONTROL_STREAM_ID);
 		if (err)
 			goto error;
 
@@ -285,6 +287,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 	struct rtmp_stream *strm;
 	enum event_type event;
 	uint32_t stream_id;
+	uint32_t value;
+	int err;
 
 	if (mbuf_get_left(mb) < 2)
 		return EBADMSG;
@@ -326,6 +330,23 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 			  stream_id);
 		break;
 
+	case EVENT_PING_REQUEST:
+		if (mbuf_get_left(mb) < 4)
+			return EBADMSG;
+
+		value = ntohl(mbuf_read_u32(mb));
+
+		re_printf("got Ping request (value=%u)\n", value);
+
+		++conn->stats.ping;
+
+		err = rtmp_control_send_user_control_msg(conn,
+							 EVENT_PING_RESPONSE,
+							 value);
+		if (err)
+			return err;
+		break;
+
 	default:
 		re_printf("rtmp: user_control:"
 			  " unhandled event %u\n", event);
@@ -354,9 +375,11 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	if (conn->term)
 		return;
 
+#if 0
 	re_printf("[%s] ### recv message: type 0x%02x (%s) (%zu bytes)\n",
 		  conn->is_client ? "Client" : "Server",
 		  msg->type, rtmp_packet_type_name(msg->type), msg->length);
+#endif
 
 	switch (msg->type) {
 
@@ -371,6 +394,17 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		re_printf("rtmp: set chunk size:  %u bytes\n", val);
 
 		rtmp_dechunker_set_chunksize(conn->dechunk, val);
+		break;
+
+	case RTMP_TYPE_ACKNOWLEDGEMENT:
+		if (mbuf_get_left(&mb) < 4)
+			return;
+
+		val = ntohl(mbuf_read_u32(&mb));
+
+		re_printf("got Acknowledgement:  sequence=%u\n", val);
+
+		++conn->stats.ack;
 		break;
 
 	case RTMP_TYPE_AMF0:
@@ -1120,6 +1154,10 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 
 	err |= re_hprintf(pf, "createstream:  %d\n", conn->createstream);
 	err |= re_hprintf(pf, "stream_begin:  %d\n", conn->stream_begin);
+
+	/* Stats */
+	err |= re_hprintf(pf, "ack:           %zu\n", conn->stats.ack);
+	err |= re_hprintf(pf, "ping:          %zu\n", conn->stats.ping);
 
 	return err;
 }

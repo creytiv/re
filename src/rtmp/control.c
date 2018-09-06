@@ -5,6 +5,7 @@
  */
 
 #include <re_types.h>
+#include <re_fmt.h>
 #include <re_mem.h>
 #include <re_mbuf.h>
 #include <re_net.h>
@@ -14,18 +15,22 @@
 #include "rtmp.h"
 
 
-/* Stream Begin */
+/* XXX: event_data type fits most event types */
 int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
-				       uint32_t stream_id)
+				       uint16_t event_type,
+				       uint32_t event_data)
 {
 	struct mbuf *mb = mbuf_alloc(6);
 	int err;
 
+	re_printf("send User Control Msg:  type=%u, data=%u\n",
+		  event_type, event_data);
+
 	if (!mb)
 		return ENOMEM;
 
-	(void)mbuf_write_u16(mb, htons(EVENT_STREAM_BEGIN));
-	(void)mbuf_write_u32(mb, htonl(stream_id));
+	(void)mbuf_write_u16(mb, htons(event_type));
+	(void)mbuf_write_u32(mb, htonl(event_data));
 
 	err = rtmp_conn_send_msg(conn, 0, RTMP_CHUNK_ID_CONTROL, 0, 0,
 				 RTMP_TYPE_USER_CONTROL_MSG,

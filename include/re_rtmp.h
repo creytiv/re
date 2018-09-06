@@ -26,6 +26,7 @@ enum rtmp_handshake_state {
 
 enum rtmp_packet_type {
 	RTMP_TYPE_SET_CHUNK_SIZE     = 1,   /* Set Chunk Size               */
+	RTMP_TYPE_ACKNOWLEDGEMENT    = 3,   /* Acknowledgement              */
 	RTMP_TYPE_USER_CONTROL_MSG   = 4,   /* User Control Messages        */
 	RTMP_TYPE_WINDOW_ACK_SIZE    = 5,   /* Window Acknowledgement Size  */
 	RTMP_TYPE_SET_PEER_BANDWIDTH = 6,   /* Set Peer Bandwidth           */
@@ -184,5 +185,5 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	      rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg);
 int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 		 const char *name, uint32_t stream_id);
-int rtmp_send_audio(struct rtmp_stream *stream, ...);
+int rtmp_send_audio(struct rtmp_stream *strm, const uint8_t *pld, size_t len);
 int rtmp_send_video(struct rtmp_stream *strm, const uint8_t *pld, size_t len);

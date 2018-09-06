@@ -48,6 +48,11 @@ struct rtmp_conn {
 	bool createstream;
 	bool stream_begin;  /* XXX: move to stream */
 
+	struct {
+		size_t ping;
+		size_t ack;
+	} stats;
+
 	/* client specific: */
 	char *app;
 	char *uri;
@@ -103,7 +108,8 @@ int rtmp_control_send_was(struct rtmp_conn *conn, uint32_t was);
 int rtmp_control_send_set_peer_bw(struct rtmp_conn *conn,
 				  size_t was, uint8_t limit_type);
 int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
-				       uint32_t stream_id);
+				       uint16_t event_type,
+				       uint32_t event_data);
 
 
 /* Client Transaction */
