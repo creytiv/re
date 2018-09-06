@@ -170,8 +170,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		cache = &rd->chunkv[hdr.chunk_id];
 
-		/* XXX: check format 2 and header length */
-
 		msg = find_message(&rd->msgl, hdr.chunk_id);
 		if (msg) {
 			re_printf("rtmp: dechunker: unexpected"
