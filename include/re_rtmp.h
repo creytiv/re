@@ -92,6 +92,10 @@ struct rtmp_message {
 	size_t pos;             /* how many bytes received so far */
 	uint8_t type;
 	uint32_t stream_id;
+
+	unsigned format;
+	uint32_t timestamp;
+	uint32_t timestamp_delta;
 };
 
 struct rtmp_dechunker;
@@ -178,7 +182,8 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
 struct rtmp_stream;
 
-typedef void (rtmp_audio_h)(const uint8_t *pld, size_t len, void *arg);
+typedef void (rtmp_audio_h)(uint32_t timestamp,
+			    const uint8_t *pld, size_t len, void *arg);
 typedef void (rtmp_video_h)(const uint8_t *pld, size_t len, void *arg);
 
 int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
@@ -186,5 +191,6 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	      rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg);
 int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 		 const char *name, uint32_t stream_id);
-int rtmp_send_audio(struct rtmp_stream *strm, const uint8_t *pld, size_t len);
+int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
+		    const uint8_t *pld, size_t len);
 int rtmp_send_video(struct rtmp_stream *strm, const uint8_t *pld, size_t len);

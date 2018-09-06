@@ -473,8 +473,17 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	case RTMP_TYPE_AUDIO:
 		strm = rtmp_stream_find(&conn->streaml, msg->stream_id);
 		if (strm) {
-			if (strm->auh)
-				strm->auh(msg->buf, msg->length, strm->arg);
+			if (msg->format == 0) {
+				strm->recv_timestamp = msg->timestamp;
+			}
+			else {
+				strm->recv_timestamp += msg->timestamp_delta;
+			}
+
+			if (strm->auh) {
+				strm->auh(strm->recv_timestamp,
+					  msg->buf, msg->length, strm->arg);
+			}
 		}
 		else {
 			re_printf("rtmp: audio: stream not found (%u)\n",

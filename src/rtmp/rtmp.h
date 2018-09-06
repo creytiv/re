@@ -66,6 +66,8 @@ struct rtmp_stream {
 	rtmp_audio_h *auh;
 	rtmp_video_h *vidh;
 	void *arg;
+
+	uint32_t recv_timestamp;
 };
 
 
