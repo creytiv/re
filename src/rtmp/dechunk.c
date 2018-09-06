@@ -41,9 +41,12 @@ struct rtmp_dechunker {
 static void destructor(void *data)
 {
 	struct rtmp_dechunker *rd = data;
+
+#if 0
 	size_t i;
 
 	re_printf("*** Dechunker cache:\n");
+
 	for (i=0; i<ARRAY_SIZE(rd->chunkv); i++) {
 		struct chunk_cache *cache = &rd->chunkv[i];
 
@@ -55,6 +58,7 @@ static void destructor(void *data)
 				  cache->stream_id);
 		}
 	}
+#endif
 
 	list_flush(&rd->msgl);
 }
@@ -140,10 +144,10 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 {
 	struct rtmp_header hdr;
 	struct rtmp_message *msg;
+	struct chunk_cache *cache;
 	size_t chunk_sz, left, msg_len;
 	bool complete;
 	int err;
-	struct chunk_cache *cache;
 
 	if (!rd)
 		return EINVAL;
@@ -158,8 +162,11 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	case 0:
 	case 1:
 	case 2:
-		if (hdr.chunk_id > MAX_CHUNK_ID)
+		if (hdr.chunk_id >= MAX_CHUNK_ID) {
+			re_printf("chunk id out of range (%u > %u)\n",
+				  hdr.chunk_id, MAX_CHUNK_ID);
 			return ERANGE;
+		}
 
 		cache = &rd->chunkv[hdr.chunk_id];
 
@@ -212,9 +219,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 			cache->stream_id     = hdr.stream_id;
 			cache->stream_id_set = true;
-
-			re_printf("set last stream_id=%u for chunk %u\n",
-				  cache->stream_id, hdr.chunk_id);
 		}
 		else {
 			if (!cache->stream_id_set)

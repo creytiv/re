@@ -80,9 +80,11 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 	if (err)
 		goto out;
 
+#if 0
 	DEBUG_NOTICE("### new ctrans (command=\"%s\", tid=%llu)"
 		  " stream_id=%u, propc=%u\n",
 		  command, tid, stream_id, body_propc);
+#endif
 
  out:
 	mem_deref(mb);
@@ -108,24 +110,22 @@ struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid)
 }
 
 
-void rtmp_ctrans_response(const struct list *ctransl, bool success,
-			  const struct command_header *cmd_hdr,
-			  struct odict *dict)
+int rtmp_ctrans_response(const struct list *ctransl, bool success,
+			 const struct command_header *cmd_hdr,
+			 struct odict *dict)
 {
 	struct rtmp_ctrans *ct;
 
 	if (!ctransl || !cmd_hdr)
-		return;
+		return EINVAL;
 
 	ct = rtmp_ctrans_find(ctransl, cmd_hdr->transaction_id);
 	if (!ct) {
 		DEBUG_WARNING("ctrans: no matching transaction"
 			      " for response '%s' (tid=%llu)\n",
 			      cmd_hdr->name, cmd_hdr->transaction_id);
-		return;
+		return ENOENT;
 	}
-
-	DEBUG_NOTICE("### ctrans response (%s)\n", ct->command);
 
 	if (success)
 		++ct->replies;
@@ -137,4 +137,6 @@ void rtmp_ctrans_response(const struct list *ctransl, bool success,
 	}
 
 	/* XXX: destroy trans */
+
+	return 0;
 }

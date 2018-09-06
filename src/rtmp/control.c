@@ -23,8 +23,10 @@ int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
 	struct mbuf *mb = mbuf_alloc(6);
 	int err;
 
+#if 0
 	re_printf("send User Control Msg:  type=%u, data=%u\n",
 		  event_type, event_data);
+#endif
 
 	if (!mb)
 		return ENOMEM;

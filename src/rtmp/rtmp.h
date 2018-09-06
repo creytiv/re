@@ -130,7 +130,7 @@ struct rtmp_ctrans {
 int  rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 		      const char *command, rtmp_resp_h *resph, void *arg,
 		      unsigned body_propc, ...);
-void rtmp_ctrans_response(const struct list *ctransl, bool success,
+int  rtmp_ctrans_response(const struct list *ctransl, bool success,
 			  const struct command_header *cmd_hdr,
 			  struct odict *dict);
 struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid);

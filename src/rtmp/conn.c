@@ -56,17 +56,21 @@ static void conn_destructor(void *data)
 	struct rtmp_conn *conn = data;
 	struct le *le;
 
+#if 0
 	re_printf("%H\n", rtmp_conn_debug, conn);
+#endif
 
 	le = conn->ctransl.head;
 	while (le) {
 		struct rtmp_ctrans *ct = le->data;
 		le = le->next;
 
+#if 0
 		re_printf("### flush transaction"
 			  " [command=%-12s    tid=%llu"
 			  "    replies=%u    errors=%u]\n",
 			  ct->command, ct->tid, ct->replies, ct->errors);
+#endif
 
 		mem_deref(ct);
 	}
@@ -90,9 +94,6 @@ static int server_send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 	mb = mbuf_alloc(256);
 	if (!mb)
 		return ENOMEM;
-
-	re_printf("server reply: tid=%llu\n",
-		  transaction_id);
 
 	err  = rtmp_command_header_encode(mb, "_result", transaction_id);
 
@@ -151,6 +152,8 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 				      const struct command_header *cmd_hdr,
 				      struct odict *dict)
 {
+	int err;
+
 	(void)dict;
 
 	if (0 == str_casecmp(cmd_hdr->name, "_result") ||
@@ -159,7 +162,10 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 		bool success = (0 == str_casecmp(cmd_hdr->name, "_result"));
 
 		/* forward response to transaction layer */
-		rtmp_ctrans_response(&conn->ctransl, success, cmd_hdr, dict);
+		err = rtmp_ctrans_response(&conn->ctransl, success,
+					   cmd_hdr, dict);
+		if (err)
+			goto error;
 	}
 	else if (0 == str_casecmp(cmd_hdr->name, "onStatus")) {
 
@@ -173,7 +179,16 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
 			  cmd_hdr->name);
+
+		/* XXX: for development */
+		conn_close(conn, EPROTO);
 	}
+
+	return;
+
+ error:
+	if (err)
+		conn_close(conn, err);
 }
 
 
@@ -217,7 +232,6 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 	}
 	else if (0 == str_casecmp(cmd_hdr->name, "createStream")) {
 
-		re_printf("got createStream\n");
 		conn->createstream = true;
 
 		/* XXX send_reply();*/
@@ -225,6 +239,9 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 	else {
 		re_printf("rtmp: server: command not handled (%s)\n",
 			  cmd_hdr->name);
+
+		/* XXX: for development */
+		conn_close(conn, EPROTO);
 	}
 
 	return;
@@ -295,10 +312,12 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 	event = ntohs(mbuf_read_u16(mb));
 
+#if 0
 	re_printf("[%s] got User Control Message:"
 		  " event_type=%u event_data=%zu bytes\n",
 		  conn->is_client ? "Client" : "Server",
 		  event, mbuf_get_left(mb));
+#endif
 
 	switch (event) {
 
@@ -306,8 +325,6 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
-
-		re_printf("rtmp: Stream Begin (stream_id=%u)\n", stream_id);
 
 		if (stream_id == RTMP_CONTROL_STREAM_ID) {
 			conn->stream_begin = true;
@@ -416,8 +433,10 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			return;
 
 		was = ntohl(mbuf_read_u32(&mb));
+#if 0
 		re_printf("[%s] got Window Ack Size from peer: %u\n",
 			  conn->is_client ? "Client" : "Server", was);
+#endif
 		conn->window_ack_size = was;
 
 		check_established(conn);
@@ -429,10 +448,12 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 		was = ntohl(mbuf_read_u32(&mb));
 		limit = mbuf_read_u8(&mb);
+#if 0
 		re_printf("[%s] got Set Peer Bandwidth from peer:"
 			  " was=%u, limit_type=%u\n",
 			  conn->is_client ? "Client" : "Server",
 			  was, limit);
+#endif
 
 		err = rtmp_control_send_was(conn, WINDOW_ACK_SIZE);
 		if (err)
@@ -477,6 +498,11 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		re_printf("rtmp: conn: unhandled message:"
 			  " type=%d (%s)\n",
 			  msg->type, rtmp_packet_type_name(msg->type));
+
+		/* XXX: for development */
+		err = EPROTO;
+		goto error;
+
 		break;
 	}
 
@@ -533,9 +559,11 @@ static void set_state(struct rtmp_conn *conn, enum rtmp_handshake_state state)
 	if (!conn)
 		return;
 
+#if 0
 	re_printf("[%s] set state: %d (%s)\n",
 		  conn->is_client ? "Client" : "Server",
 		  state, rtmp_handshake_name(state));
+#endif
 
 	conn->state = state;
 }
@@ -556,8 +584,10 @@ static int send_packet(struct rtmp_conn *conn,
 
 	mb->pos = 0;
 
+#if 0
 	re_printf("[%s] send packet (%zu bytes)\n",
 		  conn->is_client ? "Client" : "Server", mb->end);
+#endif
 
 	err = tcp_send(conn->tc, mb);
 	if (err)
@@ -607,8 +637,10 @@ static void tcp_estab_handler(void *arg)
 	struct rtmp_conn *conn = arg;
 	int err = 0;
 
+#if 0
 	re_printf("[%s] TCP established\n",
 		  conn->is_client ? "Client" : "Server");
+#endif
 
 	if (conn->is_client) {
 
@@ -664,10 +696,12 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 	if (!conn || !cmd || !len)
 		return EINVAL;
 
+#if 0
 	re_printf("[%s] send AMF command: [fmt=%u, chunk=%u, stream=%u]"
 		  " %zu bytes\n",
 		  conn->is_client ? "Client" : "Server",
 		  format, chunk_id, msg_stream_id, len);
+#endif
 
 	err = rtmp_chunker(format, chunk_id,
 			   timestamp, 0,
@@ -693,12 +727,8 @@ static void connect_resp_handler(int err, const struct command_header *cmd_hdr,
 		return;
 	}
 
-	re_printf("connect resp: success\n");
-
 	if (conn->connected)
 		return;
-
-	re_printf("client: Connected\n");
 
 	conn->connected = true;
 
@@ -739,8 +769,10 @@ static int handshake_done(struct rtmp_conn *conn)
 {
 	int err;
 
+#if 0
 	re_printf("[%s] ** handshake done **\n",
 		  conn->is_client ? "Client" : "Server");
+#endif
 
 	if (conn->is_client) {
 
@@ -777,8 +809,10 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
+#if 0
 		re_printf("server version: %u.%u.%u.%u\n",
 			  s1[4], s1[5], s1[6], s1[7]);
+#endif
 
 		memcpy(c2, s1, sizeof(c2));
 
@@ -841,8 +875,6 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return EPROTO;
 		}
 
-		re_printf("got C0\n");
-
 		/* Send S0 + S1 */
 		err = handshake_start(conn);
 		if (err)
@@ -857,9 +889,10 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
-		re_printf("got C1: [ %w ]\n", c1, 16);
+#if 0
 		re_printf("        client version: %u.%u.%u.%u\n",
 			  c1[4], c1[5], c1[6], c1[7]);
+#endif
 
 		/* Send S2 */
 
@@ -1136,6 +1169,12 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 		return err;
 
 	return 0;
+}
+
+
+struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn)
+{
+	return conn ? conn->tc : NULL;
 }
 
 

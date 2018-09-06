@@ -172,6 +172,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_close_h *closeh, void *arg);
 int rtmp_createstream(struct rtmp_conn *conn);
 uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn);
+struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
 
