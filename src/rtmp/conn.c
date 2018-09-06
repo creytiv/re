@@ -494,8 +494,17 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	case RTMP_TYPE_VIDEO:
 		strm = rtmp_stream_find(&conn->streaml, msg->stream_id);
 		if (strm) {
-			if (strm->vidh)
-				strm->vidh(msg->buf, msg->length, strm->arg);
+			if (msg->format == 0) {
+				strm->recv_timestamp = msg->timestamp;
+			}
+			else {
+				strm->recv_timestamp += msg->timestamp_delta;
+			}
+
+			if (strm->vidh) {
+				strm->vidh(strm->recv_timestamp,
+					   msg->buf, msg->length, strm->arg);
+			}
 		}
 		else {
 			re_printf("rtmp: video: stream not found (%u)\n",

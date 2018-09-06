@@ -184,7 +184,8 @@ struct rtmp_stream;
 
 typedef void (rtmp_audio_h)(uint32_t timestamp,
 			    const uint8_t *pld, size_t len, void *arg);
-typedef void (rtmp_video_h)(const uint8_t *pld, size_t len, void *arg);
+typedef void (rtmp_video_h)(uint32_t timestamp,
+			    const uint8_t *pld, size_t len, void *arg);
 
 int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	      const char *name, uint32_t stream_id,
@@ -193,4 +194,5 @@ int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 		 const char *name, uint32_t stream_id);
 int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len);
-int rtmp_send_video(struct rtmp_stream *strm, const uint8_t *pld, size_t len);
+int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
+		    const uint8_t *pld, size_t len);

@@ -182,19 +182,18 @@ int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 }
 
 
-int rtmp_send_video(struct rtmp_stream *strm, const uint8_t *pld, size_t len)
+int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
+		    const uint8_t *pld, size_t len)
 {
-	unsigned format = 0;           /* XXX: format 0 or 1 */
+	unsigned format = 0;
 	uint32_t chunk_id = 7;         /* XXX: how to choose? */
-	uint32_t timestamp = 0;        /* XXX: move to API */
-	uint32_t timestamp_delta = 0;  /* XXX: move to API */
 	int err;
 
 	if (!strm || !pld || !len)
 		return EINVAL;
 
 	err = rtmp_conn_send_msg(strm->conn, format, chunk_id, timestamp,
-				 timestamp_delta, RTMP_TYPE_VIDEO,
+				 0, RTMP_TYPE_VIDEO,
 				 strm->stream_id, pld, len);
 
 	return err;
