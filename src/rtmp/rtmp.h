@@ -20,6 +20,7 @@ enum {
 
 enum event_type {
 	EVENT_STREAM_BEGIN       = 0,
+	EVENT_STREAM_EOF         = 1,
 	EVENT_STREAM_IS_RECORDED = 4,
 	EVENT_PING_REQUEST       = 6,
 	EVENT_PING_RESPONSE      = 7,
@@ -58,11 +59,21 @@ struct rtmp_conn {
 	char *uri;
 };
 
+enum stream_op {
+	OP_PLAY,
+	OP_PUBLISH,
+};
+
 struct rtmp_stream {
 	struct le le;
 	struct rtmp_conn *conn;    /* pointer */
 	char *name;
 	uint32_t stream_id;
+	enum stream_op operation;
+	const char *command;
+	bool begin;
+	bool eof;
+	rtmp_ready_h *readyh;
 	rtmp_audio_h *auh;
 	rtmp_video_h *vidh;
 	void *arg;

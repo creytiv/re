@@ -174,7 +174,6 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_estab_h *estabh, rtmp_status_h *statush,
 		rtmp_close_h *closeh, void *arg);
-int rtmp_createstream(struct rtmp_conn *conn);
 uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn);
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
@@ -182,17 +181,20 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
 struct rtmp_stream;
 
+typedef void (rtmp_ready_h)(void *arg);
 typedef void (rtmp_audio_h)(uint32_t timestamp,
 			    const uint8_t *pld, size_t len, void *arg);
 typedef void (rtmp_video_h)(uint32_t timestamp,
 			    const uint8_t *pld, size_t len, void *arg);
 
-int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-	      const char *name, uint32_t stream_id,
-	      rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg);
-int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-		 const char *name, uint32_t stream_id);
-int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
-		    const uint8_t *pld, size_t len);
-int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
-		    const uint8_t *pld, size_t len);
+int  rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
+	       const char *name, rtmp_ready_h *readyh,
+	       rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg);
+int  rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
+		  const char *name, rtmp_ready_h *ready, void *arg);
+int  rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
+		     const uint8_t *pld, size_t len);
+int  rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
+		     const uint8_t *pld, size_t len);
+bool rtmp_stream_isready(const struct rtmp_stream *strm);
+int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);

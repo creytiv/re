@@ -127,6 +127,36 @@ static int server_send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 }
 
 
+static int createstream_reply(struct rtmp_conn *conn, uint64_t transaction_id)
+{
+	struct mbuf *mb;
+	uint32_t stream_id = 42;  /* XXX: generate a stream ID */
+	int err;
+
+	mb = mbuf_alloc(256);
+	if (!mb)
+		return ENOMEM;
+
+	err  = rtmp_command_header_encode(mb, "_result", transaction_id);
+
+	err |= rtmp_amf_encode_null(mb);
+	err |= rtmp_amf_encode_number(mb, stream_id);
+
+	if (err)
+		goto out;
+
+	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+				    RTMP_CONTROL_STREAM_ID, mb->buf, mb->end);
+	if (err)
+		goto out;
+
+ out:
+	mem_deref(mb);
+
+	return err;
+}
+
+
 static bool is_established(const struct rtmp_conn *conn)
 {
 	return conn->connected && conn->window_ack_size;
@@ -234,7 +264,11 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 		conn->createstream = true;
 
-		/* XXX send_reply();*/
+		err = createstream_reply(conn, cmd_hdr->transaction_id);
+		if (err) {
+			re_printf("rtmp: reply failed (%m)\n", err);
+			goto error;
+		}
 	}
 	else {
 		re_printf("rtmp: server: command not handled (%s)\n",
@@ -336,6 +370,26 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 					  " stream %u not found\n", stream_id);
 				return ENOSTR;
 			}
+			strm->begin = true;
+		}
+		break;
+
+	case EVENT_STREAM_EOF:
+		if (mbuf_get_left(mb) < 4)
+			return EBADMSG;
+		stream_id = ntohl(mbuf_read_u32(mb));
+
+		if (stream_id == RTMP_CONTROL_STREAM_ID) {
+			conn->stream_begin = true;
+		}
+		else {
+			strm = rtmp_stream_find(&conn->streaml, stream_id);
+			if (!strm) {
+				re_printf("rtmp: stream_eof:"
+					  " stream %u not found\n", stream_id);
+				return ENOSTR;
+			}
+			strm->eof = true;
 		}
 		break;
 
@@ -1128,51 +1182,6 @@ uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn)
 }
 
 
-static void createstream_resp_handler(int err,
-				      const struct command_header *cmd_hdr,
-				      struct odict *dict, void *arg)
-{
-	struct rtmp_conn *conn = arg;
-	const struct odict_entry *entry;
-	uint32_t stream_id;
-
-	if (err) {
-		re_printf("### createStream failed (%m)\n", err);
-		conn_close(conn, err);
-		return;
-	}
-
-	/* XXX: use stream_id from response, pass to struct rtmp_stream */
-	entry = odict_lookup_index(dict, 3, ODICT_DOUBLE);
-	if (!entry) {
-		re_printf("missing entry\n");
-		return;
-	}
-
-	stream_id = (uint32_t)entry->u.dbl;
-
-	re_printf("createStream resp:  stream_id=%u\n", stream_id);
-}
-
-
-int rtmp_createstream(struct rtmp_conn *conn)
-{
-	int err;
-
-	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
-			       createstream_resp_handler, conn,
-			       1,
-			         AMF_TYPE_NULL, NULL
-			       );
-	if (err) {
-		re_printf("rtmp: create_stream: ctrans failed (%m)\n", err);
-		return err;
-	}
-
-	return 0;
-}
-
-
 int rtmp_conn_send_msg(struct rtmp_conn *conn,
 		       unsigned format, uint32_t chunk_id,
 		       uint32_t timestamp, uint32_t timestamp_delta,
@@ -1202,6 +1211,7 @@ struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn)
 
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 {
+	struct le *le;
 	int err = 0;
 
 	if (!conn)
@@ -1219,6 +1229,13 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 	/* Stats */
 	err |= re_hprintf(pf, "ack:           %zu\n", conn->stats.ack);
 	err |= re_hprintf(pf, "ping:          %zu\n", conn->stats.ping);
+
+	err |= re_hprintf(pf, "streams:\n");
+	for (le = conn->streaml.head; le; le = le->next) {
+		struct rtmp_stream *strm = le->data;
+
+		err |= re_hprintf(pf, ".... %H\n", rtmp_stream_debug, strm);
+	}
 
 	return err;
 }
