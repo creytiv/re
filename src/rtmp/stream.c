@@ -206,6 +206,8 @@ int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 	if (!strm || !pld || !len)
 		return EINVAL;
 
+	++strm->n_send;
+
 	err = rtmp_conn_send_msg(strm->conn, format, chunk_id, timestamp,
 				 0, RTMP_TYPE_AUDIO,
 				 strm->stream_id, pld, len);
@@ -223,6 +225,8 @@ int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 
 	if (!strm || !pld || !len)
 		return EINVAL;
+
+	++strm->n_send;
 
 	err = rtmp_conn_send_msg(strm->conn, format, chunk_id, timestamp,
 				 0, RTMP_TYPE_VIDEO,
@@ -263,7 +267,10 @@ int rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm)
 	if (!strm)
 		return 0;
 
-	return re_hprintf(pf, "stream_id=%u  begin=%d  eof=%d  %s   name=%s",
+	return re_hprintf(pf,
+			  "stream_id=%u  begin=%d  eof=%d  %s   name=%12s"
+			  "  send=%zu  recv=%zu",
 			  strm->stream_id, strm->begin, strm->eof,
-			  strm->command, strm->name);
+			  strm->command, strm->name,
+			  strm->n_send, strm->n_recv);
 }

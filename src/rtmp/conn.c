@@ -534,6 +534,8 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 				strm->recv_timestamp += msg->timestamp_delta;
 			}
 
+			++strm->n_recv;
+
 			if (strm->auh) {
 				strm->auh(strm->recv_timestamp,
 					  msg->buf, msg->length, strm->arg);
@@ -554,6 +556,8 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			else {
 				strm->recv_timestamp += msg->timestamp_delta;
 			}
+
+			++strm->n_recv;
 
 			if (strm->vidh) {
 				strm->vidh(strm->recv_timestamp,
@@ -606,6 +610,8 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 
 	conn->is_client = is_client;
 	conn->state = RTMP_STATE_UNINITIALIZED;
+
+	conn->send_chunk_size = RTMP_DEFAULT_CHUNKSIZE;
 
 	/* XXX check this */
 	uptime = 0;
@@ -782,7 +788,7 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 	err = rtmp_chunker(format, chunk_id,
 			   timestamp, 0,
 			   RTMP_TYPE_AMF0, msg_stream_id,
-			   cmd, len, RTMP_DEFAULT_CHUNKSIZE,
+			   cmd, len, conn->send_chunk_size,
 			   rtmp_chunk_handler, conn);
 	if (err)
 		return err;
@@ -808,7 +814,17 @@ static void connect_resp_handler(int err, const struct command_header *cmd_hdr,
 
 	conn->connected = true;
 
+	conn->send_chunk_size = 4096;
+	err = rtmp_control_send_set_chunk_size(conn, conn->send_chunk_size);
+	if (err)
+		goto error;
+
 	check_established(conn);
+	return;
+
+ error:
+	if (err)
+		conn_close(conn, err);
 }
 
 
@@ -1195,7 +1211,7 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 
 	err = rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
 			   msg_type_id, msg_stream_id, payload, payload_len,
-			   RTMP_DEFAULT_CHUNKSIZE, rtmp_chunk_handler, conn);
+			   conn->send_chunk_size, rtmp_chunk_handler, conn);
 	if (err)
 		return err;
 
@@ -1225,6 +1241,11 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 
 	err |= re_hprintf(pf, "createstream:  %d\n", conn->createstream);
 	err |= re_hprintf(pf, "stream_begin:  %d\n", conn->stream_begin);
+
+	if (conn->is_client) {
+		err |= re_hprintf(pf, "app:           %s\n", conn->app);
+		err |= re_hprintf(pf, "uri:           %s\n", conn->uri);
+	}
 
 	/* Stats */
 	err |= re_hprintf(pf, "ack:           %zu\n", conn->stats.ack);

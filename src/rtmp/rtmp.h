@@ -57,6 +57,8 @@ struct rtmp_conn {
 	/* client specific: */
 	char *app;
 	char *uri;
+
+	uint32_t send_chunk_size;
 };
 
 enum stream_op {
@@ -79,6 +81,9 @@ struct rtmp_stream {
 	void *arg;
 
 	uint32_t recv_timestamp;
+
+	size_t n_send;
+	size_t n_recv;
 };
 
 
@@ -123,6 +128,8 @@ int rtmp_control_send_set_peer_bw(struct rtmp_conn *conn,
 int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
 				       uint16_t event_type,
 				       uint32_t event_data);
+int rtmp_control_send_set_chunk_size(struct rtmp_conn *conn,
+				     uint32_t chunk_size);
 
 
 /* Client Transaction */

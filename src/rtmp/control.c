@@ -87,3 +87,25 @@ int rtmp_control_send_set_peer_bw(struct rtmp_conn *conn,
 
 	return err;
 }
+
+
+int rtmp_control_send_set_chunk_size(struct rtmp_conn *conn,
+				     uint32_t chunk_size)
+{
+	struct mbuf *mb = mbuf_alloc(4);
+	int err;
+
+	if (!mb)
+		return ENOMEM;
+
+	(void)mbuf_write_u32(mb, htonl(chunk_size));
+
+	err = rtmp_conn_send_msg(conn, 0, RTMP_CHUNK_ID_CONTROL, 0, 0,
+				 RTMP_TYPE_SET_CHUNK_SIZE,
+				 RTMP_CONTROL_STREAM_ID,
+				 mb->buf, mb->end);
+
+	mem_deref(mb);
+
+	return err;
+}
