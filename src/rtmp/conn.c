@@ -86,42 +86,29 @@ static void conn_destructor(void *data)
 
 
 /* Server */
-static int server_send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
+static int server_send_reply(struct rtmp_conn *conn,
+			     const struct command_header *req)
 {
-	struct mbuf *mb;
+	const char *code = "NetConnection.Connect.Success";
+	const char *descr = "Connection succeeded.";
 	int err;
 
-	mb = mbuf_alloc(256);
-	if (!mb)
-		return ENOMEM;
+	err = rtmp_server_reply(conn, req,
+				2,
 
-	err  = rtmp_command_header_encode(mb, "_result", transaction_id);
+		AMF_TYPE_OBJECT, 3,
+			AMF_TYPE_STRING, "fmsVer",       "FMS/3,5,7,7009",
+			AMF_TYPE_NUMBER, "capabilities", 31.0,
+			AMF_TYPE_NUMBER, "mode",         1.0,
 
-	/* XXX: command specific response, make generic */
-
-	err |= rtmp_amf_encode_object(mb, false, 3,
-		     AMF_TYPE_STRING, "fmsVer",       "FMS/3,5,7,7009",
-		     AMF_TYPE_NUMBER, "capabilities", 31.0,
-		     AMF_TYPE_NUMBER, "mode",         1.0);
-
-	err |= rtmp_amf_encode_object(mb, false, 6,
-	      AMF_TYPE_STRING, "level",        "status",
-	      AMF_TYPE_STRING, "code",         "NetConnection.Connect.Success",
-	      AMF_TYPE_STRING, "description",  "Connection succeeded.",
-	      AMF_TYPE_ARRAY,  "data",         1,
-	      AMF_TYPE_STRING, "version",      "3,5,7,7009",
-	      AMF_TYPE_NUMBER, "clientid",     734806661.0,
-	      AMF_TYPE_NUMBER, "objectEncoding", 0.0);
-	if (err)
-		goto out;
-
-	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
-				    RTMP_CONTROL_STREAM_ID, mb->buf, mb->end);
-	if (err)
-		goto out;
-
- out:
-	mem_deref(mb);
+		AMF_TYPE_OBJECT, 6,
+			AMF_TYPE_STRING, "level",        "status",
+			AMF_TYPE_STRING, "code",         code,
+			AMF_TYPE_STRING, "description",  descr,
+			AMF_TYPE_ARRAY,  "data",         1,
+			AMF_TYPE_STRING, "version",      "3,5,7,7009",
+			AMF_TYPE_NUMBER, "clientid",     734806661.0,
+			AMF_TYPE_NUMBER, "objectEncoding", 0.0);
 
 	return err;
 }
@@ -252,7 +239,7 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 		if (err)
 			goto error;
 
-		err = server_send_reply(conn, cmd_hdr->transaction_id);
+		err = server_send_reply(conn, cmd_hdr);
 		if (err) {
 			re_printf("rtmp: reply failed (%m)\n", err);
 			goto error;
