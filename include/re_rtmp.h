@@ -17,6 +17,11 @@ enum {
 	RTMP_CHUNK_ID_CONTROL = 2,
 };
 
+/* User Control messages SHOULD use message stream ID 0
+   (known as the control stream)*/
+#define RTMP_CONTROL_STREAM_ID (0)
+
+
 enum rtmp_handshake_state {
 	RTMP_STATE_UNINITIALIZED = 0,
 	RTMP_STATE_VERSION_SENT,
@@ -169,6 +174,8 @@ int rtmp_listen(struct rtmp_sock **sockp, const struct sa *laddr,
 struct rtmp_conn;
 
 typedef void (rtmp_estab_h)(void *arg);
+typedef void (rtmp_command_h)(const struct command_header *cmd_hdr,
+			      struct odict *dict, void *arg);
 typedef void (rtmp_status_h)(struct odict *dict, void *arg);
 typedef void (rtmp_close_h)(int err, void *arg);
 
@@ -177,8 +184,8 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_status_h *statush,
 		 rtmp_close_h *closeh, void *arg);
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
-		rtmp_estab_h *estabh, rtmp_status_h *statush,
-		rtmp_close_h *closeh, void *arg);
+		rtmp_estab_h *estabh, rtmp_command_h *cmdh,
+		rtmp_status_h *statush, rtmp_close_h *closeh, void *arg);
 uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn);
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
@@ -211,3 +218,23 @@ int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
 
 int rtmp_server_reply(struct rtmp_conn *conn, const struct command_header *req,
 		      unsigned body_propc, ...);
+
+
+/*
+ * Control
+ */
+
+enum event_type {
+	RTMP_EVENT_STREAM_BEGIN       = 0,
+	RTMP_EVENT_STREAM_EOF         = 1,
+	RTMP_EVENT_STREAM_IS_RECORDED = 4,
+	RTMP_EVENT_PING_REQUEST       = 6,
+	RTMP_EVENT_PING_RESPONSE      = 7,
+};
+
+int rtmp_control_send_was(struct rtmp_conn *conn, uint32_t was);
+int rtmp_control_send_set_peer_bw(struct rtmp_conn *conn,
+				  size_t was, uint8_t limit_type);
+int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
+				       uint16_t event_type,
+				       uint32_t event_data);

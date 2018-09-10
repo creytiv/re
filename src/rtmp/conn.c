@@ -85,67 +85,6 @@ static void conn_destructor(void *data)
 }
 
 
-/* Server */
-static int server_send_reply(struct rtmp_conn *conn,
-			     const struct command_header *req)
-{
-	const char *code = "NetConnection.Connect.Success";
-	const char *descr = "Connection succeeded.";
-	int err;
-
-	err = rtmp_server_reply(conn, req,
-				2,
-
-		AMF_TYPE_OBJECT, 3,
-			AMF_TYPE_STRING, "fmsVer",       "FMS/3,5,7,7009",
-			AMF_TYPE_NUMBER, "capabilities", 31.0,
-			AMF_TYPE_NUMBER, "mode",         1.0,
-
-		AMF_TYPE_OBJECT, 6,
-			AMF_TYPE_STRING, "level",        "status",
-			AMF_TYPE_STRING, "code",         code,
-			AMF_TYPE_STRING, "description",  descr,
-			AMF_TYPE_ARRAY,  "data",         1,
-			AMF_TYPE_STRING, "version",      "3,5,7,7009",
-			AMF_TYPE_NUMBER, "clientid",     734806661.0,
-			AMF_TYPE_NUMBER, "objectEncoding", 0.0);
-
-	return err;
-}
-
-
-#if 0
-static int createstream_reply(struct rtmp_conn *conn, uint64_t transaction_id)
-{
-	struct mbuf *mb;
-	uint32_t stream_id = 42;  /* XXX: generate a stream ID */
-	int err;
-
-	mb = mbuf_alloc(256);
-	if (!mb)
-		return ENOMEM;
-
-	err  = rtmp_command_header_encode(mb, "_result", transaction_id);
-
-	err |= rtmp_amf_encode_null(mb);
-	err |= rtmp_amf_encode_number(mb, stream_id);
-
-	if (err)
-		goto out;
-
-	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
-				    RTMP_CONTROL_STREAM_ID, mb->buf, mb->end);
-	if (err)
-		goto out;
-
- out:
-	mem_deref(mb);
-
-	return err;
-}
-#endif
-
-
 static bool is_established(const struct rtmp_conn *conn)
 {
 	return conn->connected && conn->window_ack_size;
@@ -211,73 +150,6 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 }
 
 
-static void server_handle_amf_command(struct rtmp_conn *conn,
-				      const struct command_header *cmd_hdr,
-				      struct odict *dict)
-{
-	int err = 0;
-
-	(void)dict;
-
-	if (0 == str_casecmp(cmd_hdr->name, "connect")) {
-
-		if (conn->connected)
-			return;
-
-		err = rtmp_control_send_was(conn, WINDOW_ACK_SIZE);
-		if (err)
-			goto error;
-
-		err = rtmp_control_send_set_peer_bw(conn, WINDOW_ACK_SIZE, 2);
-		if (err)
-			goto error;
-
-		/* Stream Begin */
-		err = rtmp_control_send_user_control_msg(conn,
-						 EVENT_STREAM_BEGIN,
-						 RTMP_CONTROL_STREAM_ID);
-		if (err)
-			goto error;
-
-		err = server_send_reply(conn, cmd_hdr);
-		if (err) {
-			re_printf("rtmp: reply failed (%m)\n", err);
-			goto error;
-		}
-
-		conn->connected = true;
-
-		check_established(conn);
-	}
-	else if (0 == str_casecmp(cmd_hdr->name, "createStream")) {
-
-		conn->createstream = true;
-
-		err = rtmp_server_reply(conn, cmd_hdr,
-					2,
-					AMF_TYPE_NULL, NULL,
-					AMF_TYPE_NUMBER, (double)42);
-		if (err) {
-			re_printf("rtmp: reply failed (%m)\n", err);
-			goto error;
-		}
-	}
-	else {
-		re_printf("rtmp: server: command not handled (%s)\n",
-			  cmd_hdr->name);
-
-		/* XXX: for development */
-		conn_close(conn, EPROTO);
-	}
-
-	return;
-
- error:
-	if (err)
-		conn_close(conn, err);
-}
-
-
 static void handle_amf_command(struct rtmp_conn *conn,
 			       const uint8_t *cmd, size_t len)
 {
@@ -317,7 +189,8 @@ static void handle_amf_command(struct rtmp_conn *conn,
 		client_handle_amf_command(conn, &cmd_hdr, dict);
 	}
 	else {
-		server_handle_amf_command(conn, &cmd_hdr, dict);
+		if (conn->cmdh)
+			conn->cmdh(&cmd_hdr, dict, conn->arg);
 	}
 
  out:
@@ -347,7 +220,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 	switch (event) {
 
-	case EVENT_STREAM_BEGIN:
+	case RTMP_EVENT_STREAM_BEGIN:
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
@@ -366,7 +239,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		}
 		break;
 
-	case EVENT_STREAM_EOF:
+	case RTMP_EVENT_STREAM_EOF:
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
@@ -385,7 +258,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		}
 		break;
 
-	case EVENT_STREAM_IS_RECORDED:
+	case RTMP_EVENT_STREAM_IS_RECORDED:
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
@@ -393,7 +266,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 			  stream_id);
 		break;
 
-	case EVENT_PING_REQUEST:
+	case RTMP_EVENT_PING_REQUEST:
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 
@@ -404,8 +277,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		++conn->stats.ping;
 
 		err = rtmp_control_send_user_control_msg(conn,
-							 EVENT_PING_RESPONSE,
-							 value);
+						 RTMP_EVENT_PING_RESPONSE,
+						 value);
 		if (err)
 			return err;
 		break;
@@ -1153,7 +1026,8 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 
 
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
-		rtmp_estab_h *estabh, rtmp_status_h *statush,
+		rtmp_estab_h *estabh, rtmp_command_h *cmdh,
+		rtmp_status_h *statush,
 		rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
@@ -1165,6 +1039,8 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 	conn = rtmp_conn_alloc(false, estabh, statush, closeh, arg);
 	if (!conn)
 		return ENOMEM;
+
+	conn->cmdh = cmdh;
 
 	err = tcp_accept(&conn->tc, ts, tcp_estab_handler,
 			 tcp_recv_handler, tcp_close_handler, conn);

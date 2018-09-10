@@ -8,22 +8,8 @@
 #define RTMP_CONN_CHUNK_ID  (3)  /* XXX: dynamic selection */
 
 
-/* User Control messages SHOULD use message stream ID 0
-   (known as the control stream)*/
-#define RTMP_CONTROL_STREAM_ID (0)
-
-
 enum {
 	MESSAGE_LEN_MAX = 524288,
-};
-
-
-enum event_type {
-	EVENT_STREAM_BEGIN       = 0,
-	EVENT_STREAM_EOF         = 1,
-	EVENT_STREAM_IS_RECORDED = 4,
-	EVENT_PING_REQUEST       = 6,
-	EVENT_PING_RESPONSE      = 7,
 };
 
 
@@ -43,9 +29,6 @@ struct rtmp_conn {
 	rtmp_close_h *closeh;
 	void *arg;
 
-	struct list ctransl;
-	uint64_t tid_counter;
-
 	bool createstream;
 	bool stream_begin;  /* XXX: move to stream */
 
@@ -55,8 +38,13 @@ struct rtmp_conn {
 	} stats;
 
 	/* client specific: */
+	struct list ctransl;
+	uint64_t tid_counter;
 	char *app;
 	char *uri;
+
+	/* server specific: */
+	rtmp_command_h *cmdh;
 
 	uint32_t send_chunk_size;
 };
