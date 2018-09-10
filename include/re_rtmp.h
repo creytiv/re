@@ -42,6 +42,11 @@ struct sa;
 struct tcp_sock;
 
 
+struct command_header {
+	char name[64];
+	uint64_t transaction_id;
+};
+
 struct rtmp_header {
 	unsigned format:2;           /* type 0-3 */
 	uint32_t chunk_id;           /* from 3-65599 */
@@ -198,3 +203,11 @@ int  rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 		     const uint8_t *pld, size_t len);
 bool rtmp_stream_isready(const struct rtmp_stream *strm);
 int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
+
+
+/*
+ * Server
+ */
+
+int rtmp_server_reply(struct rtmp_conn *conn, const struct command_header *req,
+		      unsigned body_propc, ...);

@@ -73,6 +73,10 @@ static void createstream_handler(int err, const struct command_header *cmd_hdr,
 	}
 
 	strm->stream_id = (uint32_t)entry->u.dbl;
+	if (strm->stream_id == 0) {
+		re_printf("invalid stream id\n");
+		return;
+	}
 
 	switch (strm->operation) {
 

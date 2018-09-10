@@ -89,11 +89,6 @@ struct rtmp_stream {
 
 /* Command */
 
-struct command_header {
-	char name[64];
-	uint64_t transaction_id;
-};
-
 int rtmp_command_header_encode(struct mbuf *mb,
 			       const char *name, uint64_t tid);
 int rtmp_command_header_decode(struct command_header *hdr,

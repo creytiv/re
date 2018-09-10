@@ -127,6 +127,7 @@ static int server_send_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 }
 
 
+#if 0
 static int createstream_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 {
 	struct mbuf *mb;
@@ -155,6 +156,7 @@ static int createstream_reply(struct rtmp_conn *conn, uint64_t transaction_id)
 
 	return err;
 }
+#endif
 
 
 static bool is_established(const struct rtmp_conn *conn)
@@ -264,7 +266,10 @@ static void server_handle_amf_command(struct rtmp_conn *conn,
 
 		conn->createstream = true;
 
-		err = createstream_reply(conn, cmd_hdr->transaction_id);
+		err = rtmp_server_reply(conn, cmd_hdr,
+					2,
+					AMF_TYPE_NULL, NULL,
+					AMF_TYPE_NUMBER, (double)42);
 		if (err) {
 			re_printf("rtmp: reply failed (%m)\n", err);
 			goto error;
