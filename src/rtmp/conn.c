@@ -225,10 +225,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
 
-		if (stream_id == RTMP_CONTROL_STREAM_ID) {
-			conn->stream_begin = true;
-		}
-		else {
+		if (stream_id != RTMP_CONTROL_STREAM_ID) {
+
 			strm = rtmp_stream_find(&conn->streaml, stream_id);
 			if (!strm) {
 				re_printf("rtmp: stream_begin:"
@@ -244,10 +242,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 			return EBADMSG;
 		stream_id = ntohl(mbuf_read_u32(mb));
 
-		if (stream_id == RTMP_CONTROL_STREAM_ID) {
-			conn->stream_begin = true;
-		}
-		else {
+		if (stream_id != RTMP_CONTROL_STREAM_ID) {
+
 			strm = rtmp_stream_find(&conn->streaml, stream_id);
 			if (!strm) {
 				re_printf("rtmp: stream_eof:"
@@ -1106,9 +1102,6 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 	err |= re_hprintf(pf, "state:         %s\n",
 			  rtmp_handshake_name(conn->state));
 	err |= re_hprintf(pf, "connected:     %d\n", conn->connected);
-
-	err |= re_hprintf(pf, "createstream:  %d\n", conn->createstream);
-	err |= re_hprintf(pf, "stream_begin:  %d\n", conn->stream_begin);
 
 	if (conn->is_client) {
 		err |= re_hprintf(pf, "app:           %s\n", conn->app);
