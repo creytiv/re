@@ -763,7 +763,7 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
-		/* XXX: compare C1 and S2 */
+		/* XXX: compare C1 and S2 ? */
 
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 

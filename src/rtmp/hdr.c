@@ -125,8 +125,7 @@ void rtmp_header_init(struct rtmp_header *hdr, unsigned fmt, uint32_t chunk_id)
 	if (!hdr)
 		return;
 
-	/* XXX magic pattern for debugging */
-	memset(hdr, 0xff, sizeof(*hdr));
+	memset(hdr, 0, sizeof(*hdr));
 
 	hdr->format   = fmt;
 	hdr->chunk_id = chunk_id;
@@ -178,7 +177,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 	if (!hdr || !mb)
 		return EINVAL;
 
-	rtmp_header_init(hdr, 0, 0xffffffff);
+	rtmp_header_init(hdr, 0, 0);
 
 	err = decode_basic_hdr(hdr, mb);
 	if (err)
