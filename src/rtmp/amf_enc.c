@@ -134,6 +134,18 @@ int rtmp_amf_encode_null(struct mbuf *mb)
 }
 
 
+static bool container_has_key(enum amf_type type)
+{
+	switch (type) {
+
+	case AMF_TYPE_OBJECT:       return true;
+	case AMF_TYPE_ECMA_ARRAY:   return true;
+	case AMF_TYPE_STRICT_ARRAY: return false;
+	default:                    return false;
+	}
+}
+
+
 /*
  * NUMBER    double
  * BOOLEAN   bool
@@ -158,27 +170,20 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 		return EOVERFLOW;
 	}
 
+	encode_key = container_has_key(container);
+
 	switch (container) {
 
 	case AMF_TYPE_OBJECT:
-		encode_key = true;
 		err = rtmp_amf_encode_object_start(mb);
 		break;
 
 	case AMF_TYPE_ECMA_ARRAY:
-		encode_key = true;
-		err = rtmp_amf_encode_array_start(mb, AMF_TYPE_ECMA_ARRAY,
-						  propc);
+	case AMF_TYPE_STRICT_ARRAY:
+		err = rtmp_amf_encode_array_start(mb, container, propc);
 		break;
 
 	case AMF_TYPE_ROOT:
-		encode_key = false;
-		break;
-
-	case AMF_TYPE_STRICT_ARRAY:
-		encode_key = false;
-		err = rtmp_amf_encode_array_start(mb, AMF_TYPE_STRICT_ARRAY,
-						  propc);
 		break;
 
 	default:
@@ -232,17 +237,10 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 			err = rtmp_amf_encode_null(mb);
 			break;
 
-		case AMF_TYPE_ECMA_ARRAY:  /* recursive */
-			subcount = va_arg(*ap, int);
-			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
-			break;
-
-		case AMF_TYPE_OBJECT:  /* recursive */
-			subcount = va_arg(*ap, int);
-			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
-			break;
-
-		case AMF_TYPE_STRICT_ARRAY:  /* recursive */
+		case AMF_TYPE_OBJECT:
+		case AMF_TYPE_ECMA_ARRAY:
+		case AMF_TYPE_STRICT_ARRAY:
+			/* recursive */
 			subcount = va_arg(*ap, int);
 			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
 			break;
