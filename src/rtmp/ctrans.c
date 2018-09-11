@@ -115,6 +115,8 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 			 struct odict *dict)
 {
 	struct rtmp_ctrans *ct;
+	rtmp_resp_h *resph;
+	void *arg;
 
 	if (!ctransl || !cmd_hdr)
 		return EINVAL;
@@ -132,11 +134,15 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	else
 		++ct->errors;
 
-	if (ct->resph) {
-		ct->resph(success ? 0 : ENOENT, cmd_hdr, dict, ct->arg);
-	}
+	resph = ct->resph;
+	arg = ct->arg;
 
-	/* XXX: destroy trans */
+	/* destroy transaction */
+	ct = mem_deref(ct);
+
+	if (resph) {
+		resph(success ? 0 : ENOENT, cmd_hdr, dict, arg);
+	}
 
 	return 0;
 }

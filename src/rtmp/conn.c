@@ -22,13 +22,11 @@
 
 
 enum {
-	BUFSIZE_MAX  = 524288,
+	RTMP_BUFSIZE_MAX  = 524288,
 };
 
 
 static void conn_close(struct rtmp_conn *conn, int err);
-static int rtmp_chunk_handler(const struct rtmp_header *hdr,
-			      const uint8_t *pld, size_t pld_len, void *arg);
 
 
 static void get_version(uint8_t version[4])
@@ -54,27 +52,8 @@ static void get_version(uint8_t version[4])
 static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
-	struct le *le;
 
-#if 0
-	re_printf("%H\n", rtmp_conn_debug, conn);
-#endif
-
-	le = conn->ctransl.head;
-	while (le) {
-		struct rtmp_ctrans *ct = le->data;
-		le = le->next;
-
-#if 0
-		re_printf("### flush transaction"
-			  " [command=%-12s    tid=%llu"
-			  "    replies=%u    errors=%u]\n",
-			  ct->command, ct->tid, ct->replies, ct->errors);
-#endif
-
-		mem_deref(ct);
-	}
-
+	list_flush(&conn->ctransl);
 	list_flush(&conn->streaml);
 
 	mem_deref(conn->tc);
@@ -904,7 +883,7 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	if (conn->mb) {
 		const size_t len = mbuf_get_left(mb_pkt), pos = conn->mb->pos;
 
-		if ((mbuf_get_left(conn->mb) + len) > BUFSIZE_MAX) {
+		if ((mbuf_get_left(conn->mb) + len) > RTMP_BUFSIZE_MAX) {
 			err = EOVERFLOW;
 			goto out;
 		}
