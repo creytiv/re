@@ -16,6 +16,9 @@
 #include "rtmp.h"
 
 
+#define MAX_ARRAY_COUNT 64
+
+
 static int amf_decode_value(struct odict *dict, const char *key,
 			    struct mbuf *mb);
 
@@ -75,7 +78,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 	} num;
 	struct odict *object = NULL;
 	char *str = NULL;
-	uint32_t array_len;
+	uint32_t i, array_len;
 	uint8_t type;
 	uint16_t len;
 	bool boolean;
@@ -152,6 +155,34 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		type = (type == AMF_TYPE_ARRAY) ? ODICT_ARRAY : ODICT_OBJECT;
 
 		err = odict_entry_add(dict, key, type, object);
+
+		mem_deref(object);
+		break;
+
+	case AMF_TYPE_STRICT_ARRAY:
+		if (mbuf_get_left(mb) < 4)
+			return ENODATA;
+
+		array_len = ntohl(mbuf_read_u32(mb));
+		if (!array_len || array_len > MAX_ARRAY_COUNT)
+			return EPROTO;
+
+		err = odict_alloc(&object, 32);
+		if (err)
+			return err;
+
+		for (i=0; i<array_len; i++) {
+
+			char ix[32];
+
+			re_snprintf(ix, sizeof(ix), "%u", i);
+
+			err |= amf_decode_value(object, ix, mb);
+			if (err)
+				break;
+		}
+
+		err |= odict_entry_add(dict, key, ODICT_ARRAY, object);
 
 		mem_deref(object);
 		break;

@@ -144,7 +144,7 @@ int rtmp_amf_encode_null(struct mbuf *mb)
 int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 			    unsigned propc, va_list *ap)
 {
-	bool is_root = false;
+	bool encode_key;
 	unsigned i;
 	int err = 0;
 
@@ -160,21 +160,32 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 	switch (container) {
 
 	case AMF_TYPE_OBJECT:
+		encode_key = true;
 		err = rtmp_amf_encode_object_start(mb);
 		break;
 
 	case AMF_TYPE_ARRAY:
+		encode_key = true;
 		err = rtmp_amf_encode_array_start(mb, propc);
 		break;
 
 	case AMF_TYPE_ROOT:
-		is_root = true;
+		encode_key = false;
+		break;
+
+	case AMF_TYPE_STRICT_ARRAY:
+		encode_key = false;
+		err  = mbuf_write_u8(mb, AMF_TYPE_STRICT_ARRAY);
+		err |= mbuf_write_u32(mb, htonl(propc));
 		break;
 
 	default:
 		re_printf("amf_enc: not a container (%d)\n", container);
 		return ENOTSUP;
 	}
+
+	if (err)
+		return err;
 
 	for (i=0; i<propc; i++) {
 
@@ -185,11 +196,10 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 		bool b;
 
 		/* add key if ARRAY or OBJECT container */
-		if (!is_root) {
+		if (encode_key) {
 			const char *key;
 
 			key = va_arg(*ap, const char *);
-
 			if (!key)
 				return EINVAL;
 
@@ -230,6 +240,11 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
 			break;
 
+		case AMF_TYPE_STRICT_ARRAY:  /* recursive */
+			subcount = va_arg(*ap, int);
+			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
+			break;
+
 		default:
 			re_printf("rtmp: amf_enc: type not supported"
 				  " (i=%u, propc=%u, type=%d)\n",
@@ -241,7 +256,7 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 			break;
 	}
 
-	if (!is_root)
+	if (encode_key)
 		err |= rtmp_amf_encode_object_end(mb);
 
 	return err;

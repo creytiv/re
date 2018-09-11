@@ -126,8 +126,9 @@ enum amf_type {
 	AMF_TYPE_STRING     = 0x02,
 	AMF_TYPE_OBJECT     = 0x03,
 	AMF_TYPE_NULL       = 0x05,
-	AMF_TYPE_ARRAY      = 0x08,
+	AMF_TYPE_ARRAY      = 0x08,  /* ECMA array or 'associative' Array */
 	AMF_TYPE_OBJECT_END = 0x09,
+	AMF_TYPE_STRICT_ARRAY = 0x0a,  /* ordinal indices */
 };
 
 struct odict;
