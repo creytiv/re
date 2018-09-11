@@ -22,13 +22,6 @@ enum {
 #define RTMP_CONTROL_STREAM_ID (0)
 
 
-enum rtmp_handshake_state {
-	RTMP_STATE_UNINITIALIZED = 0,
-	RTMP_STATE_VERSION_SENT,
-	RTMP_STATE_ACK_SENT,
-	RTMP_STATE_HANDSHAKE_DONE
-};
-
 enum rtmp_packet_type {
 	RTMP_TYPE_SET_CHUNK_SIZE     = 1,   /* Set Chunk Size               */
 	RTMP_TYPE_ACKNOWLEDGEMENT    = 3,   /* Acknowledgement              */
@@ -149,13 +142,6 @@ int rtmp_amf_encode_object(struct mbuf *mb, enum class class,
 			   unsigned propc, ...);
 
 int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
-
-
-/*
- * RTMP Handshake
- */
-
-const char *rtmp_handshake_name(enum rtmp_handshake_state state);
 
 
 /*

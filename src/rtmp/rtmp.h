@@ -12,6 +12,12 @@ enum {
 	MESSAGE_LEN_MAX = 524288,
 };
 
+enum rtmp_handshake_state {
+	RTMP_STATE_UNINITIALIZED = 0,
+	RTMP_STATE_VERSION_SENT,
+	RTMP_STATE_ACK_SENT,
+	RTMP_STATE_HANDSHAKE_DONE
+};
 
 struct rtmp_conn {
 	struct list streaml;
@@ -145,3 +151,10 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
 const struct odict_entry *odict_lookup_index(const struct odict *o,
 					     unsigned ix,
 					     int type);
+
+
+/*
+ * RTMP Handshake
+ */
+
+const char *rtmp_handshake_name(enum rtmp_handshake_state state);

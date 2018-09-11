@@ -25,6 +25,8 @@ TODO:
 
 [ ] improve AMF encoding API
 [ ] implement AMF transaction matching
+[ ] add support for Data Message
+[ ] add support for AMF Strict Array (type 10)
 
 
 
