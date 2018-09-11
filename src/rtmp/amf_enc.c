@@ -47,11 +47,12 @@ static int rtmp_amf_encode_object_start(struct mbuf *mb)
 }
 
 
-static int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length)
+static int rtmp_amf_encode_array_start(struct mbuf *mb,
+				       uint8_t type, uint32_t length)
 {
 	int err;
 
-	err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
+	err  = mbuf_write_u8(mb, type);
 	err |= mbuf_write_u32(mb, htonl(length));
 
 	return err;
@@ -164,9 +165,10 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 		err = rtmp_amf_encode_object_start(mb);
 		break;
 
-	case AMF_TYPE_ARRAY:
+	case AMF_TYPE_ECMA_ARRAY:
 		encode_key = true;
-		err = rtmp_amf_encode_array_start(mb, propc);
+		err = rtmp_amf_encode_array_start(mb, AMF_TYPE_ECMA_ARRAY,
+						  propc);
 		break;
 
 	case AMF_TYPE_ROOT:
@@ -175,8 +177,8 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 
 	case AMF_TYPE_STRICT_ARRAY:
 		encode_key = false;
-		err  = mbuf_write_u8(mb, AMF_TYPE_STRICT_ARRAY);
-		err |= mbuf_write_u32(mb, htonl(propc));
+		err = rtmp_amf_encode_array_start(mb, AMF_TYPE_STRICT_ARRAY,
+						  propc);
 		break;
 
 	default:
@@ -230,7 +232,7 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 			err = rtmp_amf_encode_null(mb);
 			break;
 
-		case AMF_TYPE_ARRAY:  /* recursive */
+		case AMF_TYPE_ECMA_ARRAY:  /* recursive */
 			subcount = va_arg(*ap, int);
 			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
 			break;

@@ -120,14 +120,14 @@ void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
  */
 
 enum amf_type {
-	AMF_TYPE_ROOT       = -1,   /* special */
-	AMF_TYPE_NUMBER     = 0x00,
-	AMF_TYPE_BOOLEAN    = 0x01,
-	AMF_TYPE_STRING     = 0x02,
-	AMF_TYPE_OBJECT     = 0x03,
-	AMF_TYPE_NULL       = 0x05,
-	AMF_TYPE_ARRAY      = 0x08,  /* ECMA array or 'associative' Array */
-	AMF_TYPE_OBJECT_END = 0x09,
+	AMF_TYPE_ROOT         = -1,   /* special */
+	AMF_TYPE_NUMBER       = 0x00,
+	AMF_TYPE_BOOLEAN      = 0x01,
+	AMF_TYPE_STRING       = 0x02,
+	AMF_TYPE_OBJECT       = 0x03,
+	AMF_TYPE_NULL         = 0x05,
+	AMF_TYPE_ECMA_ARRAY   = 0x08,  /* 'associative' Array */
+	AMF_TYPE_OBJECT_END   = 0x09,
 	AMF_TYPE_STRICT_ARRAY = 0x0a,  /* ordinal indices */
 };
 

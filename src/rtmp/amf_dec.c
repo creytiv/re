@@ -131,7 +131,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		err = odict_entry_add(dict, key, ODICT_NULL);
 		break;
 
-	case AMF_TYPE_ARRAY:
+	case AMF_TYPE_ECMA_ARRAY:
 		if (mbuf_get_left(mb) < 4)
 			return ENODATA;
 
@@ -152,7 +152,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			return err;
 		}
 
-		type = (type == AMF_TYPE_ARRAY) ? ODICT_ARRAY : ODICT_OBJECT;
+		type = (type == AMF_TYPE_OBJECT) ? ODICT_OBJECT : ODICT_ARRAY;
 
 		err = odict_entry_add(dict, key, type, object);
 
