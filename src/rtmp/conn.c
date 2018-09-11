@@ -268,6 +268,30 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 }
 
 
+static void handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
+{
+	struct odict *dict;
+	int err;
+
+	err = odict_alloc(&dict, 32);
+	if (err)
+		return;
+
+	err = rtmp_amf_decode(dict, mb);
+	if (err) {
+		re_printf("rtmp: data: amf decode error (%m)\n", err);
+		goto out;
+	}
+
+	re_printf("got Data Message:\n%H\n", odict_debug, dict);
+
+	/* XXX: pass to app */
+
+ out:
+	mem_deref(dict);
+}
+
+
 static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 {
 	struct rtmp_conn *conn = arg;
@@ -411,7 +435,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_DATA:
-		/* XXX: pass to app */
+		handle_data_message(conn, &mb);
 		break;
 
 	default:
