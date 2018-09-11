@@ -24,6 +24,51 @@
 #define PROPC_MAX 8
 
 
+static int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
+{
+	size_t len;
+	int err;
+
+	len = str_len(key);
+
+	if (len > 65535)
+		return EOVERFLOW;
+
+	err  = mbuf_write_u16(mb, htons((uint16_t)len));
+	err |= mbuf_write_str(mb, key);
+
+	return err;
+}
+
+
+static int rtmp_amf_encode_object_start(struct mbuf *mb)
+{
+	return mbuf_write_u8(mb, AMF_TYPE_OBJECT);
+}
+
+
+static int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length)
+{
+	int err;
+
+	err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
+	err |= mbuf_write_u32(mb, htonl(length));
+
+	return err;
+}
+
+
+static int rtmp_amf_encode_object_end(struct mbuf *mb)
+{
+	int err;
+
+	err  = mbuf_write_u16(mb, 0);
+	err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
+
+	return err;
+}
+
+
 int rtmp_amf_encode_number(struct mbuf *mb, double val)
 {
 	const union {
@@ -85,51 +130,6 @@ int rtmp_amf_encode_null(struct mbuf *mb)
 		return EINVAL;
 
 	return mbuf_write_u8(mb, AMF_TYPE_NULL);
-}
-
-
-static int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
-{
-	size_t len;
-	int err;
-
-	len = str_len(key);
-
-	if (len > 65535)
-		return EOVERFLOW;
-
-	err  = mbuf_write_u16(mb, htons((uint16_t)len));
-	err |= mbuf_write_str(mb, key);
-
-	return err;
-}
-
-
-static int rtmp_amf_encode_object_start(struct mbuf *mb)
-{
-	return mbuf_write_u8(mb, AMF_TYPE_OBJECT);
-}
-
-
-static int rtmp_amf_encode_array_start(struct mbuf *mb, uint32_t length)
-{
-	int err;
-
-	err  = mbuf_write_u8(mb, AMF_TYPE_ARRAY);
-	err |= mbuf_write_u32(mb, htonl(length));
-
-	return err;
-}
-
-
-static int rtmp_amf_encode_object_end(struct mbuf *mb)
-{
-	int err;
-
-	err  = mbuf_write_u16(mb, 0);
-	err |= mbuf_write_u8(mb, AMF_TYPE_OBJECT_END);
-
-	return err;
 }
 
 
