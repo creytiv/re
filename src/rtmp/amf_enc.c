@@ -141,7 +141,7 @@ int rtmp_amf_encode_null(struct mbuf *mb)
  * NULL      NULL
  * ARRAY     const char *key    sub-count
  */
-int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
+int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 			    unsigned propc, va_list *ap)
 {
 	bool is_root = false;
@@ -157,28 +157,28 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
 		return EOVERFLOW;
 	}
 
-	switch (class) {
+	switch (container) {
 
-	case CLASS_OBJECT:
+	case AMF_TYPE_OBJECT:
 		err = rtmp_amf_encode_object_start(mb);
 		break;
 
-	case CLASS_ARRAY:
+	case AMF_TYPE_ARRAY:
 		err = rtmp_amf_encode_array_start(mb, propc);
 		break;
 
-	case CLASS_ROOT:
+	case AMF_TYPE_ROOT:
 		is_root = true;
 		break;
 
 	default:
+		re_printf("amf_enc: not a container (%d)\n", container);
 		return ENOTSUP;
 	}
 
 	for (i=0; i<propc; i++) {
 
 		int type        = va_arg(*ap, int);
-		const char *key;
 		const char *str;
 		int subcount;
 		double dbl;
@@ -186,6 +186,8 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
 
 		/* add key if ARRAY or OBJECT container */
 		if (!is_root) {
+			const char *key;
+
 			key = va_arg(*ap, const char *);
 
 			if (!key)
@@ -220,19 +222,18 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
 
 		case AMF_TYPE_ARRAY:  /* recursive */
 			subcount = va_arg(*ap, int);
-			err = rtmp_amf_vencode_object(mb, CLASS_ARRAY,
-						      subcount, ap);
+			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
 			break;
 
 		case AMF_TYPE_OBJECT:  /* recursive */
 			subcount = va_arg(*ap, int);
-			err = rtmp_amf_vencode_object(mb, CLASS_OBJECT,
-						      subcount, ap);
+			err = rtmp_amf_vencode_object(mb, type, subcount, ap);
 			break;
 
 		default:
 			re_printf("rtmp: amf_enc: type not supported"
-				  " (propc=%u, type=%d)\n", propc, type);
+				  " (i=%u, propc=%u, type=%d)\n",
+				  i, propc, type);
 			return ENOTSUP;
 		}
 
@@ -247,14 +248,17 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum class class,
 }
 
 
-int rtmp_amf_encode_object(struct mbuf *mb, enum class class,
+/*
+ * Encode AMF Object or Array
+ */
+int rtmp_amf_encode_object(struct mbuf *mb, enum amf_type container,
 			   unsigned propc, ...)
 {
 	va_list ap;
 	int err;
 
 	va_start(ap, propc);
-	err = rtmp_amf_vencode_object(mb, class, propc, &ap);
+	err = rtmp_amf_vencode_object(mb, container, propc, &ap);
 	va_end(ap);
 
 	return err;

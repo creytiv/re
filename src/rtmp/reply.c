@@ -44,7 +44,8 @@ int rtmp_server_reply(struct rtmp_conn *conn, const struct command_header *req,
 
 	if (body_propc) {
 		va_start(ap, body_propc);
-		err = rtmp_amf_vencode_object(mb, CLASS_ROOT, body_propc, &ap);
+		err = rtmp_amf_vencode_object(mb, AMF_TYPE_ROOT,
+					      body_propc, &ap);
 		va_end(ap);
 		if (err)
 			goto out;
