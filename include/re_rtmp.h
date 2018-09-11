@@ -6,9 +6,9 @@
 
 
 enum {
-	RTMP_PROTOCOL_VERSION = 3,
-	RTMP_SIG_SIZE         = 1536,
-	RTMP_PORT             = 1935,
+	RTMP_PROTOCOL_VERSION  = 3,
+	RTMP_SIG_SIZE          = 1536,
+	RTMP_PORT              = 1935,
 	RTMP_DEFAULT_CHUNKSIZE = 128,
 };
 
@@ -17,9 +17,13 @@ enum {
 	RTMP_CHUNK_ID_CONTROL = 2,
 };
 
-/* User Control messages SHOULD use message stream ID 0
-   (known as the control stream)*/
-#define RTMP_CONTROL_STREAM_ID (0)
+/* Stream IDs */
+enum {
+
+	/* User Control messages SHOULD use message stream ID 0
+	   (known as the control stream) */
+	RTMP_CONTROL_STREAM_ID = 0
+};
 
 
 enum rtmp_packet_type {
