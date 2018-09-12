@@ -23,8 +23,15 @@
 #include <re_dbg.h>
 
 
-int rtmp_server_reply(struct rtmp_conn *conn, const struct command_header *req,
-		      unsigned body_propc, ...)
+#if 0
+int rtmp_amf_request();
+int rtmp_amf_send();
+int rtmp_amf_reply();
+#endif
+
+
+int rtmp_amf_reply(struct rtmp_conn *conn, const struct command_header *req,
+		   unsigned body_propc, ...)
 {
 	struct mbuf *mb = mbuf_alloc(512);
 	va_list ap;

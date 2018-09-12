@@ -27,8 +27,13 @@ static void destructor(void *data)
 }
 
 
-static struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
-					     const char *name)
+struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
+				      const char *name,
+				      uint32_t stream_id,
+				      rtmp_ready_h *readyh,
+				      rtmp_audio_h *auh,
+				      rtmp_video_h *vidh,
+				      void *arg)
 {
 	struct rtmp_stream *strm;
 	int err;
@@ -38,11 +43,16 @@ static struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
 		return NULL;
 
 	strm->conn      = conn;
-	strm->stream_id = (uint32_t)-1;  /* unknown */
+	strm->stream_id = stream_id;  /* unknown */
 
 	err = str_dup(&strm->name, name);
 	if (err)
 		goto out;
+
+	strm->readyh = readyh;
+	strm->auh    = auh;
+	strm->vidh   = vidh;
+	strm->arg    = arg;
 
 	list_append(&conn->streaml, &strm->le, strm);
 
@@ -129,16 +139,13 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 
 	re_printf("rtmp: stream: play '%s'\n", name);
 
-	strm = rtmp_stream_alloc(conn, name);
+	strm = rtmp_stream_alloc(conn, name, (uint32_t)-1,
+				 readyh, auh, vidh, arg);
 	if (!strm)
 		return ENOMEM;
 
 	strm->command   = "play";
 	strm->operation = OP_PLAY;
-	strm->readyh    = readyh;
-	strm->auh       = auh;
-	strm->vidh      = vidh;
-	strm->arg       = arg;
 
 	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
 			       createstream_handler, strm,
@@ -171,14 +178,13 @@ int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 
 	re_printf("rtmp: stream: publish '%s'\n", name);
 
-	strm = rtmp_stream_alloc(conn, name);
+	strm = rtmp_stream_alloc(conn, name, (uint32_t)-1,
+				 readyh, NULL, NULL, arg);
 	if (!strm)
 		return ENOMEM;
 
 	strm->command   = "publish";
 	strm->operation = OP_PUBLISH;
-	strm->readyh    = readyh;
-	strm->arg       = arg;
 
 	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
 			       createstream_handler, strm,

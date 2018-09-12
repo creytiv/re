@@ -195,14 +195,21 @@ int  rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 		     const uint8_t *pld, size_t len);
 bool rtmp_stream_isready(const struct rtmp_stream *strm);
 int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
+struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
+				      const char *name,
+				      uint32_t stream_id,
+				      rtmp_ready_h *readyh,
+				      rtmp_audio_h *auh,
+				      rtmp_video_h *vidh,
+				      void *arg);
 
 
 /*
  * Server
  */
 
-int rtmp_server_reply(struct rtmp_conn *conn, const struct command_header *req,
-		      unsigned body_propc, ...);
+int rtmp_amf_reply(struct rtmp_conn *conn, const struct command_header *req,
+		   unsigned body_propc, ...);
 
 
 /*

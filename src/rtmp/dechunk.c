@@ -16,7 +16,7 @@
 
 enum {
 	MAX_PENDING = 16,
-	MAX_CHUNK_ID = 64
+	MAX_CHUNK_ID = 64    /* XXX: max limit, temp solution */
 };
 
 
