@@ -6,6 +6,7 @@
 
 SRCS	+= rtmp/amf_dec.c
 SRCS	+= rtmp/amf_enc.c
+SRCS	+= rtmp/amf_msg.c
 SRCS	+= rtmp/chunk.c
 SRCS	+= rtmp/command.c
 SRCS	+= rtmp/conn.c
@@ -17,3 +18,4 @@ SRCS	+= rtmp/hdr.c
 SRCS	+= rtmp/reply.c
 SRCS	+= rtmp/sock.c
 SRCS	+= rtmp/stream.c
+SRCS	+= rtmp/util.c

@@ -44,11 +44,6 @@ struct sa;
 struct tcp_sock;
 
 
-struct command_header {
-	char name[64];
-	uint64_t transaction_id;
-};
-
 struct rtmp_header {
 	unsigned format:2;           /* type 0-3 */
 	uint32_t chunk_id;           /* from 3-65599 */
@@ -60,6 +55,10 @@ struct rtmp_header {
 	uint32_t stream_id;
 };
 
+struct rtmp_amf_message {
+	struct odict *dict;
+	char *name;          /* cached */
+};
 
 /*
  * RTMP Header
@@ -159,9 +158,8 @@ int rtmp_listen(struct rtmp_sock **sockp, const struct sa *laddr,
 struct rtmp_conn;
 
 typedef void (rtmp_estab_h)(void *arg);
-typedef void (rtmp_command_h)(const struct command_header *cmd_hdr,
-			      struct odict *dict, void *arg);
-typedef void (rtmp_status_h)(struct odict *dict, void *arg);
+typedef void (rtmp_command_h)(struct rtmp_amf_message *msg, void *arg);
+typedef void (rtmp_status_h)(const struct rtmp_amf_message *msg, void *arg);
 typedef void (rtmp_close_h)(int err, void *arg);
 
 
@@ -208,7 +206,7 @@ struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
  * Server
  */
 
-int rtmp_amf_reply(struct rtmp_conn *conn, const struct command_header *req,
+int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
 		   unsigned body_propc, ...);
 
 

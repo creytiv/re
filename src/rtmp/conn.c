@@ -53,6 +53,11 @@ static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
 
+	if (!list_isempty(&conn->ctransl)) {
+		re_printf("WARNING: flushing %u transactions\n",
+			  list_count(&conn->ctransl));
+	}
+
 	list_flush(&conn->ctransl);
 	list_flush(&conn->streaml);
 
@@ -86,36 +91,33 @@ static void check_established(struct rtmp_conn *conn)
 
 
 static void client_handle_amf_command(struct rtmp_conn *conn,
-				      const struct command_header *cmd_hdr,
-				      struct odict *dict)
+				      const struct rtmp_amf_message *msg)
 {
 	int err;
 
-	(void)dict;
+	if (0 == str_casecmp(msg->name, "_result") ||
+	    0 == str_casecmp(msg->name, "_error")) {
 
-	if (0 == str_casecmp(cmd_hdr->name, "_result") ||
-	    0 == str_casecmp(cmd_hdr->name, "_error")) {
-
-		bool success = (0 == str_casecmp(cmd_hdr->name, "_result"));
+		bool success = (0 == str_casecmp(msg->name, "_result"));
 
 		/* forward response to transaction layer */
 		err = rtmp_ctrans_response(&conn->ctransl, success,
-					   cmd_hdr, dict);
+					   msg);
 		if (err)
 			goto error;
 	}
-	else if (0 == str_casecmp(cmd_hdr->name, "onStatus")) {
+	else if (0 == str_casecmp(msg->name, "onStatus")) {
 
 		re_printf("rtmp: client: recv onStatus\n");
 
 		/* XXX: lookup stream_id, pass to struct rtmp_stream ? */
 
 		if (conn->statush)
-			conn->statush(dict, conn->arg);
+			conn->statush(msg, conn->arg);
 	}
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
-			  cmd_hdr->name);
+			  msg->name);
 
 		/* XXX: for development */
 		conn_close(conn, EPROTO);
@@ -137,43 +139,25 @@ static void handle_amf_command(struct rtmp_conn *conn,
 		.end = len,
 		.size = len,
 	};
-	struct command_header cmd_hdr;
-	struct odict *dict;
+	struct rtmp_amf_message *msg = NULL;
 	int err;
 
-	err = odict_alloc(&dict, 32);
-	if (err)
-		return;
-
-	err = rtmp_amf_decode(dict, &mb);
+	err = rtmp_amf_message_decode(&msg, &mb);
 	if (err) {
 		re_printf("rtmp: cmd: amf decode error (%m)\n", err);
 		goto out;
 	}
 
-	err = rtmp_command_header_decode(&cmd_hdr, dict);
-	if (err) {
-		re_printf("could not decode command header (%m)\n", err);
-		goto out;
-	}
-
-#if 0
-	re_printf("[%s] Command: %H\n",
-		  conn->is_client ? "Client" : "Server",
-		  rtmp_command_header_print, &cmd_hdr);
-	re_printf("     %H\n", odict_debug, dict);
-#endif
-
 	if (conn->is_client) {
-		client_handle_amf_command(conn, &cmd_hdr, dict);
+		client_handle_amf_command(conn, msg);
 	}
 	else {
 		if (conn->cmdh)
-			conn->cmdh(&cmd_hdr, dict, conn->arg);
+			conn->cmdh(msg, conn->arg);
 	}
 
  out:
-	mem_deref(dict);
+	mem_deref(msg);
 }
 
 
@@ -658,11 +642,10 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 }
 
 
-static void connect_resp_handler(int err, const struct command_header *cmd_hdr,
-				 struct odict *dict, void *arg)
+static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
+				 void *arg)
 {
 	struct rtmp_conn *conn = arg;
-	(void)conn;
 
 	if (err) {
 		re_printf("### connect failed (%m)\n", err);

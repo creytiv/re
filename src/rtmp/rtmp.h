@@ -80,12 +80,9 @@ struct rtmp_stream {
 
 /* Command */
 
+
 int rtmp_command_header_encode(struct mbuf *mb,
 			       const char *name, uint64_t tid);
-int rtmp_command_header_decode(struct command_header *hdr,
-			       const struct odict *dict);
-int rtmp_command_header_print(struct re_printf *pf,
-			      const struct command_header *hdr);
 
 
 /* Stream */
@@ -120,8 +117,8 @@ int rtmp_control_send_set_chunk_size(struct rtmp_conn *conn,
 
 /* Client Transaction */
 
-typedef void (rtmp_resp_h)(int err, const struct command_header *cmd_hdr,
-			   struct odict *dict, void *arg);
+typedef void (rtmp_resp_h)(int err, const struct rtmp_amf_message *msg,
+			   void *arg);
 
 struct rtmp_ctrans {
 	struct le le;
@@ -137,8 +134,7 @@ int  rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 		      const char *command, rtmp_resp_h *resph, void *arg,
 		      unsigned body_propc, ...);
 int  rtmp_ctrans_response(const struct list *ctransl, bool success,
-			  const struct command_header *cmd_hdr,
-			  struct odict *dict);
+			  const struct rtmp_amf_message *msg);
 struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid);
 
 
@@ -148,13 +144,19 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
 			    unsigned propc, va_list *ap);
 
 
+/* RTMP Handshake */
+
+const char *rtmp_handshake_name(enum rtmp_handshake_state state);
+
+
+/* AMF Message */
+
+int rtmp_amf_message_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
+uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg);
+
+
+/* Util */
+
 const struct odict_entry *odict_lookup_index(const struct odict *o,
 					     unsigned ix,
 					     int type);
-
-
-/*
- * RTMP Handshake
- */
-
-const char *rtmp_handshake_name(enum rtmp_handshake_state state);

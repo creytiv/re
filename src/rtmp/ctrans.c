@@ -36,7 +36,7 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 		     const char *command, rtmp_resp_h *resph, void *arg,
 		     unsigned body_propc, ...)
 {
-	struct rtmp_ctrans *ct;
+	struct rtmp_ctrans *ct = NULL;
 	struct mbuf *mb = mbuf_alloc(512);
 	va_list ap;
 	uint64_t tid;
@@ -47,21 +47,26 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 	if (!mb)
 		return ENOMEM;
 
-	tid = ++conn->tid_counter;
+	if (resph) {
+		tid = ++conn->tid_counter;
 
-	ct = mem_zalloc(sizeof(*ct), ctrans_destructor);
-	if (!ct)
-		return ENOMEM;
+		ct = mem_zalloc(sizeof(*ct), ctrans_destructor);
+		if (!ct)
+			return ENOMEM;
 
-	ct->tid   = tid;
-	ct->resph = resph;
-	ct->arg   = arg;
+		ct->tid   = tid;
+		ct->resph = resph;
+		ct->arg   = arg;
 
-	err = str_dup(&ct->command, command);
-	if (err)
-		goto out;
+		err = str_dup(&ct->command, command);
+		if (err)
+			goto out;
 
-	list_append(&conn->ctransl, &ct->le, ct);
+		list_append(&conn->ctransl, &ct->le, ct);
+	}
+	else {
+		tid = 0;  /* no response expected */
+	}
 
 	err = rtmp_command_header_encode(mb, command, tid);
 	if (err)
@@ -81,7 +86,7 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 	if (err)
 		goto out;
 
-#if 0
+#if 1
 	DEBUG_NOTICE("### new ctrans (command=\"%s\", tid=%llu)"
 		  " stream_id=%u, propc=%u\n",
 		  command, tid, stream_id, body_propc);
@@ -112,21 +117,27 @@ struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid)
 
 
 int rtmp_ctrans_response(const struct list *ctransl, bool success,
-			 const struct command_header *cmd_hdr,
-			 struct odict *dict)
+			 const struct rtmp_amf_message *msg)
 {
 	struct rtmp_ctrans *ct;
+	uint64_t tid;
 	rtmp_resp_h *resph;
 	void *arg;
 
-	if (!ctransl || !cmd_hdr)
+	if (!ctransl || !msg)
 		return EINVAL;
 
-	ct = rtmp_ctrans_find(ctransl, cmd_hdr->transaction_id);
+	tid = rtmp_amf_message_tid(msg);
+	if (!tid) {
+		re_printf("ctrans: transaction id is zero.\n");
+		return EINVAL;
+	}
+
+	ct = rtmp_ctrans_find(ctransl, tid);
 	if (!ct) {
 		DEBUG_WARNING("ctrans: no matching transaction"
 			      " for response '%s' (tid=%llu)\n",
-			      cmd_hdr->name, cmd_hdr->transaction_id);
+			      msg->name, tid);
 		return ENOENT;
 	}
 
@@ -142,7 +153,7 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	ct = mem_deref(ct);
 
 	if (resph) {
-		resph(success ? 0 : ENOENT, cmd_hdr, dict, arg);
+		resph(success ? 0 : ENOENT, msg, arg);
 	}
 
 	return 0;

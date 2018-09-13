@@ -30,7 +30,7 @@ int rtmp_amf_reply();
 #endif
 
 
-int rtmp_amf_reply(struct rtmp_conn *conn, const struct command_header *req,
+int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
 		   unsigned body_propc, ...)
 {
 	struct mbuf *mb = mbuf_alloc(512);
@@ -43,7 +43,9 @@ int rtmp_amf_reply(struct rtmp_conn *conn, const struct command_header *req,
 	if (!mb)
 		return ENOMEM;
 
-	tid = req->transaction_id;
+	tid = rtmp_amf_message_tid(req);
+	if (!tid)
+		return EINVAL;
 
 	err = rtmp_command_header_encode(mb, "_result", tid);
 	if (err)

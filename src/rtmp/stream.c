@@ -64,8 +64,8 @@ struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
 }
 
 
-static void createstream_handler(int err, const struct command_header *cmd_hdr,
-				 struct odict *dict, void *arg)
+static void createstream_handler(int err, const struct rtmp_amf_message *msg,
+				 void *arg)
 {
 	struct rtmp_stream *strm = arg;
 	const struct odict_entry *entry;
@@ -76,7 +76,7 @@ static void createstream_handler(int err, const struct command_header *cmd_hdr,
 	}
 
 	/* use stream_id from response, pass to struct rtmp_stream */
-	entry = odict_lookup_index(dict, 3, ODICT_DOUBLE);
+	entry = odict_lookup_index(msg->dict, 3, ODICT_DOUBLE);
 	if (!entry) {
 		re_printf("missing entry\n");
 		return;
