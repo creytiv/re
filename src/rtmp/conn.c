@@ -147,7 +147,7 @@ static void handle_amf_command(struct rtmp_conn *conn,
 
 	err = rtmp_amf_decode(dict, &mb);
 	if (err) {
-		re_printf("rtmp: amf decode error (%m)\n", err);
+		re_printf("rtmp: cmd: amf decode error (%m)\n", err);
 		goto out;
 	}
 
@@ -567,10 +567,7 @@ static int handshake_start(struct rtmp_conn *conn)
 
 static void conn_close(struct rtmp_conn *conn, int err)
 {
-	re_printf("rtmp: connection closed (%m)\n", err);
-
 	conn->tc = mem_deref(conn->tc);
-
 	conn->term = true;
 
 	if (conn->closeh)
@@ -756,10 +753,8 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return ENODATA;
 
 		s0 = mbuf_read_u8(mb);
-		if (s0 != RTMP_PROTOCOL_VERSION) {
-			re_printf("rtmp: handshake: illegal version %u\n", s0);
+		if (s0 != RTMP_PROTOCOL_VERSION)
 			return EPROTO;
-		}
 
 		err = mbuf_read_mem(mb, s1, sizeof(s1));
 		if (err)
@@ -826,10 +821,8 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return ENODATA;
 
 		c0 = mbuf_read_u8(mb);
-		if (c0 != RTMP_PROTOCOL_VERSION) {
-			re_printf("rtmp: handshake: illegal version %u\n", c0);
+		if (c0 != RTMP_PROTOCOL_VERSION)
 			return EPROTO;
-		}
 
 		/* Send S0 + S1 */
 		err = handshake_start(conn);

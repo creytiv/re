@@ -64,12 +64,6 @@ int rtmp_amf_reply(struct rtmp_conn *conn, const struct command_header *req,
 	if (err)
 		goto out;
 
-#if 1
-	DEBUG_NOTICE("### amf reply (request=\"%s\" tid=%llu)"
-		     " propc=%u\n",
-		     req->name, tid, body_propc);
-#endif
-
  out:
 	mem_deref(mb);
 
