@@ -53,7 +53,7 @@ int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
 
 	if (body_propc) {
 		va_start(ap, body_propc);
-		err = rtmp_amf_vencode_object(mb, AMF_TYPE_ROOT,
+		err = rtmp_amf_vencode_object(mb, RTMP_AMF_TYPE_ROOT,
 					      body_propc, &ap);
 		va_end(ap);
 		if (err)

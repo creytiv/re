@@ -44,7 +44,7 @@ static int amf_decode_object(struct odict *dict, struct mbuf *mb)
 
 			val = mbuf_read_u8(mb);
 
-			if (val == AMF_TYPE_OBJECT_END)
+			if (val == RTMP_AMF_TYPE_OBJECT_END)
 				return 0;
 			else
 				return EBADMSG;
@@ -91,7 +91,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 	switch (type) {
 
-	case AMF_TYPE_NUMBER:
+	case RTMP_AMF_TYPE_NUMBER:
 		if (mbuf_get_left(mb) < 8)
 			return ENODATA;
 
@@ -100,7 +100,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		err = odict_entry_add(dict, key, ODICT_DOUBLE, num.f);
 		break;
 
-	case AMF_TYPE_BOOLEAN:
+	case RTMP_AMF_TYPE_BOOLEAN:
 		if (mbuf_get_left(mb) < 1)
 			return ENODATA;
 
@@ -109,7 +109,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		err = odict_entry_add(dict, key, ODICT_BOOL, boolean);
 		break;
 
-	case AMF_TYPE_STRING:
+	case RTMP_AMF_TYPE_STRING:
 		if (mbuf_get_left(mb) < 2)
 			return ENODATA;
 
@@ -127,11 +127,11 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		mem_deref(str);
 		break;
 
-	case AMF_TYPE_NULL:
+	case RTMP_AMF_TYPE_NULL:
 		err = odict_entry_add(dict, key, ODICT_NULL);
 		break;
 
-	case AMF_TYPE_ECMA_ARRAY:
+	case RTMP_AMF_TYPE_ECMA_ARRAY:
 		if (mbuf_get_left(mb) < 4)
 			return ENODATA;
 
@@ -141,7 +141,7 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 		/* fallthrough */
 
-	case AMF_TYPE_OBJECT:
+	case RTMP_AMF_TYPE_OBJECT:
 		err = odict_alloc(&object, 32);
 		if (err)
 			return err;
@@ -152,14 +152,12 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			return err;
 		}
 
-		type = (type == AMF_TYPE_OBJECT) ? ODICT_OBJECT : ODICT_ARRAY;
-
-		err = odict_entry_add(dict, key, type, object);
+		err = odict_entry_add(dict, key, ODICT_OBJECT, object);
 
 		mem_deref(object);
 		break;
 
-	case AMF_TYPE_STRICT_ARRAY:
+	case RTMP_AMF_TYPE_STRICT_ARRAY:
 		if (mbuf_get_left(mb) < 4)
 			return ENODATA;
 

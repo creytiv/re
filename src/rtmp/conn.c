@@ -675,21 +675,21 @@ static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
 static int send_connect(struct rtmp_conn *conn)
 {
 	const int aucodecs  = 0x0400;  /* AAC  */
-	const int vidcodecs = 0x0080;  /* H264 */
+	const int vidcodes  = 0x0080;  /* H264 */
 	int err;
 
 	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "connect",
 			       connect_resp_handler, conn,
 			       1,
-		       AMF_TYPE_OBJECT, 8,
-		         AMF_TYPE_STRING, "app", conn->app,
-		         AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
-		         AMF_TYPE_STRING, "tcUrl", conn->uri,
-		         AMF_TYPE_BOOLEAN, "fpad", false,
-		         AMF_TYPE_NUMBER, "capabilities", 15.0,
-		         AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
-		         AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodecs,
-		         AMF_TYPE_NUMBER, "videoFunction", 1.0
+		       RTMP_AMF_TYPE_OBJECT, 8,
+		         RTMP_AMF_TYPE_STRING, "app", conn->app,
+		         RTMP_AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
+		         RTMP_AMF_TYPE_STRING, "tcUrl", conn->uri,
+		         RTMP_AMF_TYPE_BOOLEAN, "fpad", false,
+		         RTMP_AMF_TYPE_NUMBER, "capabilities", 15.0,
+		         RTMP_AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
+		         RTMP_AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodes,
+		         RTMP_AMF_TYPE_NUMBER, "videoFunction", 1.0
 
 			       );
 	if (err) {

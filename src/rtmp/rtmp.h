@@ -148,7 +148,7 @@ struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid);
 
 /* AMF Encode/Decode */
 
-int rtmp_amf_vencode_object(struct mbuf *mb, enum amf_type container,
+int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 			    unsigned propc, va_list *ap);
 
 

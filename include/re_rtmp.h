@@ -66,9 +66,10 @@ const char *rtmp_packet_type_name(enum rtmp_packet_type type);
 
 
 /*
- * RTMP De-chunker
+ * RTMP De-chunker XXX make private
  */
 
+// rename to rtmp_chunk, make opaque
 struct rtmp_message {
 	struct le le;
 	uint32_t chunk_id;
@@ -85,6 +86,7 @@ struct rtmp_message {
 
 struct rtmp_dechunker;
 
+// XXX: use rtmp_chunk_h instead
 typedef void (rtmp_msg_h)(struct rtmp_message *msg, void *arg);
 
 int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
@@ -97,16 +99,16 @@ void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
  * AMF (Action Message Format)
  */
 
-enum amf_type {
-	AMF_TYPE_ROOT         = -1,   /* special */
-	AMF_TYPE_NUMBER       = 0x00,
-	AMF_TYPE_BOOLEAN      = 0x01,
-	AMF_TYPE_STRING       = 0x02,
-	AMF_TYPE_OBJECT       = 0x03,
-	AMF_TYPE_NULL         = 0x05,
-	AMF_TYPE_ECMA_ARRAY   = 0x08,  /* 'associative' Array */
-	AMF_TYPE_OBJECT_END   = 0x09,
-	AMF_TYPE_STRICT_ARRAY = 0x0a,  /* ordinal indices */
+enum rtmp_amf_type {
+	RTMP_AMF_TYPE_ROOT         = -1,   /* special */
+	RTMP_AMF_TYPE_NUMBER       = 0x00,
+	RTMP_AMF_TYPE_BOOLEAN      = 0x01,
+	RTMP_AMF_TYPE_STRING       = 0x02,
+	RTMP_AMF_TYPE_OBJECT       = 0x03,
+	RTMP_AMF_TYPE_NULL         = 0x05,
+	RTMP_AMF_TYPE_ECMA_ARRAY   = 0x08,  /* 'associative' Array */
+	RTMP_AMF_TYPE_OBJECT_END   = 0x09,
+	RTMP_AMF_TYPE_STRICT_ARRAY = 0x0a,  /* ordinal indices */
 };
 
 struct odict;
@@ -115,7 +117,7 @@ int rtmp_amf_encode_number(struct mbuf *mb, double val);
 int rtmp_amf_encode_boolean(struct mbuf *mb, bool boolean);
 int rtmp_amf_encode_string(struct mbuf *mb, const char *str);
 int rtmp_amf_encode_null(struct mbuf *mb);
-int rtmp_amf_encode_object(struct mbuf *mb, enum amf_type container,
+int rtmp_amf_encode_object(struct mbuf *mb, enum rtmp_amf_type container,
 			   unsigned propc, ...);
 
 int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);

@@ -95,9 +95,9 @@ static void createstream_handler(int err, const struct rtmp_amf_message *msg,
 		err = rtmp_ctrans_send(strm->conn, strm->stream_id, "play",
 				       NULL, NULL,
 				       3,
-				       AMF_TYPE_NULL, NULL,
-				       AMF_TYPE_STRING, strm->name,
-				       AMF_TYPE_NUMBER, -2000.0);
+				       RTMP_AMF_TYPE_NULL, NULL,
+				       RTMP_AMF_TYPE_STRING, strm->name,
+				       RTMP_AMF_TYPE_NUMBER, -2000.0);
 		if (err) {
 			re_printf("rtmp: play: ctrans failed (%m)\n", err);
 			goto out;
@@ -109,9 +109,9 @@ static void createstream_handler(int err, const struct rtmp_amf_message *msg,
 		err = rtmp_ctrans_send(strm->conn, strm->stream_id, "publish",
 				       NULL, NULL,
 				       3,
-				       AMF_TYPE_NULL, NULL,
-				       AMF_TYPE_STRING, strm->name,
-				       AMF_TYPE_STRING, "live");
+				       RTMP_AMF_TYPE_NULL, NULL,
+				       RTMP_AMF_TYPE_STRING, strm->name,
+				       RTMP_AMF_TYPE_STRING, "live");
 		if (err) {
 			re_printf("rtmp: publish: ctrans failed (%m)\n", err);
 			goto out;
@@ -150,7 +150,7 @@ int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
 			       createstream_handler, strm,
 			       1,
-			         AMF_TYPE_NULL, NULL
+			         RTMP_AMF_TYPE_NULL, NULL
 			       );
 	if (err) {
 		re_printf("rtmp: create_stream: ctrans failed (%m)\n", err);
@@ -189,7 +189,7 @@ int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
 			       createstream_handler, strm,
 			       1,
-			         AMF_TYPE_NULL, NULL
+			         RTMP_AMF_TYPE_NULL, NULL
 			       );
 	if (err) {
 		re_printf("rtmp: create_stream: ctrans failed (%m)\n", err);
