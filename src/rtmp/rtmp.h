@@ -9,9 +9,15 @@
 
 
 enum {
+	RTMP_PROTOCOL_VERSION  = 3,
 	RTMP_DEFAULT_CHUNKSIZE = 128,
 	RTMP_SIG_SIZE          = 1536,
 	RTMP_MESSAGE_LEN_MAX   = 524288,
+};
+
+/* Chunk IDs */
+enum {
+	RTMP_CHUNK_ID_CONTROL = 2,
 };
 
 enum rtmp_handshake_state {

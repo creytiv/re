@@ -6,14 +6,9 @@
 
 
 enum {
-	RTMP_PROTOCOL_VERSION  = 3,
 	RTMP_PORT              = 1935,
 };
 
-/* Chunk IDs */
-enum {
-	RTMP_CHUNK_ID_CONTROL = 2,
-};
 
 /* Stream IDs */
 enum {
