@@ -203,11 +203,11 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->length          = mbuf_read_u24_ntoh(mb);
 		hdr->type_id         = mbuf_read_u8(mb);
 
-		if (hdr->length > MESSAGE_LEN_MAX) {
+		if (hdr->length > RTMP_MESSAGE_LEN_MAX) {
 			re_fprintf(stderr, "rtmp: header decode:"
 				   " message length too large"
 				   " (%u > %u)\n",
-				   hdr->length, MESSAGE_LEN_MAX);
+				   hdr->length, RTMP_MESSAGE_LEN_MAX);
 		}
 		break;
 

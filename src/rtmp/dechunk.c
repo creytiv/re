@@ -197,7 +197,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			msg_len = hdr.length;
 		}
 
-		if (msg_len > MESSAGE_LEN_MAX)
+		if (msg_len > RTMP_MESSAGE_LEN_MAX)
 			return EOVERFLOW;
 
 		chunk_sz = min(msg_len, rd->chunk_sz);

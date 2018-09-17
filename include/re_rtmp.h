@@ -7,9 +7,7 @@
 
 enum {
 	RTMP_PROTOCOL_VERSION  = 3,
-	RTMP_SIG_SIZE          = 1536,
 	RTMP_PORT              = 1935,
-	RTMP_DEFAULT_CHUNKSIZE = 128,
 };
 
 /* Chunk IDs */

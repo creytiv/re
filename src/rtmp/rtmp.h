@@ -9,7 +9,9 @@
 
 
 enum {
-	MESSAGE_LEN_MAX = 524288,
+	RTMP_DEFAULT_CHUNKSIZE = 128,
+	RTMP_SIG_SIZE          = 1536,
+	RTMP_MESSAGE_LEN_MAX   = 524288,
 };
 
 enum rtmp_handshake_state {
