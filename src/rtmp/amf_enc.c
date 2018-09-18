@@ -224,7 +224,6 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 			break;
 
 		case RTMP_AMF_TYPE_NULL:
-			(void)va_arg(*ap, const void *);
 			err = rtmp_amf_encode_null(mb);
 			break;
 
