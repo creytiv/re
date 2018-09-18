@@ -314,6 +314,7 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		err = handle_user_control_msg(conn, &mb);
 		break;
 
+		/* XXX: common code for audio+video */
 	case RTMP_TYPE_AUDIO:
 		strm = rtmp_stream_find(&conn->streaml, msg->stream_id);
 		if (strm) {
@@ -643,26 +644,6 @@ static int send_connect(struct rtmp_conn *conn)
 }
 
 
-static int handshake_done(struct rtmp_conn *conn)
-{
-	int err;
-
-#if 0
-	re_printf("[%s] ** handshake done **\n",
-		  conn->is_client ? "Client" : "Server");
-#endif
-
-	if (conn->is_client) {
-
-		err = send_connect(conn);
-		if (err)
-			return err;
-	}
-
-	return 0;
-}
-
-
 static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	uint8_t s0;
@@ -711,7 +692,9 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 
-		handshake_done(conn);
+		err = send_connect(conn);
+		if (err)
+			return err;
 		break;
 
 	case RTMP_STATE_HANDSHAKE_DONE:
@@ -789,8 +772,6 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return err;
 
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
-
-		handshake_done(conn);
 		break;
 
 	case RTMP_STATE_HANDSHAKE_DONE:
