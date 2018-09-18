@@ -505,11 +505,16 @@ static int handshake_start(struct rtmp_conn *conn)
 
 static void conn_close(struct rtmp_conn *conn, int err)
 {
+	rtmp_close_h *closeh;
+
 	conn->tc = mem_deref(conn->tc);
 	conn->term = true;
 
-	if (conn->closeh)
-		conn->closeh(err, conn->arg);
+	closeh = conn->closeh;
+	if (closeh) {
+		conn->closeh = NULL;
+		closeh(err, conn->arg);
+	}
 }
 
 
