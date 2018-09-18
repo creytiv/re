@@ -227,7 +227,7 @@ static void handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
 }
 
 
-static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
+static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 {
 	struct rtmp_conn *conn = arg;
 	struct rtmp_stream *strm;
@@ -243,7 +243,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	int err = 0;
 
 	if (conn->term)
-		return;
+		return 0;
 
 #if 0
 	re_printf("[%s] ### recv message: type 0x%02x (%s) (%zu bytes)\n",
@@ -255,7 +255,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 	case RTMP_TYPE_SET_CHUNK_SIZE:
 		if (mbuf_get_left(&mb) < 4)
-			return;
+			return EBADMSG;
 
 		val = ntohl(mbuf_read_u32(&mb));
 
@@ -268,7 +268,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 	case RTMP_TYPE_ACKNOWLEDGEMENT:
 		if (mbuf_get_left(&mb) < 4)
-			return;
+			return EBADMSG;
 
 		val = ntohl(mbuf_read_u32(&mb));
 
@@ -283,7 +283,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
 		if (mbuf_get_left(&mb) < 4)
-			return;
+			return EBADMSG;
 
 		was = ntohl(mbuf_read_u32(&mb));
 #if 0
@@ -295,7 +295,7 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:
 		if (mbuf_get_left(&mb) < 5)
-			return;
+			return EBADMSG;
 
 		was = ntohl(mbuf_read_u32(&mb));
 		limit = mbuf_read_u8(&mb);
@@ -311,14 +311,10 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 #endif
 
 		err = rtmp_control_send_was(conn, WINDOW_ACK_SIZE);
-		if (err)
-			goto error;
 		break;
 
 	case RTMP_TYPE_USER_CONTROL_MSG:
 		err = handle_user_control_msg(conn, &mb);
-		if (err)
-			goto error;
 		break;
 
 	case RTMP_TYPE_AUDIO:
@@ -375,19 +371,10 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		re_printf("rtmp: conn: unhandled message:"
 			  " type=%d (%s)\n",
 			  msg->type, rtmp_packet_type_name(msg->type));
-
-		/* XXX: for development */
-		err = EPROTO;
-		goto error;
-
 		break;
 	}
 
-	return;
-
- error:
-	if (err)
-		conn_close(conn, err);
+	return err;
 }
 
 

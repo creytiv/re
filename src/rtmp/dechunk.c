@@ -261,7 +261,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	if (complete) {
 
-		rd->msgh(msg, rd->arg);
+		err = rd->msgh(msg, rd->arg);
 
 		mem_deref(msg);
 	}

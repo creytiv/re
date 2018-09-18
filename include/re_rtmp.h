@@ -87,7 +87,7 @@ struct rtmp_message {
 struct rtmp_dechunker;
 
 // XXX: use rtmp_chunk_h instead
-typedef void (rtmp_msg_h)(struct rtmp_message *msg, void *arg);
+typedef int (rtmp_msg_h)(struct rtmp_message *msg, void *arg);
 
 int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 			  rtmp_msg_h *msgh, void *arg);
