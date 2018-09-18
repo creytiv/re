@@ -44,27 +44,6 @@ static void conn_destructor(void *data)
 }
 
 
-static bool is_established(const struct rtmp_conn *conn)
-{
-	return conn->connected && conn->window_ack_size;
-}
-
-
-static void check_established(struct rtmp_conn *conn)
-{
-	rtmp_estab_h *estabh;
-
-	if (!is_established(conn))
-		return;
-
-	estabh = conn->estabh;
-	if (estabh) {
-		conn->estabh = NULL;
-		estabh(conn->arg);
-	}
-}
-
-
 static void client_handle_amf_command(struct rtmp_conn *conn,
 				      const struct rtmp_amf_message *msg)
 {
@@ -315,8 +294,6 @@ static void rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			  conn->is_client ? "Client" : "Server", was);
 #endif
 		conn->window_ack_size = was;
-
-		check_established(conn);
 		break;
 
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:
@@ -623,6 +600,7 @@ static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
 				 void *arg)
 {
 	struct rtmp_conn *conn = arg;
+	rtmp_estab_h *estabh;
 
 	if (err) {
 		re_printf("### connect failed (%m)\n", err);
@@ -640,7 +618,12 @@ static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
 	if (err)
 		goto error;
 
-	check_established(conn);
+	estabh = conn->estabh;
+	if (estabh) {
+		conn->estabh = NULL;
+		estabh(conn->arg);
+	}
+
 	return;
 
  error:
