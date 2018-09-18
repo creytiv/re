@@ -243,18 +243,18 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 		}
 
 		if (err)
-			break;
+			return err;
 	}
 
 	if (encode_key)
-		err |= rtmp_amf_encode_object_end(mb);
+		err = rtmp_amf_encode_object_end(mb);
 
 	return err;
 }
 
 
 /*
- * Encode AMF Object or Array
+ * Encode AMF Object or Array XXX remove?
  */
 int rtmp_amf_encode_object(struct mbuf *mb, enum rtmp_amf_type container,
 			   unsigned propc, ...)

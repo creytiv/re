@@ -46,7 +46,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 
 	err = chunkh(&hdr, payload, chunk_sz, arg);
 	if (err)
-		goto out;
+		return err;
 
 	payload += chunk_sz;
 
@@ -60,11 +60,10 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 
 		err = chunkh(&hdr, payload, chunk_sz, arg);
 		if (err)
-			break;
+			return err;
 
 		payload += chunk_sz;
 	}
 
- out:
-	return err;
+	return 0;
 }
