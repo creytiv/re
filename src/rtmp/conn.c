@@ -44,8 +44,8 @@ static void conn_destructor(void *data)
 }
 
 
-static void client_handle_amf_command(struct rtmp_conn *conn,
-				      const struct rtmp_amf_message *msg)
+static int client_handle_amf_command(struct rtmp_conn *conn,
+				     const struct rtmp_amf_message *msg)
 {
 	int err;
 
@@ -58,7 +58,7 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 		err = rtmp_ctrans_response(&conn->ctransl, success,
 					   msg);
 		if (err)
-			goto error;
+			return err;
 	}
 	else if (0 == str_casecmp(msg->name, "onStatus")) {
 
@@ -74,11 +74,7 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 			  msg->name);
 	}
 
-	return;
-
- error:
-	if (err)
-		conn_close(conn, err);
+	return 0;
 }
 
 
@@ -98,7 +94,7 @@ static int handle_amf_command(struct rtmp_conn *conn,
 		return err;
 
 	if (conn->is_client) {
-		client_handle_amf_command(conn, msg);
+		err = client_handle_amf_command(conn, msg);
 	}
 	else {
 		if (conn->cmdh)
@@ -107,7 +103,7 @@ static int handle_amf_command(struct rtmp_conn *conn,
 
 	mem_deref(msg);
 
-	return 0;
+	return err;
 }
 
 
@@ -202,14 +198,14 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 }
 
 
-static void handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
+static int handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	struct odict *dict;
 	int err;
 
 	err = odict_alloc(&dict, 32);
 	if (err)
-		return;
+		return err;
 
 	err = rtmp_amf_decode(dict, mb);
 	if (err) {
@@ -223,6 +219,8 @@ static void handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
 
  out:
 	mem_deref(dict);
+
+	return err;
 }
 
 
@@ -277,7 +275,7 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_AMF0:
-		handle_amf_command(conn, msg->buf, msg->length);
+		err = handle_amf_command(conn, msg->buf, msg->length);
 		break;
 
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
@@ -363,7 +361,7 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_DATA:
-		handle_data_message(conn, &mb);
+		err = handle_data_message(conn, &mb);
 		break;
 
 	default:
