@@ -33,13 +33,15 @@ int rtmp_amf_reply();
 int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
 		   unsigned body_propc, ...)
 {
-	struct mbuf *mb = mbuf_alloc(512);
+	struct mbuf *mb;
 	va_list ap;
 	uint64_t tid;
 	int err;
 
 	if (!conn || !req)
 		return EINVAL;
+
+	mb = mbuf_alloc(512);
 	if (!mb)
 		return ENOMEM;
 

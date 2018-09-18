@@ -37,13 +37,15 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 		     unsigned body_propc, ...)
 {
 	struct rtmp_ctrans *ct = NULL;
-	struct mbuf *mb = mbuf_alloc(512);
+	struct mbuf *mb;
 	va_list ap;
 	uint64_t tid;
 	int err;
 
 	if (!conn || !command)
 		return EINVAL;
+
+	mb = mbuf_alloc(512);
 	if (!mb)
 		return ENOMEM;
 

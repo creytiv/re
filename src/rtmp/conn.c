@@ -82,7 +82,7 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 }
 
 
-static void handle_amf_command(struct rtmp_conn *conn,
+static int handle_amf_command(struct rtmp_conn *conn,
 			       const uint8_t *cmd, size_t len)
 {
 	struct mbuf mb = {
@@ -94,10 +94,8 @@ static void handle_amf_command(struct rtmp_conn *conn,
 	int err;
 
 	err = rtmp_amf_message_decode(&msg, &mb);
-	if (err) {
-		re_printf("rtmp: cmd: amf decode error (%m)\n", err);
-		goto out;
-	}
+	if (err)
+		return err;
 
 	if (conn->is_client) {
 		client_handle_amf_command(conn, msg);
@@ -107,8 +105,9 @@ static void handle_amf_command(struct rtmp_conn *conn,
 			conn->cmdh(msg, conn->arg);
 	}
 
- out:
 	mem_deref(msg);
+
+	return 0;
 }
 
 
@@ -440,22 +439,19 @@ static void set_state(struct rtmp_conn *conn, enum rtmp_handshake_state state)
 static int send_packet(struct rtmp_conn *conn,
 		       const uint8_t *pkt, size_t len)
 {
-	struct mbuf *mb = mbuf_alloc(len);
+	struct mbuf *mb;
 	int err;
 
 	if (!conn || !pkt || !len)
 		return EINVAL;
 
-	err = mbuf_write_mem(mb, pkt, len);
-	if (err)
-		goto out;
+	mb = mbuf_alloc(len);
+	if (!mb)
+		return ENOMEM;
+
+	(void)mbuf_write_mem(mb, pkt, len);
 
 	mb->pos = 0;
-
-#if 0
-	re_printf("[%s] send packet (%zu bytes)\n",
-		  conn->is_client ? "Client" : "Server", mb->end);
-#endif
 
 	err = tcp_send(conn->tc, mb);
 	if (err)
