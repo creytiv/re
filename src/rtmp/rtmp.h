@@ -11,7 +11,7 @@
 enum {
 	RTMP_PROTOCOL_VERSION  = 3,
 	RTMP_DEFAULT_CHUNKSIZE = 128,
-	RTMP_SIG_SIZE          = 1536,
+	RTMP_HANDSHAKE_SIZE    = 1536,
 	RTMP_MESSAGE_LEN_MAX   = 524288,
 };
 
@@ -33,7 +33,7 @@ struct rtmp_conn {
 	struct tcp_conn *tc;
 	struct mbuf *mb;                  /* TCP reassembly buffer */
 	enum rtmp_handshake_state state;
-	uint8_t x1[RTMP_SIG_SIZE];        /* C1 or S1 */
+	uint8_t x1[RTMP_HANDSHAKE_SIZE];        /* C1 or S1 */
 	uint32_t window_ack_size;
 	bool is_client;
 	bool connected;

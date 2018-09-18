@@ -647,24 +647,22 @@ static int send_connect(struct rtmp_conn *conn)
 static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	uint8_t s0;
-	uint8_t s1[RTMP_SIG_SIZE];
-	uint8_t s2[RTMP_SIG_SIZE];
-	uint8_t c2[RTMP_SIG_SIZE];
+	uint8_t s1[RTMP_HANDSHAKE_SIZE];
+	uint8_t s2[RTMP_HANDSHAKE_SIZE];
+	uint8_t c2[RTMP_HANDSHAKE_SIZE];
 	int err = 0;
 
 	switch (conn->state) {
 
 	case RTMP_STATE_VERSION_SENT:
-		if (mbuf_get_left(mb) < (1+RTMP_SIG_SIZE))
+		if (mbuf_get_left(mb) < (1+RTMP_HANDSHAKE_SIZE))
 			return ENODATA;
 
 		s0 = mbuf_read_u8(mb);
 		if (s0 != RTMP_PROTOCOL_VERSION)
 			return EPROTO;
 
-		err = mbuf_read_mem(mb, s1, sizeof(s1));
-		if (err)
-			return err;
+		(void)mbuf_read_mem(mb, s1, sizeof(s1));
 
 #if 1
 		re_printf("server version: %u.%u.%u.%u\n",
@@ -681,12 +679,10 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	case RTMP_STATE_ACK_SENT:
-		if (mbuf_get_left(mb) < RTMP_SIG_SIZE)
+		if (mbuf_get_left(mb) < RTMP_HANDSHAKE_SIZE)
 			return ENODATA;
 
-		err = mbuf_read_mem(mb, s2, sizeof(s2));
-		if (err)
-			return err;
+		(void)mbuf_read_mem(mb, s2, sizeof(s2));
 
 		/* XXX: compare C1 and S2 ? */
 
@@ -717,9 +713,9 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	uint8_t c0;
-	uint8_t c1[RTMP_SIG_SIZE];
-	uint8_t c2[RTMP_SIG_SIZE];
-	uint8_t s2[RTMP_SIG_SIZE];
+	uint8_t c1[RTMP_HANDSHAKE_SIZE];
+	uint8_t c2[RTMP_HANDSHAKE_SIZE];
+	uint8_t s2[RTMP_HANDSHAKE_SIZE];
 	int err = 0;
 
 	switch (conn->state) {
@@ -739,12 +735,10 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	case RTMP_STATE_VERSION_SENT:
-		if (mbuf_get_left(mb) < (RTMP_SIG_SIZE))
+		if (mbuf_get_left(mb) < RTMP_HANDSHAKE_SIZE)
 			return ENODATA;
 
-		err = mbuf_read_mem(mb, c1, sizeof(c1));
-		if (err)
-			return err;
+		(void)mbuf_read_mem(mb, c1, sizeof(c1));
 
 #if 0
 		re_printf("        client version: %u.%u.%u.%u\n",
@@ -764,12 +758,10 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	case RTMP_STATE_ACK_SENT:
-		if (mbuf_get_left(mb) < (RTMP_SIG_SIZE))
+		if (mbuf_get_left(mb) < RTMP_HANDSHAKE_SIZE)
 			return ENODATA;
 
-		err = mbuf_read_mem(mb, c2, sizeof(c2));
-		if (err)
-			return err;
+		(void)mbuf_read_mem(mb, c2, sizeof(c2));
 
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 		break;
