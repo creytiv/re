@@ -72,9 +72,6 @@ static void client_handle_amf_command(struct rtmp_conn *conn,
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
 			  msg->name);
-
-		/* XXX: for development */
-		conn_close(conn, EPROTO);
 	}
 
 	return;
@@ -609,8 +606,7 @@ static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
 
 	if (err) {
 		re_printf("### connect failed (%m)\n", err);
-		conn_close(conn, err);
-		return;
+		goto error;
 	}
 
 	if (conn->connected)
@@ -891,6 +887,9 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 			}
 			break;
 		}
+
+		if (!conn->tc)
+			break;
 
 		if (conn->mb->pos >= conn->mb->end) {
 			conn->mb = mem_deref(conn->mb);
