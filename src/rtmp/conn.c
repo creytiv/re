@@ -1032,6 +1032,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 }
 
 
+/* XXX: make private */
 uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn)
 {
 	if (!conn)

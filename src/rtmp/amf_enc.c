@@ -21,9 +21,6 @@
 #include <re_dbg.h>
 
 
-#define PROPC_MAX 8
-
-
 static int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
 {
 	size_t len;
@@ -161,14 +158,8 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 	unsigned i;
 	int err = 0;
 
-	if (!mb || !propc)
+	if (!mb || !propc || !ap)
 		return EINVAL;
-
-	if (propc > PROPC_MAX) {
-		DEBUG_WARNING("amf_enc: too many properties (%u > %u)\n",
-			      propc, PROPC_MAX);
-		return EOVERFLOW;
-	}
 
 	encode_key = container_has_key(container);
 
@@ -212,7 +203,7 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 
 			err = rtmp_amf_encode_key(mb, key);
 			if (err)
-				break;
+				return err;
 		}
 
 		switch (type) {
