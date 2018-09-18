@@ -128,14 +128,6 @@ int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
  */
 
 
-typedef void (rtmp_conn_h)(struct tcp_sock *ts, void *arg);
-
-struct rtmp_sock;
-
-int rtmp_listen(struct rtmp_sock **sockp, const struct sa *laddr,
-		rtmp_conn_h *connh, void *arg);
-
-
 struct rtmp_conn;
 
 typedef void (rtmp_estab_h)(void *arg);
