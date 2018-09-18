@@ -10,7 +10,7 @@ VER_MINOR := 5
 VER_PATCH := 9
 
 PROJECT   := re
-VERSION   := 0.5.9
+VERSION   := $(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)
 
 MK	:= mk/re.mk
 

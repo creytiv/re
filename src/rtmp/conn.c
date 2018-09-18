@@ -21,32 +21,7 @@
 #define WINDOW_ACK_SIZE 2500000
 
 
-enum {
-	RTMP_BUFSIZE_MAX  = 524288,
-};
-
-
 static void conn_close(struct rtmp_conn *conn, int err);
-
-
-static void get_version(uint8_t version[4])
-{
-	const char *ver_str = sys_libre_version_get();
-	struct pl plv[3];
-	int i;
-
-	memset(version, 0, 4);
-
-	if (0 == re_regex(ver_str, str_len(ver_str),
-			  "[0-9]+.[0-9]+.[0-9]+",
-			  &plv[0], &plv[1], &plv[2])) {
-
-		for (i=0; i<3; i++) {
-
-			version[i] = pl_u32(&plv[i]);
-		}
-	}
-}
 
 
 static void conn_destructor(void *data)
@@ -464,7 +439,9 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	/* XXX check this */
 	uptime = 0;
 	memcpy(conn->x1, &uptime, 4);
-	get_version(&conn->x1[4]);
+	conn->x1[4] = VER_MAJOR;
+	conn->x1[5] = VER_MINOR;
+	conn->x1[6] = VER_PATCH;
 	rand_bytes(conn->x1 + 8, sizeof(conn->x1) - 8);
 
 	err = rtmp_dechunker_alloc(&conn->dechunk, rtmp_msg_handler, conn);
@@ -743,7 +720,7 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (err)
 			return err;
 
-#if 0
+#if 1
 		re_printf("server version: %u.%u.%u.%u\n",
 			  s1[4], s1[5], s1[6], s1[7]);
 #endif
@@ -883,7 +860,7 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	if (conn->mb) {
 		const size_t len = mbuf_get_left(mb_pkt), pos = conn->mb->pos;
 
-		if ((mbuf_get_left(conn->mb) + len) > RTMP_BUFSIZE_MAX) {
+		if ((mbuf_get_left(conn->mb) + len) > RTMP_MESSAGE_LEN_MAX) {
 			err = EOVERFLOW;
 			goto out;
 		}
