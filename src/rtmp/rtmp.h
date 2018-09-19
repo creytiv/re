@@ -136,12 +136,6 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 const char *rtmp_handshake_name(enum rtmp_handshake_state state);
 
 
-/* AMF Message */
-
-int rtmp_amf_message_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
-uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg);
-
-
 /* Util */
 
 const struct odict_entry *odict_lookup_index(const struct odict *o,

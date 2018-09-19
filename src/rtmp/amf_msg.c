@@ -17,6 +17,11 @@
 #include "rtmp.h"
 
 
+/* XXX: add element lookup functions with type */
+
+/* XXX: use odict index string for fast lookup */
+
+
 #define HASH_SIZE 32
 
 
@@ -89,6 +94,58 @@ uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg)
 }
 
 
-/* XXX: add element lookup functions with type */
+const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
+				    unsigned ix)
+{
+	const struct odict_entry *entry;
+	char key[16];
 
-/* XXX: use odict index string for fast lookup */
+	if (!msg)
+		return NULL;
+
+	re_snprintf(key, sizeof(key), "%u", ix);
+
+	entry = odict_lookup(msg->dict, key);
+	if (!entry) {
+		re_printf("no entry at index %u\n", ix);
+		return NULL;
+	}
+
+	if (entry->type != ODICT_STRING) {
+		re_printf("entry at index %u is not a string (%s)\n",
+			  ix, odict_type_name(entry->type));
+		return NULL;
+	}
+
+	return entry->u.str;
+}
+
+
+bool rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
+				 uint64_t *num, unsigned ix)
+{
+	const struct odict_entry *entry;
+	char key[16];
+
+	if (!msg)
+		return false;
+
+	re_snprintf(key, sizeof(key), "%u", ix);
+
+	entry = odict_lookup(msg->dict, key);
+	if (!entry) {
+		re_printf("no entry at index %u\n", ix);
+		return false;
+	}
+
+	if (entry->type != ODICT_DOUBLE) {
+		re_printf("entry at index %u is not a number (%s)\n",
+			  ix, odict_type_name(entry->type));
+		return false;
+	}
+
+	if (num)
+		*num = entry->u.dbl;
+
+	return true;
+}

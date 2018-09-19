@@ -199,15 +199,22 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 int rtmp_amf_decode(struct odict *dict, struct mbuf *mb)
 {
+	unsigned ix = 0;
 	int err = 0;
 
 	if (!dict || !mb)
 		return EINVAL;
 
+	/* decode all entries on root-level */
+
 	while (mbuf_get_left(mb) > 0) {
 
-		/* note: key is empty */
-		err = amf_decode_value(dict, "", mb);
+		char key[16];
+
+		re_snprintf(key, sizeof(key), "%u", ix++);
+
+		/* note: key is the numerical index */
+		err = amf_decode_value(dict, key, mb);
 		if (err)
 			break;
 	}
