@@ -41,13 +41,13 @@ int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
 	if (!conn || !req)
 		return EINVAL;
 
+	tid = rtmp_amf_message_tid(req);
+	if (!tid)
+		return EPROTO;
+
 	mb = mbuf_alloc(512);
 	if (!mb)
 		return ENOMEM;
-
-	tid = rtmp_amf_message_tid(req);
-	if (!tid)
-		return EINVAL;
 
 	err = rtmp_command_header_encode(mb, "_result", tid);
 	if (err)
