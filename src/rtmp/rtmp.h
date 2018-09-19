@@ -116,22 +116,13 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 typedef void (rtmp_resp_h)(int err, const struct rtmp_amf_message *msg,
 			   void *arg);
 
-struct rtmp_ctrans {
-	struct le le;
-	char *command;
-	uint64_t tid;
-	unsigned replies;
-	unsigned errors;
-	rtmp_resp_h *resph;
-	void *arg;
-};
+struct rtmp_ctrans;
 
 int  rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 		      const char *command, rtmp_resp_h *resph, void *arg,
 		      unsigned body_propc, ...);
 int  rtmp_ctrans_response(const struct list *ctransl, bool success,
 			  const struct rtmp_amf_message *msg);
-struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid);
 
 
 /* AMF Encode/Decode */

@@ -23,12 +23,37 @@
 #include <re_dbg.h>
 
 
+struct rtmp_ctrans {
+	struct le le;
+	char *command;
+	uint64_t tid;
+	rtmp_resp_h *resph;
+	void *arg;
+};
+
+
 static void ctrans_destructor(void *data)
 {
 	struct rtmp_ctrans *ct = data;
 
 	list_unlink(&ct->le);
 	mem_deref(ct->command);
+}
+
+
+static struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl,
+					    uint64_t tid)
+{
+	struct le *le;
+
+	for (le = list_head(ctransl); le; le = le->next) {
+		struct rtmp_ctrans *ct = le->data;
+
+		if (tid == ct->tid)
+			return ct;
+	}
+
+	return NULL;
 }
 
 
@@ -103,21 +128,6 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 }
 
 
-struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl, uint64_t tid)
-{
-	struct le *le;
-
-	for (le = list_head(ctransl); le; le = le->next) {
-		struct rtmp_ctrans *ct = le->data;
-
-		if (tid == ct->tid)
-			return ct;
-	}
-
-	return NULL;
-}
-
-
 int rtmp_ctrans_response(const struct list *ctransl, bool success,
 			 const struct rtmp_amf_message *msg)
 {
@@ -143,16 +153,10 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 		return ENOENT;
 	}
 
-	if (success)
-		++ct->replies;
-	else
-		++ct->errors;
-
 	resph = ct->resph;
 	arg = ct->arg;
 
-	/* destroy transaction */
-	ct = mem_deref(ct);
+	mem_deref(ct);
 
 	if (resph) {
 		resph(success ? 0 : ENOENT, msg, arg);
