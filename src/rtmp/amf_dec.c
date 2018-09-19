@@ -16,8 +16,20 @@
 #include "rtmp.h"
 
 
+#define HASH_SIZE 32
+
+
 static int amf_decode_value(struct odict *dict, const char *key,
 			    struct mbuf *mb);
+
+
+static void destructor(void *data)
+{
+	struct rtmp_amf_message *msg = data;
+
+	mem_deref(msg->name);
+	mem_deref(msg->dict);
+}
 
 
 static int amf_decode_object(struct odict *dict, struct mbuf *mb)
@@ -197,16 +209,25 @@ static int amf_decode_value(struct odict *dict, const char *key,
 }
 
 
-int rtmp_amf_decode(struct odict *dict, struct mbuf *mb)
+int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb)
 {
+	const struct odict_entry *entry;
+	struct rtmp_amf_message *msg;
 	unsigned ix = 0;
-	int err = 0;
+	int err;
 
-	if (!dict || !mb)
+	if (!msgp || !mb)
 		return EINVAL;
 
-	/* decode all entries on root-level */
+	msg = mem_zalloc(sizeof(*msg), destructor);
+	if (!msg)
+		return ENOMEM;
 
+	err = odict_alloc(&msg->dict, HASH_SIZE);
+	if (err)
+		goto out;
+
+	/* decode all entries on root-level */
 	while (mbuf_get_left(mb) > 0) {
 
 		char key[16];
@@ -214,10 +235,30 @@ int rtmp_amf_decode(struct odict *dict, struct mbuf *mb)
 		re_snprintf(key, sizeof(key), "%u", ix++);
 
 		/* note: key is the numerical index */
-		err = amf_decode_value(dict, key, mb);
+		err = amf_decode_value(msg->dict, key, mb);
 		if (err)
-			break;
+			goto out;
 	}
+
+#if 1
+	/* Cache command name */
+
+	entry = odict_lookup_index(msg->dict, 0, ODICT_STRING);
+	if (!entry) {
+		re_printf("rtmp: command name missing");
+		err = EPROTO;
+		goto out;
+	}
+	err = str_dup(&msg->name, entry->u.str);
+	if (err)
+		goto out;
+#endif
+
+ out:
+	if (err)
+		mem_deref(msg);
+	else
+		*msgp = msg;
 
 	return err;
 }

@@ -118,11 +118,10 @@ int rtmp_amf_encode_null(struct mbuf *mb);
 int rtmp_amf_encode_object(struct mbuf *mb, enum rtmp_amf_type container,
 			   unsigned propc, ...);
 
-int rtmp_amf_decode(struct odict *dict, struct mbuf *mb);
+int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
 
 /* AMF Message */
 
-int rtmp_amf_message_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
 uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg);
 bool     rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
 				     uint64_t *num, unsigned ix);

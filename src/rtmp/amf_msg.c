@@ -22,61 +22,6 @@
 /* XXX: use odict index string for fast lookup */
 
 
-#define HASH_SIZE 32
-
-
-static void destructor(void *data)
-{
-	struct rtmp_amf_message *msg = data;
-
-	mem_deref(msg->name);
-	mem_deref(msg->dict);
-}
-
-
-int rtmp_amf_message_decode(struct rtmp_amf_message **msgp, struct mbuf *mb)
-{
-	const struct odict_entry *entry;
-	struct rtmp_amf_message *msg;
-	int err;
-
-	if (!msgp || !mb)
-		return EINVAL;
-
-	msg = mem_zalloc(sizeof(*msg), destructor);
-	if (!msg)
-		return ENOMEM;
-
-	err = odict_alloc(&msg->dict, HASH_SIZE);
-	if (err)
-		goto out;
-
-	err = rtmp_amf_decode(msg->dict, mb);
-	if (err) {
-		re_printf("rtmp: amf decode error (%m)\n", err);
-		goto out;
-	}
-
-	entry = odict_lookup_index(msg->dict, 0, ODICT_STRING);
-	if (!entry) {
-		re_printf("rtmp: command name missing");
-		err = EPROTO;
-		goto out;
-	}
-	err = str_dup(&msg->name, entry->u.str);
-	if (err)
-		goto out;
-
- out:
-	if (err)
-		mem_deref(msg);
-	else
-		*msgp = msg;
-
-	return err;
-}
-
-
 uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg)
 {
 	const struct odict_entry *entry;
