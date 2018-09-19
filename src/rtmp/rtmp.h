@@ -79,10 +79,7 @@ struct rtmp_stream {
 	rtmp_video_h *vidh;
 	void *arg;
 
-	uint32_t recv_timestamp;
-
-	size_t n_send;
-	size_t n_recv;
+	uint32_t recv_timestamp;  /* XXX: move to dechunker */
 };
 
 

@@ -326,8 +326,6 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 				strm->recv_timestamp += msg->timestamp_delta;
 			}
 
-			++strm->n_recv;
-
 			if (strm->auh) {
 				strm->auh(strm->recv_timestamp,
 					  msg->buf, msg->length, strm->arg);
@@ -348,8 +346,6 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			else {
 				strm->recv_timestamp += msg->timestamp_delta;
 			}
-
-			++strm->n_recv;
 
 			if (strm->vidh) {
 				strm->vidh(strm->recv_timestamp,

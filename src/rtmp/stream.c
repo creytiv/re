@@ -207,40 +207,26 @@ int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len)
 {
-	unsigned format = 0;
 	uint32_t chunk_id = 6;         /* XXX: how to choose? */
-	int err;
 
 	if (!strm || !pld || !len)
 		return EINVAL;
 
-	++strm->n_send;
-
-	err = rtmp_conn_send_msg(strm->conn, format, chunk_id, timestamp,
-				 0, RTMP_TYPE_AUDIO,
-				 strm->stream_id, pld, len);
-
-	return err;
+	return rtmp_conn_send_msg(strm->conn, 0, chunk_id, timestamp, 0,
+				  RTMP_TYPE_AUDIO, strm->stream_id, pld, len);
 }
 
 
 int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len)
 {
-	unsigned format = 0;
 	uint32_t chunk_id = 7;         /* XXX: how to choose? */
-	int err;
 
 	if (!strm || !pld || !len)
 		return EINVAL;
 
-	++strm->n_send;
-
-	err = rtmp_conn_send_msg(strm->conn, format, chunk_id, timestamp,
-				 0, RTMP_TYPE_VIDEO,
-				 strm->stream_id, pld, len);
-
-	return err;
+	return rtmp_conn_send_msg(strm->conn, 0, chunk_id, timestamp, 0,
+				  RTMP_TYPE_VIDEO, strm->stream_id, pld, len);
 }
 
 
@@ -277,8 +263,7 @@ int rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm)
 
 	return re_hprintf(pf,
 			  "stream_id=%u  begin=%d  eof=%d  %s   name=%12s"
-			  "  send=%zu  recv=%zu",
+			  "  ",
 			  strm->stream_id, strm->begin, strm->eof,
-			  strm->command, strm->name,
-			  strm->n_send, strm->n_recv);
+			  strm->command, strm->name);
 }
