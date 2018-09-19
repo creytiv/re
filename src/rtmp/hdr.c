@@ -120,18 +120,6 @@ static int decode_basic_hdr(struct rtmp_header *hdr, struct mbuf *mb)
 }
 
 
-void rtmp_header_init(struct rtmp_header *hdr, unsigned fmt, uint32_t chunk_id)
-{
-	if (!hdr)
-		return;
-
-	memset(hdr, 0, sizeof(*hdr));
-
-	hdr->format   = fmt;
-	hdr->chunk_id = chunk_id;
-}
-
-
 int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 {
 	int err = 0;
@@ -177,7 +165,7 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 	if (!hdr || !mb)
 		return EINVAL;
 
-	rtmp_header_init(hdr, 0, 0);
+	memset(hdr, 0, sizeof(*hdr));
 
 	err = decode_basic_hdr(hdr, mb);
 	if (err)
@@ -202,13 +190,6 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->timestamp_delta = mbuf_read_u24_ntoh(mb);
 		hdr->length          = mbuf_read_u24_ntoh(mb);
 		hdr->type_id         = mbuf_read_u8(mb);
-
-		if (hdr->length > RTMP_MESSAGE_LEN_MAX) {
-			re_fprintf(stderr, "rtmp: header decode:"
-				   " message length too large"
-				   " (%u > %u)\n",
-				   hdr->length, RTMP_MESSAGE_LEN_MAX);
-		}
 		break;
 
 	case 2:
