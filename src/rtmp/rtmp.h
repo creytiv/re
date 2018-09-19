@@ -111,18 +111,6 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 			  const uint8_t *cmd, size_t len);
 
 
-/* Control */
-
-int rtmp_control_send_was(struct rtmp_conn *conn, uint32_t was);
-int rtmp_control_send_set_peer_bw(struct rtmp_conn *conn,
-				  size_t was, uint8_t limit_type);
-int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
-				       uint16_t event_type,
-				       uint32_t event_data);
-int rtmp_control_send_set_chunk_size(struct rtmp_conn *conn,
-				     uint32_t chunk_size);
-
-
 /* Client Transaction */
 
 typedef void (rtmp_resp_h)(int err, const struct rtmp_amf_message *msg,

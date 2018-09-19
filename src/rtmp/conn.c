@@ -181,9 +181,9 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 		++conn->stats.ping;
 
-		err = rtmp_control_send_user_control_msg(conn,
-						 RTMP_EVENT_PING_RESPONSE,
-						 value);
+		err = rtmp_control(conn, RTMP_TYPE_USER_CONTROL_MSG,
+				   RTMP_EVENT_PING_RESPONSE,
+				   value);
 		if (err)
 			return err;
 		break;
@@ -300,14 +300,15 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		(void)was;
 		(void)limit;
 
-#if 0
+#if 1
 		re_printf("[%s] got Set Peer Bandwidth from peer:"
 			  " was=%u, limit_type=%u\n",
 			  conn->is_client ? "Client" : "Server",
 			  was, limit);
 #endif
 
-		err = rtmp_control_send_was(conn, WINDOW_ACK_SIZE);
+		err = rtmp_control(conn, RTMP_TYPE_WINDOW_ACK_SIZE,
+				   (uint32_t)WINDOW_ACK_SIZE);
 		break;
 
 	case RTMP_TYPE_USER_CONTROL_MSG:
@@ -597,7 +598,9 @@ static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
 	conn->connected = true;
 
 	conn->send_chunk_size = 4096;
-	err = rtmp_control_send_set_chunk_size(conn, conn->send_chunk_size);
+
+	err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
+			   conn->send_chunk_size);
 	if (err)
 		goto error;
 
@@ -1012,7 +1015,7 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 
 	err |= re_hprintf(pf, "streams:\n");
 	for (le = conn->streaml.head; le; le = le->next) {
-		struct rtmp_stream *strm = le->data;
+		const struct rtmp_stream *strm = le->data;
 
 		err |= re_hprintf(pf, ".... %H\n", rtmp_stream_debug, strm);
 	}

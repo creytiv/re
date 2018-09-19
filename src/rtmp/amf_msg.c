@@ -87,3 +87,8 @@ uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg)
 
 	return (uint64_t)entry->u.dbl;
 }
+
+
+/* XXX: add element lookup functions with type */
+
+/* XXX: use odict index string for fast lookup */

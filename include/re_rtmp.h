@@ -188,7 +188,7 @@ int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
  */
 
 
-/* XXX: make private */
+/* XXX: make private ? */
 
 enum event_type {
 	RTMP_EVENT_STREAM_BEGIN       = 0,
@@ -198,9 +198,5 @@ enum event_type {
 	RTMP_EVENT_PING_RESPONSE      = 7,
 };
 
-int rtmp_control_send_was(struct rtmp_conn *conn, uint32_t was);
-int rtmp_control_send_set_peer_bw(struct rtmp_conn *conn,
-				  size_t was, uint8_t limit_type);
-int rtmp_control_send_user_control_msg(struct rtmp_conn *conn,
-				       uint16_t event_type,
-				       uint32_t event_data);
+
+int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...);
