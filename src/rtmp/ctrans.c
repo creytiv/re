@@ -149,7 +149,7 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	if (!ct) {
 		DEBUG_WARNING("ctrans: no matching transaction"
 			      " for response '%s' (tid=%llu)\n",
-			      msg->name, tid);
+			      rtmp_amf_message_string(msg, 0), tid);
 		return ENOENT;
 	}
 

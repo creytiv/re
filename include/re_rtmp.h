@@ -50,7 +50,6 @@ struct rtmp_header {
 
 struct rtmp_amf_message {
 	struct odict *dict;
-	char *name;          /* cached */
 };
 
 /*

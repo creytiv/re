@@ -47,12 +47,15 @@ static void conn_destructor(void *data)
 static int client_handle_amf_command(struct rtmp_conn *conn,
 				     const struct rtmp_amf_message *msg)
 {
+	const char *name;
 	int err;
 
-	if (0 == str_casecmp(msg->name, "_result") ||
-	    0 == str_casecmp(msg->name, "_error")) {
+	name = rtmp_amf_message_string(msg, 0);
 
-		bool success = (0 == str_casecmp(msg->name, "_result"));
+	if (0 == str_casecmp(name, "_result") ||
+	    0 == str_casecmp(name, "_error")) {
+
+		bool success = (0 == str_casecmp(name, "_result"));
 
 		/* forward response to transaction layer */
 		err = rtmp_ctrans_response(&conn->ctransl, success,
@@ -60,7 +63,7 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 		if (err)
 			return err;
 	}
-	else if (0 == str_casecmp(msg->name, "onStatus")) {
+	else if (0 == str_casecmp(name, "onStatus")) {
 
 		re_printf("rtmp: client: recv onStatus\n");
 
@@ -71,7 +74,7 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 	}
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
-			  msg->name);
+			  name);
 	}
 
 	return 0;

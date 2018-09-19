@@ -27,7 +27,6 @@ static void destructor(void *data)
 {
 	struct rtmp_amf_message *msg = data;
 
-	mem_deref(msg->name);
 	mem_deref(msg->dict);
 }
 
@@ -211,7 +210,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 
 int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb)
 {
-	const struct odict_entry *entry;
 	struct rtmp_amf_message *msg;
 	unsigned ix = 0;
 	int err;
@@ -239,20 +237,6 @@ int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb)
 		if (err)
 			goto out;
 	}
-
-#if 1
-	/* Cache command name */
-
-	entry = odict_lookup_index(msg->dict, 0, ODICT_STRING);
-	if (!entry) {
-		re_printf("rtmp: command name missing");
-		err = EPROTO;
-		goto out;
-	}
-	err = str_dup(&msg->name, entry->u.str);
-	if (err)
-		goto out;
-#endif
 
  out:
 	if (err)
