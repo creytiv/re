@@ -121,9 +121,8 @@ int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
 
 /* AMF Message */
 
-uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg);
-bool     rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
-				     uint64_t *num, unsigned ix);
+bool rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
+				 uint64_t *num, unsigned ix);
 const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
 				    unsigned ix);
 

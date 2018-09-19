@@ -68,21 +68,19 @@ static void createstream_handler(int err, const struct rtmp_amf_message *msg,
 				 void *arg)
 {
 	struct rtmp_stream *strm = arg;
-	const struct odict_entry *entry;
+	uint64_t num;
 
 	if (err) {
 		re_printf("### createStream failed (%m)\n", err);
 		return;
 	}
 
-	/* use stream_id from response, pass to struct rtmp_stream */
-	entry = odict_lookup_index(msg->dict, 3, ODICT_DOUBLE);
-	if (!entry) {
-		re_printf("missing entry\n");
+	if (!rtmp_amf_message_get_number(msg, &num, 3)) {
+		re_printf("missing stream id\n");
 		return;
 	}
 
-	strm->stream_id = (uint32_t)entry->u.dbl;
+	strm->stream_id = (uint32_t)num;
 	if (strm->stream_id == 0) {
 		re_printf("invalid stream id\n");
 		return;

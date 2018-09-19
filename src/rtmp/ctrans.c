@@ -139,8 +139,10 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	if (!ctransl || !msg)
 		return EINVAL;
 
-	tid = rtmp_amf_message_tid(msg);
-	if (!tid) {
+	if (!rtmp_amf_message_get_number(msg, &tid, 1))
+		return EPROTO;
+
+	if (tid == 0) {
 		re_printf("ctrans: transaction id is zero.\n");
 		return EINVAL;
 	}

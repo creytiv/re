@@ -41,8 +41,9 @@ int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
 	if (!conn || !req)
 		return EINVAL;
 
-	tid = rtmp_amf_message_tid(req);
-	if (!tid)
+	if (!rtmp_amf_message_get_number(req, &tid, 1))
+		return EPROTO;
+	if (tid == 0)
 		return EPROTO;
 
 	mb = mbuf_alloc(512);

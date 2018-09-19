@@ -17,28 +17,6 @@
 #include "rtmp.h"
 
 
-/* XXX: add element lookup functions with type */
-
-/* XXX: use odict index string for fast lookup */
-
-
-uint64_t rtmp_amf_message_tid(const struct rtmp_amf_message *msg)
-{
-	const struct odict_entry *entry;
-
-	if (!msg)
-		return 0;
-
-	entry = odict_lookup_index(msg->dict, 1, ODICT_DOUBLE);
-	if (!entry) {
-		re_printf("rtmp: transaction id missing");
-		return 0;
-	}
-
-	return (uint64_t)entry->u.dbl;
-}
-
-
 const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
 				    unsigned ix)
 {

@@ -133,13 +133,6 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 const char *rtmp_handshake_name(enum rtmp_handshake_state state);
 
 
-/* Util */
-
-const struct odict_entry *odict_lookup_index(const struct odict *o,
-					     unsigned ix,
-					     int type);
-
-
 /*
  * RTMP Chunk
  */
