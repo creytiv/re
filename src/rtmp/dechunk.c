@@ -43,21 +43,7 @@ static void destructor(void *data)
 	struct rtmp_dechunker *rd = data;
 
 #if 0
-	size_t i;
-
-	re_printf("*** Dechunker cache:\n");
-
-	for (i=0; i<ARRAY_SIZE(rd->chunkv); i++) {
-		struct chunk_cache *cache = &rd->chunkv[i];
-
-		if (cache->stream_id_set || cache->msg_len_set) {
-			re_printf(".... chunk_id=%u    len=%zu"
-				  "    stream_id=%u\n",
-				  i,
-				  cache->msg_len,
-				  cache->stream_id);
-		}
-	}
+	re_printf("%H\n", rtmp_dechunker_debug, rd);
 #endif
 
 	list_flush(&rd->msgl);
@@ -74,8 +60,7 @@ static void chunk_destructor(void *data)
 
 
 static struct rtmp_message *create_message(struct list *msgl,
-					   uint32_t chunk_id, size_t length,
-					   uint8_t type)
+					   const struct rtmp_header *hdr)
 {
 	struct rtmp_message *msg;
 
@@ -83,11 +68,9 @@ static struct rtmp_message *create_message(struct list *msgl,
 	if (!msg)
 		return NULL;
 
-	msg->chunk_id = chunk_id;
-	msg->length   = length;
-	msg->type     = type;
+	msg->hdr = *hdr;
 
-	msg->buf = mem_alloc(length, NULL);
+	msg->buf = mem_alloc(hdr->length, NULL);
 	if (!msg->buf)
 		return mem_deref(msg);
 
@@ -106,7 +89,7 @@ static struct rtmp_message *find_message(const struct list *msgl,
 
 		struct rtmp_message *msg = le->data;
 
-		if (chunk_id == msg->chunk_id)
+		if (chunk_id == msg->hdr.chunk_id)
 			return msg;
 	}
 
@@ -205,15 +188,14 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
 
-		msg = create_message(&rd->msgl, hdr.chunk_id,
-				     msg_len, hdr.type_id);
+		msg = create_message(&rd->msgl, &hdr);
 		if (!msg)
 			return ENOMEM;
 
 		/* type 1 and 2 does not contain stream id */
 		if (hdr.format == 0) {
 
-			msg->stream_id = hdr.stream_id;
+			msg->hdr.stream_id = hdr.stream_id;
 
 			cache->stream_id     = hdr.stream_id;
 			cache->stream_id_set = true;
@@ -221,7 +203,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		else {
 			if (!cache->stream_id_set)
 				return EPROTO;
-			msg->stream_id = cache->stream_id;
+			msg->hdr.stream_id = cache->stream_id;
 		}
 
 		err = mbuf_read_mem(mb, msg->buf, chunk_sz);
@@ -229,10 +211,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			return err;
 
 		msg->pos = chunk_sz;
-
-		msg->format = hdr.format;
-		msg->timestamp = hdr.timestamp;
-		msg->timestamp_delta = hdr.timestamp_delta;
 		break;
 
 	case 3:
@@ -242,7 +220,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			return EPROTO;
 		}
 
-		left = msg->length - msg->pos;
+		left = msg->hdr.length - msg->pos;
 
 		chunk_sz = min(left, rd->chunk_sz);
 
@@ -257,7 +235,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		break;
 	}
 
-	complete = (msg->pos >= msg->length);
+	complete = (msg->pos >= msg->hdr.length);
 
 	if (complete) {
 
@@ -276,4 +254,34 @@ void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz)
 		return;
 
 	rd->chunk_sz = chunk_sz;
+}
+
+
+int rtmp_dechunker_debug(struct re_printf *pf, const struct rtmp_dechunker *rd)
+{
+	size_t i;
+	int err;
+
+	if (!rd)
+		return 0;
+
+	err  = re_hprintf(pf, "dechunker:\n");
+
+	err |= re_hprintf(pf, "msg list:  %u\n", list_count(&rd->msgl));
+
+	err |= re_hprintf(pf, "*** Dechunker cache:\n");
+
+	for (i=0; i<ARRAY_SIZE(rd->chunkv); i++) {
+		const struct chunk_cache *cache = &rd->chunkv[i];
+
+		if (cache->stream_id_set || cache->msg_len_set) {
+			err |= re_hprintf(pf, ".... chunk_id=%u    len=%zu"
+				  "    stream_id=%u\n",
+				  i,
+				  cache->msg_len,
+				  cache->stream_id);
+		}
+	}
+
+	return err;
 }

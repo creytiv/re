@@ -229,8 +229,8 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	struct rtmp_stream *strm;
 	struct mbuf mb = {
 		.pos  = 0,
-		.end  = msg->length,
-		.size = msg->length,
+		.end  = msg->hdr.length,
+		.size = msg->hdr.length,
 		.buf  = msg->buf
 	};
 	uint32_t val;
@@ -241,13 +241,7 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	if (conn->term)
 		return 0;
 
-#if 0
-	re_printf("[%s] ### recv message: type 0x%02x (%s) (%zu bytes)\n",
-		  conn->is_client ? "Client" : "Server",
-		  msg->type, rtmp_packet_type_name(msg->type), msg->length);
-#endif
-
-	switch (msg->type) {
+	switch (msg->hdr.type_id) {
 
 	case RTMP_TYPE_SET_CHUNK_SIZE:
 		if (mbuf_get_left(&mb) < 4)
@@ -274,7 +268,7 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 		break;
 
 	case RTMP_TYPE_AMF0:
-		err = handle_amf_command(conn, msg->buf, msg->length);
+		err = handle_amf_command(conn, msg->buf, msg->hdr.length);
 		break;
 
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
@@ -316,44 +310,48 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 
 		/* XXX: common code for audio+video */
 	case RTMP_TYPE_AUDIO:
-		strm = rtmp_stream_find(&conn->streaml, msg->stream_id);
+		strm = rtmp_stream_find(&conn->streaml, msg->hdr.stream_id);
 		if (strm) {
-			if (msg->format == 0) {
-				strm->recv_timestamp = msg->timestamp;
+			if (msg->hdr.format == 0) {
+				strm->recv_timestamp = msg->hdr.timestamp;
 			}
 			else {
-				strm->recv_timestamp += msg->timestamp_delta;
+				strm->recv_timestamp +=
+					msg->hdr.timestamp_delta;
 			}
 
 			if (strm->auh) {
 				strm->auh(strm->recv_timestamp,
-					  msg->buf, msg->length, strm->arg);
+					  msg->buf, msg->hdr.length,
+					  strm->arg);
 			}
 		}
 		else {
 			re_printf("rtmp: audio: stream not found (%u)\n",
-				  msg->stream_id);
+				  msg->hdr.stream_id);
 		}
 		break;
 
 	case RTMP_TYPE_VIDEO:
-		strm = rtmp_stream_find(&conn->streaml, msg->stream_id);
+		strm = rtmp_stream_find(&conn->streaml, msg->hdr.stream_id);
 		if (strm) {
-			if (msg->format == 0) {
-				strm->recv_timestamp = msg->timestamp;
+			if (msg->hdr.format == 0) {
+				strm->recv_timestamp = msg->hdr.timestamp;
 			}
 			else {
-				strm->recv_timestamp += msg->timestamp_delta;
+				strm->recv_timestamp +=
+					msg->hdr.timestamp_delta;
 			}
 
 			if (strm->vidh) {
 				strm->vidh(strm->recv_timestamp,
-					   msg->buf, msg->length, strm->arg);
+					   msg->buf, msg->hdr.length,
+					   strm->arg);
 			}
 		}
 		else {
 			re_printf("rtmp: video: stream not found (%u)\n",
-				  msg->stream_id);
+				  msg->hdr.stream_id);
 		}
 		break;
 
@@ -364,7 +362,8 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 	default:
 		re_printf("rtmp: conn: unhandled message:"
 			  " type=%d (%s)\n",
-			  msg->type, rtmp_packet_type_name(msg->type));
+			  msg->hdr.type_id,
+			  rtmp_packet_type_name(msg->hdr.type_id));
 		break;
 	}
 

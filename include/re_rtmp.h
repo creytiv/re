@@ -69,16 +69,12 @@ const char *rtmp_packet_type_name(enum rtmp_packet_type type);
 // rename to rtmp_chunk, make opaque
 struct rtmp_message {
 	struct le le;
-	uint32_t chunk_id;
-	size_t length;
+
+	struct rtmp_header hdr;
+
 	uint8_t *buf;
 	size_t pos;             /* how many bytes received so far */
-	uint8_t type;
-	uint32_t stream_id;
 
-	unsigned format;
-	uint32_t timestamp;
-	uint32_t timestamp_delta;
 };
 
 struct rtmp_dechunker;
@@ -90,6 +86,8 @@ int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
 			  rtmp_msg_h *msgh, void *arg);
 int  rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb);
 void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
+int rtmp_dechunker_debug(struct re_printf *pf,
+			 const struct rtmp_dechunker *rd);
 
 
 /*
