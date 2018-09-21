@@ -43,7 +43,7 @@ enum rtmp_amf_type {
 	RTMP_AMF_TYPE_STRICT_ARRAY = 0x0a,  /* ordinal indices */
 };
 
-enum event_type {
+enum rtmp_event_type {
 	RTMP_EVENT_STREAM_BEGIN       = 0,
 	RTMP_EVENT_STREAM_EOF         = 1,
 	RTMP_EVENT_STREAM_IS_RECORDED = 4,
