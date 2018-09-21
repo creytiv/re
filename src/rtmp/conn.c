@@ -85,18 +85,12 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 }
 
 
-static int handle_amf_command(struct rtmp_conn *conn,
-			       const uint8_t *cmd, size_t len)
+static int handle_amf_command(struct rtmp_conn *conn, struct mbuf *mb)
 {
-	struct mbuf mb = {
-		.buf = (uint8_t *)cmd,
-		.end = len,
-		.size = len,
-	};
 	struct rtmp_amf_message *msg = NULL;
 	int err;
 
-	err = rtmp_amf_decode(&msg, &mb);
+	err = rtmp_amf_decode(&msg, mb);
 	if (err)
 		return err;
 
@@ -270,7 +264,7 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_AMF0:
-		err = handle_amf_command(conn, pld, pld_len);
+		err = handle_amf_command(conn, &mb);
 		break;
 
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
