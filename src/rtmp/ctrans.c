@@ -113,12 +113,6 @@ int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
 	if (err)
 		goto out;
 
-#if 1
-	DEBUG_NOTICE("### new ctrans (command=\"%s\", tid=%llu)"
-		  " stream_id=%u, propc=%u\n",
-		  command, tid, stream_id, body_propc);
-#endif
-
  out:
 	mem_deref(mb);
 	if (err)

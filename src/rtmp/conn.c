@@ -28,12 +28,7 @@ static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
 
-	if (!list_isempty(&conn->ctransl)) {
-		re_printf("WARNING: flushing %u transactions\n",
-			  list_count(&conn->ctransl));
-	}
-
-#if 1
+#if 0
 	re_printf("%H\n", rtmp_dechunker_debug, conn->dechunk);
 #endif
 
@@ -273,7 +268,7 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 
 		was = ntohl(mbuf_read_u32(&mb));
 
-#if 1
+#if 0
 		re_printf("[%s] got Window Ack Size from peer: %u\n",
 			  conn->is_client ? "Client" : "Server", was);
 #endif
@@ -290,7 +285,7 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		(void)was;
 		(void)limit;
 
-#if 1
+#if 0
 		re_printf("[%s] got Set Peer Bandwidth from peer:"
 			  " was=%u, limit_type=%u\n",
 			  conn->is_client ? "Client" : "Server",
@@ -642,7 +637,7 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 
 		(void)mbuf_read_mem(mb, s1, sizeof(s1));
 
-#if 1
+#if 0
 		re_printf("server version: %u.%u.%u.%u\n",
 			  s1[4], s1[5], s1[6], s1[7]);
 #endif

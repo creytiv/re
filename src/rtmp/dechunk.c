@@ -55,8 +55,6 @@ static struct rtmp_chunk *create_chunk(struct list *msgl,
 {
 	struct rtmp_chunk *msg;
 
-	re_printf("creating new chunk stream (id=%u)\n", hdr->chunk_id);
-
 	msg = mem_zalloc(sizeof(*msg), chunk_destructor);
 	if (!msg)
 		return NULL;
