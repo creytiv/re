@@ -37,7 +37,6 @@ struct rtmp_conn {
 	uint32_t window_ack_size;
 	bool is_client;
 	bool connected;
-	bool term;               // XXX remove
 	rtmp_estab_h *estabh;
 	rtmp_status_h *statush;
 	rtmp_close_h *closeh;

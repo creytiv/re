@@ -243,9 +243,6 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 	uint8_t limit;
 	int err = 0;
 
-	if (conn->term)
-		return 0;
-
 	switch (hdr->type_id) {
 
 	case RTMP_TYPE_SET_CHUNK_SIZE:
@@ -473,7 +470,6 @@ static void conn_close(struct rtmp_conn *conn, int err)
 	rtmp_close_h *closeh;
 
 	conn->tc = mem_deref(conn->tc);
-	conn->term = true;
 
 	closeh = conn->closeh;
 	if (closeh) {
