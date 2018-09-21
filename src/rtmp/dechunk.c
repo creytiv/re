@@ -19,10 +19,20 @@ enum {
 };
 
 
+/* XXX rename to rtmp_chunk, make opaque */
+struct rtmp_message {
+	struct le le;
+
+	struct rtmp_header hdr;
+
+	uint8_t *buf;
+	size_t pos;             /* how many bytes received so far */
+};
+
 struct rtmp_dechunker {
 	struct list msgl;  /* struct rtmp_message */
 	size_t chunk_sz;
-	rtmp_msg_h *msgh;
+	rtmp_chunk_h *chunkh;
 	void *arg;
 };
 
@@ -83,12 +93,12 @@ static struct rtmp_message *find_chunk(const struct list *msgl,
 /*
  * Stateful RTMP de-chunker for receiving complete messages
  */
-int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
-			 rtmp_msg_h *msgh, void *arg)
+int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
+			  rtmp_chunk_h *chunkh, void *arg)
 {
 	struct rtmp_dechunker *rd;
 
-	if (!rdp || !msgh)
+	if (!rdp || !chunkh)
 		return EINVAL;
 
 	rd = mem_zalloc(sizeof(*rd), destructor);
@@ -97,8 +107,8 @@ int rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
 
 	rd->chunk_sz = chunk_sz;
 
-	rd->msgh = msgh;
-	rd->arg  = arg;
+	rd->chunkh = chunkh;
+	rd->arg    = arg;
 
 	*rdp = rd;
 
@@ -216,7 +226,8 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	if (complete) {
 
-		err = rd->msgh(msg, rd->arg);
+		err = rd->chunkh(&msg->hdr, msg->buf, msg->hdr.length,
+				 rd->arg);
 
 		msg->buf = mem_deref(msg->buf);
 	}

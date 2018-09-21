@@ -66,24 +66,14 @@ const char *rtmp_packet_type_name(enum rtmp_packet_type type);
  * RTMP De-chunker XXX make private
  */
 
-// rename to rtmp_chunk, make opaque
-struct rtmp_message {
-	struct le le;
-
-	struct rtmp_header hdr;
-
-	uint8_t *buf;
-	size_t pos;             /* how many bytes received so far */
-
-};
 
 struct rtmp_dechunker;
 
-// XXX: use rtmp_chunk_h instead
-typedef int (rtmp_msg_h)(struct rtmp_message *msg, void *arg);
+typedef int (rtmp_chunk_h)(const struct rtmp_header *hdr,
+			   const uint8_t *pld, size_t pld_len, void *arg);
 
 int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
-			  rtmp_msg_h *msgh, void *arg);
+			  rtmp_chunk_h *chunkh, void *arg);
 int  rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb);
 void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
 int  rtmp_dechunker_debug(struct re_printf *pf,
