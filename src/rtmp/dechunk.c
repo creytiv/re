@@ -19,8 +19,7 @@ enum {
 };
 
 
-/* XXX rename to rtmp_chunk, make opaque */
-struct rtmp_message {
+struct rtmp_chunk {
 	struct le le;
 
 	struct rtmp_header hdr;
@@ -30,7 +29,7 @@ struct rtmp_message {
 };
 
 struct rtmp_dechunker {
-	struct list msgl;  /* struct rtmp_message */
+	struct list msgl;      /* struct rtmp_chunk */
 	size_t chunk_sz;
 	rtmp_chunk_h *chunkh;
 	void *arg;
@@ -47,17 +46,17 @@ static void destructor(void *data)
 
 static void chunk_destructor(void *data)
 {
-	struct rtmp_message *msg = data;
+	struct rtmp_chunk *msg = data;
 
 	list_unlink(&msg->le);
 	mem_deref(msg->buf);
 }
 
 
-static struct rtmp_message *create_chunk(struct list *msgl,
+static struct rtmp_chunk *create_chunk(struct list *msgl,
 					 const struct rtmp_header *hdr)
 {
-	struct rtmp_message *msg;
+	struct rtmp_chunk *msg;
 
 	re_printf("creating new chunk stream (id=%u)\n", hdr->chunk_id);
 
@@ -73,14 +72,14 @@ static struct rtmp_message *create_chunk(struct list *msgl,
 }
 
 
-static struct rtmp_message *find_chunk(const struct list *msgl,
+static struct rtmp_chunk *find_chunk(const struct list *msgl,
 					 uint32_t chunk_id)
 {
 	struct le *le;
 
 	for (le = list_head(msgl); le; le = le->next) {
 
-		struct rtmp_message *msg = le->data;
+		struct rtmp_chunk *msg = le->data;
 
 		if (chunk_id == msg->hdr.chunk_id)
 			return msg;
@@ -119,7 +118,7 @@ int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
 int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 {
 	struct rtmp_header hdr;
-	struct rtmp_message *msg;
+	struct rtmp_chunk *msg;
 	size_t chunk_sz, left, msg_len;
 	bool complete;
 	int err;
@@ -259,7 +258,7 @@ int rtmp_dechunker_debug(struct re_printf *pf, const struct rtmp_dechunker *rd)
 
 	for (le = rd->msgl.head; le; le = le->next) {
 
-		const struct rtmp_message *msg = le->data;
+		const struct rtmp_chunk *msg = le->data;
 
 		err |= re_hprintf(pf, "..... %H [ buf = %p ]\n",
 				  rtmp_header_print, &msg->hdr, msg->buf);
