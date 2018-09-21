@@ -216,17 +216,11 @@ static int handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
 }
 
 
-static int rtmp_msg_handler(const struct rtmp_header *hdr,
-			   const uint8_t *pld, size_t pld_len, void *arg)
+static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
+				struct mbuf *mb, void *arg)
 {
 	struct rtmp_conn *conn = arg;
 	struct rtmp_stream *strm;
-	struct mbuf mb = {
-		.pos  = 0,
-		.end  = pld_len,
-		.size = pld_len,
-		.buf  = (void *)pld
-	};
 	uint32_t val;
 	uint32_t was;
 	uint8_t limit;
@@ -235,10 +229,10 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 	switch (hdr->type_id) {
 
 	case RTMP_TYPE_SET_CHUNK_SIZE:
-		if (mbuf_get_left(&mb) < 4)
+		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 
-		val = ntohl(mbuf_read_u32(&mb));
+		val = ntohl(mbuf_read_u32(mb));
 
 		val = val & 0x7fffffff;
 
@@ -248,10 +242,10 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_ACKNOWLEDGEMENT:
-		if (mbuf_get_left(&mb) < 4)
+		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 
-		val = ntohl(mbuf_read_u32(&mb));
+		val = ntohl(mbuf_read_u32(mb));
 
 		re_printf("got Acknowledgement:  sequence=%u\n", val);
 
@@ -259,14 +253,14 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_AMF0:
-		err = handle_amf_command(conn, &mb);
+		err = handle_amf_command(conn, mb);
 		break;
 
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
-		if (mbuf_get_left(&mb) < 4)
+		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 
-		was = ntohl(mbuf_read_u32(&mb));
+		was = ntohl(mbuf_read_u32(mb));
 
 #if 0
 		re_printf("[%s] got Window Ack Size from peer: %u\n",
@@ -276,11 +270,11 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:
-		if (mbuf_get_left(&mb) < 5)
+		if (mbuf_get_left(mb) < 5)
 			return EBADMSG;
 
-		was = ntohl(mbuf_read_u32(&mb));
-		limit = mbuf_read_u8(&mb);
+		was = ntohl(mbuf_read_u32(mb));
+		limit = mbuf_read_u8(mb);
 
 		(void)was;
 		(void)limit;
@@ -297,7 +291,7 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_USER_CONTROL_MSG:
-		err = handle_user_control_msg(conn, &mb);
+		err = handle_user_control_msg(conn, mb);
 		break;
 
 		/* XXX: common code for audio+video */
@@ -306,7 +300,7 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		if (strm) {
 			if (strm->auh) {
 				strm->auh(hdr->timestamp,
-					  pld, pld_len,
+					  mb->buf, mb->end,
 					  strm->arg);
 			}
 		}
@@ -321,7 +315,7 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		if (strm) {
 			if (strm->vidh) {
 				strm->vidh(hdr->timestamp,
-					   pld, pld_len,
+					   mb->buf, mb->end,
 					   strm->arg);
 			}
 		}
@@ -332,7 +326,7 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_DATA:
-		err = handle_data_message(conn, &mb);
+		err = handle_data_message(conn, mb);
 		break;
 
 	default:
@@ -372,7 +366,7 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	rand_bytes(conn->x1 + 8, sizeof(conn->x1) - 8);
 
 	err = rtmp_dechunker_alloc(&conn->dechunk, RTMP_DEFAULT_CHUNKSIZE,
-				   rtmp_msg_handler, conn);
+				   rtmp_dechunk_handler, conn);
 	if (err)
 		goto out;
 

@@ -136,6 +136,8 @@ const char *rtmp_handshake_name(enum rtmp_handshake_state state);
  * RTMP Chunk
  */
 
+typedef int (rtmp_chunk_h)(const struct rtmp_header *hdr,
+			   const uint8_t *pld, size_t pld_len, void *arg);
 
 int rtmp_chunker(unsigned format, uint32_t chunk_id,
 		 uint32_t timestamp, uint32_t timestamp_delta,

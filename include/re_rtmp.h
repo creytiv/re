@@ -146,11 +146,11 @@ struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
 
 struct rtmp_dechunker;
 
-typedef int (rtmp_chunk_h)(const struct rtmp_header *hdr,
-			   const uint8_t *pld, size_t pld_len, void *arg);
+typedef int (rtmp_dechunk_h)(const struct rtmp_header *hdr,
+			     struct mbuf *mb, void *arg);
 
 int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
-			  rtmp_chunk_h *chunkh, void *arg);
+			  rtmp_dechunk_h *chunkh, void *arg);
 int  rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb);
 void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
 int  rtmp_dechunker_debug(struct re_printf *pf,

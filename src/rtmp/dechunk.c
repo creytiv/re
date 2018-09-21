@@ -28,7 +28,7 @@ struct rtmp_chunk {
 struct rtmp_dechunker {
 	struct list msgl;      /* struct rtmp_chunk */
 	size_t chunk_sz;
-	rtmp_chunk_h *chunkh;
+	rtmp_dechunk_h *chunkh;
 	void *arg;
 };
 
@@ -88,7 +88,7 @@ static struct rtmp_chunk *find_chunk(const struct list *msgl,
  * Stateful RTMP de-chunker for receiving complete messages
  */
 int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
-			  rtmp_chunk_h *chunkh, void *arg)
+			  rtmp_dechunk_h *chunkh, void *arg)
 {
 	struct rtmp_dechunker *rd;
 
@@ -224,8 +224,9 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	if (complete) {
 
-		err = rd->chunkh(&msg->hdr, msg->mb->buf, msg->hdr.length,
-				 rd->arg);
+		msg->mb->pos = 0;
+
+		err = rd->chunkh(&msg->hdr, msg->mb, rd->arg);
 
 		msg->mb = mem_deref(msg->mb);
 	}
