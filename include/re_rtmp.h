@@ -180,8 +180,6 @@ int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
  */
 
 
-/* XXX: make private ? */
-
 enum event_type {
 	RTMP_EVENT_STREAM_BEGIN       = 0,
 	RTMP_EVENT_STREAM_EOF         = 1,

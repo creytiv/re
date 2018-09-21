@@ -130,12 +130,14 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	/* find preceding chunk, from chunk id */
 	msg = find_chunk(&rd->msgl, hdr.chunk_id);
 
+#if 0
 	re_printf("dechunk: packet: format=%u  chunk_id=%u  length=%u"
 		  "  type=%d"
 		  " -- msg_find: %p\n",
 		  hdr.format, hdr.chunk_id, hdr.length,
 		  msg ? msg->hdr.type_id : -1,
 		  msg);
+#endif
 
 	if (!msg) {
 

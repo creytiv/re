@@ -218,7 +218,7 @@ static int handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
 
 	re_printf("got Data Message:\n%H\n", odict_debug, msg->dict);
 
-	/* XXX: pass to app */
+	/* XXX: pass data message to app */
 
  out:
 	mem_deref(msg);
@@ -318,16 +318,8 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 	case RTMP_TYPE_AUDIO:
 		strm = rtmp_stream_find(&conn->streaml, hdr->stream_id);
 		if (strm) {
-			if (hdr->format == 0) {
-				strm->recv_timestamp = hdr->timestamp;
-			}
-			else {
-				strm->recv_timestamp +=
-					hdr->timestamp_delta;
-			}
-
 			if (strm->auh) {
-				strm->auh(strm->recv_timestamp,
+				strm->auh(hdr->timestamp,
 					  pld, pld_len,
 					  strm->arg);
 			}
@@ -341,16 +333,8 @@ static int rtmp_msg_handler(const struct rtmp_header *hdr,
 	case RTMP_TYPE_VIDEO:
 		strm = rtmp_stream_find(&conn->streaml, hdr->stream_id);
 		if (strm) {
-			if (hdr->format == 0) {
-				strm->recv_timestamp = hdr->timestamp;
-			}
-			else {
-				strm->recv_timestamp +=
-					hdr->timestamp_delta;
-			}
-
 			if (strm->vidh) {
-				strm->vidh(strm->recv_timestamp,
+				strm->vidh(hdr->timestamp,
 					   pld, pld_len,
 					   strm->arg);
 			}
@@ -384,7 +368,6 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 					 void *arg)
 {
 	struct rtmp_conn *conn;
-	uint32_t uptime;
 	int err;
 
 	conn = mem_zalloc(sizeof(*conn), conn_destructor);
@@ -396,9 +379,7 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 
 	conn->send_chunk_size = RTMP_DEFAULT_CHUNKSIZE;
 
-	/* XXX check this */
-	uptime = 0;
-	memcpy(conn->x1, &uptime, 4);
+	/* version signature */
 	conn->x1[4] = VER_MAJOR;
 	conn->x1[5] = VER_MINOR;
 	conn->x1[6] = VER_PATCH;
@@ -687,8 +668,6 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return ENODATA;
 
 		(void)mbuf_read_mem(mb, s2, sizeof(s2));
-
-		/* XXX: compare C1 and S2 ? */
 
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 
