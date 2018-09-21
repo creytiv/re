@@ -82,12 +82,12 @@ struct rtmp_dechunker;
 // XXX: use rtmp_chunk_h instead
 typedef int (rtmp_msg_h)(struct rtmp_message *msg, void *arg);
 
-int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp,
+int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
 			  rtmp_msg_h *msgh, void *arg);
 int  rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb);
 void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
-int rtmp_dechunker_debug(struct re_printf *pf,
-			 const struct rtmp_dechunker *rd);
+int  rtmp_dechunker_debug(struct re_printf *pf,
+			  const struct rtmp_dechunker *rd);
 
 
 /*

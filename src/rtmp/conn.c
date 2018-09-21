@@ -33,6 +33,10 @@ static void conn_destructor(void *data)
 			  list_count(&conn->ctransl));
 	}
 
+#if 1
+	re_printf("%H\n", rtmp_dechunker_debug, conn->dechunk);
+#endif
+
 	list_flush(&conn->ctransl);
 	list_flush(&conn->streaml);
 
@@ -276,7 +280,8 @@ static int rtmp_msg_handler(struct rtmp_message *msg, void *arg)
 			return EBADMSG;
 
 		was = ntohl(mbuf_read_u32(&mb));
-#if 0
+
+#if 1
 		re_printf("[%s] got Window Ack Size from peer: %u\n",
 			  conn->is_client ? "Client" : "Server", was);
 #endif
@@ -398,7 +403,8 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	conn->x1[6] = VER_PATCH;
 	rand_bytes(conn->x1 + 8, sizeof(conn->x1) - 8);
 
-	err = rtmp_dechunker_alloc(&conn->dechunk, rtmp_msg_handler, conn);
+	err = rtmp_dechunker_alloc(&conn->dechunk, RTMP_DEFAULT_CHUNKSIZE,
+				   rtmp_msg_handler, conn);
 	if (err)
 		goto out;
 

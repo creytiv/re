@@ -215,39 +215,20 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 	if (!hdr)
 		return 0;
 
-	err |= re_hprintf(pf, "format:     %u\n", hdr->format);
-	err |= re_hprintf(pf, "chunk_id:   %u\n", hdr->chunk_id);
+	err |= re_hprintf(pf,
+			  "format %u, chunk_id %u, "
+			  "timestamp %u, timestamp_delta %u,"
+			  " len %u, type %u (%s)"
+			  " stream_id %u"
+			  ,
+			  hdr->format, hdr->chunk_id,
+			  hdr->timestamp,
+			  hdr->timestamp_delta,
+			  hdr->length,
+			  hdr->type_id,
+			  rtmp_packet_type_name(hdr->type_id),
+			  hdr->stream_id);
 
-	switch (hdr->format) {
-
-	case 0:
-		err |= re_hprintf(pf, "timestamp:  %u\n", hdr->timestamp);
-		err |= re_hprintf(pf, "msg_length: %u\n", hdr->length);
-		err |= re_hprintf(pf, "msg_type:   %u (%s)\n",
-				  hdr->type_id,
-				  rtmp_packet_type_name(hdr->type_id));
-		err |= re_hprintf(pf, "stream_id:  %u\n", hdr->stream_id);
-		break;
-
-	case 1:
-		err |= re_hprintf(pf, "timestamp_delta:  %u\n",
-				  hdr->timestamp_delta);
-		err |= re_hprintf(pf, "msg_length:       %u\n",
-				  hdr->length);
-		err |= re_hprintf(pf, "msg_type:         %u (%s)\n",
-				  hdr->type_id,
-				  rtmp_packet_type_name(hdr->type_id));
-		break;
-
-	case 2:
-		err |= re_hprintf(pf, "timestamp_delta:  %u\n",
-				  hdr->timestamp_delta);
-		break;
-
-	case 3:
-		err |= re_hprintf(pf, "(no payload)\n");
-		break;
-	}
 
 	return err;
 }
