@@ -60,9 +60,8 @@ struct rtmp_header {
 	uint32_t stream_id;
 };
 
-struct rtmp_amf_message {
-	struct odict *dict;
-};
+struct rtmp_amf_message;
+
 
 /* forward declarations */
 struct sa;
@@ -72,6 +71,7 @@ struct tcp_sock;
 
 /* AMF Message */
 
+struct odict *rtmp_amf_message_dict(const struct rtmp_amf_message *msg);
 bool rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
 				 uint64_t *num, unsigned ix);
 const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,

@@ -81,6 +81,10 @@ struct rtmp_stream {
 	void *arg;
 };
 
+struct rtmp_amf_message {
+	struct odict *dict;
+};
+
 
 /* Command */
 

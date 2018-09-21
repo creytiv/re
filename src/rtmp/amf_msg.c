@@ -17,6 +17,12 @@
 #include "rtmp.h"
 
 
+struct odict *rtmp_amf_message_dict(const struct rtmp_amf_message *msg)
+{
+	return msg ? msg->dict : NULL;
+}
+
+
 const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
 				    unsigned ix)
 {
