@@ -21,11 +21,8 @@ enum {
 
 struct rtmp_chunk {
 	struct le le;
-
 	struct rtmp_header hdr;
-
-	uint8_t *buf;
-	size_t pos;             /* how many bytes received so far */
+	struct mbuf *mb;
 };
 
 struct rtmp_dechunker {
@@ -49,7 +46,7 @@ static void chunk_destructor(void *data)
 	struct rtmp_chunk *msg = data;
 
 	list_unlink(&msg->le);
-	mem_deref(msg->buf);
+	mem_deref(msg->mb);
 }
 
 
@@ -188,47 +185,49 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
 
-		mem_deref(msg->buf);
-		msg->buf = mem_alloc(msg_len, NULL);
-		if (!msg->buf)
+		mem_deref(msg->mb);
+		msg->mb = mbuf_alloc(msg_len);
+		if (!msg->mb)
 			return ENOMEM;
 
-		err = mbuf_read_mem(mb, msg->buf, chunk_sz);
+		err = mbuf_read_mem(mb, msg->mb->buf, chunk_sz);
 		if (err)
 			return err;
 
-		msg->pos = chunk_sz;
+		msg->mb->pos = chunk_sz;
+		msg->mb->end = chunk_sz;
 
 		msg->hdr.format = hdr.format;
 		break;
 
 	case 3:
-		if (!msg->buf)
+		if (!msg->mb)
 			return EPROTO;
 
-		left = msg->hdr.length - msg->pos;
+		left = msg->hdr.length - msg->mb->pos;
 
 		chunk_sz = min(left, rd->chunk_sz);
 
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
 
-		err = mbuf_read_mem(mb, &msg->buf[msg->pos], chunk_sz);
+		err = mbuf_read_mem(mb, mbuf_buf(msg->mb), chunk_sz);
 		if (err)
 			return err;
 
-		msg->pos += chunk_sz;
+		msg->mb->pos += chunk_sz;
+		msg->mb->end += chunk_sz;
 		break;
 	}
 
-	complete = (msg->pos >= msg->hdr.length);
+	complete = (msg->mb->pos >= msg->hdr.length);
 
 	if (complete) {
 
-		err = rd->chunkh(&msg->hdr, msg->buf, msg->hdr.length,
+		err = rd->chunkh(&msg->hdr, msg->mb->buf, msg->hdr.length,
 				 rd->arg);
 
-		msg->buf = mem_deref(msg->buf);
+		msg->mb = mem_deref(msg->mb);
 	}
 
 	return err;
@@ -261,7 +260,7 @@ int rtmp_dechunker_debug(struct re_printf *pf, const struct rtmp_dechunker *rd)
 		const struct rtmp_chunk *msg = le->data;
 
 		err |= re_hprintf(pf, "..... %H [ buf = %p ]\n",
-				  rtmp_header_print, &msg->hdr, msg->buf);
+				  rtmp_header_print, &msg->hdr, msg->mb);
 
 	}
 
