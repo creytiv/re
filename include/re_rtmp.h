@@ -139,8 +139,6 @@ struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
  */
 
 
-
-
 /*
  * RTMP De-chunker XXX make private
  */
