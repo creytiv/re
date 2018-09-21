@@ -390,6 +390,9 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	if (err)
 		goto out;
 
+	/* must be above 2 */
+	conn->chunk_id_counter = 4;
+
 	conn->estabh = estabh;
 	conn->statush = statush;
 	conn->closeh = closeh;

@@ -54,6 +54,9 @@ struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
 	strm->vidh   = vidh;
 	strm->arg    = arg;
 
+	strm->chunk_id_audio = ++conn->chunk_id_counter;
+	strm->chunk_id_video = ++conn->chunk_id_counter;
+
 	list_append(&conn->streaml, &strm->le, strm);
 
  out:
@@ -205,10 +208,12 @@ int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
 int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len)
 {
-	uint32_t chunk_id = 6;         /* XXX: how to choose? */
+	uint32_t chunk_id;
 
 	if (!strm || !pld || !len)
 		return EINVAL;
+
+	chunk_id = strm->chunk_id_audio;
 
 	return rtmp_conn_send_msg(strm->conn, 0, chunk_id, timestamp, 0,
 				  RTMP_TYPE_AUDIO, strm->stream_id, pld, len);
@@ -218,10 +223,12 @@ int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len)
 {
-	uint32_t chunk_id = 7;         /* XXX: how to choose? */
+	uint32_t chunk_id;
 
 	if (!strm || !pld || !len)
 		return EINVAL;
+
+	chunk_id = strm->chunk_id_video;
 
 	return rtmp_conn_send_msg(strm->conn, 0, chunk_id, timestamp, 0,
 				  RTMP_TYPE_VIDEO, strm->stream_id, pld, len);

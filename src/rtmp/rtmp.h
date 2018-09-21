@@ -58,6 +58,8 @@ struct rtmp_conn {
 	rtmp_command_h *cmdh;
 
 	uint32_t send_chunk_size;
+
+	unsigned chunk_id_counter;
 };
 
 enum stream_op {
@@ -74,6 +76,8 @@ struct rtmp_stream {
 	const char *command;
 	bool begin;
 	bool eof;
+	unsigned chunk_id_audio;
+	unsigned chunk_id_video;
 	rtmp_ready_h *readyh;
 	rtmp_audio_h *auh;
 	rtmp_video_h *vidh;
