@@ -5,11 +5,9 @@
  */
 
 
-#define RTMP_CONN_CHUNK_ID  (3)  /* XXX: dynamic selection */
-
-
 enum {
 	RTMP_PROTOCOL_VERSION  = 3,
+	RTMP_CONN_CHUNK_ID     = 3,
 	RTMP_DEFAULT_CHUNKSIZE = 128,
 	RTMP_HANDSHAKE_SIZE    = 1536,
 	RTMP_MESSAGE_LEN_MAX   = 524288,

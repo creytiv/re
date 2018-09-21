@@ -198,7 +198,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 	default:
 		re_printf("rtmp: user_control:"
 			  " unhandled event %u\n", event);
-		return EPROTO;  /* XXX: for development */
+		break;
 	}
 
 	return 0;
@@ -388,7 +388,7 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 		goto out;
 
 	/* must be above 2 */
-	conn->chunk_id_counter = 4;
+	conn->chunk_id_counter = RTMP_CONN_CHUNK_ID + 1;
 
 	conn->estabh = estabh;
 	conn->statush = statush;
