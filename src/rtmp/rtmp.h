@@ -84,9 +84,8 @@ struct rtmp_stream {
 
 /* Command */
 
-
-int rtmp_command_header_encode(struct mbuf *mb,
-			       const char *name, uint64_t tid);
+int rtmp_command_header_encode(struct mbuf *mb, const char *name,
+			       uint64_t tid);
 
 
 /* Stream */
@@ -94,16 +93,16 @@ int rtmp_command_header_encode(struct mbuf *mb,
 struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
 				     uint32_t stream_id);
 
+
 /* Connection */
 
-int rtmp_conn_send_msg(struct rtmp_conn *conn,
-		       unsigned format, uint32_t chunk_id,
-		       uint32_t timestamp, uint32_t timestamp_delta,
-		       uint8_t msg_type_id, uint32_t msg_stream_id,
+int rtmp_conn_send_msg(struct rtmp_conn *conn, unsigned format,
+		       uint32_t chunk_id, uint32_t timestamp,
+		       uint32_t timestamp_delta, uint8_t msg_type_id,
+		       uint32_t msg_stream_id,
 		       const uint8_t *payload, size_t payload_len);
-int rtmp_send_amf_command(struct rtmp_conn *conn,
-			  unsigned format, uint32_t chunk_id,
-			  uint32_t msg_stream_id,
+int rtmp_send_amf_command(struct rtmp_conn *conn, unsigned format,
+			  uint32_t chunk_id, uint32_t msg_stream_id,
 			  const uint8_t *cmd, size_t len);
 
 
