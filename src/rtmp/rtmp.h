@@ -142,3 +142,13 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 		 uint8_t msg_type_id, uint32_t msg_stream_id,
 		 const uint8_t *payload, size_t payload_len,
 		 size_t max_chunk_sz, rtmp_chunk_h *chunkh, void *arg);
+
+
+/*
+ * RTMP Header
+ */
+
+int  rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr);
+int  rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
+int  rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr);
+const char *rtmp_packet_type_name(enum rtmp_packet_type type);
