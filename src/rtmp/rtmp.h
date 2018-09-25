@@ -146,9 +146,8 @@ const char *rtmp_packet_type_name(enum rtmp_packet_type type);
 
 
 /*
- * RTMP De-chunker XXX make private
+ * RTMP De-chunker
  */
-
 
 struct rtmp_dechunker;
 
