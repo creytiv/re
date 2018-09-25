@@ -113,7 +113,6 @@ int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 		   unsigned body_propc, ...);
 
 
-
 /* stream */
 struct rtmp_stream;
 
