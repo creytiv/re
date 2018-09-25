@@ -60,13 +60,11 @@ struct rtmp_header {
 	uint32_t stream_id;
 };
 
-struct rtmp_amf_message;
-
 
 /* forward declarations */
-struct sa;
 struct odict;
 struct tcp_sock;
+struct rtmp_amf_message;
 
 
 /* AMF Message */
@@ -83,54 +81,70 @@ const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
  */
 
 
+/* conn */
 struct rtmp_conn;
 
 typedef void (rtmp_estab_h)(void *arg);
-typedef void (rtmp_command_h)(struct rtmp_amf_message *msg, void *arg);
-typedef void (rtmp_status_h)(const struct rtmp_amf_message *msg, void *arg);
+typedef void (rtmp_command_h)(const struct rtmp_amf_message *msg, void *arg);
 typedef void (rtmp_close_h)(int err, void *arg);
 
-
 int rtmp_connect(struct rtmp_conn **connp, const char *uri,
-		 rtmp_estab_h *estabh, rtmp_status_h *statush,
+		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg);
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_estab_h *estabh, rtmp_command_h *cmdh,
-		rtmp_status_h *statush, rtmp_close_h *closeh, void *arg);
-uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn);
+		rtmp_close_h *closeh, void *arg);
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
-int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...);
-int rtmp_amf_reply(struct rtmp_conn *conn, const struct rtmp_amf_message *req,
+int  rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
+
+
+typedef void (rtmp_resp_h)(int err, const struct rtmp_amf_message *msg,
+			   void *arg);
+
+/* amf */
+int rtmp_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
+		     const char *command,
+		     unsigned body_propc, ...);
+int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
+		     const char *command,
+		     rtmp_resp_h *resph, void *arg, unsigned body_propc, ...);
+int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
+		   const struct rtmp_amf_message *req,
 		   unsigned body_propc, ...);
-int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
 
+
+/* stream */
 struct rtmp_stream;
 
-typedef void (rtmp_ready_h)(void *arg);
+typedef void (rtmp_control_h)(enum rtmp_event_type event, void *arg);
 typedef void (rtmp_audio_h)(uint32_t timestamp,
 			    const uint8_t *pld, size_t len, void *arg);
 typedef void (rtmp_video_h)(uint32_t timestamp,
 			    const uint8_t *pld, size_t len, void *arg);
 
-int  rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-	       const char *name, rtmp_ready_h *readyh,
-	       rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg);
-int  rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-		  const char *name, rtmp_ready_h *ready, void *arg);
-int  rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
-		     const uint8_t *pld, size_t len);
-int  rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
-		     const uint8_t *pld, size_t len);
-bool rtmp_stream_isready(const struct rtmp_stream *strm);
-int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
-struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
-				      const char *name,
-				      uint32_t stream_id,
-				      rtmp_ready_h *readyh,
-				      rtmp_audio_h *auh,
-				      rtmp_video_h *vidh,
-				      void *arg);
+int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
+		      uint32_t stream_id, rtmp_command_h *cmdh,
+		      rtmp_control_h *ctrlh, rtmp_audio_h *auh,
+		      rtmp_video_h *vidh, rtmp_command_h *datah,
+		      void *arg);
+int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
+		       rtmp_command_h *resph, rtmp_command_h *cmdh,
+		       rtmp_control_h *ctrlh, rtmp_audio_h *auh,
+		       rtmp_video_h *vidh, rtmp_command_h *datah,
+		       void *arg);
+int rtmp_stream_control(struct rtmp_stream *strm, enum rtmp_event_type event);
+int rtmp_play(struct rtmp_stream *strm, const char *name);
+int rtmp_publish(struct rtmp_stream *strm, const char *name);
+int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
+		    const uint8_t *pld, size_t len);
+int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
+		    const uint8_t *pld, size_t len);
+int rtmp_send_data(struct rtmp_stream *strm, unsigned propc, ...);
+
+
+// XXX: Extra
+int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...);
 
 
 #if 1

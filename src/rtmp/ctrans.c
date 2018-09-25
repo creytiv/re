@@ -57,9 +57,9 @@ static struct rtmp_ctrans *rtmp_ctrans_find(const struct list *ctransl,
 }
 
 
-int rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
-		     const char *command, rtmp_resp_h *resph, void *arg,
-		     unsigned body_propc, ...)
+int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
+		     const char *command,
+		     rtmp_resp_h *resph, void *arg, unsigned body_propc, ...)
 {
 	struct rtmp_ctrans *ct = NULL;
 	struct mbuf *mb;

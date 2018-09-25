@@ -33,10 +33,12 @@ struct rtmp_conn {
 	enum rtmp_handshake_state state;
 	uint8_t x1[RTMP_HANDSHAKE_SIZE];        /* C1 or S1 */
 	uint32_t window_ack_size;
+	uint32_t send_chunk_size;
+	unsigned chunk_id_counter;
 	bool is_client;
 	bool connected;
 	rtmp_estab_h *estabh;
-	rtmp_status_h *statush;
+	rtmp_command_h *cmdh;
 	rtmp_close_h *closeh;
 	void *arg;
 
@@ -50,34 +52,22 @@ struct rtmp_conn {
 	uint64_t tid_counter;
 	char *app;
 	char *uri;
-
-	/* server specific: */
-	rtmp_command_h *cmdh;
-
-	uint32_t send_chunk_size;
-
-	unsigned chunk_id_counter;
 };
 
-enum stream_op {
-	OP_PLAY,
-	OP_PUBLISH,
-};
 
 struct rtmp_stream {
 	struct le le;
 	struct rtmp_conn *conn;    /* pointer */
-	char *name;
 	uint32_t stream_id;
-	enum stream_op operation;
-	const char *command;
-	bool begin;
-	bool eof;
 	unsigned chunk_id_audio;
 	unsigned chunk_id_video;
-	rtmp_ready_h *readyh;
+	unsigned chunk_id_data;
 	rtmp_audio_h *auh;
 	rtmp_video_h *vidh;
+	rtmp_command_h *datah;
+	rtmp_command_h *cmdh;
+	rtmp_command_h *resph;
+	rtmp_control_h *ctrlh;
 	void *arg;
 };
 
@@ -96,6 +86,7 @@ int rtmp_command_header_encode(struct mbuf *mb, const char *name,
 
 struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
 				     uint32_t stream_id);
+int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
 
 
 /* Connection */
@@ -112,14 +103,9 @@ int rtmp_send_amf_command(struct rtmp_conn *conn, unsigned format,
 
 /* Client Transaction */
 
-typedef void (rtmp_resp_h)(int err, const struct rtmp_amf_message *msg,
-			   void *arg);
 
 struct rtmp_ctrans;
 
-int  rtmp_ctrans_send(struct rtmp_conn *conn, uint32_t stream_id,
-		      const char *command, rtmp_resp_h *resph, void *arg,
-		      unsigned body_propc, ...);
 int  rtmp_ctrans_response(const struct list *ctransl, bool success,
 			  const struct rtmp_amf_message *msg);
 

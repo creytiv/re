@@ -23,47 +23,44 @@ static void destructor(void *data)
 	struct rtmp_stream *strm = data;
 
 	list_unlink(&strm->le);
-	mem_deref(strm->name);
 }
 
 
-struct rtmp_stream *rtmp_stream_alloc(struct rtmp_conn *conn,
-				      const char *name,
-				      uint32_t stream_id,
-				      rtmp_ready_h *readyh,
-				      rtmp_audio_h *auh,
-				      rtmp_video_h *vidh,
-				      void *arg)
+int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
+		      uint32_t stream_id, rtmp_command_h *cmdh,
+		      rtmp_control_h *ctrlh, rtmp_audio_h *auh,
+		      rtmp_video_h *vidh, rtmp_command_h *datah,
+		      void *arg)
 {
 	struct rtmp_stream *strm;
-	int err;
+	int err = 0;
 
 	strm = mem_zalloc(sizeof(*strm), destructor);
 	if (!strm)
-		return NULL;
+		return ENOMEM;
 
 	strm->conn      = conn;
-	strm->stream_id = stream_id;  /* unknown */
+	strm->stream_id = stream_id;
 
-	err = str_dup(&strm->name, name);
-	if (err)
-		goto out;
-
-	strm->readyh = readyh;
+	strm->cmdh   = cmdh;
+	strm->ctrlh  = ctrlh;
 	strm->auh    = auh;
 	strm->vidh   = vidh;
+	strm->datah  = datah;
 	strm->arg    = arg;
 
 	strm->chunk_id_audio = ++conn->chunk_id_counter;
 	strm->chunk_id_video = ++conn->chunk_id_counter;
+	strm->chunk_id_data  = ++conn->chunk_id_counter;
 
 	list_append(&conn->streaml, &strm->le, strm);
 
- out:
 	if (err)
-		return mem_deref(strm);
+		mem_deref(strm);
+	else
+		*strmp = strm;
 
-	return strm;
+	return err;
 }
 
 
@@ -89,119 +86,76 @@ static void createstream_handler(int err, const struct rtmp_amf_message *msg,
 		return;
 	}
 
-	switch (strm->operation) {
+	re_printf("using stream id %u\n", strm->stream_id);
 
-	case OP_PLAY:
-		/* NOTE: the play command does not have a response */
-		err = rtmp_ctrans_send(strm->conn, strm->stream_id, "play",
-				       NULL, NULL,
-				       3,
-				       RTMP_AMF_TYPE_NULL,
-				       RTMP_AMF_TYPE_STRING, strm->name,
-				       RTMP_AMF_TYPE_NUMBER, -2000.0);
-		if (err) {
-			re_printf("rtmp: play: ctrans failed (%m)\n", err);
-			goto out;
-		}
-		break;
-
-	case OP_PUBLISH:
-		/* NOTE: the publish command does not have a response */
-		err = rtmp_ctrans_send(strm->conn, strm->stream_id, "publish",
-				       NULL, NULL,
-				       3,
-				       RTMP_AMF_TYPE_NULL,
-				       RTMP_AMF_TYPE_STRING, strm->name,
-				       RTMP_AMF_TYPE_STRING, "live");
-		if (err) {
-			re_printf("rtmp: publish: ctrans failed (%m)\n", err);
-			goto out;
-		}
-
-		break;
-	}
-
-	if (strm->readyh)
-		strm->readyh(strm->arg);
- out:
-	return;
+	if (strm->resph)
+		strm->resph(msg, strm->arg);
 }
 
 
-int rtmp_play(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-	      const char *name, rtmp_ready_h *readyh,
-	      rtmp_audio_h *auh, rtmp_video_h *vidh, void *arg)
+int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
+		       rtmp_command_h *resph, rtmp_command_h *cmdh,
+		       rtmp_control_h *ctrlh, rtmp_audio_h *auh,
+		       rtmp_video_h *vidh, rtmp_command_h *datah,
+		       void *arg)
 {
 	struct rtmp_stream *strm;
 	int err;
 
-	if (!conn || !name)
+	if (!strmp)
 		return EINVAL;
 
-	re_printf("rtmp: stream: play '%s'\n", name);
+	err = rtmp_stream_alloc(&strm, conn, (uint32_t)-1,
+				cmdh, ctrlh, auh, vidh, datah, arg);
+	if (err)
+		return err;
 
-	strm = rtmp_stream_alloc(conn, name, (uint32_t)-1,
-				 readyh, auh, vidh, arg);
-	if (!strm)
-		return ENOMEM;
+	strm->resph = resph;
 
-	strm->command   = "play";
-	strm->operation = OP_PLAY;
-
-	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
-			       createstream_handler, strm,
+	err = rtmp_amf_request(conn, 0,
+			       "createStream", createstream_handler, strm,
 			       1,
-			         RTMP_AMF_TYPE_NULL);
-	if (err) {
-		re_printf("rtmp: create_stream: ctrans failed (%m)\n", err);
+			       RTMP_AMF_TYPE_NULL);
+	if (err)
 		goto out;
-	}
 
  out:
 	if (err)
 		mem_deref(strm);
-	else if (streamp)
-		*streamp = strm;
+	else
+		*strmp = strm;
 
 	return err;
 }
 
 
-int rtmp_publish(struct rtmp_stream **streamp, struct rtmp_conn *conn,
-		 const char *name, rtmp_ready_h *readyh, void *arg)
+int rtmp_play(struct rtmp_stream *strm, const char *name)
 {
-	struct rtmp_stream *strm;
-	int err;
-
-	if (!conn || !name)
+	if (!strm || !name)
 		return EINVAL;
 
-	re_printf("rtmp: stream: publish '%s'\n", name);
+	return rtmp_amf_command(strm->conn, strm->stream_id, "play",
+				4,
+				RTMP_AMF_TYPE_NUMBER, 0.0,
+				RTMP_AMF_TYPE_NULL,
+				RTMP_AMF_TYPE_STRING, name,
+				RTMP_AMF_TYPE_NUMBER, -2000.0);
+}
 
-	strm = rtmp_stream_alloc(conn, name, (uint32_t)-1,
-				 readyh, NULL, NULL, arg);
-	if (!strm)
-		return ENOMEM;
 
-	strm->command   = "publish";
-	strm->operation = OP_PUBLISH;
+int rtmp_publish(struct rtmp_stream *strm, const char *name)
+{
+	if (!strm || !name)
+		return EINVAL;
 
-	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "createStream",
-			       createstream_handler, strm,
-			       1,
-			         RTMP_AMF_TYPE_NULL);
-	if (err) {
-		re_printf("rtmp: create_stream: ctrans failed (%m)\n", err);
-		goto out;
-	}
+	re_printf("publish:  name=%s\n", name);
 
- out:
-	if (err)
-		mem_deref(strm);
-	else if (streamp)
-		*streamp = strm;
-
-	return err;
+	return rtmp_amf_command(strm->conn, strm->stream_id, "publish",
+				4,
+				RTMP_AMF_TYPE_NUMBER, 0.0,
+				RTMP_AMF_TYPE_NULL,
+				RTMP_AMF_TYPE_STRING, name,
+				RTMP_AMF_TYPE_STRING, "live");
 }
 
 
@@ -252,23 +206,13 @@ struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
 }
 
 
-bool rtmp_stream_isready(const struct rtmp_stream *strm)
-{
-	if (!strm)
-		return false;
-
-	return strm->begin && !strm->eof;
-}
-
-
 int rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm)
 {
 	if (!strm)
 		return 0;
 
 	return re_hprintf(pf,
-			  "stream_id=%u  begin=%d  eof=%d  %s   name=%12s"
+			  "stream_id=%u  "
 			  "  ",
-			  strm->stream_id, strm->begin, strm->eof,
-			  strm->command, strm->name);
+			  strm->stream_id);
 }

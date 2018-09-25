@@ -28,10 +28,6 @@ static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
 
-#if 0
-	re_printf("%H\n", rtmp_dechunker_debug, conn->dechunk);
-#endif
-
 	list_flush(&conn->ctransl);
 	list_flush(&conn->streaml);
 
@@ -44,6 +40,7 @@ static void conn_destructor(void *data)
 
 
 static int client_handle_amf_command(struct rtmp_conn *conn,
+				     uint32_t stream_id,
 				     const struct rtmp_amf_message *msg)
 {
 	const char *name;
@@ -64,12 +61,26 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 	}
 	else if (0 == str_casecmp(name, "onStatus")) {
 
-		re_printf("rtmp: client: recv onStatus\n");
+		struct rtmp_stream *strm;
 
-		/* XXX: lookup stream_id, pass to struct rtmp_stream ? */
+		re_printf("rtmp: client: recv onStatus (stream_id %u)\n",
+			  stream_id);
 
-		if (conn->statush)
-			conn->statush(msg, conn->arg);
+		if (stream_id == 0) {
+			if (conn->cmdh)
+				conn->cmdh(msg, conn->arg);
+
+		}
+		else {
+			strm = rtmp_stream_find(&conn->streaml, stream_id);
+			if (strm) {
+				if (strm->cmdh)
+					strm->cmdh(msg, strm->arg);
+			}
+			else {
+				re_printf("onstatus: stream not found\n");
+			}
+		}
 	}
 	else {
 		re_printf("rtmp: client: command not handled (%s)\n",
@@ -80,7 +91,8 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 }
 
 
-static int handle_amf_command(struct rtmp_conn *conn, struct mbuf *mb)
+static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
+			      struct mbuf *mb)
 {
 	struct rtmp_amf_message *msg = NULL;
 	int err;
@@ -90,7 +102,7 @@ static int handle_amf_command(struct rtmp_conn *conn, struct mbuf *mb)
 		return err;
 
 	if (conn->is_client) {
-		err = client_handle_amf_command(conn, msg);
+		err = client_handle_amf_command(conn, stream_id, msg);
 	}
 	else {
 		if (conn->cmdh)
@@ -116,18 +128,14 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 	event = ntohs(mbuf_read_u16(mb));
 
-#if 0
-	re_printf("[%s] got User Control Message:"
-		  " event_type=%u event_data=%zu bytes\n",
-		  conn->is_client ? "Client" : "Server",
-		  event, mbuf_get_left(mb));
-#endif
-
 	switch (event) {
 
 	case RTMP_EVENT_STREAM_BEGIN:
+	case RTMP_EVENT_STREAM_EOF:
+	case RTMP_EVENT_STREAM_IS_RECORDED:
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
+
 		stream_id = ntohl(mbuf_read_u32(mb));
 
 		if (stream_id != RTMP_CONTROL_STREAM_ID) {
@@ -138,33 +146,10 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 					  " stream %u not found\n", stream_id);
 				return ENOSTR;
 			}
-			strm->begin = true;
+
+			if (strm->ctrlh)
+				strm->ctrlh(event, strm->arg);
 		}
-		break;
-
-	case RTMP_EVENT_STREAM_EOF:
-		if (mbuf_get_left(mb) < 4)
-			return EBADMSG;
-		stream_id = ntohl(mbuf_read_u32(mb));
-
-		if (stream_id != RTMP_CONTROL_STREAM_ID) {
-
-			strm = rtmp_stream_find(&conn->streaml, stream_id);
-			if (!strm) {
-				re_printf("rtmp: stream_eof:"
-					  " stream %u not found\n", stream_id);
-				return ENOSTR;
-			}
-			strm->eof = true;
-		}
-		break;
-
-	case RTMP_EVENT_STREAM_IS_RECORDED:
-		if (mbuf_get_left(mb) < 4)
-			return EBADMSG;
-		stream_id = ntohl(mbuf_read_u32(mb));
-		re_printf("rtmp: StreamIsRecorded (stream_id=%u)\n",
-			  stream_id);
 		break;
 
 	case RTMP_EVENT_PING_REQUEST:
@@ -194,9 +179,11 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 }
 
 
-static int handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
+static int handle_data_message(struct rtmp_conn *conn, uint32_t stream_id,
+			       struct mbuf *mb)
 {
 	struct rtmp_amf_message *msg;
+	struct rtmp_stream *strm;
 	int err;
 
 	err = rtmp_amf_decode(&msg, mb);
@@ -207,7 +194,20 @@ static int handle_data_message(struct rtmp_conn *conn, struct mbuf *mb)
 
 	re_printf("got Data Message:\n%H\n", odict_debug, msg->dict);
 
-	/* XXX: pass data message to app */
+	if (stream_id == 0) {
+
+		re_printf("dropping data msg with stream id 0\n");
+	}
+	else {
+		strm = rtmp_stream_find(&conn->streaml, stream_id);
+		if (strm) {
+			if (strm->datah)
+				strm->datah(msg, strm->arg);
+		}
+		else {
+			re_printf("data_msg: stream not found\n");
+		}
+	}
 
  out:
 	mem_deref(msg);
@@ -253,7 +253,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_AMF0:
-		err = handle_amf_command(conn, mb);
+		err = handle_amf_command(conn, hdr->stream_id, mb);
 		break;
 
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
@@ -326,7 +326,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_DATA:
-		err = handle_data_message(conn, mb);
+		err = handle_data_message(conn, hdr->stream_id, mb);
 		break;
 
 	default:
@@ -343,7 +343,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 					 rtmp_estab_h *estabh,
-					 rtmp_status_h *statush,
+					 rtmp_command_h *cmdh,
 					 rtmp_close_h *closeh,
 					 void *arg)
 {
@@ -374,9 +374,9 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	conn->chunk_id_counter = RTMP_CONN_CHUNK_ID + 1;
 
 	conn->estabh = estabh;
-	conn->statush = statush;
+	conn->cmdh   = cmdh;
 	conn->closeh = closeh;
-	conn->arg = arg;
+	conn->arg    = arg;
 
  out:
 	if (err)
@@ -588,7 +588,7 @@ static int send_connect(struct rtmp_conn *conn)
 	const int vidcodes  = 0x0080;  /* H264 */
 	int err;
 
-	err = rtmp_ctrans_send(conn, RTMP_CONTROL_STREAM_ID, "connect",
+	err = rtmp_amf_request(conn, RTMP_CONTROL_STREAM_ID, "connect",
 			       connect_resp_handler, conn,
 			       1,
 		       RTMP_AMF_TYPE_OBJECT, 8,
@@ -833,7 +833,7 @@ static void tcp_close_handler(int err, void *arg)
 
 
 int rtmp_connect(struct rtmp_conn **connp, const char *uri,
-		 rtmp_estab_h *estabh, rtmp_status_h *statush,
+		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
@@ -859,7 +859,7 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 	if (err)
 		return err;
 
-	conn = rtmp_conn_alloc(true, estabh, statush, closeh, arg);
+	conn = rtmp_conn_alloc(true, estabh, cmdh, closeh, arg);
 	if (!conn)
 		return ENOMEM;
 
@@ -885,7 +885,6 @@ int rtmp_connect(struct rtmp_conn **connp, const char *uri,
 
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_estab_h *estabh, rtmp_command_h *cmdh,
-		rtmp_status_h *statush,
 		rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
@@ -894,11 +893,9 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 	if (!connp || !ts)
 		return EINVAL;
 
-	conn = rtmp_conn_alloc(false, estabh, statush, closeh, arg);
+	conn = rtmp_conn_alloc(false, estabh, cmdh, closeh, arg);
 	if (!conn)
 		return ENOMEM;
-
-	conn->cmdh = cmdh;
 
 	err = tcp_accept(&conn->tc, ts, tcp_estab_handler,
 			 tcp_recv_handler, tcp_close_handler, conn);
@@ -912,16 +909,6 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		*connp = conn;
 
 	return err;
-}
-
-
-/* XXX: make private */
-uint32_t rtmp_window_ack_size(const struct rtmp_conn *conn)
-{
-	if (!conn)
-		return 0;
-
-	return conn->window_ack_size;
 }
 
 
@@ -981,6 +968,8 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 
 		err |= re_hprintf(pf, ".... %H\n", rtmp_stream_debug, strm);
 	}
+
+	err |= re_hprintf(pf, "%H\n", rtmp_dechunker_debug, conn->dechunk);
 
 	return err;
 }
