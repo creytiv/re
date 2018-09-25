@@ -143,3 +143,21 @@ int  rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr);
 int  rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
 int  rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr);
 const char *rtmp_packet_type_name(enum rtmp_packet_type type);
+
+
+/*
+ * RTMP De-chunker XXX make private
+ */
+
+
+struct rtmp_dechunker;
+
+typedef int (rtmp_dechunk_h)(const struct rtmp_header *hdr,
+			     struct mbuf *mb, void *arg);
+
+int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
+			  rtmp_dechunk_h *chunkh, void *arg);
+int  rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb);
+void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
+int  rtmp_dechunker_debug(struct re_printf *pf,
+			  const struct rtmp_dechunker *rd);
