@@ -45,10 +45,10 @@ int avc_config_record_encode(struct mbuf *mb,
 	err |= mbuf_write_u8(mb, profile_compat);
 	err |= mbuf_write_u8(mb, level_ind);
 
-	err |= mbuf_write_u8(mb, 4-1);
+	err |= mbuf_write_u8(mb, 0xfc | 4-1);
 
 	/* SPS */
-	err |= mbuf_write_u8(mb, 1);
+	err |= mbuf_write_u8(mb, 0xe0 | 1);
 	err |= mbuf_write_u16(mb, htons(spsLength));
 	err |= mbuf_write_mem(mb, sps, spsLength);
 
