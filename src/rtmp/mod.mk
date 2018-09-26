@@ -4,6 +4,7 @@
 # Copyright (C) 2010 Creytiv.com
 #
 
+SRCS	+= rtmp/avc.c
 SRCS	+= rtmp/amf.c
 SRCS	+= rtmp/amf_dec.c
 SRCS	+= rtmp/amf_enc.c

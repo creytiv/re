@@ -166,4 +166,44 @@ int rtmp_amf_encode_object(struct mbuf *mb, enum rtmp_amf_type container,
 int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
 
 
+#define CODECID_AVC 7
+
+
+enum avc_packet_type {
+	AVC_SEQUENCE = 0,
+	AVC_NALU     = 1,
+	AVC_EOS      = 2
+};
+
+struct config_record {
+	uint8_t version;
+	uint8_t profile_ind;
+	uint8_t profile_compat;
+	uint8_t level_ind;
+	uint8_t lengthSizeMinusOne;
+	uint8_t numOfSequenceParameterSets;
+	uint16_t sequenceParameterSetLength;
+	uint8_t *sps;
+	uint8_t numOfPictureParameterSets;
+	uint16_t pictureParameterSetLength;
+	uint8_t *pps;
+};
+
+
+int avc_config_record_encode(struct mbuf *mb,
+
+			     uint8_t profile_ind,
+			     uint8_t profile_compat,
+			     uint8_t level_ind,
+
+			     uint16_t spsLength,
+			     uint8_t *sps,
+
+			     uint16_t ppsLength,
+			     uint8_t *pps);
+
+
+int avc_config_record_decode(struct config_record *conf, struct mbuf *mb);
+
+
 #endif
