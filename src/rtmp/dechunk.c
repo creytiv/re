@@ -224,11 +224,16 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	if (complete) {
 
+		struct mbuf *buf;
+
 		msg->mb->pos = 0;
 
-		err = rd->chunkh(&msg->hdr, msg->mb, rd->arg);
+		buf = msg->mb;
+		msg->mb = NULL;
 
-		msg->mb = mem_deref(msg->mb);
+		err = rd->chunkh(&msg->hdr, buf, rd->arg);
+
+		mem_deref(buf);
 	}
 
 	return err;

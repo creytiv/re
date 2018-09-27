@@ -780,13 +780,26 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	while (mbuf_get_left(conn->mb) > 0) {
 
 		size_t pos;
+		uint32_t nrefs;
 
 		pos = conn->mb->pos;
+
+		mem_ref(conn);
 
 		if (conn->is_client)
 			err = client_handle_packet(conn, conn->mb);
 		else
 			err = server_handle_packet(conn, conn->mb);
+
+		nrefs = mem_nrefs(conn);
+
+		mem_deref(conn);
+
+		if (nrefs == 1) {
+			re_printf(".. conn is gone ..\n");
+			return;
+		}
+
 		if (err) {
 
 			/* rewind */
