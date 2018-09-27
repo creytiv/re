@@ -25,7 +25,6 @@
 
 struct rtmp_ctrans {
 	struct le le;
-	char *command;
 	uint64_t tid;
 	rtmp_resp_h *resph;
 	void *arg;
@@ -37,7 +36,6 @@ static void ctrans_destructor(void *data)
 	struct rtmp_ctrans *ct = data;
 
 	list_unlink(&ct->le);
-	mem_deref(ct->command);
 }
 
 
@@ -84,10 +82,6 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 		ct->tid   = tid;
 		ct->resph = resph;
 		ct->arg   = arg;
-
-		err = str_dup(&ct->command, command);
-		if (err)
-			goto out;
 
 		list_append(&conn->ctransl, &ct->le, ct);
 	}
