@@ -44,7 +44,6 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 				     const struct rtmp_amf_message *msg)
 {
 	const char *name;
-	int err;
 
 	name = rtmp_amf_message_string(msg, 0);
 
@@ -54,10 +53,7 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 		bool success = (0 == str_casecmp(name, "_result"));
 
 		/* forward response to transaction layer */
-		err = rtmp_ctrans_response(&conn->ctransl, success,
-					   msg);
-		if (err)
-			return err;
+		rtmp_ctrans_response(&conn->ctransl, success, msg);
 	}
 	else if (0 == str_casecmp(name, "onStatus")) {
 
