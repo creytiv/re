@@ -152,8 +152,6 @@ int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...);
  */
 
 
-
-
 #define CODECID_AVC 7
 
 
