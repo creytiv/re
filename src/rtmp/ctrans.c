@@ -76,8 +76,10 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 		tid = ++conn->tid_counter;
 
 		ct = mem_zalloc(sizeof(*ct), ctrans_destructor);
-		if (!ct)
-			return ENOMEM;
+		if (!ct) {
+			err = ENOMEM;
+			goto out;
+		}
 
 		ct->tid   = tid;
 		ct->resph = resph;
