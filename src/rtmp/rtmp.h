@@ -160,3 +160,17 @@ int  rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb);
 void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz);
 int  rtmp_dechunker_debug(struct re_printf *pf,
 			  const struct rtmp_dechunker *rd);
+
+
+/*
+ * AMF (Action Message Format)
+ */
+
+int rtmp_amf_encode_number(struct mbuf *mb, double val);
+int rtmp_amf_encode_boolean(struct mbuf *mb, bool boolean);
+int rtmp_amf_encode_string(struct mbuf *mb, const char *str);
+int rtmp_amf_encode_null(struct mbuf *mb);
+int rtmp_amf_encode_object(struct mbuf *mb, enum rtmp_amf_type container,
+			   unsigned propc, ...);
+
+int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);

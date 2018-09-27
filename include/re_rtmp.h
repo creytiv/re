@@ -152,18 +152,6 @@ int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...);
  */
 
 
-/*
- * AMF (Action Message Format)
- */
-
-int rtmp_amf_encode_number(struct mbuf *mb, double val);
-int rtmp_amf_encode_boolean(struct mbuf *mb, bool boolean);
-int rtmp_amf_encode_string(struct mbuf *mb, const char *str);
-int rtmp_amf_encode_null(struct mbuf *mb);
-int rtmp_amf_encode_object(struct mbuf *mb, enum rtmp_amf_type container,
-			   unsigned propc, ...);
-
-int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
 
 
 #define CODECID_AVC 7
