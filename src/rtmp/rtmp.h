@@ -58,6 +58,7 @@ struct rtmp_conn {
 struct rtmp_stream {
 	struct le le;
 	struct rtmp_conn *conn;    /* pointer */
+	bool created;
 	uint32_t stream_id;
 	unsigned chunk_id_audio;
 	unsigned chunk_id_video;

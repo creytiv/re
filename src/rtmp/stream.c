@@ -22,6 +22,15 @@ static void destructor(void *data)
 {
 	struct rtmp_stream *strm = data;
 
+	if (strm->created) {
+
+		rtmp_amf_command(strm->conn, 0, "deleteStream",
+				 3,
+				 RTMP_AMF_TYPE_NUMBER, 0.0,
+				 RTMP_AMF_TYPE_NULL,
+				 RTMP_AMF_TYPE_NUMBER, (double)strm->stream_id);
+	}
+
 	list_unlink(&strm->le);
 }
 
@@ -87,6 +96,8 @@ static void createstream_handler(int err, const struct rtmp_amf_message *msg,
 	}
 
 	re_printf("using stream id %u\n", strm->stream_id);
+
+	strm->created = true;
 
 	if (strm->resph)
 		strm->resph(msg, strm->arg);
