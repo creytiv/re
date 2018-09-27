@@ -200,12 +200,12 @@ int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 }
 
 
-struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
+struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
 				     uint32_t stream_id)
 {
 	struct le *le;
 
-	for (le = list_head(streaml); le; le = le->next) {
+	for (le = list_head(&conn->streaml); le; le = le->next) {
 
 		struct rtmp_stream *strm = le->data;
 

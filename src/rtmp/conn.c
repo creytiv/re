@@ -68,7 +68,7 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 
 		}
 		else {
-			strm = rtmp_stream_find(&conn->streaml, stream_id);
+			strm = rtmp_stream_find(conn, stream_id);
 			if (strm) {
 				if (strm->cmdh)
 					strm->cmdh(msg, strm->arg);
@@ -136,7 +136,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 		if (stream_id != RTMP_CONTROL_STREAM_ID) {
 
-			strm = rtmp_stream_find(&conn->streaml, stream_id);
+			strm = rtmp_stream_find(conn, stream_id);
 			if (!strm) {
 				re_printf("rtmp: stream_begin:"
 					  " stream %u not found\n", stream_id);
@@ -195,7 +195,7 @@ static int handle_data_message(struct rtmp_conn *conn, uint32_t stream_id,
 		re_printf("dropping data msg with stream id 0\n");
 	}
 	else {
-		strm = rtmp_stream_find(&conn->streaml, stream_id);
+		strm = rtmp_stream_find(conn, stream_id);
 		if (strm) {
 			if (strm->datah)
 				strm->datah(msg, strm->arg);
@@ -292,7 +292,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 		/* XXX: common code for audio+video */
 	case RTMP_TYPE_AUDIO:
-		strm = rtmp_stream_find(&conn->streaml, hdr->stream_id);
+		strm = rtmp_stream_find(conn, hdr->stream_id);
 		if (strm) {
 			if (strm->auh) {
 				strm->auh(hdr->timestamp,
@@ -307,7 +307,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_VIDEO:
-		strm = rtmp_stream_find(&conn->streaml, hdr->stream_id);
+		strm = rtmp_stream_find(conn, hdr->stream_id);
 		if (strm) {
 			if (strm->vidh) {
 				strm->vidh(hdr->timestamp,

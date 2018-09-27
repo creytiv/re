@@ -140,6 +140,8 @@ int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len);
 int rtmp_send_data(struct rtmp_stream *strm, unsigned propc, ...);
+struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
+				     uint32_t stream_id);
 
 
 // XXX: Extra

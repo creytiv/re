@@ -85,8 +85,6 @@ int rtmp_command_header_encode(struct mbuf *mb, const char *name,
 
 /* Stream */
 
-struct rtmp_stream *rtmp_stream_find(const struct list *streaml,
-				     uint32_t stream_id);
 int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
 
 
