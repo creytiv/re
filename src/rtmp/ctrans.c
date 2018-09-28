@@ -105,6 +105,7 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 	}
 
 	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+				    RTMP_TYPE_AMF0,
 				    stream_id, mb->buf, mb->end);
 	if (err)
 		goto out;

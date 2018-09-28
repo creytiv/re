@@ -72,6 +72,8 @@ struct rtmp_amf_message;
 struct odict *rtmp_amf_message_dict(const struct rtmp_amf_message *msg);
 bool rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
 				 uint64_t *num, unsigned ix);
+bool rtmp_amf_message_get_boolean(const struct rtmp_amf_message *msg,
+				  bool *value, unsigned ix);
 const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
 				    unsigned ix);
 
@@ -111,6 +113,8 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 		   const struct rtmp_amf_message *req,
 		   unsigned body_propc, ...);
+int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
+		  const char *command, unsigned body_propc, ...);
 
 
 /* stream */

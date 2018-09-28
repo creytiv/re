@@ -185,10 +185,8 @@ static int handle_data_message(struct rtmp_conn *conn, uint32_t stream_id,
 	err = rtmp_amf_decode(&msg, mb);
 	if (err) {
 		re_printf("rtmp: data: amf decode error (%m)\n", err);
-		goto out;
+		return err;
 	}
-
-	re_printf("got Data Message:\n%H\n", odict_debug, msg->dict);
 
 	if (stream_id == 0) {
 
@@ -205,7 +203,6 @@ static int handle_data_message(struct rtmp_conn *conn, uint32_t stream_id,
 		}
 	}
 
- out:
 	mem_deref(msg);
 
 	return err;
@@ -511,33 +508,19 @@ static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 }
 
 
+/* Send AMF0 Command or Data */
 int rtmp_send_amf_command(struct rtmp_conn *conn,
-			    unsigned format, uint32_t chunk_id,
-			    uint32_t msg_stream_id,
-			    const uint8_t *cmd, size_t len)
+			  unsigned format, uint32_t chunk_id,
+			  uint8_t type_id,
+			  uint32_t msg_stream_id,
+			  const uint8_t *cmd, size_t len)
 {
-	uint32_t timestamp = 0;
-	int err;
-
 	if (!conn || !cmd || !len)
 		return EINVAL;
 
-#if 0
-	re_printf("[%s] send AMF command: [fmt=%u, chunk=%u, stream=%u]"
-		  " %zu bytes\n",
-		  conn->is_client ? "Client" : "Server",
-		  format, chunk_id, msg_stream_id, len);
-#endif
-
-	err = rtmp_chunker(format, chunk_id,
-			   timestamp, 0,
-			   RTMP_TYPE_AMF0, msg_stream_id,
-			   cmd, len, conn->send_chunk_size,
-			   rtmp_chunk_handler, conn);
-	if (err)
-		return err;
-
-	return 0;
+	return rtmp_chunker(format, chunk_id, 0, 0, type_id, msg_stream_id,
+			    cmd, len, conn->send_chunk_size,
+			    rtmp_chunk_handler, conn);
 }
 
 

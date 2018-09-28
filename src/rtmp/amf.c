@@ -26,8 +26,6 @@
 int rtmp_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 		     const char *command, unsigned body_propc, ...)
 {
-
-
 	struct mbuf *mb;
 	va_list ap;
 	int err;
@@ -53,6 +51,7 @@ int rtmp_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 	}
 
 	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+				    RTMP_TYPE_AMF0,
 				    stream_id, mb->buf, mb->end);
 
 	if (err)
@@ -62,8 +61,6 @@ int rtmp_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 	mem_deref(mb);
 
 	return err;
-
-
 }
 
 
@@ -103,6 +100,48 @@ int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 	}
 
 	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+				    RTMP_TYPE_AMF0,
+				    stream_id, mb->buf, mb->end);
+
+	if (err)
+		goto out;
+
+ out:
+	mem_deref(mb);
+
+	return err;
+}
+
+
+int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
+		  const char *command, unsigned body_propc, ...)
+{
+	struct mbuf *mb;
+	va_list ap;
+	int err;
+
+	if (!conn || !command)
+		return EINVAL;
+
+	mb = mbuf_alloc(512);
+	if (!mb)
+		return ENOMEM;
+
+	err  = rtmp_amf_encode_string(mb, command);
+	if (err)
+		goto out;
+
+	if (body_propc) {
+		va_start(ap, body_propc);
+		err = rtmp_amf_vencode_object(mb, RTMP_AMF_TYPE_ROOT,
+					      body_propc, &ap);
+		va_end(ap);
+		if (err)
+			goto out;
+	}
+
+	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+				    RTMP_TYPE_DATA,
 				    stream_id, mb->buf, mb->end);
 
 	if (err)

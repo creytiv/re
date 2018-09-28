@@ -78,3 +78,33 @@ bool rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
 
 	return true;
 }
+
+
+bool rtmp_amf_message_get_boolean(const struct rtmp_amf_message *msg,
+				 bool *value, unsigned ix)
+{
+	const struct odict_entry *entry;
+	char key[16];
+
+	if (!msg)
+		return false;
+
+	re_snprintf(key, sizeof(key), "%u", ix);
+
+	entry = odict_lookup(msg->dict, key);
+	if (!entry) {
+		re_printf("no entry at index %u\n", ix);
+		return false;
+	}
+
+	if (entry->type != ODICT_BOOL) {
+		re_printf("entry at index %u is not a boolean (%s)\n",
+			  ix, odict_type_name(entry->type));
+		return false;
+	}
+
+	if (value)
+		*value = entry->u.boolean;
+
+	return true;
+}
