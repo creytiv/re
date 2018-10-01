@@ -67,6 +67,18 @@ static int rtmp_amf_encode_object_end(struct mbuf *mb)
 }
 
 
+static bool container_has_key(enum rtmp_amf_type type)
+{
+	switch (type) {
+
+	case RTMP_AMF_TYPE_OBJECT:       return true;
+	case RTMP_AMF_TYPE_ECMA_ARRAY:   return true;
+	case RTMP_AMF_TYPE_STRICT_ARRAY: return false;
+	default:                    return false;
+	}
+}
+
+
 int rtmp_amf_encode_number(struct mbuf *mb, double val)
 {
 	const union {
@@ -128,18 +140,6 @@ int rtmp_amf_encode_null(struct mbuf *mb)
 		return EINVAL;
 
 	return mbuf_write_u8(mb, RTMP_AMF_TYPE_NULL);
-}
-
-
-static bool container_has_key(enum rtmp_amf_type type)
-{
-	switch (type) {
-
-	case RTMP_AMF_TYPE_OBJECT:       return true;
-	case RTMP_AMF_TYPE_ECMA_ARRAY:   return true;
-	case RTMP_AMF_TYPE_STRICT_ARRAY: return false;
-	default:                    return false;
-	}
 }
 
 
