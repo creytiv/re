@@ -48,8 +48,10 @@ struct rtmp_conn {
 	} stats;
 
 	/* client specific: */
+	struct dns_query *dnsq;
 	struct list ctransl;
 	uint64_t tid_counter;
+	uint16_t port;
 	char *app;
 	char *uri;
 };

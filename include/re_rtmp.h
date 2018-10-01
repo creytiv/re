@@ -84,13 +84,14 @@ const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
 
 
 /* conn */
+struct dnsc;
 struct rtmp_conn;
 
 typedef void (rtmp_estab_h)(void *arg);
 typedef void (rtmp_command_h)(const struct rtmp_amf_message *msg, void *arg);
 typedef void (rtmp_close_h)(int err, void *arg);
 
-int rtmp_connect(struct rtmp_conn **connp, const char *uri,
+int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg);
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,

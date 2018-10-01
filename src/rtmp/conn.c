@@ -14,14 +14,12 @@
 #include <re_tcp.h>
 #include <re_sys.h>
 #include <re_odict.h>
+#include <re_dns.h>
 #include <re_rtmp.h>
 #include "rtmp.h"
 
 
 #define WINDOW_ACK_SIZE 2500000
-
-
-static void conn_close(struct rtmp_conn *conn, int err);
 
 
 static void conn_destructor(void *data)
@@ -31,6 +29,7 @@ static void conn_destructor(void *data)
 	list_flush(&conn->ctransl);
 	list_flush(&conn->streaml);
 
+	mem_deref(conn->dnsq);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
 	mem_deref(conn->dechunk);
@@ -446,6 +445,7 @@ static void conn_close(struct rtmp_conn *conn, int err)
 	rtmp_close_h *closeh;
 
 	conn->tc = mem_deref(conn->tc);
+	conn->dnsq = mem_deref(conn->dnsq);
 
 	closeh = conn->closeh;
 	if (closeh) {
@@ -824,46 +824,85 @@ static void tcp_close_handler(int err, void *arg)
 }
 
 
-int rtmp_connect(struct rtmp_conn **connp, const char *uri,
+static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
+			  struct list *authl, struct list *addl, void *arg)
+{
+	struct rtmp_conn *conn = arg;
+	struct dnsrr *rr;
+	struct sa addr;
+
+	rr = dns_rrlist_find(ansl, NULL, DNS_TYPE_A, DNS_CLASS_IN, false);
+	if (!rr) {
+		err = err ? err : EDESTADDRREQ;
+		goto out;
+	}
+
+	sa_set_in(&addr, rr->rdata.a.addr, conn->port);
+
+	re_printf("resolved:  %J\n", &addr);
+
+	err = tcp_connect(&conn->tc, &addr, tcp_estab_handler,
+			  tcp_recv_handler, tcp_close_handler, conn);
+	if (err)
+		goto out;
+
+	return;
+
+ out:
+	conn_close(conn, err);
+}
+
+
+int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
-	struct pl pl_addr;
+	struct pl pl_host;
 	struct pl pl_port = pl_null;
 	struct pl pl_app;
 	struct sa addr;
-	uint16_t port;
+	char host[256];
 	int err = 0;
 
 	if (!connp || !uri)
 		return EINVAL;
 
 	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+[:]*[0-9]*/[^/]+/[^]+",
-		     &pl_addr, NULL, &pl_port, &pl_app, NULL)) {
+		     &pl_host, NULL, &pl_port, &pl_app, NULL)) {
 		re_printf("rtmp: invalid uri '%s'\n", uri);
 		return EINVAL;
 	}
 
-	port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
-
-	err = sa_set(&addr, &pl_addr, port);
-	if (err)
-		return err;
-
 	conn = rtmp_conn_alloc(true, estabh, cmdh, closeh, arg);
 	if (!conn)
 		return ENOMEM;
+
+	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
 
 	err |= pl_strdup(&conn->app, &pl_app);
 	err |= str_dup(&conn->uri, uri);
 	if (err)
 		goto out;
 
-	err = tcp_connect(&conn->tc, &addr, tcp_estab_handler,
-			  tcp_recv_handler, tcp_close_handler, conn);
-	if (err)
-		goto out;
+	if (0 == sa_set(&addr, &pl_host, conn->port)) {
+
+		re_printf("... connect: IP (%J)\n", &addr);
+
+		err = tcp_connect(&conn->tc, &addr, tcp_estab_handler,
+				  tcp_recv_handler, tcp_close_handler, conn);
+		if (err)
+			goto out;
+	}
+	else {
+		pl_strcpy(&pl_host, host, sizeof(host));
+		re_printf("... connect: DNS (%s)\n", host);
+
+		err = dnsc_query(&conn->dnsq, dnsc, host, DNS_TYPE_A,
+				 DNS_CLASS_IN, true, query_handler, conn);
+		if (err)
+			goto out;
+	}
 
  out:
 	if (err)
