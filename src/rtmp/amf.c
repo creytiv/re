@@ -23,7 +23,7 @@
 #include <re_dbg.h>
 
 
-int rtmp_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
+int rtmp_amf_command(const struct rtmp_conn *conn, uint32_t stream_id,
 		     const char *command, unsigned body_propc, ...)
 {
 	struct mbuf *mb;

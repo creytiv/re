@@ -228,8 +228,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 		val = val & 0x7fffffff;
 
-		re_printf("rtmp: set chunk size:  %u bytes\n", val);
-
 		rtmp_dechunker_set_chunksize(conn->dechunk, val);
 		break;
 
@@ -254,10 +252,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 		was = ntohl(mbuf_read_u32(mb));
 
-#if 0
-		re_printf("[%s] got Window Ack Size from peer: %u\n",
-			  conn->is_client ? "Client" : "Server", was);
-#endif
 		conn->window_ack_size = was;
 		break;
 
@@ -270,13 +264,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 		(void)was;
 		(void)limit;
-
-#if 0
-		re_printf("[%s] got Set Peer Bandwidth from peer:"
-			  " was=%u, limit_type=%u\n",
-			  conn->is_client ? "Client" : "Server",
-			  was, limit);
-#endif
 
 		err = rtmp_control(conn, RTMP_TYPE_WINDOW_ACK_SIZE,
 				   (uint32_t)WINDOW_ACK_SIZE);
@@ -378,17 +365,9 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 }
 
 
-static void set_state(struct rtmp_conn *conn, enum rtmp_handshake_state state)
+static inline void set_state(struct rtmp_conn *conn,
+			     enum rtmp_handshake_state state)
 {
-	if (!conn)
-		return;
-
-#if 0
-	re_printf("[%s] set state: %d (%s)\n",
-		  conn->is_client ? "Client" : "Server",
-		  state, rtmp_handshake_name(state));
-#endif
-
 	conn->state = state;
 }
 
@@ -460,22 +439,13 @@ static void tcp_estab_handler(void *arg)
 	struct rtmp_conn *conn = arg;
 	int err = 0;
 
-#if 0
-	re_printf("[%s] TCP established\n",
-		  conn->is_client ? "Client" : "Server");
-#endif
-
 	if (conn->is_client) {
 
 		err = handshake_start(conn);
-		if (err)
-			goto out;
 	}
 
- out:
-	if (err) {
+	if (err)
 		conn_close(conn, err);
-	}
 }
 
 
@@ -509,7 +479,7 @@ static int rtmp_chunk_handler(const struct rtmp_header *hdr,
 
 
 /* Send AMF0 Command or Data */
-int rtmp_send_amf_command(struct rtmp_conn *conn,
+int rtmp_send_amf_command(const struct rtmp_conn *conn,
 			  unsigned format, uint32_t chunk_id,
 			  uint8_t type_id,
 			  uint32_t msg_stream_id,
@@ -520,7 +490,7 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 
 	return rtmp_chunker(format, chunk_id, 0, 0, type_id, msg_stream_id,
 			    cmd, len, conn->send_chunk_size,
-			    rtmp_chunk_handler, conn);
+			    rtmp_chunk_handler, (void *)conn);
 }
 
 
@@ -732,12 +702,6 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	struct rtmp_conn *conn = arg;
 	int err;
 
-#if 0
-	re_printf("[%s] tcp recv %zu bytes\n",
-		  conn->is_client ? "Client" : "Server",
-		  mbuf_get_left(mb_pkt));
-#endif
-
 	/* re-assembly of fragments */
 	if (conn->mb) {
 		const size_t len = mbuf_get_left(mb_pkt), pos = conn->mb->pos;
@@ -778,24 +742,16 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 
 		mem_deref(conn);
 
-		if (nrefs == 1) {
-			re_printf(".. conn is gone ..\n");
+		if (nrefs == 1)
 			return;
-		}
 
 		if (err) {
 
 			/* rewind */
 			conn->mb->pos = pos;
 
-			if (err == ENODATA) {
-#if 0
-				re_printf("rtmp: conn: wait for more data"
-					  " (%zu bytes in buffer)\n",
-					  conn->mb->end - conn->mb->pos);
-#endif
+			if (err == ENODATA)
 				err = 0;
-			}
 			break;
 		}
 

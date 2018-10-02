@@ -94,7 +94,7 @@ typedef void (rtmp_resp_h)(int err, const struct rtmp_amf_message *msg,
 			   void *arg);
 
 /* amf */
-int rtmp_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
+int rtmp_amf_command(const struct rtmp_conn *conn, uint32_t stream_id,
 		     const char *command,
 		     unsigned body_propc, ...);
 int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
