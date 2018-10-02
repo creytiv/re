@@ -44,6 +44,9 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 	struct rtmp_stream *strm;
 	int err = 0;
 
+	if (!strmp || !conn)
+		return EINVAL;
+
 	strm = mem_zalloc(sizeof(*strm), destructor);
 	if (!strm)
 		return ENOMEM;

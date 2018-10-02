@@ -899,7 +899,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 }
 
 
-int rtmp_conn_send_msg(struct rtmp_conn *conn,
+int rtmp_conn_send_msg(const struct rtmp_conn *conn,
 		       unsigned format, uint32_t chunk_id,
 		       uint32_t timestamp, uint32_t timestamp_delta,
 		       uint8_t msg_type_id, uint32_t msg_stream_id,
@@ -912,7 +912,8 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 
 	err = rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
 			   msg_type_id, msg_stream_id, payload, payload_len,
-			   conn->send_chunk_size, rtmp_chunk_handler, conn);
+			   conn->send_chunk_size,
+			   rtmp_chunk_handler, (void *)conn);
 	if (err)
 		return err;
 

@@ -58,7 +58,7 @@ struct rtmp_conn {
 
 struct rtmp_stream {
 	struct le le;
-	struct rtmp_conn *conn;    /* pointer */
+	const struct rtmp_conn *conn;    /* pointer */
 	bool created;
 	uint32_t stream_id;
 	unsigned chunk_id_audio;
@@ -102,7 +102,7 @@ int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
 
 /* Connection */
 
-int rtmp_conn_send_msg(struct rtmp_conn *conn, unsigned format,
+int rtmp_conn_send_msg(const struct rtmp_conn *conn, unsigned format,
 		       uint32_t chunk_id, uint32_t timestamp,
 		       uint32_t timestamp_delta, uint8_t msg_type_id,
 		       uint32_t msg_stream_id,
