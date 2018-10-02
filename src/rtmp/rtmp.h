@@ -56,7 +56,6 @@ struct rtmp_conn {
 	char *uri;
 };
 
-
 struct rtmp_stream {
 	struct le le;
 	struct rtmp_conn *conn;    /* pointer */
@@ -113,6 +112,7 @@ int rtmp_send_amf_command(struct rtmp_conn *conn,
 			  uint8_t type_id,
 			  uint32_t msg_stream_id,
 			  const uint8_t *cmd, size_t len);
+unsigned rtmp_conn_assign_chunkid(struct rtmp_conn *conn);
 
 
 /* Client Transaction */

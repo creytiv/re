@@ -58,9 +58,9 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 	strm->datah  = datah;
 	strm->arg    = arg;
 
-	strm->chunk_id_audio = ++conn->chunk_id_counter;
-	strm->chunk_id_video = ++conn->chunk_id_counter;
-	strm->chunk_id_data  = ++conn->chunk_id_counter;
+	strm->chunk_id_audio = rtmp_conn_assign_chunkid(conn);
+	strm->chunk_id_video = rtmp_conn_assign_chunkid(conn);
+	strm->chunk_id_data  = rtmp_conn_assign_chunkid(conn);
 
 	list_append(&conn->streaml, &strm->le, strm);
 

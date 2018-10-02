@@ -964,6 +964,15 @@ int rtmp_conn_send_msg(struct rtmp_conn *conn,
 }
 
 
+unsigned rtmp_conn_assign_chunkid(struct rtmp_conn *conn)
+{
+	if (!conn)
+		return 0;
+
+	return ++conn->chunk_id_counter;
+}
+
+
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn)
 {
 	return conn ? conn->tc : NULL;
