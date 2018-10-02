@@ -843,8 +843,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 	if (0 == sa_set(&addr, &pl_host, conn->port)) {
 
-		re_printf("... connect: IP (%J)\n", &addr);
-
 		err = tcp_connect(&conn->tc, &addr, tcp_estab_handler,
 				  tcp_recv_handler, tcp_close_handler, conn);
 		if (err)
@@ -852,7 +850,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	}
 	else {
 		pl_strcpy(&pl_host, host, sizeof(host));
-		re_printf("... connect: DNS (%s)\n", host);
 
 		err = dnsc_query(&conn->dnsq, dnsc, host, DNS_TYPE_A,
 				 DNS_CLASS_IN, true, query_handler, conn);
@@ -905,19 +902,13 @@ int rtmp_conn_send_msg(const struct rtmp_conn *conn,
 		       uint8_t msg_type_id, uint32_t msg_stream_id,
 		       const uint8_t *payload, size_t payload_len)
 {
-	int err;
-
 	if (!conn)
 		return EINVAL;
 
-	err = rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
-			   msg_type_id, msg_stream_id, payload, payload_len,
-			   conn->send_chunk_size,
-			   rtmp_chunk_handler, (void *)conn);
-	if (err)
-		return err;
-
-	return 0;
+	return rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
+			    msg_type_id, msg_stream_id, payload, payload_len,
+			    conn->send_chunk_size,
+			    rtmp_chunk_handler, (void *)conn);
 }
 
 
