@@ -927,6 +927,19 @@ struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn)
 }
 
 
+static const char *rtmp_handshake_name(enum rtmp_handshake_state state)
+{
+	switch (state) {
+
+	case RTMP_STATE_UNINITIALIZED:  return "UNINITIALIZED";
+	case RTMP_STATE_VERSION_SENT:   return "VERSION_SENT";
+	case RTMP_STATE_ACK_SENT:       return "ACK_SENT";
+	case RTMP_STATE_HANDSHAKE_DONE: return "HANDSHAKE_DONE";
+	default: return "?";
+	}
+}
+
+
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 {
 	struct le *le;

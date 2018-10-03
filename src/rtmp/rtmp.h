@@ -124,11 +124,6 @@ int  rtmp_ctrans_response(const struct list *ctransl, bool success,
 			  const struct rtmp_amf_message *msg);
 
 
-/* RTMP Handshake */
-
-const char *rtmp_handshake_name(enum rtmp_handshake_state state);
-
-
 /*
  * RTMP Chunk
  */
