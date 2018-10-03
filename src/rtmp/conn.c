@@ -787,6 +787,9 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	struct rtmp_conn *conn = arg;
 	struct dnsrr *rr;
 	struct sa addr;
+	(void)hdr;
+	(void)authl;
+	(void)addl;
 
 	rr = dns_rrlist_find(ansl, NULL, DNS_TYPE_A, DNS_CLASS_IN, false);
 	if (!rr) {
