@@ -127,16 +127,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 	/* find preceding chunk, from chunk id */
 	msg = find_chunk(&rd->msgl, hdr.chunk_id);
-
-#if 0
-	re_printf("dechunk: packet: format=%u  chunk_id=%u  length=%u"
-		  "  type=%d"
-		  " -- msg_find: %p\n",
-		  hdr.format, hdr.chunk_id, hdr.length,
-		  msg ? msg->hdr.type_id : -1,
-		  msg);
-#endif
-
 	if (!msg) {
 
 		/* only type 0 can create a new chunk stream */
@@ -265,9 +255,8 @@ int rtmp_dechunker_debug(struct re_printf *pf, const struct rtmp_dechunker *rd)
 
 		const struct rtmp_chunk *msg = le->data;
 
-		err |= re_hprintf(pf, "..... %H [ buf = %p ]\n",
-				  rtmp_header_print, &msg->hdr, msg->mb);
-
+		err |= re_hprintf(pf, ".... %H\n",
+				  rtmp_header_print, &msg->hdr);
 	}
 
 	err |= re_hprintf(pf, "\n");

@@ -217,8 +217,8 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 
 	err |= re_hprintf(pf,
 			  "format %u, chunk_id %u, "
-			  "timestamp %u, timestamp_delta %u,"
-			  " len %u, type %u (%s)"
+			  "timestamp %5u, timestamp_delta %2u,"
+			  " len %3u, type %2u (%s)"
 			  " stream_id %u"
 			  ,
 			  hdr->format, hdr->chunk_id,
