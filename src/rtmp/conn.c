@@ -499,6 +499,7 @@ static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
 {
 	struct rtmp_conn *conn = arg;
 	rtmp_estab_h *estabh;
+	(void)msg;
 
 	if (err) {
 		re_printf("### connect failed (%m)\n", err);
