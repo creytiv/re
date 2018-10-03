@@ -94,7 +94,7 @@ static void createstream_handler(int err, const struct rtmp_amf_message *msg,
 
 	strm->stream_id = (uint32_t)num;
 	if (strm->stream_id == 0) {
-		re_printf("invalid stream id\n");
+		re_printf("rtmp: stream: invalid stream id 0\n");
 		return;
 	}
 
