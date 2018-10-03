@@ -10,7 +10,6 @@ SRCS	+= rtmp/amf_dec.c
 SRCS	+= rtmp/amf_enc.c
 SRCS	+= rtmp/amf_msg.c
 SRCS	+= rtmp/chunk.c
-SRCS	+= rtmp/command.c
 SRCS	+= rtmp/conn.c
 SRCS	+= rtmp/control.c
 SRCS	+= rtmp/ctrans.c

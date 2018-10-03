@@ -23,6 +23,20 @@
 #include <re_dbg.h>
 
 
+int rtmp_command_header_encode(struct mbuf *mb, const char *name, uint64_t tid)
+{
+	int err;
+
+	if (!mb || !name)
+		return EINVAL;
+
+	err  = rtmp_amf_encode_string(mb, name);
+	err |= rtmp_amf_encode_number(mb, tid);
+
+	return err;
+}
+
+
 int rtmp_amf_command(const struct rtmp_conn *conn, uint32_t stream_id,
 		     const char *command, unsigned body_propc, ...)
 {
