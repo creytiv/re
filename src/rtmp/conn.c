@@ -921,6 +921,15 @@ unsigned rtmp_conn_assign_chunkid(struct rtmp_conn *conn)
 }
 
 
+uint64_t rtmp_conn_assign_tid(struct rtmp_conn *conn)
+{
+	if (!conn)
+		return 0;
+
+	return ++conn->tid_counter;
+}
+
+
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn)
 {
 	return conn ? conn->tc : NULL;

@@ -113,6 +113,7 @@ int rtmp_send_amf_command(const struct rtmp_conn *conn,
 			  uint32_t msg_stream_id,
 			  const uint8_t *cmd, size_t len);
 unsigned rtmp_conn_assign_chunkid(struct rtmp_conn *conn);
+uint64_t rtmp_conn_assign_tid(struct rtmp_conn *conn);
 
 
 /* Client Transaction */
