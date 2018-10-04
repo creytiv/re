@@ -703,6 +703,8 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	struct rtmp_conn *conn = arg;
 	int err;
 
+	conn->total_bytes += mbuf_get_left(mb_pkt);
+
 	/* re-assembly of fragments */
 	if (conn->mb) {
 		const size_t len = mbuf_get_left(mb_pkt), pos = conn->mb->pos;
@@ -762,6 +764,21 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 		if (conn->mb->pos >= conn->mb->end) {
 			conn->mb = mem_deref(conn->mb);
 			break;
+		}
+	}
+
+	if (conn->total_bytes >= (conn->last_ack + WINDOW_ACK_SIZE)) {
+
+		conn->last_ack = conn->total_bytes;
+
+		re_printf("** send ACK ** (total  %zu bytes)\n",
+			  conn->total_bytes);
+
+		err = rtmp_control(conn, RTMP_TYPE_ACKNOWLEDGEMENT,
+				   (uint32_t)conn->total_bytes);
+		if (err) {
+			re_printf("rtmp_control error (%m)\n", err);
+			goto out;
 		}
 	}
 
@@ -973,6 +990,7 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 	}
 
 	/* Stats */
+	err |= re_hprintf(pf, "bytes:         %zu\n", conn->total_bytes);
 	err |= re_hprintf(pf, "ack:           %zu\n", conn->stats.ack);
 	err |= re_hprintf(pf, "ping:          %zu\n", conn->stats.ping);
 

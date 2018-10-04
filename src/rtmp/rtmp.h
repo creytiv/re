@@ -54,6 +54,9 @@ struct rtmp_conn {
 	uint16_t port;
 	char *app;
 	char *uri;
+
+	size_t total_bytes;
+	size_t last_ack;
 };
 
 struct rtmp_stream {

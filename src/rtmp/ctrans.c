@@ -62,36 +62,26 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 	struct rtmp_ctrans *ct = NULL;
 	struct mbuf *mb;
 	va_list ap;
-	uint64_t tid;
 	int err;
 
-	if (!conn || !command)
+	if (!conn || !command || !resph)
 		return EINVAL;
 
 	mb = mbuf_alloc(512);
 	if (!mb)
 		return ENOMEM;
 
-	if (resph) {
-		tid = rtmp_conn_assign_tid(conn);
-
-		ct = mem_zalloc(sizeof(*ct), ctrans_destructor);
-		if (!ct) {
-			err = ENOMEM;
-			goto out;
-		}
-
-		ct->tid   = tid;
-		ct->resph = resph;
-		ct->arg   = arg;
-
-		list_append(&conn->ctransl, &ct->le, ct);
-	}
-	else {
-		tid = 0;  /* no response expected */
+	ct = mem_zalloc(sizeof(*ct), ctrans_destructor);
+	if (!ct) {
+		err = ENOMEM;
+		goto out;
 	}
 
-	err = rtmp_command_header_encode(mb, command, tid);
+	ct->tid   = rtmp_conn_assign_tid(conn);
+	ct->resph = resph;
+	ct->arg   = arg;
+
+	err = rtmp_command_header_encode(mb, command, ct->tid);
 	if (err)
 		goto out;
 
@@ -109,6 +99,8 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 				    stream_id, mb->buf, mb->end);
 	if (err)
 		goto out;
+
+	list_append(&conn->ctransl, &ct->le, ct);
 
  out:
 	mem_deref(mb);

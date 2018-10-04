@@ -36,6 +36,7 @@ int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 
 	case RTMP_TYPE_SET_CHUNK_SIZE:
 	case RTMP_TYPE_WINDOW_ACK_SIZE:
+	case RTMP_TYPE_ACKNOWLEDGEMENT:
 		u32 = va_arg(ap, uint32_t);
 		err = mbuf_write_u32(mb, htonl(u32));
 		break;
@@ -52,6 +53,7 @@ int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 		break;
 
 	default:
+		re_printf("rtmp: control type not supported (%d)\n", type);
 		err = ENOTSUP;
 		break;
 	}
