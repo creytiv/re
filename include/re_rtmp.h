@@ -139,7 +139,8 @@ struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
 
 
 // XXX: Extra
-int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...);
+int rtmp_control(const struct rtmp_conn *conn,
+		 enum rtmp_packet_type type, ...);
 
 
 #if 1
@@ -149,6 +150,19 @@ int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...);
 
 
 #define CODECID_AVC 7
+
+
+enum {
+	FLV_CODECID_H264    = 7,
+};
+
+enum {
+	FLV_FRAME_KEY            = 1,
+	FLV_FRAME_INTER          = 2,
+	FLV_FRAME_DISP_INTER     = 3,
+	FLV_FRAME_GENERATED_KEY  = 4,
+	FLV_FRAME_VIDEO_INFO_CMD = 5,
+};
 
 
 enum avc_packet_type {

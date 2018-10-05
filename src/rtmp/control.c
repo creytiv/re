@@ -15,7 +15,7 @@
 #include "rtmp.h"
 
 
-int rtmp_control(struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
+int rtmp_control(const struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 {
 	struct mbuf *mb;
 	uint32_t u32;

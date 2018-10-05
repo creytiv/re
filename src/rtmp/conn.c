@@ -100,8 +100,24 @@ static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 		err = client_handle_amf_command(conn, stream_id, msg);
 	}
 	else {
-		if (conn->cmdh)
-			conn->cmdh(msg, conn->arg);
+
+		if (stream_id == 0) {
+			if (conn->cmdh)
+				conn->cmdh(msg, conn->arg);
+
+		}
+		else {
+			struct rtmp_stream *strm;
+
+			strm = rtmp_stream_find(conn, stream_id);
+			if (strm) {
+				if (strm->cmdh)
+					strm->cmdh(msg, strm->arg);
+			}
+			else {
+				re_printf("onstatus: stream not found\n");
+			}
+		}
 	}
 
 	mem_deref(msg);
