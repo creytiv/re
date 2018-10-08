@@ -71,3 +71,18 @@ int rtmp_control(const struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 
 	return err;
 }
+
+
+const char *rtmp_event_name(enum rtmp_event_type event)
+{
+	switch (event) {
+
+	case RTMP_EVENT_STREAM_BEGIN:        return "StreamBegin";
+	case RTMP_EVENT_STREAM_EOF:          return "StreamEOF";
+	case RTMP_EVENT_SET_BUFFER_LENGTH:   return "SetBufferLength";
+	case RTMP_EVENT_STREAM_IS_RECORDED:  return "StreamIsRecorded";
+	case RTMP_EVENT_PING_REQUEST:        return "PingRequest";
+	case RTMP_EVENT_PING_RESPONSE:       return "PingResponse";
+	default: return "?";
+	}
+}

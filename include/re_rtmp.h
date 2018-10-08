@@ -44,6 +44,7 @@ enum rtmp_amf_type {
 enum rtmp_event_type {
 	RTMP_EVENT_STREAM_BEGIN       = 0,
 	RTMP_EVENT_STREAM_EOF         = 1,
+	RTMP_EVENT_SET_BUFFER_LENGTH  = 3,
 	RTMP_EVENT_STREAM_IS_RECORDED = 4,
 	RTMP_EVENT_PING_REQUEST       = 6,
 	RTMP_EVENT_PING_RESPONSE      = 7,
@@ -141,6 +142,7 @@ struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
 // XXX: Extra
 int rtmp_control(const struct rtmp_conn *conn,
 		 enum rtmp_packet_type type, ...);
+const char *rtmp_event_name(enum rtmp_event_type event);
 
 
 #if 1

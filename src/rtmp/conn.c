@@ -144,6 +144,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 	case RTMP_EVENT_STREAM_BEGIN:
 	case RTMP_EVENT_STREAM_EOF:
 	case RTMP_EVENT_STREAM_IS_RECORDED:
+	case RTMP_EVENT_SET_BUFFER_LENGTH:
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 
@@ -182,7 +183,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 	default:
 		re_printf("rtmp: user_control:"
-			  " unhandled event %u\n", event);
+			  " unhandled event %u (%s)\n",
+			  event, rtmp_event_name(event));
 		break;
 	}
 
@@ -808,8 +810,6 @@ static void tcp_close_handler(int err, void *arg)
 {
 	struct rtmp_conn *conn = arg;
 
-	re_printf("TCP connection closed (%m)\n", err);
-
 	conn_close(conn, err);
 }
 
@@ -831,8 +831,6 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 	}
 
 	sa_set_in(&addr, rr->rdata.a.addr, conn->port);
-
-	re_printf("resolved:  %J\n", &addr);
 
 	err = tcp_connect(&conn->tc, &addr, tcp_estab_handler,
 			  tcp_recv_handler, tcp_close_handler, conn);
