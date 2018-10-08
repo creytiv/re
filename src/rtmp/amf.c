@@ -100,7 +100,7 @@ int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 		return ENOMEM;
 
 	err = rtmp_command_header_encode(mb,
-					 success ? "_result" : "_result", tid);
+					 success ? "_result" : "_error", tid);
 	if (err)
 		goto out;
 
