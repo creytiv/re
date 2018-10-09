@@ -138,11 +138,6 @@ const char *rtmp_event_name(enum rtmp_event_type event);
  * XXX: This is the low level API, will be removed after code is stable
  */
 
-enum avc_packet_type {
-	AVC_SEQUENCE = 0,
-	AVC_NALU     = 1,
-	AVC_EOS      = 2
-};
 
 
 #endif
