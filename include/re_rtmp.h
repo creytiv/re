@@ -57,7 +57,7 @@ struct tcp_sock;
 
 
 /*
- * RTMP High-level API (socket, connection, stream)
+ * RTMP High-level API (connection, stream)
  */
 
 
@@ -143,36 +143,6 @@ enum avc_packet_type {
 	AVC_NALU     = 1,
 	AVC_EOS      = 2
 };
-
-struct config_record {
-	uint8_t version;
-	uint8_t profile_ind;
-	uint8_t profile_compat;
-	uint8_t level_ind;
-	uint8_t lengthSizeMinusOne;
-	uint8_t numOfSequenceParameterSets;
-	uint16_t sequenceParameterSetLength;
-	uint8_t *sps;
-	uint8_t numOfPictureParameterSets;
-	uint16_t pictureParameterSetLength;
-	uint8_t *pps;
-};
-
-
-int avc_config_record_encode(struct mbuf *mb,
-
-			     uint8_t profile_ind,
-			     uint8_t profile_compat,
-			     uint8_t level_ind,
-
-			     uint16_t spsLength,
-			     uint8_t *sps,
-
-			     uint16_t ppsLength,
-			     uint8_t *pps);
-
-
-int avc_config_record_decode(struct config_record *conf, struct mbuf *mb);
 
 
 #endif
