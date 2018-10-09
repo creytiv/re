@@ -76,10 +76,6 @@ struct rtmp_stream {
 	void *arg;
 };
 
-struct rtmp_amf_message {
-	struct odict *dict;
-};
-
 struct rtmp_header {
 	unsigned format:2;           /* type 0-3 */
 	uint32_t chunk_id;           /* from 3-65599 */
@@ -125,7 +121,7 @@ uint64_t rtmp_conn_assign_tid(struct rtmp_conn *conn);
 struct rtmp_ctrans;
 
 int  rtmp_ctrans_response(const struct list *ctransl, bool success,
-			  const struct rtmp_amf_message *msg);
+			  const struct odict *msg);
 
 
 /*
@@ -180,4 +176,4 @@ int rtmp_amf_encode_null(struct mbuf *mb);
 int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 			    unsigned propc, va_list *ap);
 
-int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb);
+int rtmp_amf_decode(struct odict **msgp, struct mbuf *mb);

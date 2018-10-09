@@ -79,7 +79,7 @@ int rtmp_amf_command(const struct rtmp_conn *conn, uint32_t stream_id,
 
 
 int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
-		   const struct rtmp_amf_message *req,
+		   const struct odict *req,
 		   unsigned body_propc, ...)
 {
 	struct mbuf *mb;
@@ -90,7 +90,7 @@ int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 	if (!conn || !req)
 		return EINVAL;
 
-	if (!rtmp_amf_message_get_number(req, &tid, 1))
+	if (!odict_get_number(req, &tid, "1"))
 		return EPROTO;
 	if (tid == 0)
 		return EPROTO;

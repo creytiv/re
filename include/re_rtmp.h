@@ -54,18 +54,6 @@ enum rtmp_event_type {
 /* forward declarations */
 struct odict;
 struct tcp_sock;
-struct rtmp_amf_message;
-
-
-/* AMF Message */
-
-struct odict *rtmp_amf_message_dict(const struct rtmp_amf_message *msg);
-bool rtmp_amf_message_get_number(const struct rtmp_amf_message *msg,
-				 uint64_t *num, unsigned ix);
-bool rtmp_amf_message_get_boolean(const struct rtmp_amf_message *msg,
-				  bool *value, unsigned ix);
-const char *rtmp_amf_message_string(const struct rtmp_amf_message *msg,
-				    unsigned ix);
 
 
 /*
@@ -78,7 +66,7 @@ struct dnsc;
 struct rtmp_conn;
 
 typedef void (rtmp_estab_h)(void *arg);
-typedef void (rtmp_command_h)(const struct rtmp_amf_message *msg, void *arg);
+typedef void (rtmp_command_h)(const struct odict *msg, void *arg);
 typedef void (rtmp_close_h)(int err, void *arg);
 
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
@@ -91,7 +79,7 @@ struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
 int  rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
 
-typedef void (rtmp_resp_h)(int err, const struct rtmp_amf_message *msg,
+typedef void (rtmp_resp_h)(int err, const struct odict *msg,
 			   void *arg);
 
 /* amf */
@@ -102,7 +90,7 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 		     const char *command,
 		     rtmp_resp_h *resph, void *arg, unsigned body_propc, ...);
 int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
-		   const struct rtmp_amf_message *req,
+		   const struct odict *req,
 		   unsigned body_propc, ...);
 int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
 		  const char *command, unsigned body_propc, ...);

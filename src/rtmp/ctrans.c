@@ -112,7 +112,7 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 
 
 int rtmp_ctrans_response(const struct list *ctransl, bool success,
-			 const struct rtmp_amf_message *msg)
+			 const struct odict *msg)
 {
 	struct rtmp_ctrans *ct;
 	uint64_t tid;
@@ -122,7 +122,9 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	if (!ctransl || !msg)
 		return EINVAL;
 
-	if (!rtmp_amf_message_get_number(msg, &tid, 1))
+	re_printf("resp: %H\n", odict_debug, msg);
+
+	if (!odict_get_number(msg, &tid, "1"))
 		return EPROTO;
 
 	if (tid == 0) {
@@ -133,8 +135,8 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	ct = rtmp_ctrans_find(ctransl, tid);
 	if (!ct) {
 		DEBUG_WARNING("ctrans: no matching transaction"
-			      " for response '%s' (tid=%llu)\n",
-			      rtmp_amf_message_string(msg, 0), tid);
+			      " for response (tid=%llu)\n",
+			      tid);
 		return ENOENT;
 	}
 

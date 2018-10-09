@@ -122,3 +122,78 @@ int odict_debug(struct re_printf *pf, const struct odict *o)
 
 	return err;
 }
+
+
+const char *odict_string(const struct odict *o, const char *key)
+{
+	const struct odict_entry *entry;
+
+	if (!o || !key)
+		return NULL;
+
+	entry = odict_lookup(o, key);
+	if (!entry) {
+		re_printf("no entry at key %s\n", key);
+		return NULL;
+	}
+
+	if (entry->type != ODICT_STRING) {
+		re_printf("entry at key %s is not a string (%s)\n",
+			  key, odict_type_name(entry->type));
+		return NULL;
+	}
+
+	return entry->u.str;
+}
+
+
+bool odict_get_number(const struct odict *o, uint64_t *num, const char *key)
+{
+	const struct odict_entry *entry;
+
+	if (!o || !key)
+		return false;
+
+	entry = odict_lookup(o, key);
+	if (!entry) {
+		re_printf("no entry at index %s\n", key);
+		return false;
+	}
+
+	if (entry->type != ODICT_DOUBLE) {
+		re_printf("entry at key %s is not a number (%s)\n",
+			  key, odict_type_name(entry->type));
+		return false;
+	}
+
+	if (num)
+		*num = entry->u.dbl;
+
+	return true;
+}
+
+
+bool odict_get_boolean(const struct odict *o, bool *value, const char *key)
+{
+	const struct odict_entry *entry;
+
+	if (!o || !key)
+		return false;
+
+	entry = odict_lookup(o, key);
+	if (!entry) {
+		re_printf("no entry at key %s\n", key);
+		return false;
+	}
+
+	if (entry->type != ODICT_BOOL) {
+		re_printf("entry at key %s is not a boolean (%s)\n",
+			  key, odict_type_name(entry->type));
+		return false;
+	}
+
+	if (value)
+		*value = entry->u.boolean;
+
+	return true;
+}

@@ -23,14 +23,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 			    struct mbuf *mb);
 
 
-static void destructor(void *data)
-{
-	struct rtmp_amf_message *msg = data;
-
-	mem_deref(msg->dict);
-}
-
-
 static int amf_decode_object(struct odict *dict, struct mbuf *mb)
 {
 	char *key = NULL;
@@ -208,20 +200,16 @@ static int amf_decode_value(struct odict *dict, const char *key,
 }
 
 
-int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb)
+int rtmp_amf_decode(struct odict **msgp, struct mbuf *mb)
 {
-	struct rtmp_amf_message *msg;
+	struct odict *msg;
 	unsigned ix = 0;
 	int err;
 
 	if (!msgp || !mb)
 		return EINVAL;
 
-	msg = mem_zalloc(sizeof(*msg), destructor);
-	if (!msg)
-		return ENOMEM;
-
-	err = odict_alloc(&msg->dict, HASH_SIZE);
+	err = odict_alloc(&msg, HASH_SIZE);
 	if (err)
 		goto out;
 
@@ -233,7 +221,7 @@ int rtmp_amf_decode(struct rtmp_amf_message **msgp, struct mbuf *mb)
 		re_snprintf(key, sizeof(key), "%u", ix++);
 
 		/* note: key is the numerical index */
-		err = amf_decode_value(msg->dict, key, mb);
+		err = amf_decode_value(msg, key, mb);
 		if (err)
 			goto out;
 	}

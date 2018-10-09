@@ -40,11 +40,11 @@ static void conn_destructor(void *data)
 
 static int client_handle_amf_command(struct rtmp_conn *conn,
 				     uint32_t stream_id,
-				     const struct rtmp_amf_message *msg)
+				     const struct odict *msg)
 {
 	const char *name;
 
-	name = rtmp_amf_message_string(msg, 0);
+	name = odict_string(msg, "0");
 
 	if (0 == str_casecmp(name, "_result") ||
 	    0 == str_casecmp(name, "_error")) {
@@ -89,7 +89,7 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 			      struct mbuf *mb)
 {
-	struct rtmp_amf_message *msg = NULL;
+	struct odict *msg = NULL;
 	int err;
 
 	err = rtmp_amf_decode(&msg, mb);
@@ -195,7 +195,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 static int handle_data_message(struct rtmp_conn *conn, uint32_t stream_id,
 			       struct mbuf *mb)
 {
-	struct rtmp_amf_message *msg;
+	struct odict *msg;
 	struct rtmp_stream *strm;
 	int err;
 
@@ -512,7 +512,7 @@ int rtmp_send_amf_command(const struct rtmp_conn *conn,
 }
 
 
-static void connect_resp_handler(int err, const struct rtmp_amf_message *msg,
+static void connect_resp_handler(int err, const struct odict *msg,
 				 void *arg)
 {
 	struct rtmp_conn *conn = arg;

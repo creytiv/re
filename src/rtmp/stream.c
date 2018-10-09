@@ -76,7 +76,7 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 }
 
 
-static void createstream_handler(int err, const struct rtmp_amf_message *msg,
+static void createstream_handler(int err, const struct odict *msg,
 				 void *arg)
 {
 	struct rtmp_stream *strm = arg;
@@ -87,7 +87,7 @@ static void createstream_handler(int err, const struct rtmp_amf_message *msg,
 		return;
 	}
 
-	if (!rtmp_amf_message_get_number(msg, &num, 3)) {
+	if (!odict_get_number(msg, &num, "3")) {
 		re_printf("missing stream id\n");
 		return;
 	}
