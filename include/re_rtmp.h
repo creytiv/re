@@ -131,13 +131,3 @@ struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
 int rtmp_control(const struct rtmp_conn *conn,
 		 enum rtmp_packet_type type, ...);
 const char *rtmp_event_name(enum rtmp_event_type event);
-
-
-#if 1
-/*
- * XXX: This is the low level API, will be removed after code is stable
- */
-
-
-
-#endif
