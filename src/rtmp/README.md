@@ -23,10 +23,12 @@ The following logical blocks are supported/planned:
 TODO:
 ----
 
-[ ] improve AMF encoding API
-[ ] implement AMF transaction matching
-[ ] add support for Data Message
-[ ] add support for AMF Strict Array (type 10)
+- [x] improve AMF encoding API
+- [x] implement AMF transaction matching
+- [x] add support for Data Message
+- [x] add support for AMF Strict Array (type 10)
+- [ ] add support for TLS encryption
+- [ ] add support for extended timestamp
 
 
 
@@ -54,6 +56,7 @@ Message Sequence:
 ----------------
 
 
+```
 Client                                      Server
 
 |----------------- TCP Connect -------------->|
@@ -76,7 +79,15 @@ Client                                      Server
 |                                             |
 |<------------ Command Message ---------------| chunkid=3, streamid=0, tid=1
 |        (_result- connect response)          |
+```
 
+
+Interop:
+-------
+
+- Wowza Streaming Engine 4.7.1
+- Youtube service
+- FFmpeg's RTMP module
 
 
 
