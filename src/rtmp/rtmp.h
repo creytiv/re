@@ -49,6 +49,7 @@ struct rtmp_conn {
 	} stats;
 
 	/* client specific: */
+	struct dnsc *dnsc;
 	struct dns_query *dnsq;
 	struct list ctransl;
 	uint64_t tid_counter;

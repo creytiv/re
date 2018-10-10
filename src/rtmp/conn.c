@@ -30,6 +30,7 @@ static void conn_destructor(void *data)
 	list_flush(&conn->streaml);
 
 	mem_deref(conn->dnsq);
+	mem_deref(conn->dnsc);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
 	mem_deref(conn->dechunk);
@@ -885,6 +886,8 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	}
 	else {
 		pl_strcpy(&pl_host, host, sizeof(host));
+
+		conn->dnsc = mem_ref(dnsc);
 
 		err = dnsc_query(&conn->dnsq, dnsc, host, DNS_TYPE_A,
 				 DNS_CLASS_IN, true, query_handler, conn);
