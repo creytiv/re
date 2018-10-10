@@ -98,8 +98,6 @@ static void createstream_handler(int err, const struct odict *msg,
 		return;
 	}
 
-	re_printf("using stream id %u\n", strm->stream_id);
-
 	strm->created = true;
 
 	if (strm->resph)
@@ -161,8 +159,6 @@ int rtmp_publish(struct rtmp_stream *strm, const char *name)
 {
 	if (!strm || !name)
 		return EINVAL;
-
-	re_printf("publish:  name=%s\n", name);
 
 	return rtmp_amf_command(strm->conn, strm->stream_id, "publish",
 				4,

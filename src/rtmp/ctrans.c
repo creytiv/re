@@ -122,8 +122,6 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	if (!ctransl || !msg)
 		return EINVAL;
 
-	re_printf("resp: %H\n", odict_debug, msg);
-
 	if (!odict_get_number(msg, &tid, "1"))
 		return EPROTO;
 
