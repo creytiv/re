@@ -211,7 +211,7 @@ int rtmp_amf_decode(struct odict **msgp, struct mbuf *mb)
 
 	err = odict_alloc(&msg, HASH_SIZE);
 	if (err)
-		goto out;
+		return err;
 
 	/* decode all entries on root-level */
 	while (mbuf_get_left(mb) > 0) {
