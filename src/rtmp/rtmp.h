@@ -34,6 +34,7 @@ struct rtmp_conn {
 	uint8_t x1[RTMP_HANDSHAKE_SIZE];        /* C1 or S1 */
 	uint32_t window_ack_size;
 	uint32_t send_chunk_size;
+	uint32_t recv_chunk_size;
 	unsigned chunk_id_counter;
 	bool is_client;
 	bool connected;

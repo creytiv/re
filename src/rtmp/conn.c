@@ -64,7 +64,6 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 		if (stream_id == 0) {
 			if (conn->cmdh)
 				conn->cmdh(msg, conn->arg);
-
 		}
 		else {
 			strm = rtmp_stream_find(conn, stream_id);
@@ -78,8 +77,8 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 		}
 	}
 	else {
-		re_printf("rtmp: client: command not handled (%s)\n",
-			  name);
+		if (conn->cmdh)
+			conn->cmdh(msg, conn->arg);
 	}
 
 	return 0;
@@ -246,6 +245,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 		val = val & 0x7fffffff;
 
+		conn->recv_chunk_size = val;
 		rtmp_dechunker_set_chunksize(conn->dechunk, val);
 		break;
 
@@ -1002,6 +1002,9 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 		err |= re_hprintf(pf, "app:           %s\n", conn->app);
 		err |= re_hprintf(pf, "uri:           %s\n", conn->uri);
 	}
+
+	err |= re_hprintf(pf, "chunk_size:    send=%u, recv=%u\n",
+			  conn->send_chunk_size, conn->recv_chunk_size);
 
 	/* Stats */
 	err |= re_hprintf(pf, "bytes:         %zu\n", conn->total_bytes);
