@@ -150,6 +150,12 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 		stream_id = ntohl(mbuf_read_u32(mb));
 
+		if (event == RTMP_EVENT_SET_BUFFER_LENGTH) {
+			if (mbuf_get_left(mb) < 4)
+				return EBADMSG;
+			value = ntohl(mbuf_read_u32(mb));
+		}
+
 		if (stream_id != RTMP_CONTROL_STREAM_ID) {
 
 			strm = rtmp_stream_find(conn, stream_id);
@@ -160,7 +166,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 			}
 
 			if (strm->ctrlh)
-				strm->ctrlh(event, strm->arg);
+				strm->ctrlh(event, value, strm->arg);
 		}
 		break;
 

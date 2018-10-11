@@ -122,6 +122,7 @@ static int decode_basic_hdr(struct rtmp_header *hdr, struct mbuf *mb)
 
 int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 {
+	bool ext_ts;
 	int err = 0;
 
 	if (!mb || !hdr)
@@ -134,10 +135,17 @@ int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 	switch (hdr->format) {
 
 	case 0:
-		err |= mbuf_write_u24_hton(mb, hdr->timestamp);
+		ext_ts = (hdr->timestamp >= 0x00ffffff);
+
+		err |= mbuf_write_u24_hton(mb,
+					   ext_ts ? 0xffffff : hdr->timestamp);
 		err |= mbuf_write_u24_hton(mb, hdr->length);
 		err |= mbuf_write_u8(mb, hdr->type_id);
 		err |= mbuf_write_u32(mb, sys_htoll(hdr->stream_id));
+
+		if (ext_ts) {
+			err |= mbuf_write_u32(mb, htonl(hdr->timestamp));
+		}
 		break;
 
 	case 1:
@@ -181,6 +189,12 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->length    = mbuf_read_u24_ntoh(mb);
 		hdr->type_id   = mbuf_read_u8(mb);
 		hdr->stream_id = sys_ltohl(mbuf_read_u32(mb));
+
+		if (hdr->timestamp == 0x00ffffff) {
+			if (mbuf_get_left(mb) < 4)
+				return ENODATA;
+			hdr->timestamp = ntohl(mbuf_read_u32(mb));
+		}
 		break;
 
 	case 1:

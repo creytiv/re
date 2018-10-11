@@ -82,7 +82,7 @@ struct rtmp_header {
 	unsigned format:2;           /* type 0-3 */
 	uint32_t chunk_id;           /* from 3-65599 */
 
-	uint32_t timestamp;          /* 24-bit */
+	uint32_t timestamp;          /* 24-bit or 32-bit */
 	uint32_t timestamp_delta;    /* 24-bit */
 	uint32_t length;             /* 24-bit */
 	uint8_t type_id;             /* enum rtmp_packet_type */
