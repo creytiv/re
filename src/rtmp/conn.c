@@ -131,7 +131,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 	struct rtmp_stream *strm;
 	enum rtmp_event_type event;
 	uint32_t stream_id;
-	uint32_t value;
+	uint32_t value = 0;
 	int err;
 
 	if (mbuf_get_left(mb) < 2)
