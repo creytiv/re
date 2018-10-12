@@ -120,10 +120,8 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	if (!odict_get_number(msg, &tid, "1"))
 		return EPROTO;
 
-	if (tid == 0) {
-		re_printf("ctrans: transaction id is zero.\n");
+	if (tid == 0)
 		return EINVAL;
-	}
 
 	ct = rtmp_ctrans_find(ctransl, tid);
 	if (!ct)

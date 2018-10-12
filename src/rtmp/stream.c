@@ -76,27 +76,21 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 }
 
 
-static void createstream_handler(int err, const struct odict *msg,
-				 void *arg)
+/* XXX: remove "int err" argument */
+static void createstream_handler(int err, const struct odict *msg, void *arg)
 {
 	struct rtmp_stream *strm = arg;
 	uint64_t num;
 
-	if (err) {
-		re_printf("### createStream failed (%m)\n", err);
+	if (err)
 		return;
-	}
 
-	if (!odict_get_number(msg, &num, "3")) {
-		re_printf("missing stream id\n");
+	if (!odict_get_number(msg, &num, "3"))
 		return;
-	}
 
 	strm->stream_id = (uint32_t)num;
-	if (strm->stream_id == 0) {
-		re_printf("rtmp: stream: invalid stream id 0\n");
+	if (strm->stream_id == 0)
 		return;
-	}
 
 	strm->created = true;
 

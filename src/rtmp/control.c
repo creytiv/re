@@ -53,7 +53,6 @@ int rtmp_control(const struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 		break;
 
 	default:
-		re_printf("rtmp: control type not supported (%d)\n", type);
 		err = ENOTSUP;
 		break;
 	}

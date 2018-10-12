@@ -135,11 +135,8 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			if (!msg)
 				return ENOMEM;
 		}
-		else {
-			re_printf("no chunk stream found for id=%u\n",
-				  hdr.chunk_id);
+		else
 			return ENOENT;
-		}
 	}
 
 	/* only types 0-2 can create a new buffer */
