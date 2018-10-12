@@ -28,7 +28,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 	size_t chunk_sz;
 	int err;
 
-	if (!payload || !payload_len || !chunkh)
+	if (!payload || !payload_len || !max_chunk_sz || !chunkh)
 		return EINVAL;
 
 	memset(&hdr, 0, sizeof(hdr));
