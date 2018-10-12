@@ -26,7 +26,7 @@ struct rtmp_chunk {
 };
 
 struct rtmp_dechunker {
-	struct list msgl;      /* struct rtmp_chunk */
+	struct list chunkl;      /* struct rtmp_chunk */
 	size_t chunk_sz;
 	rtmp_dechunk_h *chunkh;
 	void *arg;
@@ -37,7 +37,7 @@ static void destructor(void *data)
 {
 	struct rtmp_dechunker *rd = data;
 
-	list_flush(&rd->msgl);
+	list_flush(&rd->chunkl);
 }
 
 
@@ -50,7 +50,7 @@ static void chunk_destructor(void *data)
 }
 
 
-static struct rtmp_chunk *create_chunk(struct list *msgl,
+static struct rtmp_chunk *create_chunk(struct list *chunkl,
 				       const struct rtmp_header *hdr)
 {
 	struct rtmp_chunk *msg;
@@ -61,18 +61,18 @@ static struct rtmp_chunk *create_chunk(struct list *msgl,
 
 	msg->hdr = *hdr;
 
-	list_append(msgl, &msg->le, msg);
+	list_append(chunkl, &msg->le, msg);
 
 	return msg;
 }
 
 
-static struct rtmp_chunk *find_chunk(const struct list *msgl,
+static struct rtmp_chunk *find_chunk(const struct list *chunkl,
 				     uint32_t chunk_id)
 {
 	struct le *le;
 
-	for (le = list_head(msgl); le; le = le->next) {
+	for (le = list_head(chunkl); le; le = le->next) {
 
 		struct rtmp_chunk *msg = le->data;
 
@@ -126,15 +126,15 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		return err;
 
 	/* find preceding chunk, from chunk id */
-	msg = find_chunk(&rd->msgl, hdr.chunk_id);
+	msg = find_chunk(&rd->chunkl, hdr.chunk_id);
 	if (!msg) {
 
 		/* only type 0 can create a new chunk stream */
 		if (hdr.format == 0) {
-			if (list_count(&rd->msgl) > MAX_CHUNKS)
+			if (list_count(&rd->chunkl) > MAX_CHUNKS)
 				return EOVERFLOW;
 
-			msg = create_chunk(&rd->msgl, &hdr);
+			msg = create_chunk(&rd->chunkl, &hdr);
 			if (!msg)
 				return ENOMEM;
 		}
@@ -249,9 +249,9 @@ int rtmp_dechunker_debug(struct re_printf *pf, const struct rtmp_dechunker *rd)
 
 	err  = re_hprintf(pf, "Dechunker Debug:\n");
 
-	err |= re_hprintf(pf, "chunk list:  %u\n", list_count(&rd->msgl));
+	err |= re_hprintf(pf, "chunk list:  %u\n", list_count(&rd->chunkl));
 
-	for (le = rd->msgl.head; le; le = le->next) {
+	for (le = rd->chunkl.head; le; le = le->next) {
 
 		const struct rtmp_chunk *msg = le->data;
 

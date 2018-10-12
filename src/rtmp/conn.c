@@ -745,7 +745,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 {
 	struct rtmp_conn *conn;
 	struct pl pl_host;
-	struct pl pl_port = pl_null;
+	struct pl pl_port;
 	struct pl pl_app;
 	struct sa addr;
 	char host[256];
