@@ -64,6 +64,8 @@ int rtmp_control(const struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 
 	err = rtmp_conn_send_msg(conn, 0, RTMP_CHUNK_ID_CONTROL, 0, 0, type,
 				 RTMP_CONTROL_STREAM_ID, mb->buf, mb->end);
+	if (err)
+		goto out;
 
  out:
 	mem_deref(mb);
