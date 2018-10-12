@@ -43,27 +43,27 @@ static void destructor(void *data)
 
 static void chunk_destructor(void *data)
 {
-	struct rtmp_chunk *msg = data;
+	struct rtmp_chunk *chunk = data;
 
-	list_unlink(&msg->le);
-	mem_deref(msg->mb);
+	list_unlink(&chunk->le);
+	mem_deref(chunk->mb);
 }
 
 
 static struct rtmp_chunk *create_chunk(struct list *chunkl,
 				       const struct rtmp_header *hdr)
 {
-	struct rtmp_chunk *msg;
+	struct rtmp_chunk *chunk;
 
-	msg = mem_zalloc(sizeof(*msg), chunk_destructor);
-	if (!msg)
+	chunk = mem_zalloc(sizeof(*chunk), chunk_destructor);
+	if (!chunk)
 		return NULL;
 
-	msg->hdr = *hdr;
+	chunk->hdr = *hdr;
 
-	list_append(chunkl, &msg->le, msg);
+	list_append(chunkl, &chunk->le, chunk);
 
-	return msg;
+	return chunk;
 }
 
 
@@ -74,10 +74,10 @@ static struct rtmp_chunk *find_chunk(const struct list *chunkl,
 
 	for (le = list_head(chunkl); le; le = le->next) {
 
-		struct rtmp_chunk *msg = le->data;
+		struct rtmp_chunk *chunk = le->data;
 
-		if (chunk_id == msg->hdr.chunk_id)
-			return msg;
+		if (chunk_id == chunk->hdr.chunk_id)
+			return chunk;
 	}
 
 	return NULL;
@@ -113,7 +113,7 @@ int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
 int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 {
 	struct rtmp_header hdr;
-	struct rtmp_chunk *msg;
+	struct rtmp_chunk *chunk;
 	size_t chunk_sz, left, msg_len;
 	bool complete;
 	int err;
@@ -126,16 +126,16 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		return err;
 
 	/* find preceding chunk, from chunk id */
-	msg = find_chunk(&rd->chunkl, hdr.chunk_id);
-	if (!msg) {
+	chunk = find_chunk(&rd->chunkl, hdr.chunk_id);
+	if (!chunk) {
 
 		/* only type 0 can create a new chunk stream */
 		if (hdr.format == 0) {
 			if (list_count(&rd->chunkl) > MAX_CHUNKS)
 				return EOVERFLOW;
 
-			msg = create_chunk(&rd->chunkl, &hdr);
-			if (!msg)
+			chunk = create_chunk(&rd->chunkl, &hdr);
+			if (!chunk)
 				return ENOMEM;
 		}
 		else
@@ -152,76 +152,76 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (hdr.format == 0) {
 
 			/* copy the whole header */
-			msg->hdr = hdr;
+			chunk->hdr = hdr;
 		}
 		else if (hdr.format == 1) {
 
-			msg->hdr.timestamp_delta = hdr.timestamp_delta;
-			msg->hdr.length          = hdr.length;
-			msg->hdr.type_id         = hdr.type_id;
+			chunk->hdr.timestamp_delta = hdr.timestamp_delta;
+			chunk->hdr.length          = hdr.length;
+			chunk->hdr.type_id         = hdr.type_id;
 
-			msg->hdr.timestamp      += hdr.timestamp_delta;
+			chunk->hdr.timestamp      += hdr.timestamp_delta;
 		}
 		else if (hdr.format == 2) {
 
-			msg->hdr.timestamp_delta = hdr.timestamp_delta;
-			msg->hdr.timestamp      += hdr.timestamp_delta;
+			chunk->hdr.timestamp_delta = hdr.timestamp_delta;
+			chunk->hdr.timestamp      += hdr.timestamp_delta;
 		}
 
-		msg_len = msg->hdr.length;
+		msg_len = chunk->hdr.length;
 
 		chunk_sz = min(msg_len, rd->chunk_sz);
 
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
 
-		mem_deref(msg->mb);
-		msg->mb = mbuf_alloc(msg_len);
-		if (!msg->mb)
+		mem_deref(chunk->mb);
+		chunk->mb = mbuf_alloc(msg_len);
+		if (!chunk->mb)
 			return ENOMEM;
 
-		err = mbuf_read_mem(mb, msg->mb->buf, chunk_sz);
+		err = mbuf_read_mem(mb, chunk->mb->buf, chunk_sz);
 		if (err)
 			return err;
 
-		msg->mb->pos = chunk_sz;
-		msg->mb->end = chunk_sz;
+		chunk->mb->pos = chunk_sz;
+		chunk->mb->end = chunk_sz;
 
-		msg->hdr.format = hdr.format;
+		chunk->hdr.format = hdr.format;
 		break;
 
 	case 3:
-		if (!msg->mb)
+		if (!chunk->mb)
 			return EPROTO;
 
-		left = msg->hdr.length - msg->mb->pos;
+		left = chunk->hdr.length - chunk->mb->pos;
 
 		chunk_sz = min(left, rd->chunk_sz);
 
 		if (mbuf_get_left(mb) < chunk_sz)
 			return ENODATA;
 
-		err = mbuf_read_mem(mb, mbuf_buf(msg->mb), chunk_sz);
+		err = mbuf_read_mem(mb, mbuf_buf(chunk->mb), chunk_sz);
 		if (err)
 			return err;
 
-		msg->mb->pos += chunk_sz;
-		msg->mb->end += chunk_sz;
+		chunk->mb->pos += chunk_sz;
+		chunk->mb->end += chunk_sz;
 		break;
 	}
 
-	complete = (msg->mb->pos >= msg->hdr.length);
+	complete = (chunk->mb->pos >= chunk->hdr.length);
 
 	if (complete) {
 
 		struct mbuf *buf;
 
-		msg->mb->pos = 0;
+		chunk->mb->pos = 0;
 
-		buf = msg->mb;
-		msg->mb = NULL;
+		buf = chunk->mb;
+		chunk->mb = NULL;
 
-		err = rd->chunkh(&msg->hdr, buf, rd->arg);
+		err = rd->chunkh(&chunk->hdr, buf, rd->arg);
 
 		mem_deref(buf);
 	}
