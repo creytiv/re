@@ -120,9 +120,6 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	if (!odict_get_number(msg, &tid, "1"))
 		return EPROTO;
 
-	if (tid == 0)
-		return EINVAL;
-
 	ct = rtmp_ctrans_find(ctransl, tid);
 	if (!ct)
 		return ENOENT;
@@ -132,9 +129,7 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 
 	mem_deref(ct);
 
-	if (resph) {
-		resph(success ? 0 : ENOENT, msg, arg);
-	}
+	resph(success ? 0 : ENOENT, msg, arg);
 
 	return 0;
 }
