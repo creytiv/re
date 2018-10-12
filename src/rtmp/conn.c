@@ -527,11 +527,11 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 
 		(void)mbuf_read_mem(mb, s2, sizeof(s2));
 
-		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
-
 		err = send_connect(conn);
 		if (err)
 			return err;
+
+		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 		break;
 
 	case RTMP_STATE_HANDSHAKE_DONE:
@@ -682,6 +682,9 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 		}
 	}
 
+	if (err)
+		goto out;
+
 	if (conn->total_bytes >= (conn->last_ack + WINDOW_ACK_SIZE)) {
 
 		conn->last_ack = conn->total_bytes;
@@ -746,7 +749,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	struct pl pl_app;
 	struct sa addr;
 	char host[256];
-	int err = 0;
+	int err;
 
 	if (!connp || !uri)
 		return EINVAL;
@@ -761,7 +764,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
 
-	err |= pl_strdup(&conn->app, &pl_app);
+	err  = pl_strdup(&conn->app, &pl_app);
 	err |= str_dup(&conn->uri, uri);
 	if (err)
 		goto out;
@@ -774,6 +777,11 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 			goto out;
 	}
 	else {
+		if (!dnsc) {
+			err = EINVAL;
+			goto out;
+		}
+
 		pl_strcpy(&pl_host, host, sizeof(host));
 
 		conn->dnsc = mem_ref(dnsc);
@@ -829,7 +837,7 @@ int rtmp_conn_send_msg(const struct rtmp_conn *conn,
 		       uint8_t msg_type_id, uint32_t msg_stream_id,
 		       const uint8_t *payload, size_t payload_len)
 {
-	if (!conn)
+	if (!conn || !payload || !payload_len)
 		return EINVAL;
 
 	return rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
