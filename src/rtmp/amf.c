@@ -18,11 +18,6 @@
 #include "rtmp.h"
 
 
-#define DEBUG_MODULE "rtmp"
-#define DEBUG_LEVEL 5
-#include <re_dbg.h>
-
-
 int rtmp_command_header_encode(struct mbuf *mb, const char *name, uint64_t tid)
 {
 	int err;

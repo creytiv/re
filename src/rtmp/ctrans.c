@@ -18,11 +18,6 @@
 #include "rtmp.h"
 
 
-#define DEBUG_MODULE "rtmp"
-#define DEBUG_LEVEL 5
-#include <re_dbg.h>
-
-
 struct rtmp_ctrans {
 	struct le le;
 	uint64_t tid;
@@ -131,12 +126,8 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 	}
 
 	ct = rtmp_ctrans_find(ctransl, tid);
-	if (!ct) {
-		DEBUG_WARNING("ctrans: no matching transaction"
-			      " for response (tid=%llu)\n",
-			      tid);
+	if (!ct)
 		return ENOENT;
-	}
 
 	resph = ct->resph;
 	arg = ct->arg;

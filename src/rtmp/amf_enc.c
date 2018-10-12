@@ -16,11 +16,6 @@
 #include "rtmp.h"
 
 
-#define DEBUG_MODULE "rtmp"
-#define DEBUG_LEVEL 5
-#include <re_dbg.h>
-
-
 static int rtmp_amf_encode_key(struct mbuf *mb, const char *key)
 {
 	size_t len;
