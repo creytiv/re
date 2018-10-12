@@ -42,7 +42,6 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 		      void *arg)
 {
 	struct rtmp_stream *strm;
-	int err = 0;
 
 	if (!strmp || !conn)
 		return EINVAL;
@@ -67,12 +66,9 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 
 	list_append(&conn->streaml, &strm->le, strm);
 
-	if (err)
-		mem_deref(strm);
-	else
-		*strmp = strm;
+	*strmp = strm;
 
-	return err;
+	return 0;
 }
 
 
@@ -108,7 +104,7 @@ int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 	struct rtmp_stream *strm;
 	int err;
 
-	if (!strmp)
+	if (!strmp || !conn)
 		return EINVAL;
 
 	err = rtmp_stream_alloc(&strm, conn, (uint32_t)-1,
@@ -197,6 +193,9 @@ struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
 				     uint32_t stream_id)
 {
 	struct le *le;
+
+	if (!conn)
+		return NULL;
 
 	for (le = list_head(&conn->streaml); le; le = le->next) {
 
