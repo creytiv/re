@@ -333,7 +333,7 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 		goto out;
 
 	/* must be above 2 */
-	conn->chunk_id_counter = RTMP_CONN_CHUNK_ID + 1;
+	conn->chunk_id_counter = RTMP_CHUNK_ID_CONN + 1;
 
 	conn->estabh = estabh;
 	conn->cmdh   = cmdh;

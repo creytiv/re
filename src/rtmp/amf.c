@@ -59,7 +59,7 @@ int rtmp_amf_command(const struct rtmp_conn *conn, uint32_t stream_id,
 			goto out;
 	}
 
-	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+	err = rtmp_send_amf_command(conn, 0, RTMP_CHUNK_ID_CONN,
 				    RTMP_TYPE_AMF0,
 				    stream_id, mb->buf, mb->end);
 
@@ -108,7 +108,7 @@ int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 			goto out;
 	}
 
-	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+	err = rtmp_send_amf_command(conn, 0, RTMP_CHUNK_ID_CONN,
 				    RTMP_TYPE_AMF0,
 				    stream_id, mb->buf, mb->end);
 
@@ -149,7 +149,7 @@ int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
 			goto out;
 	}
 
-	err = rtmp_send_amf_command(conn, 0, RTMP_CONN_CHUNK_ID,
+	err = rtmp_send_amf_command(conn, 0, RTMP_CHUNK_ID_CONN,
 				    RTMP_TYPE_DATA,
 				    stream_id, mb->buf, mb->end);
 
