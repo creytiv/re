@@ -19,7 +19,9 @@
 #include "rtmp.h"
 
 
-#define WINDOW_ACK_SIZE 2500000
+enum {
+	WINDOW_ACK_SIZE = 2500000
+};
 
 
 static void conn_destructor(void *data)
@@ -204,9 +206,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 
-		was = ntohl(mbuf_read_u32(mb));
-
-		conn->window_ack_size = was;
+		conn->window_ack_size = ntohl(mbuf_read_u32(mb));
 		break;
 
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:
@@ -448,9 +448,6 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 		err = EPROTO;
 		goto error;
 	}
-
-	if (conn->connected)
-		return;
 
 	conn->connected = true;
 
