@@ -15,7 +15,7 @@
 
 
 enum {
-	MAX_PENDING = 16,
+	MAX_CHUNKS = 64,
 };
 
 
@@ -51,7 +51,7 @@ static void chunk_destructor(void *data)
 
 
 static struct rtmp_chunk *create_chunk(struct list *msgl,
-					 const struct rtmp_header *hdr)
+				       const struct rtmp_header *hdr)
 {
 	struct rtmp_chunk *msg;
 
@@ -68,7 +68,7 @@ static struct rtmp_chunk *create_chunk(struct list *msgl,
 
 
 static struct rtmp_chunk *find_chunk(const struct list *msgl,
-					 uint32_t chunk_id)
+				     uint32_t chunk_id)
 {
 	struct le *le;
 
@@ -92,7 +92,7 @@ int  rtmp_dechunker_alloc(struct rtmp_dechunker **rdp, size_t chunk_sz,
 {
 	struct rtmp_dechunker *rd;
 
-	if (!rdp || !chunkh)
+	if (!rdp || !chunk_sz || !chunkh)
 		return EINVAL;
 
 	rd = mem_zalloc(sizeof(*rd), destructor);
@@ -118,7 +118,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	bool complete;
 	int err;
 
-	if (!rd)
+	if (!rd || !mb)
 		return EINVAL;
 
 	err = rtmp_header_decode(&hdr, mb);
@@ -131,6 +131,9 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 		/* only type 0 can create a new chunk stream */
 		if (hdr.format == 0) {
+			if (list_count(&rd->msgl) > MAX_CHUNKS)
+				return EOVERFLOW;
+
 			msg = create_chunk(&rd->msgl, &hdr);
 			if (!msg)
 				return ENOMEM;
@@ -229,7 +232,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 void rtmp_dechunker_set_chunksize(struct rtmp_dechunker *rd, size_t chunk_sz)
 {
-	if (!rd)
+	if (!rd || !chunk_sz)
 		return;
 
 	rd->chunk_sz = chunk_sz;
