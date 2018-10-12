@@ -16,7 +16,9 @@
 #include "rtmp.h"
 
 
-#define HASH_SIZE 32
+enum {
+	AMF_HASH_SIZE = 32
+};
 
 
 static int amf_decode_value(struct odict *dict, const char *key,
@@ -188,10 +190,6 @@ static int amf_decode_value(struct odict *dict, const char *key,
 		break;
 
 	default:
-#if 0
-		re_printf("rtmp: amf decode: unknown amf type %u"
-			  " (key='%s')\n", type, key);
-#endif
 		err = EPROTO;
 		break;
 	}
@@ -209,7 +207,7 @@ int rtmp_amf_decode(struct odict **msgp, struct mbuf *mb)
 	if (!msgp || !mb)
 		return EINVAL;
 
-	err = odict_alloc(&msg, HASH_SIZE);
+	err = odict_alloc(&msg, AMF_HASH_SIZE);
 	if (err)
 		return err;
 

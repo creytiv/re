@@ -59,9 +59,6 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 
 		struct rtmp_stream *strm;
 
-		re_printf("rtmp: client: recv onStatus (stream_id %u)\n",
-			  stream_id);
-
 		if (stream_id == 0) {
 			if (conn->cmdh)
 				conn->cmdh(msg, conn->arg);
@@ -71,9 +68,6 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 			if (strm) {
 				if (strm->cmdh)
 					strm->cmdh(msg, strm->arg);
-			}
-			else {
-				re_printf("onstatus: stream not found\n");
 			}
 		}
 	}
@@ -100,11 +94,9 @@ static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 		err = client_handle_amf_command(conn, stream_id, msg);
 	}
 	else {
-
 		if (stream_id == 0) {
 			if (conn->cmdh)
 				conn->cmdh(msg, conn->arg);
-
 		}
 		else {
 			struct rtmp_stream *strm;
@@ -113,9 +105,6 @@ static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 			if (strm) {
 				if (strm->cmdh)
 					strm->cmdh(msg, strm->arg);
-			}
-			else {
-				re_printf("onstatus: stream not found\n");
 			}
 		}
 	}
@@ -159,11 +148,8 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		if (stream_id != RTMP_CONTROL_STREAM_ID) {
 
 			strm = rtmp_stream_find(conn, stream_id);
-			if (!strm) {
-				re_printf("rtmp: stream_begin:"
-					  " stream %u not found\n", stream_id);
+			if (!strm)
 				return ENOSTR;
-			}
 
 			if (strm->ctrlh)
 				strm->ctrlh(event, value, strm->arg);
@@ -176,8 +162,6 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 
 		value = ntohl(mbuf_read_u32(mb));
 
-		re_printf("got Ping request (value=%u)\n", value);
-
 		++conn->stats.ping;
 
 		err = rtmp_control(conn, RTMP_TYPE_USER_CONTROL_MSG,
@@ -188,9 +172,6 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	default:
-		re_printf("rtmp: user_control:"
-			  " unhandled event %u (%s)\n",
-			  event, rtmp_event_name(event));
 		break;
 	}
 
@@ -206,23 +187,14 @@ static int handle_data_message(struct rtmp_conn *conn, uint32_t stream_id,
 	int err;
 
 	err = rtmp_amf_decode(&msg, mb);
-	if (err) {
-		re_printf("rtmp: data: amf decode error (%m)\n", err);
+	if (err)
 		return err;
-	}
 
-	if (stream_id == 0) {
-
-		re_printf("dropping data msg with stream id 0\n");
-	}
-	else {
+	if (stream_id != 0) {
 		strm = rtmp_stream_find(conn, stream_id);
 		if (strm) {
 			if (strm->datah)
 				strm->datah(msg, strm->arg);
-		}
-		else {
-			re_printf("data_msg: stream not found\n");
 		}
 	}
 
@@ -261,8 +233,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 			return EBADMSG;
 
 		val = ntohl(mbuf_read_u32(mb));
-
-		re_printf("got Acknowledgement:  sequence=%u\n", val);
 
 		++conn->stats.ack;
 		break;

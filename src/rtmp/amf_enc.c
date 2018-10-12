@@ -173,7 +173,6 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 		break;
 
 	default:
-		re_printf("amf_enc: not a container (%d)\n", container);
 		return ENOTSUP;
 	}
 
@@ -231,9 +230,6 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 			break;
 
 		default:
-			re_printf("rtmp: amf_enc: type not supported"
-				  " (i=%u, propc=%u, type=%d)\n",
-				  i, propc, type);
 			return ENOTSUP;
 		}
 
