@@ -278,10 +278,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 					  strm->arg);
 			}
 		}
-		else {
-			re_printf("rtmp: audio: stream not found (%u)\n",
-				  hdr->stream_id);
-		}
 		break;
 
 	case RTMP_TYPE_VIDEO:
@@ -293,10 +289,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 					   strm->arg);
 			}
 		}
-		else {
-			re_printf("rtmp: video: stream not found (%u)\n",
-				  hdr->stream_id);
-		}
 		break;
 
 	case RTMP_TYPE_DATA:
@@ -304,10 +296,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 		break;
 
 	default:
-		re_printf("rtmp: conn: unhandled message:"
-			  " type=%d (%s)\n",
-			  hdr->type_id,
-			  rtmp_packet_type_name(hdr->type_id));
 		break;
 	}
 
@@ -489,17 +477,14 @@ int rtmp_send_amf_command(const struct rtmp_conn *conn,
 }
 
 
-static void connect_resp_handler(int err, const struct odict *msg,
-				 void *arg)
+static void connect_resp_handler(int err, const struct odict *msg, void *arg)
 {
 	struct rtmp_conn *conn = arg;
 	rtmp_estab_h *estabh;
 	(void)msg;
 
-	if (err) {
-		re_printf("### connect failed (%m)\n", err);
+	if (err)
 		goto error;
-	}
 
 	if (conn->connected)
 		return;
@@ -544,13 +529,9 @@ static int send_connect(struct rtmp_conn *conn)
 		         RTMP_AMF_TYPE_NUMBER, "capabilities", 15.0,
 		         RTMP_AMF_TYPE_NUMBER, "audioCodecs", (double)aucodecs,
 		         RTMP_AMF_TYPE_NUMBER, "videoCodecs", (double)vidcodes,
-		         RTMP_AMF_TYPE_NUMBER, "videoFunction", 1.0
-
-			       );
-	if (err) {
-		re_printf("rtmp: ctrans failed (%m)\n", err);
+		         RTMP_AMF_TYPE_NUMBER, "videoFunction", 1.0);
+	if (err)
 		return err;
-	}
 
 	return 0;
 }
@@ -575,11 +556,6 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 			return EPROTO;
 
 		(void)mbuf_read_mem(mb, s1, sizeof(s1));
-
-#if 0
-		re_printf("server version: %u.%u.%u.%u\n",
-			  s1[4], s1[5], s1[6], s1[7]);
-#endif
 
 		memcpy(c2, s1, sizeof(c2));
 
@@ -610,9 +586,6 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	default:
-		re_printf("[%s] unhandled state %d\n",
-			  conn->is_client ? "Client" : "Server",
-			  conn->state);
 		return EPROTO;
 	}
 
@@ -650,11 +623,6 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 
 		(void)mbuf_read_mem(mb, c1, sizeof(c1));
 
-#if 0
-		re_printf("        client version: %u.%u.%u.%u\n",
-			  c1[4], c1[5], c1[6], c1[7]);
-#endif
-
 		/* Send S2 */
 
 		/* Copy C1 to S2 */
@@ -683,9 +651,6 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	default:
-		re_printf("[%s] unhandled state %d\n",
-			  conn->is_client ? "Client" : "Server",
-			  conn->state);
 		return EPROTO;
 	}
 
@@ -766,15 +731,10 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 
 		conn->last_ack = conn->total_bytes;
 
-		re_printf("** send ACK ** (total  %zu bytes)\n",
-			  conn->total_bytes);
-
 		err = rtmp_control(conn, RTMP_TYPE_ACKNOWLEDGEMENT,
 				   (uint32_t)conn->total_bytes);
-		if (err) {
-			re_printf("rtmp_control error (%m)\n", err);
+		if (err)
 			goto out;
-		}
 	}
 
  out:
@@ -837,10 +797,8 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		return EINVAL;
 
 	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+[:]*[0-9]*/[^/]+/[^]+",
-		     &pl_host, NULL, &pl_port, &pl_app, NULL)) {
-		re_printf("rtmp: invalid uri '%s'\n", uri);
+		     &pl_host, NULL, &pl_port, &pl_app, NULL))
 		return EINVAL;
-	}
 
 	conn = rtmp_conn_alloc(true, estabh, cmdh, closeh, arg);
 	if (!conn)
