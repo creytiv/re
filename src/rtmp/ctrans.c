@@ -106,16 +106,19 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 }
 
 
-int rtmp_ctrans_response(const struct list *ctransl, bool success,
+int rtmp_ctrans_response(const struct list *ctransl,
 			 const struct odict *msg)
 {
 	struct rtmp_ctrans *ct;
 	uint64_t tid;
+	bool success;
 	rtmp_resp_h *resph;
 	void *arg;
 
 	if (!ctransl || !msg)
 		return EINVAL;
+
+	success = (0 == str_casecmp(odict_string(msg, "0"), "_result"));
 
 	if (!odict_get_number(msg, &tid, "1"))
 		return EPROTO;
@@ -129,7 +132,7 @@ int rtmp_ctrans_response(const struct list *ctransl, bool success,
 
 	mem_deref(ct);
 
-	resph(success ? 0 : ENOENT, msg, arg);
+	resph(success, msg, arg);
 
 	return 0;
 }

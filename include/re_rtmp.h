@@ -81,7 +81,7 @@ struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
 int  rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
 
-typedef void (rtmp_resp_h)(int err, const struct odict *msg,
+typedef void (rtmp_resp_h)(bool success, const struct odict *msg,
 			   void *arg);
 
 /* amf */

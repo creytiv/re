@@ -73,13 +73,14 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 
 
 /* XXX: remove "int err" argument */
-static void createstream_handler(int err, const struct odict *msg, void *arg)
+static void createstream_handler(bool success, const struct odict *msg,
+				 void *arg)
 {
 	struct rtmp_stream *strm = arg;
 	uint64_t num;
 
-	if (err)
-		return;
+	if (!success)
+		goto out;
 
 	if (!odict_get_number(msg, &num, "3"))
 		return;
@@ -90,6 +91,7 @@ static void createstream_handler(int err, const struct odict *msg, void *arg)
 
 	strm->created = true;
 
+ out:
 	if (strm->resph)
 		strm->resph(msg, strm->arg);
 }

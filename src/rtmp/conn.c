@@ -50,10 +50,8 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 	if (0 == str_casecmp(name, "_result") ||
 	    0 == str_casecmp(name, "_error")) {
 
-		bool success = (0 == str_casecmp(name, "_result"));
-
 		/* forward response to transaction layer */
-		rtmp_ctrans_response(&conn->ctransl, success, msg);
+		rtmp_ctrans_response(&conn->ctransl, msg);
 	}
 	else if (0 == str_casecmp(name, "onStatus")) {
 
@@ -477,14 +475,18 @@ int rtmp_send_amf_command(const struct rtmp_conn *conn,
 }
 
 
-static void connect_resp_handler(int err, const struct odict *msg, void *arg)
+static void connect_resp_handler(bool success, const struct odict *msg,
+				 void *arg)
 {
 	struct rtmp_conn *conn = arg;
 	rtmp_estab_h *estabh;
+	int err;
 	(void)msg;
 
-	if (err)
+	if (!success) {
+		err = EPROTO;
 		goto error;
+	}
 
 	if (conn->connected)
 		return;

@@ -116,7 +116,7 @@ uint64_t rtmp_conn_assign_tid(struct rtmp_conn *conn);
 
 struct rtmp_ctrans;
 
-int  rtmp_ctrans_response(const struct list *ctransl, bool success,
+int  rtmp_ctrans_response(const struct list *ctransl,
 			  const struct odict *msg);
 
 
