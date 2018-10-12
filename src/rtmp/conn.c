@@ -39,22 +39,27 @@ static void conn_destructor(void *data)
 }
 
 
-static int client_handle_amf_command(struct rtmp_conn *conn,
-				     uint32_t stream_id,
-				     const struct odict *msg)
+static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
+			      struct mbuf *mb)
 {
+	struct odict *msg = NULL;
 	const char *name;
+	int err;
+
+	err = rtmp_amf_decode(&msg, mb);
+	if (err)
+		return err;
 
 	name = odict_string(msg, "0");
 
-	if (0 == str_casecmp(name, "_result") ||
-	    0 == str_casecmp(name, "_error")) {
+	if (conn->is_client &&
+	    (0 == str_casecmp(name, "_result") ||
+	     0 == str_casecmp(name, "_error"))) {
 
 		/* forward response to transaction layer */
 		rtmp_ctrans_response(&conn->ctransl, msg);
 	}
-	else if (0 == str_casecmp(name, "onStatus")) {
-
+	else {
 		struct rtmp_stream *strm;
 
 		if (stream_id == 0) {
@@ -62,43 +67,6 @@ static int client_handle_amf_command(struct rtmp_conn *conn,
 				conn->cmdh(msg, conn->arg);
 		}
 		else {
-			strm = rtmp_stream_find(conn, stream_id);
-			if (strm) {
-				if (strm->cmdh)
-					strm->cmdh(msg, strm->arg);
-			}
-		}
-	}
-	else {
-		if (conn->cmdh)
-			conn->cmdh(msg, conn->arg);
-	}
-
-	return 0;
-}
-
-
-static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
-			      struct mbuf *mb)
-{
-	struct odict *msg = NULL;
-	int err;
-
-	err = rtmp_amf_decode(&msg, mb);
-	if (err)
-		return err;
-
-	if (conn->is_client) {
-		err = client_handle_amf_command(conn, stream_id, msg);
-	}
-	else {
-		if (stream_id == 0) {
-			if (conn->cmdh)
-				conn->cmdh(msg, conn->arg);
-		}
-		else {
-			struct rtmp_stream *strm;
-
 			strm = rtmp_stream_find(conn, stream_id);
 			if (strm) {
 				if (strm->cmdh)
@@ -146,10 +114,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		if (stream_id != RTMP_CONTROL_STREAM_ID) {
 
 			strm = rtmp_stream_find(conn, stream_id);
-			if (!strm)
-				return ENOSTR;
-
-			if (strm->ctrlh)
+			if (strm && strm->ctrlh)
 				strm->ctrlh(event, value, strm->arg);
 		}
 		break;
@@ -180,25 +145,21 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 static int handle_data_message(struct rtmp_conn *conn, uint32_t stream_id,
 			       struct mbuf *mb)
 {
-	struct odict *msg;
 	struct rtmp_stream *strm;
+	struct odict *msg;
 	int err;
 
 	err = rtmp_amf_decode(&msg, mb);
 	if (err)
 		return err;
 
-	if (stream_id != 0) {
-		strm = rtmp_stream_find(conn, stream_id);
-		if (strm) {
-			if (strm->datah)
-				strm->datah(msg, strm->arg);
-		}
-	}
+	strm = rtmp_stream_find(conn, stream_id);
+	if (strm && strm->datah)
+		strm->datah(msg, strm->arg);
 
 	mem_deref(msg);
 
-	return err;
+	return 0;
 }
 
 
