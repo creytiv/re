@@ -208,15 +208,3 @@ struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
 
 	return NULL;
 }
-
-
-int rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm)
-{
-	if (!strm)
-		return 0;
-
-	return re_hprintf(pf,
-			  "stream_id=%u  "
-			  "  ",
-			  strm->stream_id);
-}

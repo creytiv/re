@@ -95,12 +95,6 @@ struct rtmp_header {
 int rtmp_command_header_encode(struct mbuf *mb, const char *name,
 			       uint64_t tid);
 
-
-/* Stream */
-
-int  rtmp_stream_debug(struct re_printf *pf, const struct rtmp_stream *strm);
-
-
 /* Connection */
 
 int rtmp_conn_send_msg(const struct rtmp_conn *conn, unsigned format,

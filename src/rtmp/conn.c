@@ -923,7 +923,6 @@ static const char *rtmp_handshake_name(enum rtmp_handshake_state state)
 
 int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 {
-	struct le *le;
 	int err = 0;
 
 	if (!conn)
@@ -948,12 +947,8 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 	err |= re_hprintf(pf, "ack:           %zu\n", conn->stats.ack);
 	err |= re_hprintf(pf, "ping:          %zu\n", conn->stats.ping);
 
-	err |= re_hprintf(pf, "streams:\n");
-	for (le = conn->streaml.head; le; le = le->next) {
-		const struct rtmp_stream *strm = le->data;
-
-		err |= re_hprintf(pf, ".... %H\n", rtmp_stream_debug, strm);
-	}
+	err |= re_hprintf(pf, "streams:       %u\n",
+			  list_count(&conn->streaml));
 
 	err |= re_hprintf(pf, "%H\n", rtmp_dechunker_debug, conn->dechunk);
 
