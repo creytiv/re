@@ -69,7 +69,7 @@ static bool container_has_key(enum rtmp_amf_type type)
 	case RTMP_AMF_TYPE_OBJECT:       return true;
 	case RTMP_AMF_TYPE_ECMA_ARRAY:   return true;
 	case RTMP_AMF_TYPE_STRICT_ARRAY: return false;
-	default:                    return false;
+	default:                         return false;
 	}
 }
 
@@ -181,7 +181,7 @@ int rtmp_amf_vencode_object(struct mbuf *mb, enum rtmp_amf_type container,
 
 	for (i=0; i<propc; i++) {
 
-		int type        = va_arg(*ap, int);
+		int type = va_arg(*ap, int);
 		const char *str;
 		int subcount;
 		double dbl;

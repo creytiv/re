@@ -46,7 +46,7 @@ int rtmp_amf_command(const struct rtmp_conn *conn, uint32_t stream_id,
 	if (!mb)
 		return ENOMEM;
 
-	err  = rtmp_amf_encode_string(mb, command);
+	err = rtmp_amf_encode_string(mb, command);
 	if (err)
 		goto out;
 
@@ -136,7 +136,7 @@ int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
 	if (!mb)
 		return ENOMEM;
 
-	err  = rtmp_amf_encode_string(mb, command);
+	err = rtmp_amf_encode_string(mb, command);
 	if (err)
 		goto out;
 
