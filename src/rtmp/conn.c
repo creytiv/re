@@ -88,51 +88,35 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	struct rtmp_stream *strm;
 	enum rtmp_event_type event;
-	uint32_t stream_id;
-	uint32_t value = 0;
+	uint32_t value;
 	int err;
 
-	if (mbuf_get_left(mb) < 2)
+	if (mbuf_get_left(mb) < 6)
 		return EBADMSG;
 
 	event = ntohs(mbuf_read_u16(mb));
+	value = ntohl(mbuf_read_u32(mb));
 
 	switch (event) {
 
 	case RTMP_EVENT_STREAM_BEGIN:
 	case RTMP_EVENT_STREAM_EOF:
+	case RTMP_EVENT_STREAM_DRY:
 	case RTMP_EVENT_STREAM_IS_RECORDED:
 	case RTMP_EVENT_SET_BUFFER_LENGTH:
-		if (mbuf_get_left(mb) < 4)
-			return EBADMSG;
 
-		stream_id = ntohl(mbuf_read_u32(mb));
+		if (value != RTMP_CONTROL_STREAM_ID) {
 
-		if (event == RTMP_EVENT_SET_BUFFER_LENGTH) {
-			if (mbuf_get_left(mb) < 4)
-				return EBADMSG;
-			value = ntohl(mbuf_read_u32(mb));
-		}
-
-		if (stream_id != RTMP_CONTROL_STREAM_ID) {
-
-			strm = rtmp_stream_find(conn, stream_id);
+			strm = rtmp_stream_find(conn, value);
 			if (strm && strm->ctrlh)
-				strm->ctrlh(event, value, strm->arg);
+				strm->ctrlh(event, mb, strm->arg);
 		}
 		break;
 
 	case RTMP_EVENT_PING_REQUEST:
-		if (mbuf_get_left(mb) < 4)
-			return EBADMSG;
-
-		value = ntohl(mbuf_read_u32(mb));
-
-		++conn->stats.ping;
 
 		err = rtmp_control(conn, RTMP_TYPE_USER_CONTROL_MSG,
-				   RTMP_EVENT_PING_RESPONSE,
-				   value);
+				   RTMP_EVENT_PING_RESPONSE, value);
 		if (err)
 			return err;
 		break;
@@ -915,7 +899,6 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 	/* Stats */
 	err |= re_hprintf(pf, "bytes:         %zu\n", conn->total_bytes);
 	err |= re_hprintf(pf, "ack:           %zu\n", conn->stats.ack);
-	err |= re_hprintf(pf, "ping:          %zu\n", conn->stats.ping);
 
 	err |= re_hprintf(pf, "streams:       %u\n",
 			  list_count(&conn->streaml));

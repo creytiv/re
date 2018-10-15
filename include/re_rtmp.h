@@ -103,7 +103,7 @@ int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
 /* stream */
 struct rtmp_stream;
 
-typedef void (rtmp_control_h)(enum rtmp_event_type event, uint32_t value,
+typedef void (rtmp_control_h)(enum rtmp_event_type event, struct mbuf *mb,
 			      void *arg);
 typedef void (rtmp_audio_h)(uint32_t timestamp,
 			    const uint8_t *pld, size_t len, void *arg);

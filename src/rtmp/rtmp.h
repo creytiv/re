@@ -43,7 +43,6 @@ struct rtmp_conn {
 	void *arg;
 
 	struct {
-		size_t ping;
 		size_t ack;
 	} stats;
 
