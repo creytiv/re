@@ -29,12 +29,11 @@ struct rtmp_conn {
 	struct list streaml;
 	struct rtmp_dechunker *dechunk;
 	struct tcp_conn *tc;
-	struct mbuf *mb;                  /* TCP reassembly buffer */
+	struct mbuf *mb;                        /* TCP reassembly buffer */
 	enum rtmp_handshake_state state;
 	uint8_t x1[RTMP_HANDSHAKE_SIZE];        /* C1 or S1 */
 	uint32_t window_ack_size;
 	uint32_t send_chunk_size;
-	uint32_t recv_chunk_size;
 	unsigned chunk_id_counter;
 	bool is_client;
 	bool connected;
@@ -56,6 +55,7 @@ struct rtmp_conn {
 	uint16_t port;
 	char *app;
 	char *uri;
+	char *stream;
 
 	size_t total_bytes;
 	size_t last_ack;
@@ -73,7 +73,7 @@ struct rtmp_stream {
 	rtmp_video_h *vidh;
 	rtmp_command_h *datah;
 	rtmp_command_h *cmdh;
-	rtmp_command_h *resph;
+	rtmp_resp_h *resph;
 	rtmp_control_h *ctrlh;
 	void *arg;
 };

@@ -115,7 +115,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 	struct rtmp_header hdr;
 	struct rtmp_chunk *chunk;
 	size_t chunk_sz, left, msg_len;
-	bool complete;
 	int err;
 
 	if (!rd || !mb)
@@ -194,7 +193,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		if (!chunk->mb)
 			return EPROTO;
 
-		left = chunk->hdr.length - chunk->mb->pos;
+		left = mbuf_get_space(chunk->mb);
 
 		chunk_sz = min(left, rd->chunk_sz);
 
@@ -210,9 +209,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		break;
 	}
 
-	complete = (chunk->mb->pos >= chunk->hdr.length);
-
-	if (complete) {
+	if (chunk->mb->pos >= chunk->mb->size) {
 
 		struct mbuf *buf;
 

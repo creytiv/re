@@ -38,6 +38,7 @@ static void conn_destructor(void *data)
 	mem_deref(conn->dechunk);
 	mem_deref(conn->uri);
 	mem_deref(conn->app);
+	mem_deref(conn->stream);
 }
 
 
@@ -79,7 +80,7 @@ static int handle_amf_command(struct rtmp_conn *conn, uint32_t stream_id,
 
 	mem_deref(msg);
 
-	return err;
+	return 0;
 }
 
 
@@ -185,7 +186,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 		val = val & 0x7fffffff;
 
-		conn->recv_chunk_size = val;
 		rtmp_dechunker_set_chunksize(conn->dechunk, val);
 		break;
 
@@ -446,7 +446,7 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 
 	if (!success) {
 		err = EPROTO;
-		goto error;
+		goto out;
 	}
 
 	conn->connected = true;
@@ -456,7 +456,7 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 	err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
 			   conn->send_chunk_size);
 	if (err)
-		goto error;
+		goto out;
 
 	estabh = conn->estabh;
 	if (estabh) {
@@ -464,9 +464,7 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 		estabh(conn->arg);
 	}
 
-	return;
-
- error:
+ out:
 	if (err)
 		conn_close(conn, err);
 }
@@ -663,6 +661,9 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 		if (nrefs == 1)
 			return;
 
+		if (!conn->tc)
+			return;
+
 		if (err) {
 
 			/* rewind */
@@ -673,8 +674,6 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 			break;
 		}
 
-		if (!conn->tc)
-			break;
 
 		if (conn->mb->pos >= conn->mb->end) {
 			conn->mb = mem_deref(conn->mb);
@@ -747,6 +746,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	struct pl pl_host;
 	struct pl pl_port;
 	struct pl pl_app;
+	struct pl pl_stream;
 	struct sa addr;
 	char host[256];
 	int err;
@@ -755,7 +755,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		return EINVAL;
 
 	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+[:]*[0-9]*/[^/]+/[^]+",
-		     &pl_host, NULL, &pl_port, &pl_app, NULL))
+		     &pl_host, NULL, &pl_port, &pl_app, &pl_stream))
 		return EINVAL;
 
 	conn = rtmp_conn_alloc(true, estabh, cmdh, closeh, arg);
@@ -765,6 +765,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
 
 	err  = pl_strdup(&conn->app, &pl_app);
+	err |= pl_strdup(&conn->stream, &pl_stream);
 	err |= str_dup(&conn->uri, uri);
 	if (err)
 		goto out;
@@ -871,6 +872,12 @@ struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn)
 }
 
 
+const char *rtmp_conn_stream(const struct rtmp_conn *conn)
+{
+	return conn ? conn->stream : NULL;
+}
+
+
 static const char *rtmp_handshake_name(enum rtmp_handshake_state state)
 {
 	switch (state) {
@@ -902,8 +909,8 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 		err |= re_hprintf(pf, "uri:           %s\n", conn->uri);
 	}
 
-	err |= re_hprintf(pf, "chunk_size:    send=%u, recv=%u\n",
-			  conn->send_chunk_size, conn->recv_chunk_size);
+	err |= re_hprintf(pf, "chunk_size:    send=%u\n",
+			  conn->send_chunk_size);
 
 	/* Stats */
 	err |= re_hprintf(pf, "bytes:         %zu\n", conn->total_bytes);

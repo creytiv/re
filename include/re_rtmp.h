@@ -44,6 +44,7 @@ enum rtmp_amf_type {
 enum rtmp_event_type {
 	RTMP_EVENT_STREAM_BEGIN       = 0,
 	RTMP_EVENT_STREAM_EOF         = 1,
+	RTMP_EVENT_STREAM_DRY         = 2,
 	RTMP_EVENT_SET_BUFFER_LENGTH  = 3,
 	RTMP_EVENT_STREAM_IS_RECORDED = 4,
 	RTMP_EVENT_PING_REQUEST       = 6,
@@ -78,6 +79,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 int rtmp_control(const struct rtmp_conn *conn,
 		 enum rtmp_packet_type type, ...);
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
+const char *rtmp_conn_stream(const struct rtmp_conn *conn);
 int  rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
 
 
@@ -114,7 +116,7 @@ int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 		      rtmp_video_h *vidh, rtmp_command_h *datah,
 		      void *arg);
 int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
-		       rtmp_command_h *resph, rtmp_command_h *cmdh,
+		       rtmp_resp_h *resph, rtmp_command_h *cmdh,
 		       rtmp_control_h *ctrlh, rtmp_audio_h *auh,
 		       rtmp_video_h *vidh, rtmp_command_h *datah,
 		       void *arg);

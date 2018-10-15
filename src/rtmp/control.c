@@ -80,6 +80,7 @@ const char *rtmp_event_name(enum rtmp_event_type event)
 
 	case RTMP_EVENT_STREAM_BEGIN:        return "StreamBegin";
 	case RTMP_EVENT_STREAM_EOF:          return "StreamEOF";
+	case RTMP_EVENT_STREAM_DRY:          return "StreamDry";
 	case RTMP_EVENT_SET_BUFFER_LENGTH:   return "SetBufferLength";
 	case RTMP_EVENT_STREAM_IS_RECORDED:  return "StreamIsRecorded";
 	case RTMP_EVENT_PING_REQUEST:        return "PingRequest";
