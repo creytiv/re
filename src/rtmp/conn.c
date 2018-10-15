@@ -298,8 +298,7 @@ static inline void set_state(struct rtmp_conn *conn,
 }
 
 
-static int send_packet(struct rtmp_conn *conn,
-		       const uint8_t *pkt, size_t len)
+static int send_packet(struct rtmp_conn *conn, const uint8_t *pkt, size_t len)
 {
 	struct mbuf *mb;
 	int err;
@@ -478,8 +477,6 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	uint8_t s0;
 	uint8_t s1[RTMP_HANDSHAKE_SIZE];
-	uint8_t s2[RTMP_HANDSHAKE_SIZE];
-	uint8_t c2[RTMP_HANDSHAKE_SIZE];
 	int err = 0;
 
 	switch (conn->state) {
@@ -494,9 +491,7 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 
 		(void)mbuf_read_mem(mb, s1, sizeof(s1));
 
-		memcpy(c2, s1, sizeof(c2));
-
-		err = send_packet(conn, c2, sizeof(c2));
+		err = send_packet(conn, s1, sizeof(s1));
 		if (err)
 			return err;
 
@@ -507,7 +502,8 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (mbuf_get_left(mb) < RTMP_HANDSHAKE_SIZE)
 			return ENODATA;
 
-		(void)mbuf_read_mem(mb, s2, sizeof(s2));
+		/* S2 (ignored) */
+		mbuf_advance(mb, RTMP_HANDSHAKE_SIZE);
 
 		err = send_connect(conn);
 		if (err)
@@ -534,8 +530,6 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 {
 	uint8_t c0;
 	uint8_t c1[RTMP_HANDSHAKE_SIZE];
-	uint8_t c2[RTMP_HANDSHAKE_SIZE];
-	uint8_t s2[RTMP_HANDSHAKE_SIZE];
 	int err = 0;
 
 	switch (conn->state) {
@@ -560,12 +554,8 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 
 		(void)mbuf_read_mem(mb, c1, sizeof(c1));
 
-		/* Send S2 */
-
 		/* Copy C1 to S2 */
-		memcpy(s2, c1, sizeof(s2));
-
-		err = send_packet(conn, s2, sizeof(s2));
+		err = send_packet(conn, c1, sizeof(c1));
 		if (err)
 			return err;
 
@@ -576,7 +566,8 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		if (mbuf_get_left(mb) < RTMP_HANDSHAKE_SIZE)
 			return ENODATA;
 
-		(void)mbuf_read_mem(mb, c2, sizeof(c2));
+		/* C2 (ignored) */
+		mbuf_advance(mb, RTMP_HANDSHAKE_SIZE);
 
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 		break;
