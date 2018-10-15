@@ -49,8 +49,8 @@ const char *odict_type_name(enum odict_type type);
 
 /* Helpers */
 
+const struct odict_entry *odict_get_type(const struct odict *o,
+					enum odict_type type, const char *key);
 const char *odict_string(const struct odict *o, const char *key);
-bool odict_get_number(const struct odict *o,
-		      uint64_t *num, const char *key);
-bool odict_get_boolean(const struct odict *o,
-		       bool *value, const char *key);
+bool odict_get_number(const struct odict *o, uint64_t *num, const char *key);
+bool odict_get_boolean(const struct odict *o, bool *value, const char *key);
