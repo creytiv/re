@@ -41,11 +41,13 @@ int sip_addr_decode(struct sip_addr *addr, const struct pl *pl)
 			addr->params.p = NULL;
 	}
 	else {
+		struct pl params;
 		memset(addr, 0, sizeof(*addr));
 
 		if (re_regex(pl->p, pl->l, "[^;]+[^]*",
-			     &addr->auri, &addr->params))
+			     &addr->auri, &params))
 			return EBADMSG;
+		addr->auri = *pl;
 	}
 
 	err = uri_decode(&addr->uri, &addr->auri);
