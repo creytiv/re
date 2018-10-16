@@ -208,18 +208,18 @@ int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
  * Set default locations for trusted CA certificates
  *
  * @param tls    TLS Context
- * @param capath Path to CA certificates
+ * @param cafile PEM file with CA certificates
  *
  * @return 0 if success, otherwise errorcode
  */
-int tls_add_ca(struct tls *tls, const char *capath)
+int tls_add_ca(struct tls *tls, const char *cafile)
 {
-	if (!tls || !capath)
+	if (!tls || !cafile)
 		return EINVAL;
 
 	/* Load the CAs we trust */
-	if (!(SSL_CTX_load_verify_locations(tls->ctx, capath, 0))) {
-		DEBUG_WARNING("Can't read CA list: %s\n", capath);
+	if (!(SSL_CTX_load_verify_locations(tls->ctx, cafile, NULL))) {
+		DEBUG_WARNING("Can't read CA file: %s\n", cafile);
 		ERR_clear_error();
 		return EINVAL;
 	}
