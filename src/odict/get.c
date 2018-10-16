@@ -47,25 +47,30 @@ bool odict_get_number(const struct odict *o, uint64_t *num, const char *key)
 {
 	const struct odict_entry *entry;
 
-	entry = odict_get_type(o, ODICT_DOUBLE, key);
-	if (entry) {
+	if (!o || !key)
+		return false;
 
+	entry = odict_lookup(o, key);
+	if (!entry)
+		return false;
+
+	switch (entry->type) {
+
+	case ODICT_DOUBLE:
 		if (num)
 			*num = (uint64_t)entry->u.dbl;
+		break;
 
-		return true;
-	}
-
-	entry = odict_get_type(o, ODICT_INT, key);
-	if (entry) {
-
+	case ODICT_INT:
 		if (num)
 			*num = entry->u.integer;
+		break;
 
-		return true;
+	default:
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 
