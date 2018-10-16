@@ -5,11 +5,12 @@
  */
 
 
+/** RTMP Protocol values */
 enum {
 	RTMP_PORT = 1935,
 };
 
-/* Stream IDs */
+/** RTMP Stream IDs */
 enum {
 
 	/* User Control messages SHOULD use message stream ID 0
@@ -17,28 +18,30 @@ enum {
 	RTMP_CONTROL_STREAM_ID = 0
 };
 
+/** RTMP Packet types */
 enum rtmp_packet_type {
-	RTMP_TYPE_SET_CHUNK_SIZE     = 1,   /* Set Chunk Size               */
-	RTMP_TYPE_ACKNOWLEDGEMENT    = 3,   /* Acknowledgement              */
-	RTMP_TYPE_USER_CONTROL_MSG   = 4,   /* User Control Messages        */
-	RTMP_TYPE_WINDOW_ACK_SIZE    = 5,   /* Window Acknowledgement Size  */
-	RTMP_TYPE_SET_PEER_BANDWIDTH = 6,   /* Set Peer Bandwidth           */
-	RTMP_TYPE_AUDIO              = 8,   /* Audio Message                */
-	RTMP_TYPE_VIDEO              = 9,   /* Video Message                */
-	RTMP_TYPE_DATA               = 18,  /* Data Message                 */
-	RTMP_TYPE_AMF0               = 20,  /* Action Message Format (AMF)  */
+	RTMP_TYPE_SET_CHUNK_SIZE     = 1,  /**< Set Chunk Size               */
+	RTMP_TYPE_ACKNOWLEDGEMENT    = 3,  /**< Acknowledgement              */
+	RTMP_TYPE_USER_CONTROL_MSG   = 4,  /**< User Control Messages        */
+	RTMP_TYPE_WINDOW_ACK_SIZE    = 5,  /**< Window Acknowledgement Size  */
+	RTMP_TYPE_SET_PEER_BANDWIDTH = 6,  /**< Set Peer Bandwidth           */
+	RTMP_TYPE_AUDIO              = 8,  /**< Audio Message                */
+	RTMP_TYPE_VIDEO              = 9,  /**< Video Message                */
+	RTMP_TYPE_DATA               = 18, /**< Data Message                 */
+	RTMP_TYPE_AMF0               = 20, /**< Action Message Format (AMF)  */
 };
 
+/** RTMP AMF types */
 enum rtmp_amf_type {
-	RTMP_AMF_TYPE_ROOT         = -1,   /* special */
-	RTMP_AMF_TYPE_NUMBER       = 0x00,
-	RTMP_AMF_TYPE_BOOLEAN      = 0x01,
-	RTMP_AMF_TYPE_STRING       = 0x02,
-	RTMP_AMF_TYPE_OBJECT       = 0x03,
-	RTMP_AMF_TYPE_NULL         = 0x05,
-	RTMP_AMF_TYPE_ECMA_ARRAY   = 0x08,  /* 'associative' Array */
-	RTMP_AMF_TYPE_OBJECT_END   = 0x09,
-	RTMP_AMF_TYPE_STRICT_ARRAY = 0x0a,  /* ordinal indices */
+	RTMP_AMF_TYPE_ROOT         = -1,    /**< Special internal type      */
+	RTMP_AMF_TYPE_NUMBER       = 0x00,  /**< Number Type                */
+	RTMP_AMF_TYPE_BOOLEAN      = 0x01,  /**< Boolean Type               */
+	RTMP_AMF_TYPE_STRING       = 0x02,  /**< String Type                */
+	RTMP_AMF_TYPE_OBJECT       = 0x03,  /**< Object Type                */
+	RTMP_AMF_TYPE_NULL         = 0x05,  /**< Null type                  */
+	RTMP_AMF_TYPE_ECMA_ARRAY   = 0x08,  /**< ECMA 'associative' Array   */
+	RTMP_AMF_TYPE_OBJECT_END   = 0x09,  /**< Object End Type            */
+	RTMP_AMF_TYPE_STRICT_ARRAY = 0x0a,  /**< Array with ordinal indices */
 };
 
 enum rtmp_event_type {
