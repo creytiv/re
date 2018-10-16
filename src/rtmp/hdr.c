@@ -229,9 +229,9 @@ int rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr)
 		return 0;
 
 	return re_hprintf(pf,
-			  "format %u, chunk_id %u, "
-			  "timestamp %5u, timestamp_delta %2u,"
-			  " len %3u, type %2u (%s) stream_id %u",
+			  "fmt %u, chunk %u, "
+			  "timestamp %5u, ts_delta %2u,"
+			  " len %3u, type %2u (%-14s) stream_id %u",
 			  hdr->format, hdr->chunk_id, hdr->timestamp,
 			  hdr->timestamp_delta, hdr->length, hdr->type_id,
 			  rtmp_packet_type_name(hdr->type_id), hdr->stream_id);

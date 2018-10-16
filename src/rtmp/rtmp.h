@@ -36,6 +36,8 @@ struct rtmp_conn {
 	struct mbuf *mb;                        /* TCP reassembly buffer */
 	enum rtmp_handshake_state state;
 	uint8_t x1[RTMP_HANDSHAKE_SIZE];        /* C1 or S1 */
+	size_t total_bytes;
+	size_t last_ack;
 	uint32_t window_ack_size;
 	uint32_t send_chunk_size;
 	unsigned chunk_id_counter;
@@ -46,26 +48,18 @@ struct rtmp_conn {
 	rtmp_close_h *closeh;
 	void *arg;
 
-	struct {
-		size_t ack;
-	} stats;
-
 	/* client specific: */
 	struct dnsc *dnsc;
 	struct dns_query *dnsq;
 	struct list ctransl;
+	struct sa srvv[16];
+	unsigned srvc;
 	uint64_t tid_counter;
 	uint16_t port;
 	char *app;
 	char *uri;
 	char *stream;
 	char *host;
-
-	size_t total_bytes;
-	size_t last_ack;
-
-	struct sa srvv[16];
-	unsigned srvc;
 };
 
 /**

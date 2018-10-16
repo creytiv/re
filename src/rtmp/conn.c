@@ -182,8 +182,7 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 			return EBADMSG;
 
 		val = ntohl(mbuf_read_u32(mb));
-
-		++conn->stats.ack;
+		(void)val;
 		break;
 
 	case RTMP_TYPE_AMF0:
@@ -1006,33 +1005,19 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 	err |= re_hprintf(pf, "state:         %s\n",
 			  rtmp_handshake_name(conn->state));
 	err |= re_hprintf(pf, "connected:     %d\n", conn->connected);
-
-	if (conn->is_client) {
-		err |= re_hprintf(pf, "app:           %s\n", conn->app);
-		err |= re_hprintf(pf, "uri:           %s\n", conn->uri);
-	}
-
 	err |= re_hprintf(pf, "chunk_size:    send=%u\n",
 			  conn->send_chunk_size);
-
-	/* Stats */
 	err |= re_hprintf(pf, "bytes:         %zu\n", conn->total_bytes);
-	err |= re_hprintf(pf, "ack:           %zu\n", conn->stats.ack);
-
 	err |= re_hprintf(pf, "streams:       %u\n",
 			  list_count(&conn->streaml));
 
-	err |= re_hprintf(pf, "%H\n", rtmp_dechunker_debug, conn->dechunk);
-
-	unsigned i;
-
-	for (i = 0; i < ARRAY_SIZE(conn->srvv); i++) {
-		const struct sa *addr = &conn->srvv[i];
-
-		if (sa_isset(addr, SA_ALL))
-			err |= re_hprintf(pf, ".... %j\n", addr);
+	if (conn->is_client) {
+		err |= re_hprintf(pf, "uri:           %s\n", conn->uri);
+		err |= re_hprintf(pf, "app:           %s\n", conn->app);
+		err |= re_hprintf(pf, "stream:        %s\n", conn->stream);
 	}
 
+	err |= re_hprintf(pf, "%H\n", rtmp_dechunker_debug, conn->dechunk);
 
 	return err;
 }

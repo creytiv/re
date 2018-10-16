@@ -248,13 +248,13 @@ int rtmp_dechunker_debug(struct re_printf *pf, const struct rtmp_dechunker *rd)
 
 	err  = re_hprintf(pf, "Dechunker Debug:\n");
 
-	err |= re_hprintf(pf, "chunk list:  %u\n", list_count(&rd->chunkl));
+	err |= re_hprintf(pf, "chunk list: (%u)\n", list_count(&rd->chunkl));
 
 	for (le = rd->chunkl.head; le; le = le->next) {
 
 		const struct rtmp_chunk *msg = le->data;
 
-		err |= re_hprintf(pf, ".... %H\n",
+		err |= re_hprintf(pf, ".. %H\n",
 				  rtmp_header_print, &msg->hdr);
 	}
 
