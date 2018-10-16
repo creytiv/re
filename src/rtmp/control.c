@@ -15,6 +15,15 @@
 #include "rtmp.h"
 
 
+/**
+ * Send an RTMP control message
+ *
+ * @param conn RTMP connection
+ * @param type RTMP Packet type
+ * @param ...  Optional packet arguments
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_control(const struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 {
 	struct mbuf *mb;
@@ -74,6 +83,13 @@ int rtmp_control(const struct rtmp_conn *conn, enum rtmp_packet_type type, ...)
 }
 
 
+/**
+ * Get the event name as a string
+ *
+ * @param event RTMP Event type
+ *
+ * @return Name of the event as a string
+ */
 const char *rtmp_event_name(enum rtmp_event_type event)
 {
 	switch (event) {

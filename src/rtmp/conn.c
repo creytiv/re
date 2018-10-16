@@ -782,6 +782,23 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 }
 
 
+/**
+ * Connect to an RTMP server
+ *
+ * @param connp  Pointer to allocated RTMP connection object
+ * @param dnsc   DNS Client for resolving FQDN uris
+ * @param uri    RTMP uri to connect to
+ * @param estabh Established handler
+ * @param cmdh   Incoming command handler
+ * @param closeh Close handler
+ * @param arg    Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ *
+ * Example URIs:
+ *
+ *     rtmp://a.rtmp.youtube.com/live2/my-stream
+ */
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
@@ -863,6 +880,18 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 }
 
 
+/**
+ * Accept an incoming TCP connection creating an RTMP Server connection
+ *
+ * @param connp  Pointer to allocated RTMP connection object
+ * @param ts     TCP socket with pending connection
+ * @param estabh Established handler
+ * @param cmdh   Incoming command handler
+ * @param closeh Close handler
+ * @param arg    Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		rtmp_close_h *closeh, void *arg)
@@ -926,12 +955,26 @@ uint64_t rtmp_conn_assign_tid(struct rtmp_conn *conn)
 }
 
 
+/**
+ * Get the underlying TCP connection from an RTMP connection
+ *
+ * @param conn RTMP Connection
+ *
+ * @return TCP-Connection
+ */
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn)
 {
 	return conn ? conn->tc : NULL;
 }
 
 
+/**
+ * Get the RTMP connection stream name from rtmp_connect
+ *
+ * @param conn RTMP Connection
+ *
+ * @return RTMP Stream name or NULL
+ */
 const char *rtmp_conn_stream(const struct rtmp_conn *conn)
 {
 	return conn ? conn->stream : NULL;
