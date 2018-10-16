@@ -44,14 +44,15 @@ enum rtmp_amf_type {
 	RTMP_AMF_TYPE_STRICT_ARRAY = 0x0a,  /**< Array with ordinal indices */
 };
 
+/** RTMP Event types */
 enum rtmp_event_type {
-	RTMP_EVENT_STREAM_BEGIN       = 0,
-	RTMP_EVENT_STREAM_EOF         = 1,
-	RTMP_EVENT_STREAM_DRY         = 2,
-	RTMP_EVENT_SET_BUFFER_LENGTH  = 3,
-	RTMP_EVENT_STREAM_IS_RECORDED = 4,
-	RTMP_EVENT_PING_REQUEST       = 6,
-	RTMP_EVENT_PING_RESPONSE      = 7,
+	RTMP_EVENT_STREAM_BEGIN       = 0,  /**< Stream begin               */
+	RTMP_EVENT_STREAM_EOF         = 1,  /**< Stream End-Of-File         */
+	RTMP_EVENT_STREAM_DRY         = 2,  /**< No more data on the stream */
+	RTMP_EVENT_SET_BUFFER_LENGTH  = 3,  /**< Set buffer size in [ms]    */
+	RTMP_EVENT_STREAM_IS_RECORDED = 4,  /**< Stream is recorded         */
+	RTMP_EVENT_PING_REQUEST       = 6,  /**< Ping Request from server   */
+	RTMP_EVENT_PING_RESPONSE      = 7,  /**< Ping Response to server    */
 };
 
 
