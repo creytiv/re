@@ -53,6 +53,7 @@ enum rtmp_event_type {
 
 
 /* forward declarations */
+struct dnsc;
 struct odict;
 struct tcp_sock;
 
@@ -63,7 +64,6 @@ struct tcp_sock;
 
 
 /* conn */
-struct dnsc;
 struct rtmp_conn;
 
 typedef void (rtmp_estab_h)(void *arg);

@@ -27,7 +27,6 @@ const struct odict_entry *odict_get_type(const struct odict *o,
 	if (entry->type != type)
 		return NULL;
 
-
 	return entry;
 }
 
