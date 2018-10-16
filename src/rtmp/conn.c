@@ -885,7 +885,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  *
  * @param connp  Pointer to allocated RTMP connection object
  * @param ts     TCP socket with pending connection
- * @param estabh Established handler
+ * @param estabh Established handler XXX needed for server ?
  * @param cmdh   Incoming command handler
  * @param closeh Close handler
  * @param arg    Handler argument
