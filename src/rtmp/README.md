@@ -4,20 +4,38 @@ RTMP module
 This module implements Real Time Messaging Protocol (RTMP) [1].
 
 
-The following logical blocks are supported/planned:
 
-- RTMP Handshake
-- RTMP Header encoding and decoding
-- RTMP Chunking and De-chunking
-- RTMP Transport via TCP
-- RTMP Client
-- RTMP Server
-- AMF (Action Message Format) Encoding/Decoding
 
-- RTMPS (RTMP over TLS)
-- RTMPE (RTMP over Adobe Encryption)
-- RTMPT (RTMP over HTTP)
-- RTMFP (RTMP over UDP)
+Functional overview:
+-------------------
+
+RTMP Specification v1.0 .......... YES
+RTMP with TCP transport .......... YES
+
+RTMPS (RTMP over TLS) ............ NO
+RTMPE (RTMP over Adobe Encryption) NO
+RTMPT (RTMP over HTTP) ........... NO
+RTMFP (RTMP over UDP) ............ NO
+
+Transport:
+Client ........................... YES
+Server ........................... YES
+IPv4 ............................. YES
+IPv6 ............................. YES
+DNS Resolving A/AAAA ............. YES
+
+RTMP Components:
+RTMP Handshake ................... YES
+RTMP Header encoding and decoding. YES
+RTMP Chunking .................... YES
+RTMP Dechunking .................. YES
+AMF0 (Action Message Format) ..... YES
+AMF3 (Action Message Format) ..... NO
+Send and receive audio/video ..... YES
+Regular and extended timestamp ... YES
+Multiple streams ................. YES
+
+
 
 
 TODO:
@@ -28,7 +46,7 @@ TODO:
 - [x] add support for Data Message
 - [x] add support for AMF Strict Array (type 10)
 - [ ] add support for TLS encryption
-- [ ] add support for extended timestamp
+- [x] add support for extended timestamp
 
 
 
@@ -36,20 +54,22 @@ TODO:
 Protocol stack:
 --------------
 
-    .-------.  .-------.
-    |  AMF  |  |  FLV  |
-    '-------'  '-------'
-        |          |
-        +----------'
-        |
-    .-------.
-    |  RTMP |
-    '-------'
-        |
-        |
-    .-------.
-    |  TCP  |
-    '-------'
+    .-------.  .-------.  .-------.
+    |  AMF  |  | Audio |  | Video |
+    '-------'  '-------'  '-------'
+        |          |          |
+        +----------+----------'
+                   |
+               .-------.
+               |  RTMP |
+               '-------'
+                   |
+                   |
+               .-------.
+               |  TCP  |
+               '-------'
+
+
 
 
 Message Sequence:
