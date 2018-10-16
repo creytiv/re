@@ -55,9 +55,14 @@ struct rtmp_conn {
 	char *app;
 	char *uri;
 	char *stream;
+	char *host;
 
 	size_t total_bytes;
 	size_t last_ack;
+
+	struct sa srvv[16];
+	unsigned srvc;
+
 };
 
 struct rtmp_stream {

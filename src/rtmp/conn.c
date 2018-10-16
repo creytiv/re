@@ -24,6 +24,9 @@ enum {
 };
 
 
+static int req_connect(struct rtmp_conn *conn);
+
+
 static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
@@ -38,6 +41,7 @@ static void conn_destructor(void *data)
 	mem_deref(conn->dechunk);
 	mem_deref(conn->uri);
 	mem_deref(conn->app);
+	mem_deref(conn->host);
 	mem_deref(conn->stream);
 }
 
@@ -675,11 +679,80 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 }
 
 
+static void try_next(struct rtmp_conn *conn, int err)
+{
+	if (conn->connected)
+		return;
+
+	conn->tc = mem_deref(conn->tc);
+
+	if (conn->srvc > 0) {
+
+		err = req_connect(conn);
+		if (!err)
+			return;
+	}
+
+	conn_close(conn, err);
+}
+
+
 static void tcp_close_handler(int err, void *arg)
 {
 	struct rtmp_conn *conn = arg;
 
-	conn_close(conn, err);
+	re_printf("close: (%m)\n", err);
+
+	if (conn->is_client)
+		try_next(conn, err ? err : ECONNRESET);
+	else
+		conn_close(conn, err);
+}
+
+
+static int req_connect(struct rtmp_conn *conn)
+{
+	const struct sa *addr;
+	int err = EINVAL;
+
+	while (conn->srvc > 0) {
+
+		--conn->srvc;
+
+		addr = &conn->srvv[conn->srvc];
+
+		conn->tc = mem_deref(conn->tc);
+		err = tcp_connect(&conn->tc, addr, tcp_estab_handler,
+				  tcp_recv_handler, tcp_close_handler, conn);
+		if (!err)
+			break;
+	}
+
+	return err;
+}
+
+
+static bool rr_handler(struct dnsrr *rr, void *arg)
+{
+	struct rtmp_conn *conn = arg;
+
+	if (conn->srvc >= ARRAY_SIZE(conn->srvv))
+		return true;
+
+	switch (rr->type) {
+
+	case DNS_TYPE_A:
+		sa_set_in(&conn->srvv[conn->srvc++], rr->rdata.a.addr,
+                          conn->port);
+		break;
+
+	case DNS_TYPE_AAAA:
+		sa_set_in6(&conn->srvv[conn->srvc++], rr->rdata.aaaa.addr,
+			   conn->port);
+		break;
+	}
+
+	return false;
 }
 
 
@@ -687,22 +760,18 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 			  struct list *authl, struct list *addl, void *arg)
 {
 	struct rtmp_conn *conn = arg;
-	struct dnsrr *rr;
-	struct sa addr;
 	(void)hdr;
 	(void)authl;
 	(void)addl;
 
-	rr = dns_rrlist_find(ansl, NULL, DNS_TYPE_A, DNS_CLASS_IN, false);
-	if (!rr) {
+	dns_rrlist_apply2(ansl, conn->host, DNS_TYPE_A, DNS_TYPE_AAAA,
+                          DNS_CLASS_IN, true, rr_handler, conn);
+	if (conn->srvc == 0) {
 		err = err ? err : EDESTADDRREQ;
 		goto out;
 	}
 
-	sa_set_in(&addr, rr->rdata.a.addr, conn->port);
-
-	err = tcp_connect(&conn->tc, &addr, tcp_estab_handler,
-			  tcp_recv_handler, tcp_close_handler, conn);
+	err = req_connect(conn);
 	if (err)
 		goto out;
 
@@ -722,8 +791,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	struct pl pl_port;
 	struct pl pl_app;
 	struct pl pl_stream;
-	struct sa addr;
-	char host[256];
 	int err;
 
 	if (!connp || !uri)
@@ -745,24 +812,42 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (err)
 		goto out;
 
-	if (0 == sa_set(&addr, &pl_host, conn->port)) {
+	if (0 == sa_set(&conn->srvv[0], &pl_host, conn->port)) {
 
-		err = tcp_connect(&conn->tc, &addr, tcp_estab_handler,
-				  tcp_recv_handler, tcp_close_handler, conn);
+		conn->srvc = 1;
+
+		err = req_connect(conn);
 		if (err)
 			goto out;
 	}
 	else {
+		struct sa tmp;
+		bool have_ipv4 = 1;
+		bool have_ipv6 = 0;
+		unsigned type = DNS_TYPE_A;
+
 		if (!dnsc) {
 			err = EINVAL;
 			goto out;
 		}
 
-		pl_strcpy(&pl_host, host, sizeof(host));
+		have_ipv4 = 0==net_default_source_addr_get(AF_INET, &tmp);
+		have_ipv6 = 0==net_default_source_addr_get(AF_INET6, &tmp);
+
+		err = pl_strdup(&conn->host, &pl_host);
+		if (err)
+			goto out;
 
 		conn->dnsc = mem_ref(dnsc);
 
-		err = dnsc_query(&conn->dnsq, dnsc, host, DNS_TYPE_A,
+		re_printf("resolve: ipv4=%d, ipv6=%d\n", have_ipv4, have_ipv6);
+
+		if (have_ipv4)
+			type = DNS_TYPE_A;
+		else if (have_ipv6)
+			type = DNS_TYPE_AAAA;
+
+		err = dnsc_query(&conn->dnsq, dnsc, conn->host, type,
 				 DNS_CLASS_IN, true, query_handler, conn);
 		if (err)
 			goto out;
@@ -895,6 +980,16 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 			  list_count(&conn->streaml));
 
 	err |= re_hprintf(pf, "%H\n", rtmp_dechunker_debug, conn->dechunk);
+
+	unsigned i;
+
+	for (i = 0; i < ARRAY_SIZE(conn->srvv); i++) {
+		const struct sa *addr = &conn->srvv[i];
+
+		if (sa_isset(addr, SA_ALL))
+			err |= re_hprintf(pf, ".... %j\n", addr);
+	}
+
 
 	return err;
 }
