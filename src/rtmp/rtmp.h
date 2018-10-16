@@ -18,6 +18,7 @@ enum {
 	RTMP_CHUNK_ID_CONN     = 3,
 };
 
+/** Defines the RTMP Handshake State */
 enum rtmp_handshake_state {
 	RTMP_STATE_UNINITIALIZED = 0,
 	RTMP_STATE_VERSION_SENT,
@@ -25,6 +26,9 @@ enum rtmp_handshake_state {
 	RTMP_STATE_HANDSHAKE_DONE
 };
 
+/**
+ * Defines an RTMP Connection
+ */
 struct rtmp_conn {
 	struct list streaml;
 	struct rtmp_dechunker *dechunk;
@@ -62,12 +66,14 @@ struct rtmp_conn {
 
 	struct sa srvv[16];
 	unsigned srvc;
-
 };
 
+/**
+ * Defines an RTMP Stream
+ */
 struct rtmp_stream {
 	struct le le;
-	const struct rtmp_conn *conn;    /* pointer */
+	const struct rtmp_conn *conn;    /**< Pointer to parent connection */
 	bool created;
 	uint32_t stream_id;
 	unsigned chunk_id_audio;

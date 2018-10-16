@@ -26,6 +26,7 @@ struct rtmp_chunk {
 	struct mbuf *mb;
 };
 
+/** Defines the RTMP Dechunker */
 struct rtmp_dechunker {
 	struct list chunkl;      /* struct rtmp_chunk */
 	size_t chunk_sz;
