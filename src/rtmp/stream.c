@@ -35,6 +35,21 @@ static void destructor(void *data)
 }
 
 
+/**
+ * Allocate a new RTMP Stream object
+ *
+ * @param strmp     Pointer to allocated RTMP Stream
+ * @param conn      RTMP Connection
+ * @param stream_id Stream id
+ * @param cmdh      Command handler
+ * @param ctrlh     Control handler
+ * @param auh       Audio handler
+ * @param vidh      Video handler
+ * @param datah     Data handler
+ * @param arg       Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_stream_alloc(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 		      uint32_t stream_id, rtmp_command_h *cmdh,
 		      rtmp_control_h *ctrlh, rtmp_audio_h *auh,
@@ -100,6 +115,21 @@ static void createstream_handler(bool success, const struct odict *msg,
 }
 
 
+/**
+ * Create a new RTMP Stream by sending "createStream" to the RTMP Server.
+ *
+ * @param strmp     Pointer to allocated RTMP Stream
+ * @param conn      RTMP Connection
+ * @param resph     RTMP Response handler
+ * @param cmdh      Command handler
+ * @param ctrlh     Control handler
+ * @param auh       Audio handler
+ * @param vidh      Video handler
+ * @param datah     Data handler
+ * @param arg       Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 		       rtmp_resp_h *resph, rtmp_command_h *cmdh,
 		       rtmp_control_h *ctrlh, rtmp_audio_h *auh,
@@ -136,6 +166,14 @@ int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 }
 
 
+/**
+ * Start playing an RTMP Stream by sending "play" to the RTMP Server
+ *
+ * @param strm RTMP Stream
+ * @param name Stream name
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_play(struct rtmp_stream *strm, const char *name)
 {
 	if (!strm || !name)
@@ -150,6 +188,14 @@ int rtmp_play(struct rtmp_stream *strm, const char *name)
 }
 
 
+/**
+ * Start publishing an RTMP Stream by sending "publish" to the RTMP Server
+ *
+ * @param strm RTMP Stream
+ * @param name Stream name
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_publish(struct rtmp_stream *strm, const char *name)
 {
 	if (!strm || !name)
@@ -164,6 +210,16 @@ int rtmp_publish(struct rtmp_stream *strm, const char *name)
 }
 
 
+/**
+ * Send audio packet on the RTMP Stream
+ *
+ * @param strm      RTMP Stream
+ * @param timestamp Timestamp in [milliseconds]
+ * @param pld       Audio payload
+ * @param len       Payload length
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len)
 {
@@ -179,6 +235,16 @@ int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 }
 
 
+/**
+ * Send video packet on the RTMP Stream
+ *
+ * @param strm      RTMP Stream
+ * @param timestamp Timestamp in [milliseconds]
+ * @param pld       Video payload
+ * @param len       Payload length
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len)
 {
@@ -194,6 +260,14 @@ int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
 }
 
 
+/**
+ * Find an RTMP Stream by stream id
+ *
+ * @param conn      RTMP Connection
+ * @param stream_id Stream id
+ *
+ * @return RTMP Stream if found, or NULL if not found
+ */
 struct rtmp_stream *rtmp_stream_find(const struct rtmp_conn *conn,
 				     uint32_t stream_id)
 {

@@ -124,7 +124,6 @@ int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 		       rtmp_control_h *ctrlh, rtmp_audio_h *auh,
 		       rtmp_video_h *vidh, rtmp_command_h *datah,
 		       void *arg);
-int rtmp_stream_control(struct rtmp_stream *strm, enum rtmp_event_type event);
 int rtmp_play(struct rtmp_stream *strm, const char *name);
 int rtmp_publish(struct rtmp_stream *strm, const char *name);
 int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
