@@ -9,6 +9,7 @@ This module implements Real Time Messaging Protocol (RTMP) [1].
 Functional overview:
 -------------------
 
+```
 RTMP Specification v1.0 .......... YES
 RTMP with TCP transport .......... YES
 
@@ -34,6 +35,7 @@ AMF3 (Action Message Format) ..... NO
 Send and receive audio/video ..... YES
 Regular and extended timestamp ... YES
 Multiple streams ................. YES
+```
 
 
 
