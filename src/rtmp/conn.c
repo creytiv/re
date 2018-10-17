@@ -882,7 +882,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  *
  * @param connp  Pointer to allocated RTMP connection object
  * @param ts     TCP socket with pending connection
- * @param estabh Established handler XXX needed for server ?
  * @param cmdh   Incoming command handler
  * @param closeh Close handler
  * @param arg    Handler argument
@@ -890,8 +889,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  * @return 0 if success, otherwise errorcode
  */
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
-		rtmp_estab_h *estabh, rtmp_command_h *cmdh,
-		rtmp_close_h *closeh, void *arg)
+		rtmp_command_h *cmdh, rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
 	int err;
@@ -899,7 +897,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 	if (!connp || !ts)
 		return EINVAL;
 
-	conn = rtmp_conn_alloc(false, estabh, cmdh, closeh, arg);
+	conn = rtmp_conn_alloc(false, NULL, cmdh, closeh, arg);
 	if (!conn)
 		return ENOMEM;
 
