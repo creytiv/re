@@ -706,6 +706,8 @@ static int req_connect(struct rtmp_conn *conn)
 		addr = &conn->srvv[conn->srvc];
 
 		conn->state = RTMP_STATE_UNINITIALIZED;
+		conn->last_ack = 0;
+		conn->total_bytes = 0;
 		conn->mb = mem_deref(conn->mb);
 		conn->tc = mem_deref(conn->tc);
 
