@@ -700,8 +700,6 @@ static void tcp_close_handler(int err, void *arg)
 {
 	struct rtmp_conn *conn = arg;
 
-	re_printf("close: (%m)\n", err);
-
 	if (conn->is_client)
 		try_next(conn, err ? err : ECONNRESET);
 	else
