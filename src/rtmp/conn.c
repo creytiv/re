@@ -34,7 +34,8 @@ static void conn_destructor(void *data)
 	list_flush(&conn->ctransl);
 	list_flush(&conn->streaml);
 
-	mem_deref(conn->dnsq);
+	mem_deref(conn->dnsq6);
+	mem_deref(conn->dnsq4);
 	mem_deref(conn->dnsc);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
@@ -352,7 +353,8 @@ static void conn_close(struct rtmp_conn *conn, int err)
 	rtmp_close_h *closeh;
 
 	conn->tc = mem_deref(conn->tc);
-	conn->dnsq = mem_deref(conn->dnsq);
+	conn->dnsq6 = mem_deref(conn->dnsq6);
+	conn->dnsq4 = mem_deref(conn->dnsq4);
 
 	closeh = conn->closeh;
 	if (closeh) {
@@ -678,32 +680,17 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 }
 
 
-static void try_next(struct rtmp_conn *conn, int err)
+static void tcp_close_handler(int err, void *arg)
 {
-	if (conn->connected)
-		return;
+	struct rtmp_conn *conn = arg;
 
-	conn->tc = mem_deref(conn->tc);
-
-	if (conn->srvc > 0) {
-
+	if (conn->is_client && !conn->connected && conn->srvc > 0) {
 		err = req_connect(conn);
 		if (!err)
 			return;
 	}
 
 	conn_close(conn, err);
-}
-
-
-static void tcp_close_handler(int err, void *arg)
-{
-	struct rtmp_conn *conn = arg;
-
-	if (conn->is_client)
-		try_next(conn, err ? err : ECONNRESET);
-	else
-		conn_close(conn, err);
 }
 
 
@@ -718,7 +705,10 @@ static int req_connect(struct rtmp_conn *conn)
 
 		addr = &conn->srvv[conn->srvc];
 
+		conn->state = RTMP_STATE_UNINITIALIZED;
+		conn->mb = mem_deref(conn->mb);
 		conn->tc = mem_deref(conn->tc);
+
 		err = tcp_connect(&conn->tc, addr, tcp_estab_handler,
 				  tcp_recv_handler, tcp_close_handler, conn);
 		if (!err)
@@ -763,6 +753,11 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 
 	dns_rrlist_apply2(ansl, conn->host, DNS_TYPE_A, DNS_TYPE_AAAA,
                           DNS_CLASS_IN, true, rr_handler, conn);
+
+	/* wait for other (A/AAAA) query to complete */
+	if (conn->dnsq4 || conn->dnsq6)
+		return;
+
 	if (conn->srvc == 0) {
 		err = err ? err : EDESTADDRREQ;
 		goto out;
@@ -835,18 +830,14 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 			goto out;
 	}
 	else {
+#ifdef HAVE_INET6
 		struct sa tmp;
-		bool have_ipv4 = 1;
-		bool have_ipv6 = 0;
-		unsigned type = DNS_TYPE_A;
+#endif
 
 		if (!dnsc) {
 			err = EINVAL;
 			goto out;
 		}
-
-		have_ipv4 = 0==net_default_source_addr_get(AF_INET, &tmp);
-		have_ipv6 = 0==net_default_source_addr_get(AF_INET6, &tmp);
 
 		err = pl_strdup(&conn->host, &pl_host);
 		if (err)
@@ -854,17 +845,21 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 		conn->dnsc = mem_ref(dnsc);
 
-		re_printf("resolve: ipv4=%d, ipv6=%d\n", have_ipv4, have_ipv6);
-
-		if (have_ipv4)
-			type = DNS_TYPE_A;
-		else if (have_ipv6)
-			type = DNS_TYPE_AAAA;
-
-		err = dnsc_query(&conn->dnsq, dnsc, conn->host, type,
+		err = dnsc_query(&conn->dnsq4, dnsc, conn->host, DNS_TYPE_A,
 				 DNS_CLASS_IN, true, query_handler, conn);
 		if (err)
 			goto out;
+
+#ifdef HAVE_INET6
+		if (0 == net_default_source_addr_get(AF_INET6, &tmp)) {
+
+			err = dnsc_query(&conn->dnsq6, dnsc, conn->host,
+					 DNS_TYPE_AAAA, DNS_CLASS_IN,
+					 true, query_handler, conn);
+			if (err)
+				goto out;
+		}
+#endif
 	}
 
  out:

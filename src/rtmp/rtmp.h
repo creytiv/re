@@ -50,7 +50,8 @@ struct rtmp_conn {
 
 	/* client specific: */
 	struct dnsc *dnsc;
-	struct dns_query *dnsq;
+	struct dns_query *dnsq4;
+	struct dns_query *dnsq6;
 	struct list ctransl;
 	struct sa srvv[16];
 	unsigned srvc;
