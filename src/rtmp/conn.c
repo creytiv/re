@@ -194,7 +194,9 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 		if (mbuf_get_left(mb) < 4)
 			return EBADMSG;
 
-		conn->window_ack_size = ntohl(mbuf_read_u32(mb));
+		was = ntohl(mbuf_read_u32(mb));
+		if (was != 0)
+			conn->window_ack_size = was;
 		break;
 
 	case RTMP_TYPE_SET_PEER_BANDWIDTH:
@@ -203,9 +205,10 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 
 		was = ntohl(mbuf_read_u32(mb));
 		limit = mbuf_read_u8(mb);
-
-		(void)was;
 		(void)limit;
+
+		if (was != 0)
+			conn->window_ack_size = was;
 
 		err = rtmp_control(conn, RTMP_TYPE_WINDOW_ACK_SIZE,
 				   (uint32_t)WINDOW_ACK_SIZE);
@@ -267,6 +270,7 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	conn->state = RTMP_STATE_UNINITIALIZED;
 
 	conn->send_chunk_size = RTMP_DEFAULT_CHUNKSIZE;
+	conn->window_ack_size = WINDOW_ACK_SIZE;
 
 	/* version signature */
 	conn->x1[4] = VER_MAJOR;
@@ -664,7 +668,7 @@ static void tcp_recv_handler(struct mbuf *mb_pkt, void *arg)
 	if (err)
 		goto out;
 
-	if (conn->total_bytes >= (conn->last_ack + WINDOW_ACK_SIZE)) {
+	if (conn->total_bytes >= (conn->last_ack + conn->window_ack_size)) {
 
 		conn->last_ack = conn->total_bytes;
 
@@ -705,11 +709,16 @@ static int req_connect(struct rtmp_conn *conn)
 
 		addr = &conn->srvv[conn->srvc];
 
+		conn->send_chunk_size = RTMP_DEFAULT_CHUNKSIZE;
+		conn->window_ack_size = WINDOW_ACK_SIZE;
 		conn->state = RTMP_STATE_UNINITIALIZED;
 		conn->last_ack = 0;
 		conn->total_bytes = 0;
 		conn->mb = mem_deref(conn->mb);
 		conn->tc = mem_deref(conn->tc);
+
+		rtmp_dechunker_set_chunksize(conn->dechunk,
+					     RTMP_DEFAULT_CHUNKSIZE);
 
 		err = tcp_connect(&conn->tc, addr, tcp_estab_handler,
 				  tcp_recv_handler, tcp_close_handler, conn);
