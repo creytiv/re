@@ -576,6 +576,13 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		/* C2 (ignored) */
 		mbuf_advance(mb, RTMP_HANDSHAKE_SIZE);
 
+		conn->send_chunk_size = 4096;
+
+		err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
+				   conn->send_chunk_size);
+		if (err)
+			return err;
+
 		set_state(conn, RTMP_STATE_HANDSHAKE_DONE);
 		break;
 
