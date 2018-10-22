@@ -430,7 +430,7 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 {
 	struct rtmp_conn *conn = arg;
 	rtmp_estab_h *estabh;
-	int err;
+	int err = 0;
 	(void)msg;
 
 	if (!success) {
@@ -439,13 +439,6 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 	}
 
 	conn->connected = true;
-
-	conn->send_chunk_size = 4096;
-
-	err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
-			   conn->send_chunk_size);
-	if (err)
-		goto out;
 
 	estabh = conn->estabh;
 	if (estabh) {
@@ -463,6 +456,14 @@ static int send_connect(struct rtmp_conn *conn)
 {
 	const int ac  = 0x0400;  /* AAC  */
 	const int vc  = 0x0080;  /* H264 */
+	int err = 0;
+
+	conn->send_chunk_size = 4096;
+
+	err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
+			   conn->send_chunk_size);
+	if (err)
+		return err;
 
 	return rtmp_amf_request(conn, RTMP_CONTROL_STREAM_ID, "connect",
 				connect_resp_handler, conn,
