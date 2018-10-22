@@ -35,7 +35,7 @@ struct rtmp_conn {
 	struct tcp_conn *tc;
 	struct mbuf *mb;                        /* TCP reassembly buffer */
 	enum rtmp_handshake_state state;
-	uint8_t x1[RTMP_HANDSHAKE_SIZE];        /* C1 or S1 */
+	uint8_t sig[1+RTMP_HANDSHAKE_SIZE];     /* C0+C1 or S0+S1 */
 	size_t total_bytes;
 	size_t last_ack;
 	uint32_t window_ack_size;

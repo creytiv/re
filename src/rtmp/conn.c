@@ -273,10 +273,12 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	conn->window_ack_size = WINDOW_ACK_SIZE;
 
 	/* version signature */
-	conn->x1[4] = VER_MAJOR;
-	conn->x1[5] = VER_MINOR;
-	conn->x1[6] = VER_PATCH;
-	rand_bytes(conn->x1 + 8, sizeof(conn->x1) - 8);
+	conn->sig[0] = RTMP_PROTOCOL_VERSION;
+	conn->sig[5] = VER_MAJOR;
+	conn->sig[6] = VER_MINOR;
+	conn->sig[7] = VER_PATCH;
+	conn->sig[8] = 0;
+	rand_bytes(conn->sig + 9, sizeof(conn->sig) - 9);
 
 	err = rtmp_dechunker_alloc(&conn->dechunk, RTMP_DEFAULT_CHUNKSIZE,
 				   rtmp_dechunk_handler, conn);
@@ -335,14 +337,9 @@ static int send_packet(struct rtmp_conn *conn, const uint8_t *pkt, size_t len)
 
 static int handshake_start(struct rtmp_conn *conn)
 {
-	const uint8_t x0 = RTMP_PROTOCOL_VERSION;
 	int err;
 
-	err = send_packet(conn, &x0, sizeof(x0));
-	if (err)
-		return err;
-
-	err = send_packet(conn, conn->x1, sizeof(conn->x1));
+	err = send_packet(conn, conn->sig, sizeof(conn->sig));
 	if (err)
 		return err;
 
