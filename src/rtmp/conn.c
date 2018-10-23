@@ -332,8 +332,11 @@ static int handshake_start(struct rtmp_conn *conn)
 	uint8_t sig[1+RTMP_HANDSHAKE_SIZE];
 	int err;
 
-	/* version signature */
 	sig[0] = RTMP_PROTOCOL_VERSION;
+	sig[1] = 0;
+	sig[2] = 0;
+	sig[3] = 0;
+	sig[4] = 0;
 	sig[5] = VER_MAJOR;
 	sig[6] = VER_MINOR;
 	sig[7] = VER_PATCH;
