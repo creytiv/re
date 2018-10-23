@@ -34,7 +34,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 	if (!payload || !payload_len || !max_chunk_sz || !tc)
 		return EINVAL;
 
-	mb = mbuf_alloc(256);
+	mb = mbuf_alloc(payload_len + 256);
 	if (!mb)
 		return ENOMEM;
 

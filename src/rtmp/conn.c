@@ -272,14 +272,6 @@ static struct rtmp_conn *rtmp_conn_alloc(bool is_client,
 	conn->send_chunk_size = RTMP_DEFAULT_CHUNKSIZE;
 	conn->window_ack_size = WINDOW_ACK_SIZE;
 
-	/* version signature */
-	conn->sig[0] = RTMP_PROTOCOL_VERSION;
-	conn->sig[5] = VER_MAJOR;
-	conn->sig[6] = VER_MINOR;
-	conn->sig[7] = VER_PATCH;
-	conn->sig[8] = 0;
-	rand_bytes(conn->sig + 9, sizeof(conn->sig) - 9);
-
 	err = rtmp_dechunker_alloc(&conn->dechunk, RTMP_DEFAULT_CHUNKSIZE,
 				   rtmp_dechunk_handler, conn);
 	if (err)
@@ -337,9 +329,18 @@ static int send_packet(struct rtmp_conn *conn, const uint8_t *pkt, size_t len)
 
 static int handshake_start(struct rtmp_conn *conn)
 {
+	uint8_t sig[1+RTMP_HANDSHAKE_SIZE];
 	int err;
 
-	err = send_packet(conn, conn->sig, sizeof(conn->sig));
+	/* version signature */
+	sig[0] = RTMP_PROTOCOL_VERSION;
+	sig[5] = VER_MAJOR;
+	sig[6] = VER_MINOR;
+	sig[7] = VER_PATCH;
+	sig[8] = 0;
+	rand_bytes(sig + 9, sizeof(sig) - 9);
+
+	err = send_packet(conn, sig, sizeof(sig));
 	if (err)
 		return err;
 
@@ -401,12 +402,11 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 {
 	struct rtmp_conn *conn = arg;
 	rtmp_estab_h *estabh;
-	int err = 0;
 	(void)msg;
 
 	if (!success) {
-		err = EPROTO;
-		goto out;
+		conn_close(conn, EPROTO);
+		return;
 	}
 
 	conn->connected = true;
@@ -416,10 +416,6 @@ static void connect_resp_handler(bool success, const struct odict *msg,
 		conn->estabh = NULL;
 		estabh(conn->arg);
 	}
-
- out:
-	if (err)
-		conn_close(conn, err);
 }
 
 
@@ -427,14 +423,6 @@ static int send_connect(struct rtmp_conn *conn)
 {
 	const int ac  = 0x0400;  /* AAC  */
 	const int vc  = 0x0080;  /* H264 */
-	int err = 0;
-
-	conn->send_chunk_size = 4096;
-
-	err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
-			   conn->send_chunk_size);
-	if (err)
-		return err;
 
 	return rtmp_amf_request(conn, RTMP_CONTROL_STREAM_ID, "connect",
 				connect_resp_handler, conn,
@@ -482,6 +470,12 @@ static int client_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 
 		/* S2 (ignored) */
 		mbuf_advance(mb, RTMP_HANDSHAKE_SIZE);
+
+		conn->send_chunk_size = 4096;
+		err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
+				   conn->send_chunk_size);
+		if (err)
+			return err;
 
 		err = send_connect(conn);
 		if (err)
