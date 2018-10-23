@@ -10,6 +10,7 @@
 #include <re_mbuf.h>
 #include <re_net.h>
 #include <re_sa.h>
+#include <re_tcp.h>
 #include <re_list.h>
 #include <re_rtmp.h>
 #include "rtmp.h"
@@ -22,15 +23,20 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 		 uint32_t timestamp, uint32_t timestamp_delta,
 		 uint8_t msg_type_id, uint32_t msg_stream_id,
 		 const uint8_t *payload, size_t payload_len,
-		 size_t max_chunk_sz, rtmp_chunk_h *chunkh, void *arg)
+		 size_t max_chunk_sz, struct tcp_conn *tc)
 {
 	const uint8_t *pend = payload + payload_len;
 	struct rtmp_header hdr;
+	struct mbuf *mb;
 	size_t chunk_sz;
 	int err;
 
-	if (!payload || !payload_len || !max_chunk_sz || !chunkh)
+	if (!payload || !payload_len || !max_chunk_sz || !tc)
 		return EINVAL;
+
+	mb = mbuf_alloc(256);
+	if (!mb)
+		return ENOMEM;
 
 	memset(&hdr, 0, sizeof(hdr));
 
@@ -45,9 +51,10 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 
 	chunk_sz = min(payload_len, max_chunk_sz);
 
-	err = chunkh(&hdr, payload, chunk_sz, arg);
+	err  = rtmp_header_encode(mb, &hdr);
+	err |= mbuf_write_mem(mb, payload, chunk_sz);
 	if (err)
-		return err;
+		goto out;
 
 	payload += chunk_sz;
 
@@ -59,12 +66,22 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 
 		chunk_sz = min(len, max_chunk_sz);
 
-		err = chunkh(&hdr, payload, chunk_sz, arg);
+		err  = rtmp_header_encode(mb, &hdr);
+		err |= mbuf_write_mem(mb, payload, chunk_sz);
 		if (err)
-			return err;
+			goto out;
 
 		payload += chunk_sz;
 	}
 
-	return 0;
+	mb->pos = 0;
+
+	err = tcp_send(tc, mb);
+	if (err)
+		goto out;
+
+ out:
+	mem_deref(mb);
+
+	return err;
 }

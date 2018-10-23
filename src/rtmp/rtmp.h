@@ -129,14 +129,11 @@ int  rtmp_ctrans_response(const struct list *ctransl,
  * RTMP Chunk
  */
 
-typedef int (rtmp_chunk_h)(const struct rtmp_header *hdr,
-			   const uint8_t *pld, size_t pld_len, void *arg);
-
 int rtmp_chunker(unsigned format, uint32_t chunk_id,
 		 uint32_t timestamp, uint32_t timestamp_delta,
 		 uint8_t msg_type_id, uint32_t msg_stream_id,
 		 const uint8_t *payload, size_t payload_len,
-		 size_t max_chunk_sz, rtmp_chunk_h *chunkh, void *arg);
+		 size_t max_chunk_sz, struct tcp_conn *tc);
 
 
 /*

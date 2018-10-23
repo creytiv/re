@@ -380,35 +380,6 @@ static void tcp_estab_handler(void *arg)
 }
 
 
-static int rtmp_chunk_handler(const struct rtmp_header *hdr,
-			      const uint8_t *pld, size_t pld_len, void *arg)
-{
-	struct rtmp_conn *conn = arg;
-	struct mbuf *mb;
-	int err;
-
-	mb = mbuf_alloc(1024);
-	if (!mb)
-		return ENOMEM;
-
-	err  = rtmp_header_encode(mb, hdr);
-	err |= mbuf_write_mem(mb, pld, pld_len);
-	if (err)
-		goto out;
-
-	mb->pos = 0;
-
-	err = tcp_send(conn->tc, mb);
-	if (err)
-		goto out;
-
- out:
-	mem_deref(mb);
-
-	return err;
-}
-
-
 /* Send AMF0 Command or Data */
 int rtmp_send_amf_command(const struct rtmp_conn *conn,
 			  unsigned format, uint32_t chunk_id,
@@ -421,7 +392,7 @@ int rtmp_send_amf_command(const struct rtmp_conn *conn,
 
 	return rtmp_chunker(format, chunk_id, 0, 0, type_id, msg_stream_id,
 			    cmd, len, conn->send_chunk_size,
-			    rtmp_chunk_handler, (void *)conn);
+			    conn->tc);
 }
 
 
@@ -577,7 +548,6 @@ static int server_handle_packet(struct rtmp_conn *conn, struct mbuf *mb)
 		mbuf_advance(mb, RTMP_HANDSHAKE_SIZE);
 
 		conn->send_chunk_size = 4096;
-
 		err = rtmp_control(conn, RTMP_TYPE_SET_CHUNK_SIZE,
 				   conn->send_chunk_size);
 		if (err)
@@ -939,7 +909,7 @@ int rtmp_conn_send_msg(const struct rtmp_conn *conn,
 	return rtmp_chunker(format, chunk_id, timestamp, timestamp_delta,
 			    msg_type_id, msg_stream_id, payload, payload_len,
 			    conn->send_chunk_size,
-			    rtmp_chunk_handler, (void *)conn);
+			    conn->tc);
 }
 
 
