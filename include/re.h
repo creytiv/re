@@ -41,6 +41,7 @@ extern "C" {
 #include "re_net.h"
 #include "re_odict.h"
 #include "re_json.h"
+#include "re_rtmp.h"
 #include "re_rtp.h"
 #include "re_sdp.h"
 #include "re_uri.h"

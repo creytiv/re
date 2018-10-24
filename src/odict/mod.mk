@@ -7,3 +7,4 @@
 SRCS	+= odict/entry.c
 SRCS	+= odict/odict.c
 SRCS	+= odict/type.c
+SRCS	+= odict/get.c
