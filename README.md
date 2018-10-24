@@ -24,6 +24,7 @@ Copyright (C) 2010 - 2018 Creytiv.com
 * Async I/O (poll, epoll, select, kqueue)
 * UDP/TCP/TLS/DTLS transport
 * JSON parser
+* Real Time Messaging Protocol (RTMP)
 
 
 ## Building
@@ -123,6 +124,7 @@ Please send private feedback to libre [at] creytiv.com
 | natbd    | unstable | NAT Behavior Discovery using STUN              |
 | net      | testing  | Networking routines                            |
 | odict    | unstable | Ordered Dictionary                             |
+| rtmp     | unstable | Real Time Messaging Protocol                   |
 | rtp      | testing  | Real-time Transport Protocol                   |
 | sa       | stable   | Socket Address functions                       |
 | sdp      | testing  | Session Description Protocol                   |
@@ -265,6 +267,7 @@ legend:
 | ICE     | -   | yes | -   | -   |
 | RTP     | -   | yes | -   | -   |
 | RTCP    | -   | yes | -   | -   |
+| RTMP    | yes | -   | -   | -   |
 | SIP     | yes | yes | yes | -   |
 | STUN    | yes | yes | yes | yes |
 | TURN    | yes | yes | yes | yes |
