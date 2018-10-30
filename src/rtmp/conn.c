@@ -757,6 +757,19 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 }
 
 
+static int decode_hostport(const struct pl *hp, struct pl *host,
+			   struct pl *port)
+{
+	/* Try IPv6 first */
+	if (!re_regex(hp->p, hp->l, "\\[[0-9a-f:]+\\][:]*[0-9]*",
+		      host, NULL, port))
+		return 0;
+
+	/* Then non-IPv6 host */
+	return re_regex(hp->p, hp->l, "[^:]+[:]*[0-9]*", host, NULL, port);
+}
+
+
 /**
  * Connect to an RTMP server
  *
@@ -773,12 +786,14 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  * Example URIs:
  *
  *     rtmp://a.rtmp.youtube.com/live2/my-stream
+ *     rtmp://[::1]/vod/mp4:sample.mp4
  */
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
+	struct pl pl_hostport;
 	struct pl pl_host;
 	struct pl pl_port;
 	struct pl pl_app;
@@ -788,9 +803,14 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (!connp || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+[:]*[0-9]*/[^/]+/[^]+",
-		     &pl_host, NULL, &pl_port, &pl_app, &pl_stream))
+	if (re_regex(uri, strlen(uri), "rtmp://[^/]+/[^/]+/[^]+",
+		     &pl_hostport, &pl_app, &pl_stream)) {
 		return EINVAL;
+	}
+
+	err = decode_hostport(&pl_hostport, &pl_host, &pl_port);
+	if (err)
+		return err;
 
 	conn = rtmp_conn_alloc(true, estabh, cmdh, closeh, arg);
 	if (!conn)
