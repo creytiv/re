@@ -83,6 +83,9 @@ int uri_encode(struct re_printf *pf, const struct uri *uri)
 int uri_decode_hostport(const struct pl *hostport, struct pl *host,
 			struct pl *port)
 {
+	if (!hostport || !host || !port)
+		return EINVAL;
+
 	/* Try IPv6 first */
 	if (!re_regex(hostport->p, hostport->l, "\\[[0-9a-f:]+\\][:]*[0-9]*",
 		      host, NULL, port))

@@ -792,9 +792,8 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		return EINVAL;
 
 	if (re_regex(uri, strlen(uri), "rtmp://[^/]+/[^/]+/[^]+",
-		     &pl_hostport, &pl_app, &pl_stream)) {
+		     &pl_hostport, &pl_app, &pl_stream))
 		return EINVAL;
-	}
 
 	if (uri_decode_hostport(&pl_hostport, &pl_host, &pl_port))
 		return EINVAL;
