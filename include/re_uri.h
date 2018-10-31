@@ -23,6 +23,8 @@ typedef int (uri_apply_h)(const struct pl *name, const struct pl *val,
 struct re_printf;
 int  uri_encode(struct re_printf *pf, const struct uri *uri);
 int  uri_decode(struct uri *uri, const struct pl *pl);
+int  uri_decode_hostport(const struct pl *hostport, struct pl *host,
+			 struct pl *port);
 int  uri_param_get(const struct pl *pl, const struct pl *pname,
 		   struct pl *pvalue);
 int  uri_params_apply(const struct pl *pl, uri_apply_h *ah, void *arg);

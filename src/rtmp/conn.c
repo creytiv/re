@@ -15,6 +15,7 @@
 #include <re_sys.h>
 #include <re_odict.h>
 #include <re_dns.h>
+#include <re_uri.h>
 #include <re_rtmp.h>
 #include "rtmp.h"
 
@@ -757,19 +758,6 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 }
 
 
-static int decode_hostport(const struct pl *hp, struct pl *host,
-			   struct pl *port)
-{
-	/* Try IPv6 first */
-	if (!re_regex(hp->p, hp->l, "\\[[0-9a-f:]+\\][:]*[0-9]*",
-		      host, NULL, port))
-		return 0;
-
-	/* Then non-IPv6 host */
-	return re_regex(hp->p, hp->l, "[^:]+[:]*[0-9]*", host, NULL, port);
-}
-
-
 /**
  * Connect to an RTMP server
  *
@@ -808,9 +796,8 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		return EINVAL;
 	}
 
-	err = decode_hostport(&pl_hostport, &pl_host, &pl_port);
-	if (err)
-		return err;
+	if (uri_decode_hostport(&pl_hostport, &pl_host, &pl_port))
+		return EINVAL;
 
 	conn = rtmp_conn_alloc(true, estabh, cmdh, closeh, arg);
 	if (!conn)
