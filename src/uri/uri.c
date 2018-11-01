@@ -74,11 +74,18 @@ int uri_encode(struct re_printf *pf, const struct uri *uri)
 /**
  * Decode host-port portion of a URI (if present)
  *
+ * @param hostport Host and port input string
+ * @param host     Decoded host portion
+ * @param port     Decoded port portion
+ *
  * @return 0 if success, otherwise errorcode
  */
-static int decode_hostport(const struct pl *hostport, struct pl *host,
-			   struct pl *port)
+int uri_decode_hostport(const struct pl *hostport, struct pl *host,
+			struct pl *port)
 {
+	if (!hostport || !host || !port)
+		return EINVAL;
+
 	/* Try IPv6 first */
 	if (!re_regex(hostport->p, hostport->l, "\\[[0-9a-f:]+\\][:]*[0-9]*",
 		      host, NULL, port))
@@ -114,7 +121,7 @@ int uri_decode(struct uri *uri, const struct pl *pl)
 			  &uri->scheme, &uri->user, NULL, &uri->password,
 			  &hostport, &uri->params, &uri->headers)) {
 
-		if (0 == decode_hostport(&hostport, &uri->host, &port))
+		if (0 == uri_decode_hostport(&hostport, &uri->host, &port))
 			goto out;
 	}
 
@@ -122,7 +129,7 @@ int uri_decode(struct uri *uri, const struct pl *pl)
 	err = re_regex(pl->p, pl->l, "[^:]+:[^;? ]+[^?]*[^]*",
 		       &uri->scheme, &hostport, &uri->params, &uri->headers);
 	if (0 == err) {
-		err = decode_hostport(&hostport, &uri->host, &port);
+		err = uri_decode_hostport(&hostport, &uri->host, &port);
 		if (0 == err)
 			goto out;
 	}

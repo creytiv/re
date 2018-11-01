@@ -15,6 +15,7 @@
 #include <re_sys.h>
 #include <re_odict.h>
 #include <re_dns.h>
+#include <re_uri.h>
 #include <re_rtmp.h>
 #include "rtmp.h"
 
@@ -773,12 +774,14 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  * Example URIs:
  *
  *     rtmp://a.rtmp.youtube.com/live2/my-stream
+ *     rtmp://[::1]/vod/mp4:sample.mp4
  */
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
+	struct pl pl_hostport;
 	struct pl pl_host;
 	struct pl pl_port;
 	struct pl pl_app;
@@ -788,8 +791,11 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (!connp || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "rtmp://[^:/]+[:]*[0-9]*/[^/]+/[^]+",
-		     &pl_host, NULL, &pl_port, &pl_app, &pl_stream))
+	if (re_regex(uri, strlen(uri), "rtmp://[^/]+/[^/]+/[^]+",
+		     &pl_hostport, &pl_app, &pl_stream))
+		return EINVAL;
+
+	if (uri_decode_hostport(&pl_hostport, &pl_host, &pl_port))
 		return EINVAL;
 
 	conn = rtmp_conn_alloc(true, estabh, cmdh, closeh, arg);
