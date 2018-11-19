@@ -192,8 +192,14 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		break;
 
 	case 3:
-		if (!chunk->mb)
-			return EPROTO;
+		if (!chunk->mb) {
+
+			chunk->mb = mbuf_alloc(chunk->hdr.length);
+			if (!chunk->mb)
+				return ENOMEM;
+
+			chunk->hdr.timestamp += chunk->hdr.timestamp_delta;
+		}
 
 		left = mbuf_get_space(chunk->mb);
 
