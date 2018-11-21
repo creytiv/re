@@ -199,21 +199,11 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 				return ENOMEM;
 
 			if (chunk->hdr.format == 0) {
-
 				chunk->hdr.timestamp_delta =
 					chunk->hdr.timestamp;
-				chunk->hdr.timestamp +=
-					chunk->hdr.timestamp_delta;
 			}
-			else if (chunk->hdr.format == 1 ||
-				 chunk->hdr.format == 2) {
 
-				chunk->hdr.timestamp +=
-					chunk->hdr.timestamp_delta;
-			}
-			else {
-				return EPROTO;
-			}
+			chunk->hdr.timestamp += chunk->hdr.timestamp_delta;
 		}
 
 		left = mbuf_get_space(chunk->mb);
