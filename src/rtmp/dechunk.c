@@ -143,8 +143,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			return ENOENT;
 	}
 
-	/* only types 0-2 can create a new buffer */
-
 	switch (hdr.format) {
 
 	case 0:
@@ -220,6 +218,9 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		chunk->mb->pos += chunk_sz;
 		chunk->mb->end += chunk_sz;
 		break;
+
+	default:
+		return EPROTO;
 	}
 
 	if (chunk->mb->pos >= chunk->mb->size) {
