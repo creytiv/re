@@ -143,8 +143,6 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			return ENOENT;
 	}
 
-	/* only types 0-2 can create a new buffer */
-
 	switch (hdr.format) {
 
 	case 0:
@@ -192,8 +190,19 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		break;
 
 	case 3:
-		if (!chunk->mb)
-			return EPROTO;
+		if (!chunk->mb) {
+
+			chunk->mb = mbuf_alloc(chunk->hdr.length);
+			if (!chunk->mb)
+				return ENOMEM;
+
+			if (chunk->hdr.format == 0) {
+				chunk->hdr.timestamp_delta =
+					chunk->hdr.timestamp;
+			}
+
+			chunk->hdr.timestamp += chunk->hdr.timestamp_delta;
+		}
 
 		left = mbuf_get_space(chunk->mb);
 
@@ -209,6 +218,9 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		chunk->mb->pos += chunk_sz;
 		chunk->mb->end += chunk_sz;
 		break;
+
+	default:
+		return EPROTO;
 	}
 
 	if (chunk->mb->pos >= chunk->mb->size) {
