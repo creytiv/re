@@ -1,3 +1,18 @@
+2018-11-24 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.6.0
+
+	* Project URL: https://github.com/creytiv/re
+
+	* build: add major,minor,patch versions to CFLAGS
+
+	* odict: add high-level odict helper functions
+
+	* rtmp: new module for Real Time Messaging Protocol (RTMP)
+
+	* uri: add uri_decode_hostport
+
+
 2018-09-01 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.5.9
