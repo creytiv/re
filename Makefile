@@ -6,8 +6,8 @@
 
 # Master version number
 VER_MAJOR := 0
-VER_MINOR := 5
-VER_PATCH := 9
+VER_MINOR := 6
+VER_PATCH := 0
 
 PROJECT   := re
 VERSION   := $(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)
