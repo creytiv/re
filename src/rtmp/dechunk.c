@@ -158,13 +158,10 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			chunk->hdr.timestamp_delta = hdr.timestamp_delta;
 			chunk->hdr.length          = hdr.length;
 			chunk->hdr.type_id         = hdr.type_id;
-
-			chunk->hdr.timestamp      += hdr.timestamp_delta;
 		}
 		else if (hdr.format == 2) {
 
 			chunk->hdr.timestamp_delta = hdr.timestamp_delta;
-			chunk->hdr.timestamp      += hdr.timestamp_delta;
 		}
 
 		msg_len = chunk->hdr.length;
@@ -187,6 +184,9 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		chunk->mb->end = chunk_sz;
 
 		chunk->hdr.format = hdr.format;
+
+		if (hdr.format == 1 || hdr.format == 2)
+			chunk->hdr.timestamp += hdr.timestamp_delta;
 		break;
 
 	case 3:
