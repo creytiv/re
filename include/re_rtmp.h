@@ -125,6 +125,7 @@ int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 		       void *arg);
 int rtmp_play(struct rtmp_stream *strm, const char *name);
 int rtmp_publish(struct rtmp_stream *strm, const char *name);
+int rtmp_meta(struct rtmp_stream *strm);
 int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len);
 int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,

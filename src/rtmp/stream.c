@@ -210,6 +210,21 @@ int rtmp_publish(struct rtmp_stream *strm, const char *name)
 }
 
 
+int rtmp_meta(struct rtmp_stream *strm)
+{
+	if (!strm)
+		return EINVAL;
+
+	return rtmp_amf_data((struct rtmp_conn *)strm->conn, strm->stream_id,
+			     "@setDataFrame",
+		     2,
+		     RTMP_AMF_TYPE_STRING, "onMetaData",
+		     RTMP_AMF_TYPE_ECMA_ARRAY, 2,
+			     RTMP_AMF_TYPE_NUMBER, "audiocodecid", 10.0,
+			     RTMP_AMF_TYPE_NUMBER, "videocodecid",  7.0);
+}
+
+
 /**
  * Send audio packet on the RTMP Stream
  *
