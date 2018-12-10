@@ -210,6 +210,13 @@ int rtmp_publish(struct rtmp_stream *strm, const char *name)
 }
 
 
+/**
+ * Send metadata on the stream to the RTMP Server
+ *
+ * @param strm RTMP Stream
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int rtmp_meta(struct rtmp_stream *strm)
 {
 	if (!strm)
