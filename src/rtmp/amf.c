@@ -122,7 +122,7 @@ int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 }
 
 
-int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
+int rtmp_amf_data(const struct rtmp_conn *conn, uint32_t stream_id,
 		  const char *command, unsigned body_propc, ...)
 {
 	struct mbuf *mb;

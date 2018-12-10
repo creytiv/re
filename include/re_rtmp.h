@@ -99,7 +99,7 @@ int rtmp_amf_request(struct rtmp_conn *conn, uint32_t stream_id,
 int rtmp_amf_reply(struct rtmp_conn *conn, uint32_t stream_id, bool success,
 		   const struct odict *req,
 		   unsigned body_propc, ...);
-int rtmp_amf_data(struct rtmp_conn *conn, uint32_t stream_id,
+int rtmp_amf_data(const struct rtmp_conn *conn, uint32_t stream_id,
 		  const char *command, unsigned body_propc, ...);
 
 
@@ -125,6 +125,7 @@ int rtmp_stream_create(struct rtmp_stream **strmp, struct rtmp_conn *conn,
 		       void *arg);
 int rtmp_play(struct rtmp_stream *strm, const char *name);
 int rtmp_publish(struct rtmp_stream *strm, const char *name);
+int rtmp_meta(struct rtmp_stream *strm);
 int rtmp_send_audio(struct rtmp_stream *strm, uint32_t timestamp,
 		    const uint8_t *pld, size_t len);
 int rtmp_send_video(struct rtmp_stream *strm, uint32_t timestamp,
