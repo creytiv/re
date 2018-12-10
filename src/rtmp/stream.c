@@ -222,7 +222,7 @@ int rtmp_meta(struct rtmp_stream *strm)
 	if (!strm)
 		return EINVAL;
 
-	return rtmp_amf_data((struct rtmp_conn *)strm->conn, strm->stream_id,
+	return rtmp_amf_data(strm->conn, strm->stream_id,
 			     "@setDataFrame",
 		     2,
 		     RTMP_AMF_TYPE_STRING, "onMetaData",
