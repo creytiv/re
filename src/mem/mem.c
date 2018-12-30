@@ -30,17 +30,18 @@
 struct mem {
 	uint32_t nrefs;     /**< Number of references  */
 	mem_destroy_h *dh;  /**< Destroy handler       */
+	uint32_t magic;		/**< Magic number          */
 #if MEM_DEBUG
 	struct le le;       /**< Linked list element   */
-	uint32_t magic;     /**< Magic number          */
 	size_t size;        /**< Size of memory object */
 #endif
 };
 
+static const uint32_t mem_magic = 0xe7fb9ac4;
+
 #if MEM_DEBUG
 /* Memory debugging */
 static struct list meml = LIST_INIT;
-static const uint32_t mem_magic = 0xe7fb9ac4;
 static ssize_t threshold = -1;  /**< Memory threshold, disabled by default */
 
 static struct memstat memstat = {
@@ -149,6 +150,7 @@ void *mem_alloc(size_t size, mem_destroy_h *dh)
 
 	m->nrefs = 1;
 	m->dh    = dh;
+	m->magic = mem_magic;
 
 	STAT_ALLOC(m, size);
 
@@ -196,6 +198,10 @@ void *mem_realloc(void *data, size_t size)
 		return NULL;
 
 	m = ((struct mem *)data) - 1;
+
+	if (mem_magic != m->magic) {
+		return NULL;
+	}
 
 	MAGIC_CHECK(m);
 
@@ -311,7 +317,13 @@ void *mem_deref(void *data)
 
 	MAGIC_CHECK(m);
 
-	if (--m->nrefs > 0)
+	if (m->magic != mem_magic) {
+		return NULL;
+	}
+
+	--m->nrefs;
+
+	if (m->nrefs != 0)
 		return NULL;
 
 	if (m->dh)
