@@ -81,6 +81,8 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 		rtmp_command_h *cmdh, rtmp_close_h *closeh, void *arg);
 int rtmp_control(const struct rtmp_conn *conn,
 		 enum rtmp_packet_type type, ...);
+void rtmp_set_handlers(struct rtmp_conn *conn, rtmp_command_h *cmdh,
+		       rtmp_close_h *closeh, void *arg);
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
 const char *rtmp_conn_stream(const struct rtmp_conn *conn);
 int  rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
