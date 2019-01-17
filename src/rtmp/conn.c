@@ -960,6 +960,26 @@ const char *rtmp_conn_stream(const struct rtmp_conn *conn)
 }
 
 
+/**
+ * Set callback handlers for the RTMP connection
+ *
+ * @param conn   RTMP connection
+ * @param cmdh   Incoming command handler
+ * @param closeh Close handler
+ * @param arg    Handler argument
+ */
+void rtmp_set_handlers(struct rtmp_conn *conn, rtmp_command_h *cmdh,
+		       rtmp_close_h *closeh, void *arg)
+{
+	if (!conn)
+		return;
+
+	conn->cmdh   = cmdh;
+	conn->closeh = closeh;
+	conn->arg    = arg;
+}
+
+
 static const char *rtmp_handshake_name(enum rtmp_handshake_state state)
 {
 	switch (state) {
