@@ -204,6 +204,17 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			chunk->hdr.timestamp += chunk->hdr.timestamp_delta;
 		}
 
+		if (chunk->hdr.timestamp >= 0x00ffffff) {
+			uint32_t ext_ts;
+
+			if (mbuf_get_left(mb) < 4)
+				return ENODATA;
+
+			ext_ts = ntohl(mbuf_read_u32(mb));
+
+			(void)ext_ts;  /* ignored */
+		}
+
 		left = mbuf_get_space(chunk->mb);
 
 		chunk_sz = min(left, rd->chunk_sz);

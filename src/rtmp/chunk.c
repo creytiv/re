@@ -67,6 +67,10 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 		chunk_sz = min(len, max_chunk_sz);
 
 		err  = rtmp_header_encode(mb, &hdr);
+
+		if (timestamp >= 0xffffff)
+			err |= mbuf_write_u32(mb, htonl(timestamp));
+
 		err |= mbuf_write_mem(mb, payload, chunk_sz);
 		if (err)
 			goto out;
