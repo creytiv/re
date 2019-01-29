@@ -150,13 +150,27 @@ int rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr)
 		break;
 
 	case 1:
-		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
+		ext_ts = (hdr->timestamp >= 0x00ffffff);
+
+		err |= mbuf_write_u24_hton(mb,
+				   ext_ts ? 0xffffff : hdr->timestamp_delta);
 		err |= mbuf_write_u24_hton(mb, hdr->length);
 		err |= mbuf_write_u8(mb, hdr->type_id);
+
+		if (ext_ts) {
+			err |= mbuf_write_u32(mb, htonl(hdr->timestamp_delta));
+		}
 		break;
 
 	case 2:
-		err |= mbuf_write_u24_hton(mb, hdr->timestamp_delta);
+		ext_ts = (hdr->timestamp >= 0x00ffffff);
+
+		err |= mbuf_write_u24_hton(mb,
+				   ext_ts ? 0xffffff : hdr->timestamp_delta);
+
+		if (ext_ts) {
+			err |= mbuf_write_u32(mb, htonl(hdr->timestamp_delta));
+		}
 		break;
 
 	case 3:
@@ -205,6 +219,12 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 		hdr->timestamp_delta = mbuf_read_u24_ntoh(mb);
 		hdr->length          = mbuf_read_u24_ntoh(mb);
 		hdr->type_id         = mbuf_read_u8(mb);
+
+		if (hdr->timestamp_delta == 0x00ffffff) {
+			if (mbuf_get_left(mb) < 4)
+				return ENODATA;
+			hdr->timestamp_delta = ntohl(mbuf_read_u32(mb));
+		}
 		break;
 
 	case 2:
@@ -212,6 +232,12 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 			return ENODATA;
 
 		hdr->timestamp_delta = mbuf_read_u24_ntoh(mb);
+
+		if (hdr->timestamp_delta == 0x00ffffff) {
+			if (mbuf_get_left(mb) < 4)
+				return ENODATA;
+			hdr->timestamp_delta = ntohl(mbuf_read_u32(mb));
+		}
 		break;
 
 	case 3:
