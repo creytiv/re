@@ -24,6 +24,7 @@ struct rtmp_chunk {
 	struct le le;
 	struct rtmp_header hdr;
 	struct mbuf *mb;
+	bool ext_ts;
 };
 
 /** Defines the RTMP Dechunker */
@@ -152,16 +153,23 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 			/* copy the whole header */
 			chunk->hdr = hdr;
+
+			chunk->ext_ts = (hdr.timestamp >= TIMESTAMP_MAX);
 		}
 		else if (hdr.format == 1) {
 
 			chunk->hdr.timestamp_delta = hdr.timestamp_delta;
 			chunk->hdr.length          = hdr.length;
 			chunk->hdr.type_id         = hdr.type_id;
+
+			chunk->ext_ts = (hdr.timestamp_delta >= TIMESTAMP_MAX);
+
 		}
 		else if (hdr.format == 2) {
 
 			chunk->hdr.timestamp_delta = hdr.timestamp_delta;
+
+			chunk->ext_ts = (hdr.timestamp_delta >= TIMESTAMP_MAX);
 		}
 
 		msg_len = chunk->hdr.length;
@@ -204,7 +212,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			chunk->hdr.timestamp += chunk->hdr.timestamp_delta;
 		}
 
-		if (chunk->hdr.timestamp >= 0x00ffffff) {
+		if (chunk->ext_ts) {
 			uint32_t ext_ts;
 
 			if (mbuf_get_left(mb) < 4)
@@ -212,7 +220,12 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 
 			ext_ts = ntohl(mbuf_read_u32(mb));
 
-			(void)ext_ts;  /* ignored */
+			re_printf("extended timestamp: 0x%x\n", ext_ts);
+
+			if (chunk->hdr.format == 0)
+				chunk->hdr.timestamp = ext_ts;
+			else
+				chunk->hdr.timestamp_delta = ext_ts;
 		}
 
 		left = mbuf_get_space(chunk->mb);

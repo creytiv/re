@@ -5,6 +5,9 @@
  */
 
 
+#define TIMESTAMP_MAX 0x00ffffff
+
+
 enum {
 	RTMP_PROTOCOL_VERSION  = 3,
 	RTMP_DEFAULT_CHUNKSIZE = 128,

@@ -29,10 +29,25 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 	struct rtmp_header hdr;
 	struct mbuf *mb;
 	size_t chunk_sz;
+	uint32_t ext_ts = 0;
 	int err;
 
 	if (!payload || !payload_len || !max_chunk_sz || !tc)
 		return EINVAL;
+
+	switch (format) {
+
+	case 0:
+		if (timestamp >= TIMESTAMP_MAX)
+			ext_ts = timestamp;
+		break;
+
+	case 1:
+	case 2:
+		if (timestamp_delta >= TIMESTAMP_MAX)
+			ext_ts = timestamp_delta;
+		break;
+	}
 
 	mb = mbuf_alloc(payload_len + 256);
 	if (!mb)
@@ -68,8 +83,9 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
 
 		err  = rtmp_header_encode(mb, &hdr);
 
-		if (timestamp >= 0xffffff)
-			err |= mbuf_write_u32(mb, htonl(timestamp));
+		if (ext_ts) {
+			err |= mbuf_write_u32(mb, htonl(ext_ts));
+		}
 
 		err |= mbuf_write_mem(mb, payload, chunk_sz);
 		if (err)
