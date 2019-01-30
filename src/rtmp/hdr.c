@@ -141,8 +141,6 @@ int rtmp_header_encode(struct mbuf *mb, struct rtmp_header *hdr)
 	if (!mb || !hdr)
 		return EINVAL;
 
-	re_printf("hdr: encode:\n");
-
 	err = encode_basic_hdr(mb, hdr->format, hdr->chunk_id);
 	if (err)
 		return err;
@@ -188,8 +186,6 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 {
 	uint32_t *timestamp_ext = NULL;
 	int err;
-
-	re_printf("hdr: decode:\n");
 
 	if (!hdr || !mb)
 		return EINVAL;
