@@ -184,6 +184,7 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 		chunk->mb->end = chunk_sz;
 
 		chunk->hdr.format = hdr.format;
+		chunk->hdr.ext_ts = hdr.ext_ts;
 
 		if (hdr.format == 1 || hdr.format == 2)
 			chunk->hdr.timestamp += hdr.timestamp_delta;
@@ -202,6 +203,21 @@ int rtmp_dechunker_receive(struct rtmp_dechunker *rd, struct mbuf *mb)
 			}
 
 			chunk->hdr.timestamp += chunk->hdr.timestamp_delta;
+		}
+
+		if (chunk->hdr.ext_ts) {
+
+			uint32_t ext_ts;
+
+			if (mbuf_get_left(mb) < 4)
+				return ENODATA;
+
+			ext_ts = ntohl(mbuf_read_u32(mb));
+
+			if (chunk->hdr.format == 0)
+				chunk->hdr.timestamp = ext_ts;
+			else
+				chunk->hdr.timestamp_delta = ext_ts;
 		}
 
 		left = mbuf_get_space(chunk->mb);
