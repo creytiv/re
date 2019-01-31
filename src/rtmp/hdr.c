@@ -240,9 +240,6 @@ int rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb)
 
 		*timestamp_ext = ntohl(mbuf_read_u32(mb));
 		hdr->ext_ts = true;
-
-		re_printf("hdr: decode: read ext ts (type %u, ts %u)\n",
-			  hdr->format, *timestamp_ext);
 	}
 
 	return 0;
