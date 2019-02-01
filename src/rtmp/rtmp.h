@@ -88,9 +88,11 @@ struct rtmp_header {
 
 	uint32_t timestamp;          /* 24-bit or 32-bit */
 	uint32_t timestamp_delta;    /* 24-bit */
+	uint32_t timestamp_ext;
 	uint32_t length;             /* 24-bit */
 	uint8_t type_id;             /* enum rtmp_packet_type */
 	uint32_t stream_id;
+	bool ext_ts;
 };
 
 
@@ -139,7 +141,7 @@ int rtmp_chunker(unsigned format, uint32_t chunk_id,
  * RTMP Header
  */
 
-int  rtmp_header_encode(struct mbuf *mb, const struct rtmp_header *hdr);
+int  rtmp_header_encode(struct mbuf *mb, struct rtmp_header *hdr);
 int  rtmp_header_decode(struct rtmp_header *hdr, struct mbuf *mb);
 int  rtmp_header_print(struct re_printf *pf, const struct rtmp_header *hdr);
 const char *rtmp_packet_type_name(enum rtmp_packet_type type);
