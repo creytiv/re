@@ -53,9 +53,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/re/*.h
 /usr/share/re/re.mk
 %{_libdir}/libre*.a
-
+%{_libdir}/pkgconfig/libre.pc
 
 %changelog
 * Fri Nov 5 2010 Alfred E. Heggestad <aeh@db.org> -
 - Initial build.
-
