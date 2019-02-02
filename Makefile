@@ -78,7 +78,7 @@ endif
 libre.pc:
 	@echo 'prefix='$(PREFIX) > libre.pc
 	@echo 'exec_prefix=$${prefix}' >> libre.pc
-	@echo 'libdir=$${prefix}/lib' >> libre.pc
+	@echo 'libdir=$(LIBDIR)' >> libre.pc
 	@echo 'includedir=$${prefix}/include/re' >> libre.pc
 	@echo '' >> libre.pc
 	@echo 'Name: libre' >> libre.pc
