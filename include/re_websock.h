@@ -47,7 +47,8 @@ struct websock;
 struct websock_conn;
 
 typedef void (websock_estab_h)(void *arg);
-typedef void (websock_recv_h)(struct websock_conn *conn, struct websock_hdr *hdr, struct mbuf *mb, void *arg);
+typedef void (websock_recv_h)(struct websock_conn *conn,
+		struct websock_hdr *hdr, struct mbuf *mb, void *arg);
 typedef void (websock_close_h)(struct websock_conn *conn, int err, void *arg);
 
 

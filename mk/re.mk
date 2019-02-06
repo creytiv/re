@@ -812,7 +812,8 @@ clang:
 #
 DOX_DIR	= ../$(PROJECT)-dox
 DOX_TAR	= $(PROJECT)-dox-$(VERSION)
-DOX_HAVE_DOT	:= $(shell [ -f /usr/bin/dot ] || [ -f /usr/local/bin/dot ] && echo "YES")
+DOX_HAVE_DOT	:= $(shell [ -f /usr/bin/dot ] || [ -f /usr/local/bin/dot ] \
+	&& echo "YES")
 ifeq ($(DOX_HAVE_DOT),)
 DOX_HAVE_DOT	:= NO
 endif
@@ -822,7 +823,8 @@ $(DOX_DIR):
 
 .PHONY:
 dox:	$(DOX_DIR)
-	@( cat mk/Doxyfile ; echo "PROJECT_NUMBER=$(VERSION)"; echo "HAVE_DOT=$(DOX_HAVE_DOT)" ) | doxygen -
-	@cd .. && rm -f $(PROJECT)/$(DOX_TAR).tar.gz && \
-	tar -zcf $(PROJECT)/$(DOX_TAR).tar.gz $(PROJECT)-dox > /dev/null && \
-	echo "Doxygen docs in `pwd`/$(PROJECT)/$(DOX_TAR).tar.gz"
+	@( cat mk/Doxyfile ; echo "PROJECT_NUMBER=$(VERSION)"; \
+		echo "HAVE_DOT=$(DOX_HAVE_DOT)" ) | doxygen -
+	@cd .. && rm -f $(PROJECT)/$(DOX_TAR).tar.gz \
+		&& tar -zcf $(PROJECT)/$(DOX_TAR).tar.gz $(PROJECT)-dox > /dev/null \
+		&& echo "Doxygen docs in `pwd`/$(PROJECT)/$(DOX_TAR).tar.gz"

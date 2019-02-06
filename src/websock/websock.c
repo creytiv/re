@@ -66,7 +66,8 @@ static const char magic[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 static void timeout_handler(void *arg);
 
 
-static void dummy_recv_handler(struct websock_conn *conn, struct websock_hdr *hdr, struct mbuf *mb, void *arg)
+static void dummy_recv_handler(struct websock_conn *conn,
+		struct websock_hdr *hdr, struct mbuf *mb, void *arg)
 {
 	(void)conn;
 	(void)hdr;
@@ -75,7 +76,8 @@ static void dummy_recv_handler(struct websock_conn *conn, struct websock_hdr *hd
 }
 
 
-static void internal_close_handler(struct websock_conn *conn, int err, void *arg)
+static void internal_close_handler(struct websock_conn *conn, int err,
+		void *arg)
 {
 	(void)err;
 	(void)arg;
