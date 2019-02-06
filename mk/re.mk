@@ -825,6 +825,6 @@ $(DOX_DIR):
 dox:	$(DOX_DIR)
 	@( cat mk/Doxyfile ; echo "PROJECT_NUMBER=$(VERSION)"; \
 		echo "HAVE_DOT=$(DOX_HAVE_DOT)" ) | doxygen -
-	@cd .. && rm -f $(PROJECT)/$(DOX_TAR).tar.gz \
-		&& tar -zcf $(PROJECT)/$(DOX_TAR).tar.gz $(PROJECT)-dox > /dev/null \
-		&& echo "Doxygen docs in `pwd`/$(PROJECT)/$(DOX_TAR).tar.gz"
+	@cd .. && rm -f $(PROJECT)/$(DOX_TAR).tar.gz &&\
+	tar -zcf $(PROJECT)/$(DOX_TAR).tar.gz $(PROJECT)-dox >/dev/null\
+	&& echo "Doxygen docs in `pwd`/$(PROJECT)/$(DOX_TAR).tar.gz"
