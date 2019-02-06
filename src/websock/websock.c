@@ -66,19 +66,19 @@ static const char magic[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 static void timeout_handler(void *arg);
 
 
-static void dummy_recv_handler(const struct websock_hdr *hdr, struct mbuf *mb,
-			       void *arg)
+static void dummy_recv_handler(struct websock_conn *conn, struct websock_hdr *hdr, struct mbuf *mb, void *arg)
 {
+	(void)conn;
 	(void)hdr;
 	(void)mb;
 	(void)arg;
 }
 
 
-static void internal_close_handler(int err, void *arg)
+static void internal_close_handler(struct websock_conn *conn, int err, void *arg)
 {
-	struct websock_conn *conn = arg;
 	(void)err;
+	(void)arg;
 
 	mem_deref(conn);
 }
@@ -134,7 +134,7 @@ static void conn_close(struct websock_conn *conn, int err)
 	conn->tc = mem_deref(conn->tc);
 	conn->state = CLOSED;
 
-	conn->closeh(err, conn->arg);
+	conn->closeh(conn, err, conn->arg);
 }
 
 
@@ -306,7 +306,7 @@ static void recv_handler(struct mbuf *mb, void *arg)
 		case WEBSOCK_TEXT:
 		case WEBSOCK_BIN:
 			mem_ref(conn);
-			conn->recvh(&hdr, mb, conn->arg);
+			conn->recvh(conn, &hdr, mb, conn->arg);
 
 			if (mem_nrefs(conn) == 1) {
 
