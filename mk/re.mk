@@ -810,20 +810,19 @@ clang:
 #
 # Documentation section
 #
-DOX_DIR=../$(PROJECT)-dox
-DOX_TAR=$(PROJECT)-dox-$(VERSION)
+DOX_DIR	= ../$(PROJECT)-dox
+DOX_TAR	= $(PROJECT)-dox-$(VERSION)
+DOX_HAVE_DOT	:= $(shell [ -f /usr/bin/dot ] || [ -f /usr/local/bin/dot ] && echo "YES")
+ifeq ($(DOX_HAVE_DOT),)
+DOX_HAVE_DOT	:= NO
+endif
 
 $(DOX_DIR):
 	@mkdir $@
 
-$(DOX_DIR)/Doxyfile: mk/Doxyfile Makefile
-	@cp $< $@
-	@perl -pi -e 's/PROJECT_NUMBER\s*=.*/PROJECT_NUMBER = $(VERSION)/' \
-	$(DOX_DIR)/Doxyfile
-
 .PHONY:
-dox:	$(DOX_DIR) $(DOX_DIR)/Doxyfile
-	@doxygen $(DOX_DIR)/Doxyfile 2>&1 | grep -v DEBUG_ ; true
-	@cd .. && rm -f $(DOX_TAR).tar.gz && \
-	tar -zcf $(DOX_TAR).tar.gz $(PROJECT)-dox > /dev/null && \
-	echo "Doxygen docs in `pwd`/$(DOX_TAR).tar.gz"
+dox:	$(DOX_DIR)
+	@( cat mk/Doxyfile ; echo "PROJECT_NUMBER=$(VERSION)"; echo "HAVE_DOT=$(DOX_HAVE_DOT)" ) | doxygen -
+	@cd .. && rm -f $(PROJECT)/$(DOX_TAR).tar.gz && \
+	tar -zcf $(PROJECT)/$(DOX_TAR).tar.gz $(PROJECT)-dox > /dev/null && \
+	echo "Doxygen docs in `pwd`/$(PROJECT)/$(DOX_TAR).tar.gz"
