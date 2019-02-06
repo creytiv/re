@@ -17,10 +17,10 @@ install:
     - wget "https://github.com/alfredh/pytools/raw/master/ccheck.py"
 
 script: 
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
         make EXTRA_CFLAGS=-Werror CCACHE=;
     fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+  - if [[ "$TRAVIS_OS_NAME" = "osx" ]]; then
         make EXTRA_CFLAGS="-I/usr/local/opt/openssl/include -Werror" EXTRA_LFLAGS="-L/usr/local/opt/openssl/lib" CCACHE=;
     fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python2 ccheck.py ; fi
+  - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then python2 ccheck.py ; fi
