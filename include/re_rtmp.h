@@ -74,6 +74,9 @@ typedef void (rtmp_estab_h)(void *arg);
 typedef void (rtmp_command_h)(const struct odict *msg, void *arg);
 typedef void (rtmp_close_h)(int err, void *arg);
 
+typedef void (rtmp_control_h)(enum rtmp_event_type event, struct mbuf *mb,
+			      void *arg);
+
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg);
@@ -86,6 +89,7 @@ void rtmp_set_handlers(struct rtmp_conn *conn, rtmp_command_h *cmdh,
 struct tcp_conn *rtmp_conn_tcpconn(const struct rtmp_conn *conn);
 const char *rtmp_conn_stream(const struct rtmp_conn *conn);
 int  rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn);
+void rtmp_set_control_handler(struct rtmp_conn *conn, rtmp_control_h *ctrlh);
 
 
 typedef void (rtmp_resp_h)(bool success, const struct odict *msg,
@@ -108,8 +112,6 @@ int rtmp_amf_data(const struct rtmp_conn *conn, uint32_t stream_id,
 /* stream */
 struct rtmp_stream;
 
-typedef void (rtmp_control_h)(enum rtmp_event_type event, struct mbuf *mb,
-			      void *arg);
 typedef void (rtmp_audio_h)(uint32_t timestamp,
 			    const uint8_t *pld, size_t len, void *arg);
 typedef void (rtmp_video_h)(uint32_t timestamp,

@@ -45,6 +45,7 @@ struct rtmp_conn {
 	rtmp_estab_h *estabh;
 	rtmp_command_h *cmdh;
 	rtmp_close_h *closeh;
+	rtmp_control_h *ctrlh;
 	void *arg;
 
 	/* client specific: */
