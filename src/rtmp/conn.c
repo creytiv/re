@@ -136,6 +136,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	case RTMP_EVENT_PING_REQUEST:
+
 		err = rtmp_control(conn, RTMP_TYPE_USER_CONTROL_MSG,
 				   RTMP_EVENT_PING_RESPONSE, value);
 		if (err)
