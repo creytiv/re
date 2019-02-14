@@ -11,6 +11,7 @@
 #include <re_net.h>
 #include <re_sa.h>
 #include <re_list.h>
+#include <re_tmr.h>
 #include <re_tcp.h>
 #include <re_sys.h>
 #include <re_odict.h>
@@ -32,6 +33,8 @@ static void conn_destructor(void *data)
 {
 	struct rtmp_conn *conn = data;
 
+	tmr_cancel(&conn->tmr_ping);
+
 	list_flush(&conn->ctransl);
 	list_flush(&conn->streaml);
 
@@ -45,6 +48,19 @@ static void conn_destructor(void *data)
 	mem_deref(conn->app);
 	mem_deref(conn->host);
 	mem_deref(conn->stream);
+}
+
+
+static void tmr_ping_handler(void *data)
+{
+	struct rtmp_conn *conn = data;
+	uint32_t value = 0;
+
+	tmr_start(&conn->tmr_ping, conn->ping_interval,
+		  tmr_ping_handler, conn);
+
+	rtmp_control(conn, RTMP_TYPE_USER_CONTROL_MSG,
+		     RTMP_EVENT_PING_REQUEST, value);
 }
 
 
@@ -101,6 +117,7 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		return EBADMSG;
 
 	event = ntohs(mbuf_read_u16(mb));
+	value = ntohl(mbuf_read_u32(mb));
 
 	switch (event) {
 
@@ -109,8 +126,6 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 	case RTMP_EVENT_STREAM_DRY:
 	case RTMP_EVENT_STREAM_IS_RECORDED:
 	case RTMP_EVENT_SET_BUFFER_LENGTH:
-
-		value = ntohl(mbuf_read_u32(mb));
 
 		if (value != RTMP_CONTROL_STREAM_ID) {
 
@@ -121,11 +136,6 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	case RTMP_EVENT_PING_REQUEST:
-
-		value = ntohl(mbuf_read_u32(mb));
-
-		re_printf("got Ping Request:  value = %u\n", value);
-
 		err = rtmp_control(conn, RTMP_TYPE_USER_CONTROL_MSG,
 				   RTMP_EVENT_PING_RESPONSE, value);
 		if (err)
@@ -133,14 +143,9 @@ static int handle_user_control_msg(struct rtmp_conn *conn, struct mbuf *mb)
 		break;
 
 	case RTMP_EVENT_PING_RESPONSE:
-
-		if (conn->ctrlh)
-			conn->ctrlh(event, mb, conn->arg);
 		break;
 
 	default:
-		re_printf("*** user control event not handled (%d) ***\n",
-			  event);
 		break;
 	}
 
@@ -229,9 +234,6 @@ static int rtmp_dechunk_handler(const struct rtmp_header *hdr,
 		break;
 
 	case RTMP_TYPE_USER_CONTROL_MSG:
-
-		re_printf("header stream: %u\n", hdr->stream_id);
-
 		err = handle_user_control_msg(conn, mb);
 		break;
 
@@ -996,16 +998,6 @@ void rtmp_set_handlers(struct rtmp_conn *conn, rtmp_command_h *cmdh,
 }
 
 
-void rtmp_set_control_handler(struct rtmp_conn *conn, rtmp_control_h *ctrlh)
-{
-	if (!conn)
-		return;
-
-
-	conn->ctrlh = ctrlh;
-}
-
-
 static const char *rtmp_handshake_name(enum rtmp_handshake_state state)
 {
 	switch (state) {
@@ -1046,4 +1038,14 @@ int rtmp_conn_debug(struct re_printf *pf, const struct rtmp_conn *conn)
 	err |= re_hprintf(pf, "%H\n", rtmp_dechunker_debug, conn->dechunk);
 
 	return err;
+}
+
+
+void rtmp_conn_enable_ping(struct rtmp_conn *conn, uint32_t interval)
+{
+	if (!conn)
+		return;
+
+	conn->ping_interval = interval;
+	tmr_start(&conn->tmr_ping, interval, tmr_ping_handler, conn);
 }

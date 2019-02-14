@@ -12,6 +12,7 @@
 #include <re_sa.h>
 #include <re_tcp.h>
 #include <re_list.h>
+#include <re_tmr.h>
 #include <re_rtmp.h>
 #include "rtmp.h"
 

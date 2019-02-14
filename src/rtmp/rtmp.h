@@ -45,7 +45,6 @@ struct rtmp_conn {
 	rtmp_estab_h *estabh;
 	rtmp_command_h *cmdh;
 	rtmp_close_h *closeh;
-	rtmp_control_h *ctrlh;
 	void *arg;
 
 	/* client specific: */
@@ -61,6 +60,10 @@ struct rtmp_conn {
 	char *uri;
 	char *stream;
 	char *host;
+
+	/* server specific: */
+	struct tmr tmr_ping;
+	uint32_t ping_interval;
 };
 
 /**

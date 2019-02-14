@@ -11,6 +11,7 @@
 #include <re_net.h>
 #include <re_sa.h>
 #include <re_list.h>
+#include <re_tmr.h>
 #include <re_sys.h>
 #include <re_odict.h>
 #include <re_rtmp.h>
