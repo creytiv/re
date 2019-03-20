@@ -41,7 +41,7 @@ Description: Generic library for real-time communications with async IO support
 Package: libre-dev
 Architecture: any
 Section: libdevel
-Depends: libre (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libre (= ${binary:Version}), ${misc:Depends}
 Description: Generic library for real-time communications (development files)
  Libre is a portable and generic library for real-time communications
  with async IO support and a complete SIP stack with support for protocols
