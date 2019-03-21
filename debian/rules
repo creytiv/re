@@ -11,7 +11,7 @@
 
 
 EXTRA_CFLAGS:="$(shell dpkg-buildflags --get CFLAGS | sed -e 's/-O2//')"
-EXTRA_LFLAGS:="$(shell dpkg-buildflags --get LDFLAGS) -Wl,-soname,libre.so"
+EXTRA_LFLAGS:="$(shell dpkg-buildflags --get LDFLAGS) -Wl,-soname,libre.so.0"
 
 
 configure: configure-stamp
