@@ -41,6 +41,7 @@ struct rtmp_conn {
 	uint32_t send_chunk_size;
 	unsigned chunk_id_counter;
 	bool is_client;
+	bool secure;
 	bool connected;
 	rtmp_estab_h *estabh;
 	rtmp_command_h *cmdh;
@@ -53,6 +54,8 @@ struct rtmp_conn {
 	struct dns_query *dnsq6;
 	struct list ctransl;
 	struct sa srvv[16];
+	struct tls *tls;
+	struct tls_conn *sc;
 	unsigned srvc;
 	uint64_t tid_counter;
 	uint16_t port;

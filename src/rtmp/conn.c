@@ -12,6 +12,8 @@
 #include <re_sa.h>
 #include <re_list.h>
 #include <re_tcp.h>
+#include <re_srtp.h>
+#include <re_tls.h>
 #include <re_sys.h>
 #include <re_odict.h>
 #include <re_dns.h>
@@ -38,6 +40,8 @@ static void conn_destructor(void *data)
 	mem_deref(conn->dnsq6);
 	mem_deref(conn->dnsq4);
 	mem_deref(conn->dnsc);
+	mem_deref(conn->sc);
+	mem_deref(conn->tls);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
 	mem_deref(conn->dechunk);
@@ -358,6 +362,7 @@ static void conn_close(struct rtmp_conn *conn, int err)
 {
 	rtmp_close_h *closeh;
 
+	conn->sc = mem_deref(conn->sc);
 	conn->tc = mem_deref(conn->tc);
 	conn->dnsq6 = mem_deref(conn->dnsq6);
 	conn->dnsq4 = mem_deref(conn->dnsq4);
@@ -688,6 +693,7 @@ static int req_connect(struct rtmp_conn *conn)
 		conn->last_ack = 0;
 		conn->total_bytes = 0;
 		conn->mb = mem_deref(conn->mb);
+		conn->sc = mem_deref(conn->sc);
 		conn->tc = mem_deref(conn->tc);
 
 		rtmp_dechunker_set_chunksize(conn->dechunk,
@@ -695,6 +701,13 @@ static int req_connect(struct rtmp_conn *conn)
 
 		err = tcp_connect(&conn->tc, addr, tcp_estab_handler,
 				  tcp_recv_handler, tcp_close_handler, conn);
+
+		if (err)
+			continue;
+
+		if (conn->secure)
+			err = tls_start_tcp(&conn->sc, conn->tls, conn->tc, 0);
+
 		if (!err)
 			break;
 	}
@@ -781,19 +794,28 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
+	struct pl pl_secure;
 	struct pl pl_hostport;
 	struct pl pl_host;
 	struct pl pl_port;
 	struct pl pl_app;
 	struct pl pl_stream;
+	bool secure;
 	int err;
 
 	if (!connp || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "rtmp://[^/]+/[^/]+/[^]+",
-		     &pl_hostport, &pl_app, &pl_stream))
+	if (re_regex(uri, strlen(uri), "rtmp[s]*://[^/]+/[^/]+/[^]+",
+		     &pl_secure, &pl_hostport, &pl_app, &pl_stream))
 		return EINVAL;
+
+	if (0 == pl_strcasecmp(&pl_secure, "s")) {
+		secure = true;
+	}
+	else {
+		secure = false;
+	}
 
 	if (uri_decode_hostport(&pl_hostport, &pl_host, &pl_port))
 		return EINVAL;
@@ -802,6 +824,13 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (!conn)
 		return ENOMEM;
 
+	if (secure) {
+		err = tls_alloc(&conn->tls, TLS_METHOD_SSLV23, NULL, NULL);
+		if (err)
+			goto out;
+	}
+
+	conn->secure = secure;
 	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
 
 	err  = pl_strdup(&conn->app, &pl_app);
