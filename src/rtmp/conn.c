@@ -705,8 +705,10 @@ static int req_connect(struct rtmp_conn *conn)
 		if (err)
 			continue;
 
+#ifdef USE_TLS
 		if (conn->secure)
 			err = tls_start_tcp(&conn->sc, conn->tls, conn->tc, 0);
+#endif
 
 		if (!err)
 			break;
@@ -824,11 +826,13 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (!conn)
 		return ENOMEM;
 
+#ifdef USE_TLS
 	if (secure) {
 		err = tls_alloc(&conn->tls, TLS_METHOD_SSLV23, NULL, NULL);
 		if (err)
 			goto out;
 	}
+#endif
 
 	conn->secure = secure;
 	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
