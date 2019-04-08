@@ -7,6 +7,7 @@
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mbuf.h>
+#include <re_mem.h>
 #include <re_md5.h>
 #include <re_sys.h>
 #include <re_httpauth.h>
@@ -94,6 +95,14 @@ static int digest_decode(const struct pl *hval, digest_decode_h *dech,
 	}
 
 	return 0;
+}
+
+
+static void response_destructor(void *data)
+{
+	struct httpauth_digest_resp *resp = data;
+
+	mem_deref(resp->mb);
 }
 
 
@@ -211,4 +220,191 @@ int httpauth_digest_response_auth(const struct httpauth_digest_resp *resp,
 		return EAUTH;
 
 	return 0;
+}
+
+
+static uint32_t nc = 1;
+
+int httpauth_digest_make_response(struct httpauth_digest_resp **presp,
+		const struct httpauth_digest_chall *chall,
+		const char *path, const char *method, const char *user,
+		const char *pwd, const char *body)
+{
+	struct httpauth_digest_resp *resp;
+	size_t p1, p2;
+	uint8_t ha1[MD5_SIZE], ha2[MD5_SIZE], response[MD5_SIZE];
+	uint32_t cnonce;
+	struct mbuf *mb = NULL;
+	int err;
+
+	if (!presp || !chall || !method || !user || !path || !pwd)
+		return EINVAL;
+
+	resp = mem_zalloc(sizeof(*resp), response_destructor);
+	if (!resp) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	mb = mbuf_alloc(256);
+	if (!mb) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	resp->realm = chall->realm;
+	resp->nonce = chall->nonce;
+	pl_set_str(&resp->username, user);
+	pl_set_str(&resp->uri, path);
+	resp->qop = chall->qop;
+
+	err = mbuf_printf(mb, "%x", nc);
+	err |= mbuf_write_u8(mb, 0);
+	if (err)
+		goto out;
+
+	/* Client nonce should change, so we use random value. */
+	cnonce = rand_u32();
+	p1 = mb->pos;
+	err = mbuf_printf(mb, "%x", cnonce);
+	err |= mbuf_write_u8(mb, 0);
+	if (err)
+		goto out;
+
+	/* compute response */
+	/* HA1 = MD5(username:realm:password) */
+	p2 = mb->pos;
+	err = mbuf_printf(mb, "%r:%r:%s", &resp->username, &resp->realm,
+			pwd);
+	if (err)
+		goto out;
+
+	mbuf_set_pos(mb, p2);
+	md5(mbuf_buf(mb), mbuf_get_left(mb), ha1);
+	mbuf_skip_to_end(mb);
+	if (0 == pl_strcmp(&chall->algorithm, "MD5-sess")) {
+		/* HA1 = MD5(HA1:nonce:cnonce) */
+		p2 = mb->pos;
+		err = mbuf_printf(mb, "%w:%r:%x", ha1, sizeof(ha1),
+				&resp->nonce, cnonce);
+		if (err)
+			goto out;
+
+		mbuf_set_pos(mb, p2);
+		md5(mbuf_buf(mb), mbuf_get_left(mb), ha1);
+		mbuf_skip_to_end(mb);
+	}
+
+	/* HA2 */
+	p2 = mb->pos;
+	if (0 == pl_strcmp(&resp->qop, "auth-int") && str_isset(body)) {
+		/* HA2 = MD5(method:digestURI:MD5(entityBody)) */
+		err = mbuf_printf(mb, "%s", body);
+		if (err)
+			goto out;
+
+		mbuf_set_pos(mb, p2);
+		md5(mbuf_buf(mb), mbuf_get_left(mb), ha2);
+		mbuf_skip_to_end(mb);
+		p2 = mb->pos;
+		err = mbuf_printf(mb, "%s:%r:%w", method, &resp->uri,
+				ha2, sizeof(ha2));
+	}
+	else {
+		/* HA2 = MD5(method:digestURI) */
+		err = mbuf_printf(mb, "%s:%r", method, &resp->uri);
+
+	}
+
+	if (err)
+		goto out;
+
+	mbuf_set_pos(mb, p2);
+	md5(mbuf_buf(mb), mbuf_get_left(mb), ha2);
+	mbuf_skip_to_end(mb);
+
+	/* repsonse */
+	p2 = mb->pos;
+	if (0 == pl_strcmp(&resp->qop, "auth-int") ||
+			0 == pl_strcmp(&resp->qop, "auth")) {
+	/* response = MD5(HA1:nonce:nonceCount:cnonce:qop:HA2) */
+		err = mbuf_printf(mb, "%w:%r:%x:%x:%r:%w",
+				ha1, sizeof(ha1), &resp->nonce, nc, cnonce,
+				&resp->qop, ha2, sizeof(ha2));
+	}
+	else {
+	/* response = MD5(HA1:nonce:HA2) */
+		err = mbuf_printf(mb, "%w:%r:%w", ha1, sizeof(ha1),
+				&resp->nonce, ha2, sizeof(ha2));
+	}
+
+	if (err)
+		goto out;
+
+	mbuf_set_pos(mb, p2);
+	md5(mbuf_buf(mb), mbuf_get_left(mb), response);
+	mbuf_skip_to_end(mb);
+
+	p2 = mb->pos;
+	err = mbuf_printf(mb, "%w", response, sizeof(response));
+	err |= mbuf_write_u8(mb, 0);
+	if (err)
+		goto out;
+
+	++nc;
+	mbuf_set_pos(mb, 0);
+	pl_set_str(&resp->nc, (const char*) mbuf_buf(mb));
+	mbuf_set_pos(mb, p1);
+	pl_set_str(&resp->cnonce, (const char*) mbuf_buf(mb));
+	mbuf_set_pos(mb, p2);
+	pl_set_str(&resp->response, (const char*) mbuf_buf(mb));
+out:
+	resp->mb = mb;
+	if (err)
+		mem_deref(resp);
+	else
+		*presp = resp;
+
+	return err;
+}
+
+
+int httpauth_digest_response_encode(const struct httpauth_digest_resp *resp,
+				  struct mbuf *mb)
+{
+	int err;
+	size_t s;
+
+	if (!resp || !mb)
+		return EINVAL;
+
+	/* lenth of string literals */
+	s = 93;
+	if (pl_isset(&resp->qop))
+		s += 26;
+
+	/* length of values */
+	s += resp->username.l + resp->realm.l + resp->nonce.l + resp->uri.l;
+	s += resp->response.l;
+	if (pl_isset(&resp->qop))
+		s += resp->qop.l + resp->nc.l + resp->cnonce.l;
+
+	if (s > mb->size)
+		mbuf_resize(mb, s);
+
+	err = mbuf_write_str(mb, "Authorization: ");
+	err |= mbuf_printf(mb, "Digest username=\"%r\"", &resp->username);
+	err |= mbuf_printf(mb, ", realm=\"%r\"", &resp->realm);
+	err |= mbuf_printf(mb, ", nonce=\"%r\"", &resp->nonce);
+	err |= mbuf_printf(mb, ", uri=\"%r\"", &resp->uri);
+	err |= mbuf_printf(mb, ", response=\"%r\"", &resp->response);
+
+	if (pl_isset(&resp->qop)) {
+		err |= mbuf_printf(mb, ", qop=%r", &resp->qop);
+		err |= mbuf_printf(mb, ", nc=%r", &resp->nc);
+		err |= mbuf_printf(mb, ", cnonce=\"%r\"", &resp->cnonce);
+	}
+
+	mbuf_set_pos(mb, 0);
+	return err;
 }
