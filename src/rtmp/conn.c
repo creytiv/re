@@ -400,7 +400,8 @@ static void tcp_estab_handler(void *arg)
 				re_printf("rtmp: could not"
 					  " verify TLS server"
 					  " (common name '%s')\n", cn);
-				goto out;
+				conn_close(conn, err);
+				return;
 			}
 		}
 #endif
@@ -408,7 +409,6 @@ static void tcp_estab_handler(void *arg)
 		err = handshake_start(conn);
 	}
 
- out:
 	if (err)
 		conn_close(conn, err);
 }
