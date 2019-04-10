@@ -860,14 +860,14 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (!conn)
 		return ENOMEM;
 
+	conn->secure = secure;
+	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : defport;
+
 #ifdef USE_TLS
-	if (secure) {
+	if (conn->secure) {
 		conn->tls = mem_ref(tls);
 	}
 #endif
-
-	conn->secure = secure;
-	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : defport;
 
 	err  = pl_strdup(&conn->app, &pl_app);
 	err |= pl_strdup(&conn->stream, &pl_stream);
