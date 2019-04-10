@@ -933,12 +933,13 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 	if (err)
 		goto out;
 
+#ifdef USE_TLS
 	if (tls) {
-
 		err = tls_start_tcp(&conn->sc, tls, conn->tc, 0);
 		if (err)
 			goto out;
 	}
+#endif
 
  out:
 	if (err)
