@@ -194,6 +194,9 @@ int dns_dname_decode(struct mbuf *mb, char **name, size_t start)
 
 			--mb->pos;
 
+			if (mbuf_get_left(mb) < 2)
+				break;
+
 			offset = ntohs(mbuf_read_u16(mb)) & OFFSET_MASK;
 			if (!comp) {
 				pos  = mb->pos;
@@ -205,7 +208,7 @@ int dns_dname_decode(struct mbuf *mb, char **name, size_t start)
 		}
 		else if (len > mbuf_get_left(mb))
 			break;
-		else if (len > sizeof(buf) - i - 2)
+		else if (len + i + 2 > sizeof(buf))
 			break;
 
 		if (i > 0)
