@@ -380,11 +380,35 @@ static void tcp_estab_handler(void *arg)
 	struct rtmp_conn *conn = arg;
 	int err = 0;
 
+#ifdef USE_TLS
+	if (conn->sc) {
+		re_printf("rtmp: TLS established (cipher = %s)\n",
+			  tls_cipher_name(conn->sc));
+	}
+#endif
+
 	if (conn->is_client) {
+
+#ifdef USE_TLS
+		if (conn->sc) {
+			char cn[512] = "";
+
+			tls_peer_common_name(conn->sc, cn, sizeof(cn));
+
+			err = tls_peer_verify(conn->sc);
+			if (err) {
+				re_printf("rtmp: could not"
+					  " verify TLS server"
+					  " (common name '%s')\n", cn);
+				goto out;
+			}
+		}
+#endif
 
 		err = handshake_start(conn);
 	}
 
+ out:
 	if (err)
 		conn_close(conn, err);
 }
