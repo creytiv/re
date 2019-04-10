@@ -797,28 +797,38 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
-	struct pl pl_secure;
+	struct pl pl_scheme;
 	struct pl pl_hostport;
 	struct pl pl_host;
 	struct pl pl_port;
 	struct pl pl_app;
 	struct pl pl_stream;
+	uint16_t defport;
 	bool secure;
 	int err;
 
 	if (!connp || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "rtmp[s]*://[^/]+/[^/]+/[^]+",
-		     &pl_secure, &pl_hostport, &pl_app, &pl_stream))
+	if (re_regex(uri, strlen(uri), "[a-z]+://[^/]+/[^/]+/[^]+",
+		     &pl_scheme, &pl_hostport, &pl_app, &pl_stream))
 		return EINVAL;
 
-	if (0 == pl_strcasecmp(&pl_secure, "s")) {
-		secure = true;
+	if (!pl_strcasecmp(&pl_scheme, "rtmp")) {
+		secure  = false;
+		defport = RTMP_PORT;
 	}
-	else {
-		secure = false;
+#ifdef USE_TLS
+	else if (!pl_strcasecmp(&pl_scheme, "rtmps")) {
+		secure  = true;
+		defport = 443;
+
+		if (!tls)
+			return EINVAL;
 	}
+#endif
+	else
+		return ENOTSUP;
 
 	if (uri_decode_hostport(&pl_hostport, &pl_host, &pl_port))
 		return EINVAL;
@@ -834,7 +844,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 #endif
 
 	conn->secure = secure;
-	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
+	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : defport;
 
 	err  = pl_strdup(&conn->app, &pl_app);
 	err |= pl_strdup(&conn->stream, &pl_stream);
