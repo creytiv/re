@@ -792,6 +792,7 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  *     rtmp://[::1]/vod/mp4:sample.mp4
  */
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
+		 struct tls *tls,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
@@ -828,9 +829,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 #ifdef USE_TLS
 	if (secure) {
-		err = tls_alloc(&conn->tls, TLS_METHOD_SSLV23, NULL, NULL);
-		if (err)
-			goto out;
+		conn->tls = mem_ref(tls);
 	}
 #endif
 
@@ -906,6 +905,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  * @return 0 if success, otherwise errorcode
  */
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
+		struct tls *tls,
 		rtmp_command_h *cmdh, rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
@@ -922,6 +922,13 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 			 tcp_recv_handler, tcp_close_handler, conn);
 	if (err)
 		goto out;
+
+	if (tls) {
+
+		err = tls_start_tcp(&conn->sc, tls, conn->tc, 0);
+		if (err)
+			goto out;
+	}
 
  out:
 	if (err)
