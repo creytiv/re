@@ -776,6 +776,7 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  * @param connp  Pointer to allocated RTMP connection object
  * @param dnsc   DNS Client for resolving FQDN uris
  * @param uri    RTMP uri to connect to
+ * @param tls    TLS Context (optional)
  * @param estabh Established handler
  * @param cmdh   Incoming command handler
  * @param closeh Close handler
@@ -906,6 +907,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  *
  * @param connp  Pointer to allocated RTMP connection object
  * @param ts     TCP socket with pending connection
+ * @param tls    TLS Context (optional)
  * @param cmdh   Incoming command handler
  * @param closeh Close handler
  * @param arg    Handler argument
