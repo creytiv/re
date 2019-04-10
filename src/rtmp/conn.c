@@ -702,11 +702,8 @@ static int req_connect(struct rtmp_conn *conn)
 		err = tcp_connect(&conn->tc, addr, tcp_estab_handler,
 				  tcp_recv_handler, tcp_close_handler, conn);
 
-		if (err)
-			continue;
-
 #ifdef USE_TLS
-		if (conn->secure)
+		if (conn->secure && !err)
 			err = tls_start_tcp(&conn->sc, conn->tls, conn->tc, 0);
 #endif
 
@@ -820,11 +817,12 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	}
 #ifdef USE_TLS
 	else if (!pl_strcasecmp(&pl_scheme, "rtmps")) {
-		secure  = true;
-		defport = 443;
 
 		if (!tls)
 			return EINVAL;
+
+		secure  = true;
+		defport = 443;
 	}
 #endif
 	else
