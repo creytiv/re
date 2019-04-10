@@ -87,6 +87,7 @@ struct http_msg {
 	uint32_t clen;         /**< Content length                         */
 };
 
+
 struct http_uri {
 	struct pl scheme;
 	struct pl host;
@@ -95,6 +96,15 @@ struct http_uri {
 };
 
 int http_uri_decode(struct http_uri *hu, const struct pl *uri);
+
+
+/** Http Client configuration */
+struct http_conf {
+	uint32_t conn_timeout;  /* in [ms] */
+	uint32_t recv_timeout;  /* in [ms] */
+	uint32_t idle_timeout;  /* in [ms] */
+};
+
 
 typedef bool(http_hdr_h)(const struct http_hdr *hdr, void *arg);
 
@@ -134,7 +144,7 @@ typedef void (http_conn_h)(struct tcp_conn *tc, struct tls_conn *sc,
 			   void *arg);
 
 int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc);
-int http_client_set_timeout(struct http_cli *cli, uint32_t ms);
+int http_client_set_config(struct http_cli *cli, struct http_conf *conf);
 int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		 const char *uri, http_resp_h *resph, http_data_h *datah,
 		 void *arg, const char *fmt, ...);
