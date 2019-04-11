@@ -41,7 +41,6 @@ struct rtmp_conn {
 	uint32_t send_chunk_size;
 	unsigned chunk_id_counter;
 	bool is_client;
-	bool secure;
 	bool connected;
 	rtmp_estab_h *estabh;
 	rtmp_command_h *cmdh;

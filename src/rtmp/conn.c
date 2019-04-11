@@ -727,7 +727,7 @@ static int req_connect(struct rtmp_conn *conn)
 				  tcp_recv_handler, tcp_close_handler, conn);
 
 #ifdef USE_TLS
-		if (conn->secure && !err)
+		if (conn->tls && !err)
 			err = tls_start_tcp(&conn->sc, conn->tls, conn->tc, 0);
 #endif
 
@@ -860,13 +860,11 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (!conn)
 		return ENOMEM;
 
-	conn->secure = secure;
 	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : defport;
 
 #ifdef USE_TLS
-	if (conn->secure) {
+	if (secure)
 		conn->tls = mem_ref(tls);
-	}
 #endif
 
 	err  = pl_strdup(&conn->app, &pl_app);
