@@ -5,5 +5,4 @@
 #
 
 SRCS	+= uri/uri.c
-SRCS	+= uri/ucmp.c
 SRCS	+= uri/uric.c
