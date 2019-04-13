@@ -67,14 +67,14 @@ static void timeout_handler(void *arg);
 
 
 static void dummy_recv_handler(struct websock_conn * conn,
-    const struct websock_hdr *hdr, struct mbuf *mb, void *arg)
+	const struct websock_hdr *hdr, struct mbuf *mb, void *arg)
 {
-    (void)conn; (void)hdr; (void)mb; (void)arg;
+	(void)conn; (void)hdr; (void)mb; (void)arg;
 }
 
 
 static void internal_close_handler(struct websock_conn *conn,
-    int err, void *arg)
+	int err, void *arg)
 {
 	(void)err; (void)arg;
 
