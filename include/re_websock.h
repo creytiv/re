@@ -46,10 +46,10 @@ struct websock_hdr {
 struct websock;
 struct websock_conn;
 
-typedef void (websock_estab_h)(void *arg);
-typedef void (websock_recv_h)(const struct websock_hdr *hdr, struct mbuf *mb,
-			      void *arg);
-typedef void (websock_close_h)(int err, void *arg);
+typedef void (websock_estab_h)(struct websock_conn * conn, void *arg);
+typedef void (websock_recv_h)(struct websock_conn * conn,
+    const struct websock_hdr *hdr, struct mbuf *mb, void *arg);
+typedef void (websock_close_h)(struct websock_conn*conn, int err, void*arg);
 
 
 int websock_connect(struct websock_conn **connp, struct websock *sock,
