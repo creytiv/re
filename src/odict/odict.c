@@ -10,6 +10,7 @@
 #include "re_hash.h"
 #include "re_odict.h"
 
+const uint32_t ODICT_SIZE_DEFAULT = 32;
 
 static void destructor(void *arg)
 {
@@ -44,6 +45,18 @@ int odict_alloc(struct odict **op, uint32_t hash_size)
 		*op = o;
 
 	return err;
+}
+
+struct odict *odict_new_size(uint32_t size)
+{
+    struct odict *that;
+    odict_alloc(&that, size);
+    return that;
+}
+
+struct odict *odict_new()
+{
+    return odict_new_size(ODICT_SIZE_DEFAULT);
 }
 
 

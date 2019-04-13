@@ -4,6 +4,8 @@
  * Copyright (C) 2010 - 2015 Creytiv.com
  */
 
+const uint32_t ODICT_SIZE_DEFAULT;
+
 enum odict_type {
 	ODICT_OBJECT,
 	ODICT_ARRAY,
@@ -33,6 +35,8 @@ struct odict_entry {
 };
 
 int odict_alloc(struct odict **op, uint32_t hash_size);
+struct odict *odict_new_size(uint32_t size);
+struct odict *odict_new(void);
 const struct odict_entry *odict_lookup(const struct odict *o, const char *key);
 size_t odict_count(const struct odict *o, bool nested);
 int odict_debug(struct re_printf *pf, const struct odict *o);
