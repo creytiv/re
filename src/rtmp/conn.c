@@ -394,15 +394,7 @@ static void tcp_estab_handler(void *arg)
 			char cn[512] = "";
 
 			tls_peer_common_name(conn->sc, cn, sizeof(cn));
-
-			err = tls_peer_verify(conn->sc);
-			if (err) {
-				re_printf("rtmp: could not"
-					  " verify TLS server"
-					  " (common name '%s')\n", cn);
-				conn_close(conn, err);
-				return;
-			}
+			re_printf("cert common name: %s\n", cn);
 		}
 #endif
 
@@ -727,8 +719,18 @@ static int req_connect(struct rtmp_conn *conn)
 				  tcp_recv_handler, tcp_close_handler, conn);
 
 #ifdef USE_TLS
-		if (conn->tls && !err)
+		if (conn->tls && !err) {
 			err = tls_start_tcp(&conn->sc, conn->tls, conn->tc, 0);
+			if (err)
+				break;
+
+			err = tls_set_verify_host(conn->sc, conn->host);
+			if (err) {
+				re_printf("cert host error: %m\n", err);
+				break;
+			}
+
+		}
 #endif
 
 		if (!err)
@@ -876,6 +878,10 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (0 == sa_set(&conn->srvv[0], &pl_host, conn->port)) {
 
 		conn->srvc = 1;
+
+		err = pl_strdup(&conn->host, &pl_host);
+		if (err)
+			goto out;
 
 		err = req_connect(conn);
 		if (err)

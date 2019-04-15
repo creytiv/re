@@ -10,6 +10,7 @@
 #include <openssl/bn.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -871,6 +872,32 @@ int tls_set_servername(struct tls_conn *tc, const char *servername)
 		ERR_clear_error();
 		return EPROTO;
 	}
+
+	return 0;
+}
+
+
+int tls_set_verify_host(struct tls_conn *tc, const char *host)
+{
+	X509_VERIFY_PARAM *param;
+
+	re_printf(".... cert host: '%s'\n", host);
+
+	if (!tc || !host)
+		return EINVAL;
+
+	param = SSL_get0_param(tc->ssl);
+
+	/* Enable automatic hostname checks */
+	X509_VERIFY_PARAM_set_hostflags(param,
+					X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+
+	if (!X509_VERIFY_PARAM_set1_host(param, host, str_len(host))) {
+		ERR_clear_error();
+		return EPROTO;
+	}
+
+	SSL_set_verify(tc->ssl, SSL_VERIFY_PEER, NULL);
 
 	return 0;
 }
