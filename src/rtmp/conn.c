@@ -729,7 +729,6 @@ static int req_connect(struct rtmp_conn *conn)
 				re_printf("cert host error: %m\n", err);
 				break;
 			}
-
 		}
 #endif
 
