@@ -879,6 +879,7 @@ int tls_set_servername(struct tls_conn *tc, const char *servername)
 
 int tls_set_verify_host(struct tls_conn *tc, const char *host)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x100020fL
 	X509_VERIFY_PARAM *param;
 
 	re_printf(".... cert host: '%s'\n", host);
@@ -900,6 +901,12 @@ int tls_set_verify_host(struct tls_conn *tc, const char *host)
 	SSL_set_verify(tc->ssl, SSL_VERIFY_PEER, NULL);
 
 	return 0;
+#else
+	(void)tc;
+	(void)host;
+
+	return ENOSYS;
+#endif
 }
 
 
