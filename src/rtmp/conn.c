@@ -705,14 +705,9 @@ static int req_connect(struct rtmp_conn *conn)
 		if (conn->tls && !err) {
 			err = tls_start_tcp(&conn->sc, (struct tls *)conn->tls,
 					    conn->tc, 0);
-			if (err)
-				break;
-
-			err = tls_set_verify_server(conn->sc, conn->host);
-			if (err) {
-				re_printf("cert host error: %m\n", err);
-				break;
-			}
+			if (!err)
+				err = tls_set_verify_server(conn->sc,
+							    conn->host);
 		}
 #endif
 
