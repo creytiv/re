@@ -41,7 +41,6 @@ static void conn_destructor(void *data)
 	mem_deref(conn->dnsq4);
 	mem_deref(conn->dnsc);
 	mem_deref(conn->sc);
-	mem_deref(conn->tls);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
 	mem_deref(conn->dechunk);
@@ -720,7 +719,8 @@ static int req_connect(struct rtmp_conn *conn)
 
 #ifdef USE_TLS
 		if (conn->tls && !err) {
-			err = tls_start_tcp(&conn->sc, conn->tls, conn->tc, 0);
+			err = tls_start_tcp(&conn->sc, (struct tls *)conn->tls,
+					    conn->tc, 0);
 			if (err)
 				break;
 
@@ -815,7 +815,7 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  *     rtmp://[::1]/vod/mp4:sample.mp4
  */
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
-		 struct tls *tls,
+		 const struct tls *tls,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
@@ -865,7 +865,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 #ifdef USE_TLS
 	if (secure)
-		conn->tls = mem_ref(tls);
+		conn->tls = tls;
 #endif
 
 	err  = pl_strdup(&conn->app, &pl_app);
@@ -942,7 +942,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  * @return 0 if success, otherwise errorcode
  */
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
-		struct tls *tls,
+		const struct tls *tls,
 		rtmp_command_h *cmdh, rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
@@ -962,7 +962,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 
 #ifdef USE_TLS
 	if (tls) {
-		err = tls_start_tcp(&conn->sc, tls, conn->tc, 0);
+		err = tls_start_tcp(&conn->sc, (struct tls *)tls, conn->tc, 0);
 		if (err)
 			goto out;
 	}
