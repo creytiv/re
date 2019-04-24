@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#include <net/if.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mbuf.h>
@@ -86,8 +87,8 @@ static bool if_getaddr_handler(const char *ifname,
 		return false;
 
 #if 1
-	/* skip loopback and link-local IP */
-	if (sa_is_loopback(sa) || sa_is_linklocal(sa))
+	/* skip loopback IP */
+	if (sa_is_loopback(sa))
 		return false;
 #endif
 
@@ -99,6 +100,15 @@ static bool if_getaddr_handler(const char *ifname,
 	sa_cpy(ife->ip, sa);
 	ife->found = true;
 
+#ifdef HAVE_INET6
+	/* Assign IPv6 link local address scope id */
+	if (sa_is_linklocal(sa)) {
+		ife->ip->u.in6.sin6_scope_id = if_nametoindex(ifname);
+		DEBUG_WARNING("Set scope of %s to %u\n", ifname,
+			      ife->ip->u.in6.sin6_scope_id);
+	}
+
+#endif
 	return ife->found;
 }
 
