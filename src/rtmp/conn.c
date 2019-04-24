@@ -806,7 +806,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	struct pl pl_app;
 	struct pl pl_stream;
 	uint16_t defport;
-	bool secure;
 	int err;
 
 	if (!connp || !uri)
@@ -817,7 +816,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		return EINVAL;
 
 	if (!pl_strcasecmp(&pl_scheme, "rtmp")) {
-		secure  = false;
+		tls     = NULL;
 		defport = RTMP_PORT;
 	}
 #ifdef USE_TLS
@@ -826,7 +825,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		if (!tls)
 			return EINVAL;
 
-		secure  = true;
 		defport = 443;
 	}
 #endif
@@ -841,11 +839,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		return ENOMEM;
 
 	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : defport;
-
-#ifdef USE_TLS
-	if (secure)
-		conn->tls = tls;
-#endif
+	conn->tls = tls;
 
 	err  = pl_strdup(&conn->app, &pl_app);
 	err |= pl_strdup(&conn->stream, &pl_stream);
