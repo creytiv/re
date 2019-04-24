@@ -53,7 +53,7 @@ struct rtmp_conn {
 	struct dns_query *dnsq6;
 	struct list ctransl;
 	struct sa srvv[16];
-	const struct tls *tls;
+	struct tls *tls;
 	struct tls_conn *sc;
 	unsigned srvc;
 	uint64_t tid_counter;

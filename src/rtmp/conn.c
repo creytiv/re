@@ -703,7 +703,7 @@ static int req_connect(struct rtmp_conn *conn)
 
 #ifdef USE_TLS
 		if (conn->tls && !err) {
-			err = tls_start_tcp(&conn->sc, (struct tls *)conn->tls,
+			err = tls_start_tcp(&conn->sc, conn->tls,
 					    conn->tc, 0);
 			if (!err)
 				err = tls_set_verify_server(conn->sc,
@@ -794,7 +794,7 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  *     rtmp://[::1]/vod/mp4:sample.mp4
  */
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
-		 const struct tls *tls,
+		 struct tls *tls,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
@@ -921,7 +921,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  * @return 0 if success, otherwise errorcode
  */
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
-		const struct tls *tls,
+		struct tls *tls,
 		rtmp_command_h *cmdh, rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
@@ -941,7 +941,7 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 
 #ifdef USE_TLS
 	if (tls) {
-		err = tls_start_tcp(&conn->sc, (struct tls *)tls, conn->tc, 0);
+		err = tls_start_tcp(&conn->sc, tls, conn->tc, 0);
 		if (err)
 			goto out;
 	}
