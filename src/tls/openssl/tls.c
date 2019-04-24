@@ -879,21 +879,13 @@ int tls_set_servername(struct tls_conn *tc, const char *servername)
 
 int tls_set_verify_server(struct tls_conn *tc, const char *host)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
-	X509_VERIFY_PARAM *param;
-
-	re_printf(".... cert host: '%s'\n", host);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 
 	if (!tc || !host)
 		return EINVAL;
 
-	param = SSL_get0_param(tc->ssl);
-
-	/* Enable automatic hostname checks */
-	X509_VERIFY_PARAM_set_hostflags(param,
-					X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
-
-	if (!X509_VERIFY_PARAM_set1_host(param, host, str_len(host))) {
+	SSL_set_hostflags(tc->ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+	if (!SSL_set1_host(tc->ssl, host)) {
 		ERR_clear_error();
 		return EPROTO;
 	}
