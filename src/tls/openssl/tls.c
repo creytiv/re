@@ -877,7 +877,7 @@ int tls_set_servername(struct tls_conn *tc, const char *servername)
 }
 
 
-int tls_set_verify_host(struct tls_conn *tc, const char *host)
+int tls_set_verify_server(struct tls_conn *tc, const char *host)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
 	X509_VERIFY_PARAM *param;
