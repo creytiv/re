@@ -843,6 +843,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 	err  = pl_strdup(&conn->app, &pl_app);
 	err |= pl_strdup(&conn->stream, &pl_stream);
+	err |= pl_strdup(&conn->host, &pl_host);
 	err |= str_dup(&conn->uri, uri);
 	if (err)
 		goto out;
@@ -851,7 +852,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 		conn->srvc = 1;
 
-		err = pl_strdup(&conn->host, &pl_host);
 		if (err)
 			goto out;
 
@@ -868,10 +868,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 			err = EINVAL;
 			goto out;
 		}
-
-		err = pl_strdup(&conn->host, &pl_host);
-		if (err)
-			goto out;
 
 		conn->dnsc = mem_ref(dnsc);
 
