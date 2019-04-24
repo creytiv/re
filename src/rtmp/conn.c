@@ -852,9 +852,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 
 		conn->srvc = 1;
 
-		if (err)
-			goto out;
-
 		err = req_connect(conn);
 		if (err)
 			goto out;
