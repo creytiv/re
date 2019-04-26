@@ -57,6 +57,7 @@ enum rtmp_event_type {
 
 
 /* forward declarations */
+struct tls;
 struct dnsc;
 struct odict;
 struct tcp_sock;
@@ -75,9 +76,11 @@ typedef void (rtmp_command_h)(const struct odict *msg, void *arg);
 typedef void (rtmp_close_h)(int err, void *arg);
 
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
+		 struct tls *tls,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg);
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
+		struct tls *tls,
 		rtmp_command_h *cmdh, rtmp_close_h *closeh, void *arg);
 int rtmp_control(const struct rtmp_conn *conn,
 		 enum rtmp_packet_type type, ...);

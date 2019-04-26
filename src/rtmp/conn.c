@@ -12,6 +12,8 @@
 #include <re_sa.h>
 #include <re_list.h>
 #include <re_tcp.h>
+#include <re_srtp.h>
+#include <re_tls.h>
 #include <re_sys.h>
 #include <re_odict.h>
 #include <re_dns.h>
@@ -38,6 +40,7 @@ static void conn_destructor(void *data)
 	mem_deref(conn->dnsq6);
 	mem_deref(conn->dnsq4);
 	mem_deref(conn->dnsc);
+	mem_deref(conn->sc);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
 	mem_deref(conn->dechunk);
@@ -358,6 +361,7 @@ static void conn_close(struct rtmp_conn *conn, int err)
 {
 	rtmp_close_h *closeh;
 
+	conn->sc = mem_deref(conn->sc);
 	conn->tc = mem_deref(conn->tc);
 	conn->dnsq6 = mem_deref(conn->dnsq6);
 	conn->dnsq4 = mem_deref(conn->dnsq4);
@@ -688,6 +692,7 @@ static int req_connect(struct rtmp_conn *conn)
 		conn->last_ack = 0;
 		conn->total_bytes = 0;
 		conn->mb = mem_deref(conn->mb);
+		conn->sc = mem_deref(conn->sc);
 		conn->tc = mem_deref(conn->tc);
 
 		rtmp_dechunker_set_chunksize(conn->dechunk,
@@ -695,6 +700,17 @@ static int req_connect(struct rtmp_conn *conn)
 
 		err = tcp_connect(&conn->tc, addr, tcp_estab_handler,
 				  tcp_recv_handler, tcp_close_handler, conn);
+
+#ifdef USE_TLS
+		if (conn->tls && !err) {
+			err = tls_start_tcp(&conn->sc, conn->tls,
+					    conn->tc, 0);
+			if (!err)
+				err = tls_set_verify_server(conn->sc,
+							    conn->host);
+		}
+#endif
+
 		if (!err)
 			break;
 	}
@@ -764,6 +780,7 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  * @param connp  Pointer to allocated RTMP connection object
  * @param dnsc   DNS Client for resolving FQDN uris
  * @param uri    RTMP uri to connect to
+ * @param tls    TLS Context (optional)
  * @param estabh Established handler
  * @param cmdh   Incoming command handler
  * @param closeh Close handler
@@ -777,23 +794,42 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
  *     rtmp://[::1]/vod/mp4:sample.mp4
  */
 int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
+		 struct tls *tls,
 		 rtmp_estab_h *estabh, rtmp_command_h *cmdh,
 		 rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
+	struct pl pl_scheme;
 	struct pl pl_hostport;
 	struct pl pl_host;
 	struct pl pl_port;
 	struct pl pl_app;
 	struct pl pl_stream;
+	uint16_t defport;
 	int err;
 
 	if (!connp || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "rtmp://[^/]+/[^/]+/[^]+",
-		     &pl_hostport, &pl_app, &pl_stream))
+	if (re_regex(uri, strlen(uri), "[a-z]+://[^/]+/[^/]+/[^]+",
+		     &pl_scheme, &pl_hostport, &pl_app, &pl_stream))
 		return EINVAL;
+
+	if (!pl_strcasecmp(&pl_scheme, "rtmp")) {
+		tls     = NULL;
+		defport = RTMP_PORT;
+	}
+#ifdef USE_TLS
+	else if (!pl_strcasecmp(&pl_scheme, "rtmps")) {
+
+		if (!tls)
+			return EINVAL;
+
+		defport = 443;
+	}
+#endif
+	else
+		return ENOTSUP;
 
 	if (uri_decode_hostport(&pl_hostport, &pl_host, &pl_port))
 		return EINVAL;
@@ -802,10 +838,12 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	if (!conn)
 		return ENOMEM;
 
-	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : RTMP_PORT;
+	conn->port = pl_isset(&pl_port) ? pl_u32(&pl_port) : defport;
+	conn->tls = tls;
 
 	err  = pl_strdup(&conn->app, &pl_app);
 	err |= pl_strdup(&conn->stream, &pl_stream);
+	err |= pl_strdup(&conn->host, &pl_host);
 	err |= str_dup(&conn->uri, uri);
 	if (err)
 		goto out;
@@ -827,10 +865,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 			err = EINVAL;
 			goto out;
 		}
-
-		err = pl_strdup(&conn->host, &pl_host);
-		if (err)
-			goto out;
 
 		conn->dnsc = mem_ref(dnsc);
 
@@ -866,6 +900,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  *
  * @param connp  Pointer to allocated RTMP connection object
  * @param ts     TCP socket with pending connection
+ * @param tls    TLS Context (optional)
  * @param cmdh   Incoming command handler
  * @param closeh Close handler
  * @param arg    Handler argument
@@ -873,6 +908,7 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
  * @return 0 if success, otherwise errorcode
  */
 int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
+		struct tls *tls,
 		rtmp_command_h *cmdh, rtmp_close_h *closeh, void *arg)
 {
 	struct rtmp_conn *conn;
@@ -889,6 +925,14 @@ int rtmp_accept(struct rtmp_conn **connp, struct tcp_sock *ts,
 			 tcp_recv_handler, tcp_close_handler, conn);
 	if (err)
 		goto out;
+
+#ifdef USE_TLS
+	if (tls) {
+		err = tls_start_tcp(&conn->sc, tls, conn->tc, 0);
+		if (err)
+			goto out;
+	}
+#endif
 
  out:
 	if (err)

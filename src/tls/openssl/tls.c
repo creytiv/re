@@ -10,6 +10,7 @@
 #include <openssl/bn.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_mem.h>
@@ -873,6 +874,40 @@ int tls_set_servername(struct tls_conn *tc, const char *servername)
 	}
 
 	return 0;
+}
+
+
+/**
+ * Enable verification of server certificate and hostname
+ *
+ * @param tc   TLS Connection
+ * @param host Server hostname
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_verify_server(struct tls_conn *tc, const char *host)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && \
+	!defined(LIBRESSL_VERSION_NUMBER)
+
+	if (!tc || !host)
+		return EINVAL;
+
+	SSL_set_hostflags(tc->ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+	if (!SSL_set1_host(tc->ssl, host)) {
+		ERR_clear_error();
+		return EPROTO;
+	}
+
+	SSL_set_verify(tc->ssl, SSL_VERIFY_PEER, NULL);
+
+	return 0;
+#else
+	(void)tc;
+	(void)host;
+
+	return ENOSYS;
+#endif
 }
 
 

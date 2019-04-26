@@ -33,6 +33,7 @@ struct rtmp_conn {
 	struct list streaml;
 	struct rtmp_dechunker *dechunk;
 	struct tcp_conn *tc;
+	struct tls_conn *sc;
 	struct mbuf *mb;                        /* TCP reassembly buffer */
 	enum rtmp_handshake_state state;
 	size_t total_bytes;
@@ -53,6 +54,7 @@ struct rtmp_conn {
 	struct dns_query *dnsq6;
 	struct list ctransl;
 	struct sa srvv[16];
+	struct tls *tls;
 	unsigned srvc;
 	uint64_t tid_counter;
 	uint16_t port;
