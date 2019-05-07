@@ -246,7 +246,6 @@
     <ClCompile Include="..\..\src\turn\turnc.c" />
     <ClCompile Include="..\..\src\udp\mcast.c" />
     <ClCompile Include="..\..\src\udp\udp.c" />
-    <ClCompile Include="..\..\src\uri\ucmp.c" />
     <ClCompile Include="..\..\src\uri\uri.c" />
     <ClCompile Include="..\..\src\uri\uric.c" />
   </ItemGroup>
