@@ -92,6 +92,8 @@ int re_printf(const char *fmt, ...);
 int re_snprintf(char *str, size_t size, const char *fmt, ...);
 int re_sdprintf(char **strp, const char *fmt, ...);
 
+int re_set_output_handler(struct re_printf *log_handler);
+
 
 /* Regular expressions */
 int re_regex(const char *ptr, size_t len, const char *expr, ...);

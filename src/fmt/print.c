@@ -43,6 +43,8 @@ static const char prfx_neg[]  = "-";
 static const char prfx_hex[]  = "0x";
 static const char str_nil[]  = "(nil)";
 
+static struct re_printf *re_log_handler = NULL;
+
 
 static int write_padded(const char *p, size_t sz, size_t pad, char pch,
 			bool plr, const char *prfx, re_vprintf_h *vph,
@@ -599,7 +601,7 @@ int re_vfprintf(FILE *stream, const char *fmt, va_list ap)
 
 
 /**
- * Print a formatted string to stdout, using va_list
+ * Print a formatted string to stdout or custom handler, using va_list
  *
  * @param fmt Formatted string
  * @param ap  Variable-arguments list
@@ -608,7 +610,17 @@ int re_vfprintf(FILE *stream, const char *fmt, va_list ap)
  */
 int re_vprintf(const char *fmt, va_list ap)
 {
-	return re_vfprintf(stdout, fmt, ap);
+	if (re_log_handler) {
+		char msg[1024];
+		int res = re_vsnprintf(msg, sizeof(msg), fmt, ap);
+		if (res == -1)
+			return res;
+
+		return re_log_handler->vph(
+			msg, sizeof(msg), re_log_handler->arg);
+	}
+	else
+		return re_vfprintf(stdout, fmt, ap);
 }
 
 
@@ -728,7 +740,7 @@ int re_fprintf(FILE *stream, const char *fmt, ...)
 
 
 /**
- * Print a formatted string to stdout
+ * Print a formatted string to stdout or custom handler
  *
  * @param fmt    Formatted string
  *
@@ -787,4 +799,20 @@ int re_sdprintf(char **strp, const char *fmt, ...)
 	va_end(ap);
 
 	return err;
+}
+
+
+/**
+* @param log_handler Print backend
+*
+* @return 0 if success, otherwise errorcode
+*/
+int re_set_output_handler(struct re_printf *log_handler)
+{
+	if (!log_handler)
+		return EINVAL;
+
+	re_log_handler = log_handler;
+
+	return 0;
 }
