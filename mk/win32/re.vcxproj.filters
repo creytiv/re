@@ -353,9 +353,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\uri\ucmp.c">
-      <Filter>src\uri</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\uri\uri.c">
       <Filter>src\uri</Filter>
     </ClCompile>
