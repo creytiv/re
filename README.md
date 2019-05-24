@@ -121,7 +121,6 @@ Please send private feedback to libre [at] creytiv.com
 | mod      | testing  | Run-time module loading                        |
 | mqueue   | testing  | Thread-safe message queue                      |
 | msg      | unstable | Generic message component library              |
-| natbd    | unstable | NAT Behavior Discovery using STUN              |
 | net      | testing  | Networking routines                            |
 | odict    | unstable | Ordered Dictionary                             |
 | rtmp     | unstable | Real Time Messaging Protocol                   |
@@ -193,7 +192,6 @@ legend:
 * [RFC 5766](https://tools.ietf.org/html/rfc5766) - Traversal Using Relays around NAT (TURN)
 * [RFC 5768](https://tools.ietf.org/html/rfc5768) - Indicating Support for ICE in SIP
 * [RFC 5769](https://tools.ietf.org/html/rfc5769) - Test vectors for STUN
-* [RFC 5780](https://tools.ietf.org/html/rfc5780) - NAT Behaviour Discovery Using STUN
 * [RFC 6026](https://tools.ietf.org/html/rfc6026) - Correct Transaction Handling for 2xx Resp. to SIP INVITE Requests
 * [RFC 6156](https://tools.ietf.org/html/rfc6156) - TURN Extension for IPv6
 * [RFC 6188](https://tools.ietf.org/html/rfc6188) - The Use of AES-192 and AES-256 in Secure RTP

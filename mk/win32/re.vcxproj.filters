@@ -64,9 +64,6 @@
     <Filter Include="src\net\win32">
       <UniqueIdentifier>{779e44ed-0935-450c-a3dd-7bdef53a1179}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\natbd">
-      <UniqueIdentifier>{1bff8dd5-d220-4f10-8c26-64c82522d824}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\msg">
       <UniqueIdentifier>{9ea33625-0411-4065-a16b-ce3f49d3ca15}</UniqueIdentifier>
     </Filter>
@@ -232,9 +229,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\re_msg.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\re_natbd.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\re_net.h">
@@ -637,24 +631,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\net\win32\wif.c">
       <Filter>src\net\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\natbd\filtering.c">
-      <Filter>src\natbd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\natbd\genalg.c">
-      <Filter>src\natbd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\natbd\hairpinning.c">
-      <Filter>src\natbd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\natbd\lifetime.c">
-      <Filter>src\natbd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\natbd\mapping.c">
-      <Filter>src\natbd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\natbd\natstr.c">
-      <Filter>src\natbd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\msg\ctype.c">
       <Filter>src\msg</Filter>

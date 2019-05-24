@@ -37,7 +37,6 @@
     <ClInclude Include="..\..\include\re_mod.h" />
     <ClInclude Include="..\..\include\re_mqueue.h" />
     <ClInclude Include="..\..\include\re_msg.h" />
-    <ClInclude Include="..\..\include\re_natbd.h" />
     <ClInclude Include="..\..\include\re_net.h" />
     <ClInclude Include="..\..\include\re_odict.h" />
     <ClInclude Include="..\..\include\re_rtp.h" />
@@ -146,12 +145,6 @@
     <ClCompile Include="..\..\src\mqueue\win32\pipe.c" />
     <ClCompile Include="..\..\src\msg\ctype.c" />
     <ClCompile Include="..\..\src\msg\param.c" />
-    <ClCompile Include="..\..\src\natbd\filtering.c" />
-    <ClCompile Include="..\..\src\natbd\genalg.c" />
-    <ClCompile Include="..\..\src\natbd\hairpinning.c" />
-    <ClCompile Include="..\..\src\natbd\lifetime.c" />
-    <ClCompile Include="..\..\src\natbd\mapping.c" />
-    <ClCompile Include="..\..\src\natbd\natstr.c" />
     <ClCompile Include="..\..\src\net\if.c" />
     <ClCompile Include="..\..\src\net\net.c" />
     <ClCompile Include="..\..\src\net\netstr.c" />
