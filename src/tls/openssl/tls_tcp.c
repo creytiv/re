@@ -306,12 +306,9 @@ static bool recv_handler(int *err, struct mbuf *mb, bool *estab, void *arg)
 
 			switch (ssl_err) {
 
+			case SSL_ERROR_ZERO_RETURN:
 			case SSL_ERROR_WANT_READ:
 				break;
-
-			case SSL_ERROR_ZERO_RETURN:
-				*err = ECONNRESET;
-				return true;
 
 			default:
 				*err = EPROTO;
