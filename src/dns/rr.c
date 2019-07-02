@@ -148,8 +148,7 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 		ptr  = rr->rdata.txt.data;
 		dlen = min(str_len(rr->rdata.txt.data), 65279);
 
-		while (dlen > 0) {
-
+		do {
 			uint8_t slen = min(dlen, 0xff);
 
 			err |= mbuf_write_u8(mb, slen);
@@ -157,7 +156,7 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 
 			ptr  += slen;
 			dlen -= slen;
-		}
+		} while (dlen > 0);
 		break;
 
 	case DNS_TYPE_AAAA:
