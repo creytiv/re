@@ -87,8 +87,7 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 		  struct hash *ht_dname, size_t start)
 {
 	uint32_t ttl;
-	uint16_t len;
-	size_t start_rdata, dlen;
+	size_t start_rdata, dlen, len;
 	char *ptr;
 	int err = 0;
 
@@ -146,7 +145,7 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 
 	case DNS_TYPE_TXT:
 		ptr  = rr->rdata.txt.data;
-		dlen = min(str_len(rr->rdata.txt.data), 65279);
+		dlen = str_len(rr->rdata.txt.data);
 
 		do {
 			uint8_t slen = min(dlen, 0xff);
@@ -187,6 +186,10 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 	}
 
 	len = mb->pos - start_rdata;
+
+	if (len > 0xffff)
+		return EOVERFLOW;
+
 	mb->pos = start_rdata - 2;
 	err |= mbuf_write_u16(mb, htons(len));
 	mb->pos += len;
