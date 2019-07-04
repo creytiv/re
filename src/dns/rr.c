@@ -43,6 +43,10 @@ static void rr_destructor(void *data)
 		mem_deref(rr->rdata.mx.exchange);
 		break;
 
+	case DNS_TYPE_TXT:
+		mem_deref(rr->rdata.txt.data);
+		break;
+
 	case DNS_TYPE_SRV:
 		mem_deref(rr->rdata.srv.target);
 		break;
@@ -83,8 +87,8 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 		  struct hash *ht_dname, size_t start)
 {
 	uint32_t ttl;
-	uint16_t len;
-	size_t start_rdata;
+	size_t start_rdata, dlen, len;
+	char *ptr;
 	int err = 0;
 
 	if (!mb || !rr)
@@ -139,6 +143,21 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 					ht_dname, start, true);
 		break;
 
+	case DNS_TYPE_TXT:
+		ptr  = rr->rdata.txt.data;
+		dlen = str_len(rr->rdata.txt.data);
+
+		do {
+			uint8_t slen = min(dlen, 0xff);
+
+			err |= mbuf_write_u8(mb, slen);
+			err |= mbuf_write_mem(mb, (uint8_t *)ptr, slen);
+
+			ptr  += slen;
+			dlen -= slen;
+		} while (dlen > 0);
+		break;
+
 	case DNS_TYPE_AAAA:
 		err |= mbuf_write_mem(mb, rr->rdata.aaaa.addr, 16);
 		break;
@@ -167,6 +186,10 @@ int dns_rr_encode(struct mbuf *mb, const struct dnsrr *rr, int64_t ttl_offs,
 	}
 
 	len = mb->pos - start_rdata;
+
+	if (len > 0xffff)
+		return EOVERFLOW;
+
 	mb->pos = start_rdata - 2;
 	err |= mbuf_write_u16(mb, htons(len));
 	mb->pos += len;
@@ -188,6 +211,8 @@ int dns_rr_decode(struct mbuf *mb, struct dnsrr **rr, size_t start)
 {
 	int err = 0;
 	struct dnsrr *lrr;
+	uint16_t rdlen;
+	char *ptr;
 
 	if (!mb || !rr)
 		return EINVAL;
@@ -270,6 +295,31 @@ int dns_rr_decode(struct mbuf *mb, struct dnsrr **rr, size_t start)
 		if (err)
 			goto error;
 
+		break;
+
+	case DNS_TYPE_TXT:
+		ptr = lrr->rdata.txt.data = mem_alloc(lrr->rdlen + 1, NULL);
+		if (!lrr->rdata.txt.data) {
+			err = ENOMEM;
+			goto error;
+		}
+
+		rdlen = lrr->rdlen;
+
+		while (rdlen > 0) {
+
+			uint8_t len = mbuf_read_u8(mb);
+
+			if (len > --rdlen)
+				goto fmerr;
+
+			mbuf_read_mem(mb, (uint8_t *)ptr, len);
+
+			ptr   += len;
+			rdlen -= len;
+		}
+
+		*ptr = '\0';
 		break;
 
 	case DNS_TYPE_AAAA:
@@ -429,6 +479,13 @@ bool dns_rr_cmp(const struct dnsrr *rr1, const struct dnsrr *rr2, bool rdata)
 
 		break;
 
+	case DNS_TYPE_TXT:
+		if (str_casecmp(rr1->rdata.txt.data,
+				rr2->rdata.txt.data))
+			return false;
+
+		break;
+
 	case DNS_TYPE_AAAA:
 		if (memcmp(rr1->rdata.aaaa.addr, rr2->rdata.aaaa.addr, 16))
 			return false;
@@ -504,6 +561,7 @@ const char *dns_rr_typename(uint16_t type)
 	case DNS_TYPE_SOA:   return "SOA";
 	case DNS_TYPE_PTR:   return "PTR";
 	case DNS_TYPE_MX:    return "MX";
+	case DNS_TYPE_TXT:   return "TXT";
 	case DNS_TYPE_AAAA:  return "AAAA";
 	case DNS_TYPE_SRV:   return "SRV";
 	case DNS_TYPE_NAPTR: return "NAPTR";
@@ -596,6 +654,10 @@ int dns_rr_print(struct re_printf *pf, const struct dnsrr *rr)
 	case DNS_TYPE_MX:
 		err |= re_hprintf(pf, "%3u %s.", rr->rdata.mx.pref,
 				  rr->rdata.mx.exchange);
+		break;
+
+	case DNS_TYPE_TXT:
+		err |= re_hprintf(pf, "\"%s\"", rr->rdata.txt.data);
 		break;
 
 	case DNS_TYPE_AAAA:

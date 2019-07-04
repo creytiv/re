@@ -40,6 +40,7 @@ enum {
 	DNS_TYPE_SOA   = 0x0006,
 	DNS_TYPE_PTR   = 0x000c,
 	DNS_TYPE_MX    = 0x000f,
+	DNS_TYPE_TXT   = 0x0010,
 	DNS_TYPE_AAAA  = 0x001c,
 	DNS_TYPE_SRV   = 0x0021,
 	DNS_TYPE_NAPTR = 0x0023,
@@ -109,6 +110,9 @@ struct dnsrr {
 			uint16_t pref;
 			char *exchange;
 		} mx;
+		struct {
+			char *data;
+		} txt;
 		struct {
 			uint8_t addr[16];
 		} aaaa;
