@@ -50,7 +50,7 @@ struct sip_ctrans;
 int  sip_ctrans_request(struct sip_ctrans **ctp, struct sip *sip,
 			enum sip_transp tp, const struct sa *dst, char *met,
 			char *branch, struct mbuf *mb, sip_resp_h *resph,
-			void *arg);
+			void *arg, const char *host);
 int  sip_ctrans_cancel(struct sip_ctrans *ct);
 int  sip_ctrans_init(struct sip *sip, uint32_t sz);
 int  sip_ctrans_debug(struct re_printf *pf, const struct sip *sip);
@@ -69,7 +69,8 @@ typedef void(sip_transp_h)(int err, void *arg);
 int  sip_transp_init(struct sip *sip, uint32_t sz);
 int  sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 		     enum sip_transp tp, const struct sa *dst, struct mbuf *mb,
-		     sip_transp_h *transph, void *arg);
+		     sip_transp_h *transph, void *arg,
+		     const char *host);
 bool sip_transp_supported(struct sip *sip, enum sip_transp tp, int af);
 const char *sip_transp_srvid(enum sip_transp tp);
 bool sip_transp_reliable(enum sip_transp tp);

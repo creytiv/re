@@ -205,7 +205,7 @@ static void retransmit_handler(void *arg)
 	tmr_start(&ct->tmre, timeout, retransmit_handler, ct);
 
 	err = sip_transp_send(&ct->qent, ct->sip, NULL, ct->tp, &ct->dst,
-			      ct->mb, transport_handler, ct);
+			      ct->mb, transport_handler, ct, NULL);
 	if (err) {
 		terminate(ct, err);
 		mem_deref(ct);
@@ -310,7 +310,7 @@ static bool response_handler(const struct sip_msg *msg, void *arg)
 int sip_ctrans_request(struct sip_ctrans **ctp, struct sip *sip,
 		       enum sip_transp tp, const struct sa *dst, char *met,
 		       char *branch, struct mbuf *mb,
-		       sip_resp_h *resph, void *arg)
+		       sip_resp_h *resph, void *arg, const char *host)
 {
 	struct sip_ctrans *ct;
 	int err;
@@ -336,7 +336,7 @@ int sip_ctrans_request(struct sip_ctrans **ctp, struct sip *sip,
 	ct->arg    = arg;
 
 	err = sip_transp_send(&ct->qent, sip, NULL, tp, dst, mb,
-			      transport_handler, ct);
+			      transport_handler, ct, host);
 	if (err)
 		goto out;
 
@@ -386,7 +386,7 @@ int sip_ctrans_cancel(struct sip_ctrans *ct)
 		goto out;
 
 	err = sip_ctrans_request(NULL, ct->sip, ct->tp, &ct->dst, cancel,
-				 ct->branch, mb, NULL, NULL);
+				 ct->branch, mb, NULL, NULL, NULL);
 	if (err)
 		goto out;
 

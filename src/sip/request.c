@@ -194,7 +194,8 @@ static int request(struct sip_request *req, enum sip_transp tp,
 		err = sip_send(req->sip, NULL, tp, dst, mb);
 	else
 		err = sip_ctrans_request(&req->ct, req->sip, tp, dst, req->met,
-					 branch, mb, response_handler, req);
+					 branch, mb, response_handler, req,
+					 req->host);
 	if (err)
 		goto out;
 
@@ -629,6 +630,8 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 	err = pl_strdup(&req->host, &pl);
 	if (err)
 		goto out;
+
+	re_printf(".... req: host = '%s'\n", req->host);
 
 	req->stateful = stateful;
 	req->sortkey = sortkey;

@@ -57,6 +57,8 @@ struct sip_conn {
 	struct sip *sip;
 	uint32_t ka_interval;
 	bool established;
+	char *host;
+	bool client;
 };
 
 
@@ -104,6 +106,7 @@ static void conn_destructor(void *arg)
 	mem_deref(conn->sc);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
+	mem_deref(conn->host);
 }
 
 
@@ -463,6 +466,27 @@ static void tcp_estab_handler(void *arg)
 	tcp_conn_local_get(conn->tc, &conn->laddr);
 #endif
 
+	if (conn->client && conn->sc) {
+
+		err = tls_peer_verify(conn->sc);
+
+		re_printf(".... tls server cert: (%m)\n", err);
+
+		if (err) {
+			conn_close(conn, err);
+			mem_deref(conn);
+			return;
+		}
+
+		if (!tls_verify_peer_san(conn->sc, conn->host)) {
+			re_printf("sip: could not verify server SAN (%s)\n",
+				  conn->host);
+			conn_close(conn, EAUTH);
+			mem_deref(conn);
+			return;
+		}
+	}
+
 	conn->established = true;
 
 	le = list_head(&conn->ql);
@@ -544,7 +568,7 @@ static void tcp_connect_handler(const struct sa *paddr, void *arg)
 
 static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 		     const struct sa *dst, struct mbuf *mb,
-		     sip_transp_h *transph, void *arg)
+		     sip_transp_h *transph, void *arg, const char *host)
 {
 	struct sip_conn *conn, *new_conn = NULL;
 	struct sip_connqent *qent;
@@ -565,6 +589,7 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 	hash_append(sip->ht_conn, sa_hash(dst, SA_ALL), &conn->he, conn);
 	conn->paddr = *dst;
 	conn->sip   = sip;
+	conn->client = true;
 
 	err = tcp_connect(&conn->tc, dst, tcp_estab_handler, tcp_recv_handler,
 			  tcp_close_handler, conn);
@@ -588,6 +613,12 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 		err = tls_start_tcp(&conn->sc, transp->tls, conn->tc, 0);
 		if (err)
 			goto out;
+
+		err = str_dup(&conn->host, host);
+		if (err) {
+			re_printf("sip: missing host param for tls\n");
+			goto out;
+		}
 	}
 #endif
 
@@ -716,14 +747,17 @@ void sip_transp_flush(struct sip *sip)
 }
 
 
+/* TODO: find a better way to transfer host from ctrans to transp */
 int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 		    enum sip_transp tp, const struct sa *dst, struct mbuf *mb,
-		    sip_transp_h *transph, void *arg)
+		    sip_transp_h *transph, void *arg, const char *host)
 {
 	const struct sip_transport *transp;
 	struct sip_conn *conn;
 	bool secure = false;
 	int err;
+
+	re_printf(".... send: host=%s\n", host);
 
 	if (!sip || !dst || !mb)
 		return EINVAL;
@@ -753,7 +787,7 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 			err = tcp_send(conn->tc, mb);
 		else
 			err = conn_send(qentp, sip, secure, dst, mb,
-					transph, arg);
+					transph, arg, host);
 		break;
 
 	default:

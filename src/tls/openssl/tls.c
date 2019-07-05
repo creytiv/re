@@ -683,11 +683,19 @@ int tls_peer_common_name(const struct tls_conn *tc, char *cn, size_t size)
  */
 int tls_peer_verify(const struct tls_conn *tc)
 {
+	long result;
+
 	if (!tc)
 		return EINVAL;
 
-	if (SSL_get_verify_result(tc->ssl) != X509_V_OK)
+	result = SSL_get_verify_result(tc->ssl);
+	if (result != X509_V_OK) {
+
+		re_printf("tls: verify failed, result = %ld (%s)\n",
+			  result,  X509_verify_cert_error_string(result));
+
 		return EAUTH;
+	}
 
 	return 0;
 }
@@ -936,4 +944,83 @@ void tls_flush_error(void)
 struct ssl_ctx_st *tls_openssl_context(const struct tls *tls)
 {
 	return tls ? tls->ctx : NULL;
+}
+
+
+static bool check_cert(X509 *x, const char *host)
+{
+	STACK_OF(GENERAL_NAME) *san_names;
+	bool match = false;
+	int i;
+
+	san_names = X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
+	if (!san_names)
+		return false;
+
+	for (i = 0; i < sk_GENERAL_NAME_num(san_names); i++) {
+
+		const GENERAL_NAME *name = sk_GENERAL_NAME_value(san_names, i);
+		struct pl pl;
+		unsigned char *p = 0;
+		unsigned len;
+
+		switch (name->type) {
+
+		case GEN_DNS:
+			len = ASN1_STRING_to_UTF8(&p, name->d.ia5);
+			re_printf("[%u] type DNS: '%b'\n", i, p, len);
+
+			pl.p = (char *)p;
+			pl.l = len;
+
+			if (0 == pl_strcasecmp(&pl, host)) {
+				match = true;
+				goto out;
+			}
+			break;
+
+		default:
+			re_printf("cert: unknown type %d\n", name->type);
+			break;
+		}
+	}
+
+ out:
+	sk_GENERAL_NAME_pop_free(san_names, GENERAL_NAME_free);
+
+	return match;
+}
+
+
+/*
+ * RFC 5922
+ *
+ * Subject Alternative Names (SANs)
+ */
+bool tls_verify_peer_san(const struct tls_conn *tc, const char *host)
+{
+	X509 *cert;
+	bool match;
+
+	re_printf("---- tls: verify SAN: '%s'\n", host);
+
+	if (!tc || !host)
+		return false;
+
+	cert = SSL_get_peer_certificate(tc->ssl);
+	if (!cert)
+		return false;
+
+	match = check_cert(cert, host);
+
+	if (!match) {
+		char cn[256];
+		tls_peer_common_name(tc, cn, sizeof(cn));
+
+		match = 0==str_casecmp(host, cn);
+	}
+
+	X509_free(cert);
+
+	return match;
 }
