@@ -641,20 +641,29 @@ static int read_file(char **buf, const char *path)
 
 int http_uri_decode(struct http_uri *hu, const struct pl *uri)
 {
+	int err = 0;
 	if (!hu)
 		return EINVAL;
 
 	memset(hu, 0, sizeof(*hu));
 
 	/* Try IPv6 first */
-	if (!re_regex(uri->p, uri->l, "[a-z]+://\\[[^\\]]+\\][:]*[0-9]*[^]+",
-		     &hu->scheme, &hu->host, NULL, &hu->port, &hu->path))
-		return hu->scheme.p == uri->p ? 0 : EINVAL;
+	err = re_regex(uri->p, uri->l, "[a-z]+://\\[[^\\]]+\\][:]*[0-9]*[^]+",
+		       &hu->scheme, &hu->host, NULL, &hu->port, &hu->path) ||
+	      hu->scheme.p != uri->p;
+	if (!err)
+		goto out;
 
 	/* Then non-IPv6 host */
-	return re_regex(uri->p, uri->l, "[a-z]+://[^:/]+[:]*[0-9]*[^]+",
-		     &hu->scheme, &hu->host, NULL, &hu->port, &hu->path) ||
-			hu->scheme.p != uri->p;
+	err = re_regex(uri->p, uri->l, "[a-z]+://[^:/]+[:]*[0-9]*[^]+",
+		       &hu->scheme, &hu->host, NULL, &hu->port, &hu->path) ||
+	      hu->scheme.p != uri->p;
+
+out:
+	if (!err && !pl_isset(&hu->path))
+		pl_set_str(&hu->path, "/");
+
+	return err;
 }
 
 
