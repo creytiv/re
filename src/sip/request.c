@@ -631,8 +631,6 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 	if (err)
 		goto out;
 
-	re_printf(".... req: host = '%s'\n", req->host);
-
 	req->stateful = stateful;
 	req->sortkey = sortkey;
 	req->mb    = mem_ref(mb);

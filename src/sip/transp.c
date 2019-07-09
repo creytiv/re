@@ -466,6 +466,7 @@ static void tcp_estab_handler(void *arg)
 	tcp_conn_local_get(conn->tc, &conn->laddr);
 #endif
 
+#ifdef USE_TLS
 	if (conn->client && conn->sc) {
 
 		err = tls_peer_verify(conn->sc);
@@ -486,6 +487,7 @@ static void tcp_estab_handler(void *arg)
 			return;
 		}
 	}
+#endif
 
 	conn->established = true;
 

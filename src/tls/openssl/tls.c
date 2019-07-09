@@ -968,14 +968,14 @@ static bool check_cert(X509 *x, const char *host)
 
 		case GEN_DNS:
 			len = ASN1_STRING_to_UTF8(&p, name->d.ia5);
-			re_printf("[%u] type DNS: '%b'\n", i, p, len);
 
 			pl.p = (char *)p;
 			pl.l = len;
 
+			re_printf("tls: [%u] type DNS: '%r'\n", i, &pl);
+
 			if (0 == pl_strcasecmp(&pl, host)) {
 				match = true;
-				goto out;
 			}
 			break;
 
@@ -985,7 +985,6 @@ static bool check_cert(X509 *x, const char *host)
 		}
 	}
 
- out:
 	sk_GENERAL_NAME_pop_free(san_names, GENERAL_NAME_free);
 
 	return match;
