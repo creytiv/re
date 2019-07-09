@@ -840,20 +840,19 @@ int tcp_conn_alloc(struct tcp_conn **tcp,
 	hints.ai_protocol = IPPROTO_TCP;
 
 	(void)re_snprintf(addr, sizeof(addr), "%H",
-			  sa_print_addr, peer);
+			sa_print_addr, peer);
 	(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(peer));
 
 	error = getaddrinfo(addr, serv, &hints, &res);
 	if (error) {
 		DEBUG_WARNING("connect: getaddrinfo(): (%s)\n",
-			      gai_strerror(error));
+				gai_strerror(error));
 		err = EADDRNOTAVAIL;
 		goto out;
 	}
 
 	err = EINVAL;
 	for (r = res; r; r = r->ai_next) {
-
 		tc->fdc = SOK_CAST socket(r->ai_family, SOCK_STREAM,
 					  IPPROTO_TCP);
 		if (tc->fdc < 0) {
@@ -959,12 +958,40 @@ int tcp_conn_bind(struct tcp_conn *tc, const struct sa *local)
 	return err;
 }
 
+/**
+ * Connect to a remote peer
+ *
+ * @param tc	    TCP Connection object
+ * @param peer      Network address of peer
+ * @param send_hint Network address indicating the interface the
+ * 					connection should use to send.
+ *	 				NULL for "dealer's choice"
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tcp_conn_connect_hint(struct tcp_conn *tc, const struct sa *peer,
+		const struct sa *send_hint)
+{
+	int err = 0;
+
+	if (!tc || !sa_isset(peer, SA_ALL))
+		return EINVAL;
+
+	if (send_hint && sa_isset(send_hint, SA_ADDR)) {
+		err = tcp_conn_bind(tc, send_hint);
+		if (err)
+			return err;
+	}
+
+	err = tcp_conn_connect(tc, peer);
+	return err;
+}
 
 /**
  * Connect to a remote peer
  *
- * @param tc   TCP Connection object
- * @param peer Network address of peer
+ * @param tc    TCP Connection object
+ * @param peer  Network address of peer
  *
  * @return 0 if success, otherwise errorcode
  */
@@ -993,13 +1020,13 @@ int tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer)
 	hints.ai_protocol = IPPROTO_TCP;
 
 	(void)re_snprintf(addr, sizeof(addr), "%H",
-			  sa_print_addr, peer);
+			sa_print_addr, peer);
 	(void)re_snprintf(serv, sizeof(serv), "%u", sa_port(peer));
 
 	error = getaddrinfo(addr, serv, &hints, &res);
 	if (error) {
 		DEBUG_WARNING("connect: getaddrinfo(): (%s)\n",
-			      gai_strerror(error));
+                             gai_strerror(error));
 		return EADDRNOTAVAIL;
 	}
 

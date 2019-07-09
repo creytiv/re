@@ -23,6 +23,8 @@ typedef void (udp_error_h)(int err, void *arg);
 int  udp_listen(struct udp_sock **usp, const struct sa *local,
 		udp_recv_h *rh, void *arg);
 int  udp_connect(struct udp_sock *us, const struct sa *peer);
+int  udp_connect_hint(struct udp_sock *us, const struct sa *peer,
+		const struct sa *send_hint);
 int  udp_send(struct udp_sock *us, const struct sa *dst, struct mbuf *mb);
 int  udp_send_anon(const struct sa *dst, struct mbuf *mb);
 int  udp_local_get(const struct udp_sock *us, struct sa *local);

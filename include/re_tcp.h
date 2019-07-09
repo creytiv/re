@@ -64,6 +64,8 @@ int  tcp_conn_alloc(struct tcp_conn **tcp, const struct sa *peer,
 		    void *arg);
 int  tcp_conn_bind(struct tcp_conn *tc, const struct sa *local);
 int  tcp_conn_connect(struct tcp_conn *tc, const struct sa *peer);
+int  tcp_conn_connect_hint(struct tcp_conn *tc, const struct sa *peer,
+			const struct sa *send_hint);
 int  tcp_send(struct tcp_conn *tc, struct mbuf *mb);
 int  tcp_set_send(struct tcp_conn *tc, tcp_send_h *sendh);
 void tcp_set_handlers(struct tcp_conn *tc, tcp_estab_h *eh, tcp_recv_h *rh,
@@ -79,8 +81,11 @@ size_t tcp_conn_txqsz(const struct tcp_conn *tc);
 /* High-level API */
 int  tcp_listen(struct tcp_sock **tsp, const struct sa *local,
 		tcp_conn_h *ch, void *arg);
-int  tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
-		 tcp_estab_h *eh, tcp_recv_h *rh, tcp_close_h *ch, void *arg);
+int  tcp_connect_hint(struct tcp_conn **tcp, const struct sa *peer,
+		 const struct sa *local, tcp_estab_h *eh, tcp_recv_h *rh,
+		 tcp_close_h *ch, void *arg);
+int tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
+		tcp_estab_h *eh, tcp_recv_h *rh, tcp_close_h *ch, void *arg);
 int  tcp_local_get(const struct tcp_sock *ts, struct sa *local);
 
 

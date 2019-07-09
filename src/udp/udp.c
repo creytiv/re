@@ -390,17 +390,8 @@ int udp_listen(struct udp_sock **usp, const struct sa *local,
 	return err;
 }
 
-
-/**
- * Connect a UDP Socket to a specific peer.
- * When connected, this UDP Socket will only receive data from that peer.
- *
- * @param us   UDP Socket
- * @param peer Peer network address
- *
- * @return 0 if success, otherwise errorcode
- */
-int udp_connect(struct udp_sock *us, const struct sa *peer)
+static int udp_connect_impl(struct udp_sock *us, const struct sa *peer,
+		const struct sa *send_hint)
 {
 	int fd;
 
@@ -413,6 +404,11 @@ int udp_connect(struct udp_sock *us, const struct sa *peer)
 	else
 		fd = us->fd;
 
+	if (send_hint && sa_isset(send_hint, SA_ADDR)) {
+		(void)bind(fd, &send_hint->u.sa,
+					SIZ_CAST sizeof(send_hint->u.sa));
+	}
+
 	if (0 != connect(fd, &peer->u.sa, peer->len))
 		return errno;
 
@@ -421,6 +417,36 @@ int udp_connect(struct udp_sock *us, const struct sa *peer)
 	return 0;
 }
 
+/**
+ * Connect a UDP Socket to a specific peer.
+ * When connected, this UDP Socket will only receive data from that peer.
+ *
+ * @param us   UDP Socket
+ * @param peer Peer network address
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int udp_connect(struct udp_sock *us, const struct sa *peer)
+{
+	return udp_connect_impl(us, peer, NULL);
+}
+
+/**
+ * Connect a UDP Socket to a specific peer.
+ * When connected, this UDP Socket will only receive data from that peer.
+ *
+ * @param us   		UDP Socket
+ * @param peer      Peer network address
+ * @param send_hint Local network address representing the interface to use
+ * 					for sending
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int udp_connect_hint(struct udp_sock *us, const struct sa *peer,
+		const struct sa *send_hint)
+{
+	return udp_connect_impl(us, peer, send_hint);
+}
 
 static int udp_send_internal(struct udp_sock *us, const struct sa *dst,
 			     struct mbuf *mb, struct le *le)

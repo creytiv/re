@@ -200,6 +200,7 @@ struct dnsc_conf {
 	uint32_t tcp_hash_size;
 	uint32_t conn_timeout;  /* in [ms] */
 	uint32_t idle_timeout;  /* in [ms] */
+	struct sa *laddr;
 };
 
 int  dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
@@ -216,6 +217,7 @@ int  dnsc_notify(struct dns_query **qp, struct dnsc *dnsc, const char *name,
 		 uint16_t type, uint16_t dnsclass, const struct dnsrr *ans_rr,
 		 int proto, const struct sa *srvv, const uint32_t *srvc,
 		 dns_query_h *qh, void *arg);
+void dnsc_copy_default_config(struct dnsc_conf *conf);
 
 
 /* DNS System functions */

@@ -16,6 +16,7 @@
 #include <re_tcp.h>
 #include <re_sys.h>
 #include <re_dns.h>
+#include <re_net.h>
 
 
 #define DEBUG_MODULE "dnsc"
@@ -91,6 +92,7 @@ static const struct dnsc_conf default_conf = {
 	TCP_HASH_SIZE,
 	CONN_TIMEOUT,
 	IDLE_TIMEOUT,
+	NULL,
 };
 
 
@@ -856,7 +858,7 @@ int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 	if (err)
 		goto out;
 
-	err = udp_listen(&dnsc->us, NULL, udp_recv_handler, dnsc);
+	err = udp_listen(&dnsc->us, dnsc->conf.laddr, udp_recv_handler, dnsc);
 	if (err)
 		goto out;
 
@@ -902,4 +904,15 @@ int dnsc_srv_set(struct dnsc *dnsc, const struct sa *srvv, uint32_t srvc)
 	}
 
 	return 0;
+}
+
+/**
+ * Copy the default config into the provided container
+ *
+ * @param conf The container into which the default config
+ *             will get copied.
+ */
+void dnsc_copy_default_config(struct dnsc_conf *conf)
+{
+	memcpy(conf, &default_conf, sizeof(*conf));
 }

@@ -541,10 +541,9 @@ static void tcp_connect_handler(const struct sa *paddr, void *arg)
 	}
 }
 
-
-static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
-		     const struct sa *dst, struct mbuf *mb,
-		     sip_transp_h *transph, void *arg)
+static int conn_send(struct sip_connqent **qentp, struct sip *sip,
+		bool secure, const struct sa* laddr, const struct sa *dst,
+		struct mbuf *mb, sip_transp_h *transph, void *arg)
 {
 	struct sip_conn *conn, *new_conn = NULL;
 	struct sip_connqent *qent;
@@ -566,8 +565,8 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 	conn->paddr = *dst;
 	conn->sip   = sip;
 
-	err = tcp_connect(&conn->tc, dst, tcp_estab_handler, tcp_recv_handler,
-			  tcp_close_handler, conn);
+	err = tcp_connect_hint(&conn->tc, dst, laddr, tcp_estab_handler,
+			tcp_recv_handler, tcp_close_handler, conn);
 	if (err)
 		goto out;
 
@@ -724,6 +723,7 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 	struct sip_conn *conn;
 	bool secure = false;
 	int err;
+	struct sa laddr;
 
 	if (!sip || !dst || !mb)
 		return EINVAL;
@@ -751,9 +751,11 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 
 		if (conn && conn->tc)
 			err = tcp_send(conn->tc, mb);
-		else
-			err = conn_send(qentp, sip, secure, dst, mb,
+		else {
+			(void)sip_transp_laddr(sip, &laddr, tp, dst);
+			err = conn_send(qentp, sip, secure, &laddr, dst, mb,
 					transph, arg);
+		}
 		break;
 
 	default:

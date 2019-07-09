@@ -49,21 +49,9 @@ int tcp_listen(struct tcp_sock **tsp, const struct sa *local,
 	return err;
 }
 
-
-/**
- * Make a TCP Connection to a remote peer
- *
- * @param tcp  Returned TCP Connection object
- * @param peer Network address of peer
- * @param eh   TCP Connection Established handler
- * @param rh   TCP Connection Receive data handler
- * @param ch   TCP Connection close handler
- * @param arg  Handler argument
- *
- * @return 0 if success, otherwise errorcode
- */
-int tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
-		tcp_estab_h *eh, tcp_recv_h *rh, tcp_close_h *ch, void *arg)
+static int tcp_connect_impl(struct tcp_conn **tcp, const struct sa *peer,
+		const struct sa *local, tcp_estab_h *eh, tcp_recv_h *rh,
+		tcp_close_h *ch, void *arg)
 {
 	struct tcp_conn *tc = NULL;
 	int err;
@@ -75,7 +63,7 @@ int tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
 	if (err)
 		goto out;
 
-	err = tcp_conn_connect(tc, peer);
+	err = tcp_conn_connect_hint(tc, peer, local);
 	if (err)
 		goto out;
 
@@ -86,6 +74,46 @@ int tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
 		*tcp = tc;
 
 	return err;
+}
+
+/**
+ * Make a TCP Connection to a remote peer with a hint address
+ * for which interface should be used to send.
+ *
+ * @param tcp   Returned TCP Connection object
+ * @param peer  Network address of peer
+ * @param local Local Network address to be used as src.
+ * 				NULL if OS should choose.
+ * @param eh    TCP Connection Established handler
+ * @param rh    TCP Connection Receive data handler
+ * @param ch    TCP Connection close handler
+ * @param arg   Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tcp_connect_hint(struct tcp_conn **tcp, const struct sa *peer,
+		const struct sa *local, tcp_estab_h *eh, tcp_recv_h *rh,
+		tcp_close_h *ch, void *arg)
+{
+	return tcp_connect_impl(tcp, peer, local, eh, rh, ch, arg);
+}
+
+/**
+ * Make a TCP Connection to a remote peer
+ *
+ * @param tcp   Returned TCP Connection object
+ * @param peer  Network address of peer
+ * @param eh    TCP Connection Established handler
+ * @param rh    TCP Connection Receive data handler
+ * @param ch    TCP Connection close handler
+ * @param arg   Handler argument
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
+		tcp_estab_h *eh, tcp_recv_h *rh, tcp_close_h *ch, void *arg)
+{
+	return tcp_connect_impl(tcp, peer, NULL, eh, rh, ch, arg);
 }
 
 
