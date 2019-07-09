@@ -947,50 +947,6 @@ struct ssl_ctx_st *tls_openssl_context(const struct tls *tls)
 }
 
 
-static bool check_cert(X509 *x, const char *host)
-{
-	STACK_OF(GENERAL_NAME) *san_names;
-	bool match = false;
-	int i;
-
-	san_names = X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
-	if (!san_names)
-		return false;
-
-	for (i = 0; i < sk_GENERAL_NAME_num(san_names); i++) {
-
-		const GENERAL_NAME *name = sk_GENERAL_NAME_value(san_names, i);
-		struct pl pl;
-		unsigned char *p = 0;
-		unsigned len;
-
-		switch (name->type) {
-
-		case GEN_DNS:
-			len = ASN1_STRING_to_UTF8(&p, name->d.ia5);
-
-			pl.p = (char *)p;
-			pl.l = len;
-
-			re_printf("tls: [%u] type DNS: '%r'\n", i, &pl);
-
-			if (0 == pl_strcasecmp(&pl, host)) {
-				match = true;
-			}
-			break;
-
-		default:
-			re_printf("cert: unknown type %d\n", name->type);
-			break;
-		}
-	}
-
-	sk_GENERAL_NAME_pop_free(san_names, GENERAL_NAME_free);
-
-	return match;
-}
-
-
 /*
  * RFC 5922
  *
@@ -998,8 +954,11 @@ static bool check_cert(X509 *x, const char *host)
  */
 bool tls_verify_peer_san(const struct tls_conn *tc, const char *host)
 {
+	STACK_OF(GENERAL_NAME) *san_names;
 	X509 *cert;
-	bool match;
+	bool match = false;
+	int i;
+	int err;
 
 	re_printf("---- tls: verify SAN: '%s'\n", host);
 
@@ -1010,16 +969,56 @@ bool tls_verify_peer_san(const struct tls_conn *tc, const char *host)
 	if (!cert)
 		return false;
 
-	match = check_cert(cert, host);
+	san_names = X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+	if (san_names) {
+		for (i=0; i<sk_GENERAL_NAME_num(san_names); i++) {
 
-	if (!match) {
+			const GENERAL_NAME *name;
+			struct pl pl;
+			unsigned char *p = 0;
+			unsigned len;
+			bool lmatch;
+
+			name = sk_GENERAL_NAME_value(san_names, i);
+
+			switch (name->type) {
+
+			case GEN_DNS:
+				len = ASN1_STRING_to_UTF8(&p, name->d.ia5);
+
+				pl.p = (char *)p;
+				pl.l = len;
+
+				lmatch = (0 == pl_strcasecmp(&pl, host));
+				if (lmatch)
+					match = true;
+
+				re_printf("tls: %5s [%u] type DNS: '%r'\n",
+					  lmatch ? "Match" : "", i, &pl);
+				break;
+
+			default:
+				re_printf("cert: unknown type %d\n",
+					  name->type);
+				break;
+			}
+		}
+	}
+	else {
 		char cn[256];
-		tls_peer_common_name(tc, cn, sizeof(cn));
 
-		match = 0==str_casecmp(host, cn);
+		err = tls_peer_common_name(tc, cn, sizeof(cn));
+		if (err)
+			goto out;
+
+		match = (0==str_casecmp(host, cn));
 	}
 
-	X509_free(cert);
+ out:
+	if (san_names)
+		sk_GENERAL_NAME_pop_free(san_names, GENERAL_NAME_free);
+	if (cert)
+		X509_free(cert);
 
 	return match;
 }
