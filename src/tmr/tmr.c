@@ -3,6 +3,10 @@
  *
  * Copyright (C) 2010 Creytiv.com
  */
+#define _POSIX_C_SOURCE 199309L
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <string.h>
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -125,6 +129,23 @@ uint64_t tmr_jiffies(void)
 {
 	uint64_t jfs;
 
+#if defined(_POSIX_TIMERS) && defined(_POSIX_MONOTONIC_CLOCK)
+	struct timespec now;
+
+	const clockid_t clk_id =
+#if defined(CLOCK_MONOTONIC_COARSE) && CLOCK_MONOTONIC_COARSE >= 0
+		CLOCK_MONOTONIC_COARSE; /* ms precision */
+#else
+		CLOCK_MONOTONIC;
+#endif
+	if (0 != clock_gettime(clk_id, &now)) {
+		DEBUG_WARNING("jiffies: clock_gettime() failed (%m)\n", errno);
+		return 0;
+	}
+
+	jfs  = (long)now.tv_sec * (uint64_t)1000;
+	jfs += now.tv_nsec / 1000000L;
+#else
 #if defined(WIN32)
 	FILETIME ft;
 	ULARGE_INTEGER li;
@@ -142,6 +163,7 @@ uint64_t tmr_jiffies(void)
 
 	jfs  = (long)now.tv_sec * (uint64_t)1000;
 	jfs += now.tv_usec / 1000;
+#endif
 #endif
 
 	return jfs;
