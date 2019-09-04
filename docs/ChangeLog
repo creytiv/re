@@ -1,3 +1,43 @@
+2019-09-07 Alfred E. Heggestad <alfred.heggestad@gmail.com>
+
+	* Version 0.6.1
+
+Aleksei (1):
+      Update MSVS project (Remove uri_cmp) (#209)
+
+Alfred E. Heggestad (10):
+      rtmp: update timestamp after complete packet (#172)
+      rtmp: add rtmp_meta() to send metadata on stream (#173)
+      remove gai_strerror stub (#174)
+      rtmp: add function to set handlers (#180)
+      rtmp: proper handling of extended timestamps (#184)
+      docs: update copyright year (#186)
+      debian: fix some warnings and add version to SONAME (#192)
+      uri: remove uri_cmp() (#199)
+      rtmp: add rtmps (tls) support (#195)
+      Update README.md (#205)
+
+Andrey Semashev (1):
+      Fix libdir in pkgconfig (#185)
+
+Lennart Grahl (1):
+      Raise FD_EXCEPT on EPOLLHUP (fixes closed pipes) (#159)
+
+Richard Aas (9):
+      debian release 0.6.0-1
+      debian release 0.6.0-2
+      debian release 0.6.0-3
+      dns: fix dname decode buffer checks (#197)
+      regex: fix character buffer check (#198)
+      Debian release 0.6.0-4
+      tls: don't close connection on SSL_ERROR_ZERO_RETURN error (#217)
+      DNS TXT resource record support (#219)
+      debian release 0.6.0-6
+
+Steffen Vogel (1):
+      rpm: add missing file to %install section (#178)
+
+
 2018-11-24 Alfred E. Heggestad <alfred.heggestad@gmail.com>
 
 	* Version 0.6.0
