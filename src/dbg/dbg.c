@@ -7,15 +7,12 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_PTHREAD
-#include <stdlib.h>
-#include <pthread.h>
-#endif
 #include <time.h>
 #include <re_types.h>
 #include <re_fmt.h>
 #include <re_list.h>
 #include <re_tmr.h>
+#include <re_lock.h>
 
 
 #define DEBUG_MODULE "dbg"
@@ -31,9 +28,7 @@ static struct {
 	dbg_print_h *ph;       /**< Optional print handler */
 	void *arg;             /**< Handler argument       */
 	FILE *f;               /**< Logfile                */
-#ifdef HAVE_PTHREAD
-	pthread_mutex_t mutex; /**< Thread locking         */
-#endif
+	struct lock *mutex;    /**< Thread locking         */
 } dbg = {
 	0,
 	DBG_INFO,
@@ -41,27 +36,22 @@ static struct {
 	NULL,
 	NULL,
 	NULL,
-#ifdef HAVE_PTHREAD
-	PTHREAD_MUTEX_INITIALIZER,
-#endif
+	NULL,
 };
 
 
-#ifdef HAVE_PTHREAD
 static inline void dbg_lock(void)
 {
-	pthread_mutex_lock(&dbg.mutex);
+	if (dbg.mutex)
+		lock_write_get(dbg.mutex);
 }
 
 
 static inline void dbg_unlock(void)
 {
-	pthread_mutex_unlock(&dbg.mutex);
+	if (dbg.mutex)
+		lock_rel(dbg.mutex);
 }
-#else
-#define dbg_lock()    /**< Stub */
-#define dbg_unlock()  /**< Stub */
-#endif
 
 
 /**
@@ -72,6 +62,9 @@ static inline void dbg_unlock(void)
  */
 void dbg_init(int level, enum dbg_flags flags)
 {
+	if (!dbg.mutex) {
+		lock_alloc(&dbg.mutex);
+	}
 	dbg.tick  = tmr_jiffies();
 	dbg.level = level;
 	dbg.flags = flags;
