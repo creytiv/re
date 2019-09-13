@@ -59,7 +59,7 @@ static inline void dbg_unlock(void)
  *
  * @param level Debug level
  * @param flags Debug flags
- * 
+ *
  * @return 0 if success, otherwise errorcode
  */
 int dbg_init(int level, enum dbg_flags flags)
