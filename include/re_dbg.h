@@ -177,7 +177,7 @@ enum dbg_flags {
  */
 typedef void (dbg_print_h)(int level, const char *p, size_t len, void *arg);
 
-void dbg_init(int level, enum dbg_flags flags);
+int  dbg_init(int level, enum dbg_flags flags);
 void dbg_close(void);
 int  dbg_logfile_set(const char *name);
 void dbg_handler_set(dbg_print_h *ph, void *arg);
