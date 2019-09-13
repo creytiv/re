@@ -59,15 +59,20 @@ static inline void dbg_unlock(void)
  *
  * @param level Debug level
  * @param flags Debug flags
+ * 
+ * @return 0 if success, otherwise errorcode
  */
-void dbg_init(int level, enum dbg_flags flags)
+int dbg_init(int level, enum dbg_flags flags)
 {
 	if (!dbg.mutex) {
-		lock_alloc(&dbg.mutex);
+		int err = lock_alloc(&dbg.mutex);
+		if (err)
+			return err;
 	}
 	dbg.tick  = tmr_jiffies();
 	dbg.level = level;
 	dbg.flags = flags;
+	return 0;
 }
 
 
