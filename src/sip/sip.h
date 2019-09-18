@@ -18,6 +18,7 @@ struct sip {
 	struct stun *stun;
 	char *software;
 	sip_exit_h *exith;
+	sip_trace_h *traceh;
 	void *arg;
 	bool closing;
 };
