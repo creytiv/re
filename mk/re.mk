@@ -271,6 +271,7 @@ endif
 	AFLAGS		:= cru
 	LIB_SUFFIX	:= .dylib
 	HAVE_KQUEUE	:= 1
+	SYSROOT		:= $(shell xcrun --show-sdk-path)/usr
 endif
 ifeq ($(OS),netbsd)
 	CFLAGS		+= -fPIC -DNETBSD
