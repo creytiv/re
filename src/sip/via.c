@@ -37,7 +37,8 @@ static int decode_hostport(const struct pl *hostport, struct pl *host,
  */
 int sip_via_decode(struct sip_via *via, const struct pl *pl)
 {
-	struct pl transp, host, port;
+	struct pl transp, host, port, received, rport;
+	uint32_t rp;
 	int err;
 
 	if (!via || !pl)
@@ -72,6 +73,13 @@ int sip_via_decode(struct sip_via *via, const struct pl *pl)
 		sa_set_port(&via->addr, pl_u32(&port));
 
 	via->val = *pl;
+
+	if ((0 == msg_param_decode(&via->params, "received", &received)) &&
+		(0 == msg_param_decode(&via->params, "rport", &rport)) &&
+		(rp = pl_u32(&rport))) {
+
+		sa_set(&via->received, &received, rp);
+	}
 
 	return msg_param_decode(&via->params, "branch", &via->branch);
 }

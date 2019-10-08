@@ -144,6 +144,7 @@ struct sip_via {
 	struct pl params;
 	struct pl branch;
 	struct pl val;
+	struct sa received;
 	enum sip_transp tp;
 };
 
