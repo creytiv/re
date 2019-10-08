@@ -27,6 +27,7 @@ enum {
 struct sipreg {
 	struct sip_loopstate ls;
 	struct sa laddr;
+	bool use_received;
 	struct tmr tmr;
 	struct sip *sip;
 	struct sip_keepalive *ka;
@@ -168,6 +169,15 @@ static bool contact_handler(const struct sip_hdr *hdr,
 }
 
 
+const struct sa *get_via_received(const struct sip_msg *msg)
+{
+	if (sa_isset(&msg->via.received, SA_ADDR)) {
+		return &(msg->via.received);
+	}
+	return NULL;
+}
+
+
 static void response_handler(int err, const struct sip_msg *msg, void *arg)
 {
 	const struct sip_hdr *minexp;
@@ -191,6 +201,11 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		reg->wait *= 900;
 		reg->failc = 0;
 
+		if (sa_isset(&msg->via.received, SA_ALL)) {
+			reg->use_received = true;
+			reg->laddr = msg->via.received;
+		}
+
 		if (reg->regid > 0 && !reg->terminated && !reg->ka)
 			start_outbound(reg, msg);
 	}
@@ -206,6 +221,11 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			if (err) {
 				err = (err == EAUTH) ? 0 : err;
 				break;
+			}
+
+			if (sa_isset(&msg->via.received, SA_ALL)) {
+				reg->use_received = true;
+				reg->laddr = msg->via.received;
 			}
 
 			err = request(reg, false);
@@ -259,7 +279,9 @@ static int send_handler(enum sip_transp tp, const struct sa *src,
 	(void)dst;
 
 	if (reg->expires > 0) {
-		reg->laddr = *src;
+		if (!reg->use_received)
+			reg->laddr = *src;
+
 		reg->tp = tp;
 	}
 
