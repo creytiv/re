@@ -50,7 +50,7 @@ static void reinvite_resp_handler(int err, const struct sip_msg *msg,
 			(void)sess->offerh(&desc, msg, sess->arg);
 		}
 
-		(void)sipsess_ack(sess->sock, sess->dlg, msg->cseq.num,
+		(void)sipsess_ack(sess, sess->sock, sess->dlg, msg->cseq.num,
 				  sess->auth, sess->ctype, desc);
 		mem_deref(desc);
 	}
@@ -113,9 +113,14 @@ static int send_handler(enum sip_transp tp, const struct sa *src,
 	struct sipsess *sess = arg;
 	(void)dst;
 
-	sip_contact_set(&contact, sess->cuser, src, tp);
+	if (!sess->contacth(sess->arg)) {
+		sip_contact_set(&contact, sess->cuser, src, tp);
 
-	return mbuf_printf(mb, "%H", sip_contact_print, &contact);
+		return mbuf_printf(mb, "%H", sip_contact_print, &contact);
+	}
+
+	return mbuf_printf(mb, "%H", sip_contact_print,
+			   sess->contacth(sess->arg));
 }
 
 

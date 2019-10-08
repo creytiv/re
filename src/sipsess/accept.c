@@ -65,8 +65,9 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 		   struct mbuf *desc,
 		   sip_auth_h *authh, void *aarg, bool aref,
 		   sipsess_offer_h *offerh, sipsess_answer_h *answerh,
-		   sipsess_estab_h *estabh, sipsess_info_h *infoh,
-		   sipsess_refer_h *referh, sipsess_close_h *closeh,
+		   sipsess_estab_h *estabh, sipsess_contact_h *contacth,
+		   sipsess_info_h *infoh, sipsess_refer_h *referh,
+		   sipsess_close_h *closeh,
 		   void *arg, const char *fmt, ...)
 {
 	struct sipsess *sess;
@@ -78,8 +79,8 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 		return EINVAL;
 
 	err = sipsess_alloc(&sess, sock, cuser, ctype, NULL, authh, aarg, aref,
-			    offerh, answerh, NULL, estabh, infoh, referh,
-			    closeh, arg);
+			    offerh, answerh, NULL, estabh, contacth, infoh,
+			    referh, closeh, arg);
 	if (err)
 		return err;
 
@@ -104,10 +105,6 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 		err = sipsess_reply_2xx(sess, msg, scode, reason, desc,
 					fmt, &ap);
 	else {
-		struct sip_contact contact;
-
-		sip_contact_set(&contact, sess->cuser, &msg->dst, msg->tp);
-
 		err = sip_treplyf(&sess->st, NULL, sess->sip,
 				  msg, true, scode, reason,
 				  "%H"
@@ -116,7 +113,7 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 				  "Content-Length: %zu\r\n"
 				  "\r\n"
 				  "%b",
-				  sip_contact_print, &contact,
+				  sip_contact_print, sess->contacth(sess->arg),
 				  fmt, &ap,
 				  desc ? "Content-Type: " : "",
 				  desc ? sess->ctype : "",
@@ -155,7 +152,6 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 		     struct mbuf *desc, const char *fmt, ...)
 {
-	struct sip_contact contact;
 	va_list ap;
 	int err;
 
@@ -163,8 +159,6 @@ int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 		return EINVAL;
 
 	va_start(ap, fmt);
-
-	sip_contact_set(&contact, sess->cuser, &sess->msg->dst, sess->msg->tp);
 
 	err = sip_treplyf(&sess->st, NULL, sess->sip, sess->msg, true,
 			  scode, reason,
@@ -174,7 +168,7 @@ int sipsess_progress(struct sipsess *sess, uint16_t scode, const char *reason,
 			  "Content-Length: %zu\r\n"
 			  "\r\n"
 			  "%b",
-			  sip_contact_print, &contact,
+			  sip_contact_print, sess->contacth(sess->arg),
 			  fmt, &ap,
 			  desc ? "Content-Type: " : "",
 			  desc ? sess->ctype : "",

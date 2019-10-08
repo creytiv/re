@@ -52,6 +52,14 @@ static void internal_establish_handler(const struct sip_msg *msg, void *arg)
 }
 
 
+static struct sip_contact *internal_contact_handler(void *arg)
+{
+	(void)arg;
+
+	return NULL;
+}
+
+
 static void internal_close_handler(int err, const struct sip_msg *msg,
 				   void *arg)
 {
@@ -159,6 +167,7 @@ int sipsess_alloc(struct sipsess **sessp, struct sipsess_sock *sock,
 		  sip_auth_h *authh, void *aarg, bool aref,
 		  sipsess_offer_h *offerh, sipsess_answer_h *answerh,
 		  sipsess_progr_h *progrh, sipsess_estab_h *estabh,
+		  sipsess_contact_h *contacth,
 		  sipsess_info_h *infoh, sipsess_refer_h *referh,
 		  sipsess_close_h *closeh, void *arg)
 {
@@ -188,6 +197,7 @@ int sipsess_alloc(struct sipsess **sessp, struct sipsess_sock *sock,
 	sess->answerh = answerh ? answerh : internal_answer_handler;
 	sess->progrh  = progrh  ? progrh  : internal_progress_handler;
 	sess->estabh  = estabh  ? estabh  : internal_establish_handler;
+	sess->contacth = contacth ? contacth : internal_contact_handler;
 	sess->infoh   = infoh;
 	sess->referh  = referh;
 	sess->closeh  = closeh  ? closeh  : internal_close_handler;

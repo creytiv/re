@@ -30,6 +30,7 @@ struct sipsess {
 	sipsess_info_h *infoh;
 	sipsess_refer_h *referh;
 	sipsess_close_h *closeh;
+	sipsess_contact_h *contacth;
 	void *arg;
 	bool owner;
 	bool sent_offer;
@@ -69,12 +70,13 @@ int  sipsess_alloc(struct sipsess **sessp, struct sipsess_sock *sock,
 		   sip_auth_h *authh, void *aarg, bool aref,
 		   sipsess_offer_h *offerh, sipsess_answer_h *answerh,
 		   sipsess_progr_h *progrh, sipsess_estab_h *estabh,
+		   sipsess_contact_h *contacth,
 		   sipsess_info_h *infoh, sipsess_refer_h *referh,
 		   sipsess_close_h *closeh, void *arg);
 void sipsess_terminate(struct sipsess *sess, int err,
 		       const struct sip_msg *msg);
-int  sipsess_ack(struct sipsess_sock *sock, struct sip_dialog *dlg,
-		uint32_t cseq, struct sip_auth *auth,
+int sipsess_ack(struct sipsess *sess, struct sipsess_sock *sock,
+		struct sip_dialog *dlg,	uint32_t cseq, struct sip_auth *auth,
 		const char *ctype, struct mbuf *desc);
 int  sipsess_ack_again(struct sipsess_sock *sock, const struct sip_msg *msg);
 int  sipsess_reply_2xx(struct sipsess *sess, const struct sip_msg *msg,
