@@ -444,6 +444,16 @@ static int conn_connect(struct http_req *req)
 		err = tls_start_tcp(&conn->sc, req->cli->tls, conn->tc, 0);
 		if (err)
 			goto out;
+
+		if (req->cli->tls_hostname)
+			err = tls_peer_set_verify_host(conn->sc, req->cli->tls_hostname);
+
+		if (err)
+			goto out;
+
+		err = tls_set_servername(conn->sc, req->host);
+		if (err)
+			goto out;
 	}
 #endif
 
