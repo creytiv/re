@@ -249,7 +249,7 @@ static void sip_recv(struct sip *sip, const struct sip_msg *msg)
 	}
 
 	if (msg->req) {
-		(void)re_fprintf(stderr, "unhandeled request from %J: %r %r\n",
+		(void)re_fprintf(stderr, "unhandled request from %J: %r %r\n",
 				 &msg->src, &msg->met, &msg->ruri);
 
 		if (!pl_strcmp(&msg->met, "CANCEL"))
@@ -260,7 +260,7 @@ static void sip_recv(struct sip *sip, const struct sip_msg *msg)
 					501, "Not Implemented");
 	}
 	else {
-		(void)re_fprintf(stderr, "unhandeled response from %J:"
+		(void)re_fprintf(stderr, "unhandled response from %J:"
 				 " %u %r (%r)\n", &msg->src,
 				 msg->scode, &msg->reason, &msg->cseq.met);
 	}
