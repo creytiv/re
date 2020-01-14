@@ -160,7 +160,8 @@ int sipsess_alloc(struct sipsess **sessp, struct sipsess_sock *sock,
 		  sipsess_offer_h *offerh, sipsess_answer_h *answerh,
 		  sipsess_progr_h *progrh, sipsess_estab_h *estabh,
 		  sipsess_info_h *infoh, sipsess_refer_h *referh,
-		  sipsess_close_h *closeh, void *arg)
+		  sipsess_notify_h *notifyh, sipsess_close_h *closeh,
+		  void *arg)
 {
 	struct sipsess *sess;
 	int err;
@@ -190,6 +191,7 @@ int sipsess_alloc(struct sipsess **sessp, struct sipsess_sock *sock,
 	sess->estabh  = estabh  ? estabh  : internal_establish_handler;
 	sess->infoh   = infoh;
 	sess->referh  = referh;
+	sess->notifyh = notifyh;
 	sess->closeh  = closeh  ? closeh  : internal_close_handler;
 	sess->arg     = arg;
 

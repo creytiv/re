@@ -66,7 +66,8 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 		   sip_auth_h *authh, void *aarg, bool aref,
 		   sipsess_offer_h *offerh, sipsess_answer_h *answerh,
 		   sipsess_estab_h *estabh, sipsess_info_h *infoh,
-		   sipsess_refer_h *referh, sipsess_close_h *closeh,
+		   sipsess_refer_h *referh, sipsess_notify_h *notifyh,
+		   sipsess_close_h *closeh,
 		   void *arg, const char *fmt, ...)
 {
 	struct sipsess *sess;
@@ -79,7 +80,7 @@ int sipsess_accept(struct sipsess **sessp, struct sipsess_sock *sock,
 
 	err = sipsess_alloc(&sess, sock, cuser, ctype, NULL, authh, aarg, aref,
 			    offerh, answerh, NULL, estabh, infoh, referh,
-			    closeh, arg);
+			    notifyh, closeh, arg);
 	if (err)
 		return err;
 

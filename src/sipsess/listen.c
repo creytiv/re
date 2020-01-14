@@ -245,6 +245,31 @@ static void invite_handler(struct sipsess_sock *sock,
 }
 
 
+static void notify_handler(struct sipsess_sock *sock, const struct sip_msg *msg)
+{
+	struct sip *sip = sock->sip;
+	struct sipsess *sess;
+
+	sess = sipsess_find(sock, msg);
+	if (!sess || sess->terminated) {
+		(void)sip_reply(sip, msg, 481, "Call Does Not Exist");
+		return;
+	}
+
+	if (!sip_dialog_rseq_valid(sess->dlg, msg)) {
+		(void)sip_reply(sip, msg, 500, "Server Internal Error");
+		return;
+	}
+
+	if (!sess->notifyh) {
+		(void)sip_reply(sip, msg, 501, "Not Implemented");
+		return;
+	}
+
+	sess->notifyh(sip, msg, sess->arg);
+}
+
+
 static bool request_handler(const struct sip_msg *msg, void *arg)
 {
 	struct sipsess_sock *sock = arg;
@@ -276,6 +301,10 @@ static bool request_handler(const struct sip_msg *msg, void *arg)
 			return false;
 
 		refer_handler(sock, msg);
+		return true;
+	}
+	else if (!pl_strcmp(&msg->met, "NOTIFY")) {
+		notify_handler(sock, msg);
 		return true;
 	}
 

@@ -187,7 +187,8 @@ int sipsess_connect(struct sipsess **sessp, struct sipsess_sock *sock,
 		    sipsess_offer_h *offerh, sipsess_answer_h *answerh,
 		    sipsess_progr_h *progrh, sipsess_estab_h *estabh,
 		    sipsess_info_h *infoh, sipsess_refer_h *referh,
-		    sipsess_close_h *closeh, void *arg, const char *fmt, ...)
+		    sipsess_notify_h *notifyh, sipsess_close_h *closeh,
+		    void *arg, const char *fmt, ...)
 {
 	struct sipsess *sess;
 	int err;
@@ -197,7 +198,7 @@ int sipsess_connect(struct sipsess **sessp, struct sipsess_sock *sock,
 
 	err = sipsess_alloc(&sess, sock, cuser, ctype, desc, authh, aarg, aref,
 			    offerh, answerh, progrh, estabh, infoh, referh,
-			    closeh, arg);
+			    notifyh, closeh, arg);
 	if (err)
 		return err;
 

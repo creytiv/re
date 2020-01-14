@@ -29,6 +29,7 @@ struct sipsess {
 	sipsess_estab_h *estabh;
 	sipsess_info_h *infoh;
 	sipsess_refer_h *referh;
+	sipsess_notify_h *notifyh;
 	sipsess_close_h *closeh;
 	void *arg;
 	bool owner;
@@ -70,7 +71,8 @@ int  sipsess_alloc(struct sipsess **sessp, struct sipsess_sock *sock,
 		   sipsess_offer_h *offerh, sipsess_answer_h *answerh,
 		   sipsess_progr_h *progrh, sipsess_estab_h *estabh,
 		   sipsess_info_h *infoh, sipsess_refer_h *referh,
-		   sipsess_close_h *closeh, void *arg);
+		   sipsess_notify_h *notifyh, sipsess_close_h *closeh,
+		   void *arg);
 void sipsess_terminate(struct sipsess *sess, int err,
 		       const struct sip_msg *msg);
 int  sipsess_ack(struct sipsess_sock *sock, struct sip_dialog *dlg,
