@@ -4,6 +4,8 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

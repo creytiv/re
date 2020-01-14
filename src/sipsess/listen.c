@@ -245,7 +245,11 @@ static void invite_handler(struct sipsess_sock *sock,
 }
 
 
-static void notify_handler(struct sipsess_sock *sock, const struct sip_msg *msg)
+/* Handle NOTIFY message
+ * Return false if message could not be handled, it will then fall through to
+ * out-of-dialog message handling.
+ */
+static bool notify_handler(struct sipsess_sock *sock, const struct sip_msg *msg)
 {
 	struct sip *sip = sock->sip;
 	struct sipsess *sess;
@@ -253,20 +257,19 @@ static void notify_handler(struct sipsess_sock *sock, const struct sip_msg *msg)
 	sess = sipsess_find(sock, msg);
 	if (!sess || sess->terminated) {
 		(void)sip_reply(sip, msg, 481, "Call Does Not Exist");
-		return;
+		return false;
 	}
 
 	if (!sip_dialog_rseq_valid(sess->dlg, msg)) {
 		(void)sip_reply(sip, msg, 500, "Server Internal Error");
-		return;
+		return true;
 	}
 
 	if (!sess->notifyh) {
-		(void)sip_reply(sip, msg, 501, "Not Implemented");
-		return;
+		return false;
 	}
 
-	sess->notifyh(sip, msg, sess->arg);
+	return sess->notifyh(sip, msg, sess->arg);
 }
 
 
@@ -304,8 +307,7 @@ static bool request_handler(const struct sip_msg *msg, void *arg)
 		return true;
 	}
 	else if (!pl_strcmp(&msg->met, "NOTIFY")) {
-		notify_handler(sock, msg);
-		return true;
+		return notify_handler(sock, msg);
 	}
 
 	return false;

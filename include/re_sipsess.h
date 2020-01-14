@@ -18,7 +18,7 @@ typedef void (sipsess_info_h)(struct sip *sip, const struct sip_msg *msg,
 			      void *arg);
 typedef void (sipsess_refer_h)(struct sip *sip, const struct sip_msg *msg,
 			       void *arg);
-typedef void (sipsess_notify_h)(struct sip *sip, const struct sip_msg *msg,
+typedef bool (sipsess_notify_h)(struct sip *sip, const struct sip_msg *msg,
 			      void *arg);
 typedef void (sipsess_close_h)(int err, const struct sip_msg *msg, void *arg);
 
