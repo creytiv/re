@@ -650,6 +650,33 @@ int tcp_sock_alloc(struct tcp_sock **tsp, const struct sa *local,
 
 
 /**
+ * Duplicate TCP socket
+ *
+ * @param tso TCP Socket to duplicate
+ *
+ * @return Duplicated TCP Socket if success, otherwise NULL
+ */
+struct tcp_sock *tcp_sock_dup(struct tcp_sock *tso)
+{
+	struct tcp_sock *ts;
+
+	if (!tso)
+		return NULL;
+
+	ts = mem_zalloc(sizeof(*ts), sock_destructor);
+	if (!ts)
+		return NULL;
+
+	ts->fd  = -1;
+	ts->fdc = tso->fdc;
+
+	tso->fdc = -1;
+
+	return ts;
+}
+
+
+/**
  * Bind to a TCP Socket
  *
  * @param ts    TCP Socket
