@@ -202,6 +202,7 @@ void icem_comp_set_selected(struct icem_comp *comp, struct ice_candpair *cp)
 		DEBUG_WARNING("{%s.%u} set_selected: invalid state %s\n",
 			      comp->icem->name, comp->id,
 			      ice_candpair_state2name(cp->state));
+		return;
 	}
 
 	mem_deref(comp->cp_sel);
