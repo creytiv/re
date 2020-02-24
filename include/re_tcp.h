@@ -50,6 +50,7 @@ typedef void (tcp_close_h)(int err, void *arg);
 /* TCP Socket */
 int  tcp_sock_alloc(struct tcp_sock **tsp, const struct sa *local,
 		    tcp_conn_h *ch, void *arg);
+struct tcp_sock *tcp_sock_dup(struct tcp_sock *tso);
 int  tcp_sock_bind(struct tcp_sock *ts, const struct sa *local);
 int  tcp_sock_listen(struct tcp_sock *ts, int backlog);
 int  tcp_accept(struct tcp_conn **tcp, struct tcp_sock *ts, tcp_estab_h *eh,
