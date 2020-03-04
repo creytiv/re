@@ -11,7 +11,7 @@
 
 
 EXTRA_CFLAGS:="$(shell dpkg-buildflags --get CFLAGS | sed -e 's/-O2//')"
-EXTRA_LFLAGS:="$(shell dpkg-buildflags --get LDFLAGS) -Wl,-soname,libre.so.0"
+EXTRA_LFLAGS:="$(shell dpkg-buildflags --get LDFLAGS) -Wl,-soname,libre.so"
 
 
 configure: configure-stamp
@@ -28,8 +28,7 @@ build-stamp: configure-stamp
 	# Add here commands to compile the package.
 	$(MAKE) RELEASE=1 \
 		EXTRA_CFLAGS=$(EXTRA_CFLAGS) \
-		EXTRA_LFLAGS=$(EXTRA_LFLAGS) \
-		LIB_SUFFIX=.so.0
+		EXTRA_LFLAGS=$(EXTRA_LFLAGS)
 
 	touch $@
 
@@ -39,7 +38,7 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	$(MAKE) LIB_SUFFIX=.so.0 clean
+	$(MAKE) clean
 
 	dh_clean 
 
@@ -51,10 +50,7 @@ install: build
 
         # Add here commands to install the package into debian/tmp
 	mkdir $(CURDIR)/debian/tmp
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp \
-		LIB_SUFFIX=.so.0
-
-	cd $(CURDIR)/debian/tmp/usr/lib && ln -s -f libre.so.0 libre.so
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 
 	dh_movefiles
 
