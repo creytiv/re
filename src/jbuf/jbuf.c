@@ -89,8 +89,10 @@ static void frame_alloc(struct jbuf *jb, struct frame **f)
 		f0 = le->data;
 
 		STAT_INC(n_overflow);
+#if JBUF_STAT
 		DEBUG_INFO("drop 1 old frame seq=%u (total dropped %u)\n",
 			   f0->hdr.seq, jb->stat.n_overflow);
+#endif
 
 		f0->mem = mem_deref(f0->mem);
 		list_unlink(le);

@@ -312,7 +312,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\include;..\..\..\misc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_CONSOLE;HAVE_INET_PTON;HAVE_INET_NTOP;FD_SETSIZE=2048;HAVE_SELECT;HAVE_IO_H;_CRT_SECURE_NO_DEPRECATE;WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;HAVE_INET_PTON;HAVE_INET_NTOP;FD_SETSIZE=2048;HAVE_SELECT;HAVE_IO_H;_CRT_SECURE_NO_DEPRECATE;WIN32_LEAN_AND_MEAN;NDEBUG;RELEASE=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
