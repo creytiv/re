@@ -161,7 +161,10 @@ static bool auth_handler(const struct sip_hdr *hdr, const struct sip_msg *msg,
 			goto out;
 	}
 	else {
-		if (!pl_isset(&ch.stale) || pl_strcasecmp(&ch.stale, "true")) {
+		/* error if first auth attempt fails */
+		/* see https://github.com/creytiv/re/issues/223 */
+		if ((!pl_isset(&ch.stale) ||
+		     pl_strcasecmp(&ch.stale, "true")) && (realm->nc == 2)) {
 			err = EAUTH;
 			goto out;
 		}
