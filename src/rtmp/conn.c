@@ -835,8 +835,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		     &pl_scheme, &pl_hostport, &pl_path))
 		return EINVAL;
 
-	re_printf(".... path: '%r'\n", &pl_path);
-
 	tok = pl_strrchr(&pl_path, '/');
 	if (tok) {
 		pl_app.p = pl_path.p;
@@ -849,9 +847,6 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 		re_printf("missing slash\n");
 		return EINVAL;
 	}
-
-	re_printf(".... app:  '%r'\n", &pl_app);
-	re_printf(".... path: '%r'\n", &pl_stream);
 
 	if (!pl_strcasecmp(&pl_scheme, "rtmp")) {
 		tls     = NULL;
