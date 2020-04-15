@@ -437,7 +437,8 @@ static int send_connect(struct rtmp_conn *conn)
 				1,
 			RTMP_AMF_TYPE_OBJECT, 8,
 		          RTMP_AMF_TYPE_STRING, "app", conn->app,
-		          RTMP_AMF_TYPE_STRING, "flashVer", "LNX 9,0,124,2",
+		          RTMP_AMF_TYPE_STRING, "flashVer",
+				"FMLE/3.0 (compatible; Lavf58.39.101)",
 		          RTMP_AMF_TYPE_STRING, "tcUrl", conn->uri,
 		          RTMP_AMF_TYPE_BOOLEAN, "fpad", false,
 		          RTMP_AMF_TYPE_NUMBER, "capabilities", 15.0,
@@ -774,6 +775,23 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 }
 
 
+static const char *pl_strrchr(const struct pl *pl, char c)
+{
+	const char *p, *end;
+
+	if (!pl)
+		return NULL;
+
+	end = pl->p + pl->l;
+	for (p = end; p >= pl->p; p--) {
+		if (*p == c)
+			return p;
+	}
+
+	return NULL;
+}
+
+
 /**
  * Connect to an RTMP server
  *
@@ -803,17 +821,37 @@ int rtmp_connect(struct rtmp_conn **connp, struct dnsc *dnsc, const char *uri,
 	struct pl pl_hostport;
 	struct pl pl_host;
 	struct pl pl_port;
+	struct pl pl_path;
 	struct pl pl_app;
 	struct pl pl_stream;
+	const char *tok;
 	uint16_t defport;
 	int err;
 
 	if (!connp || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "[a-z]+://[^/]+/[^/]+/[^]+",
-		     &pl_scheme, &pl_hostport, &pl_app, &pl_stream))
+	if (re_regex(uri, strlen(uri), "[a-z]+://[^/]+/[^]+",
+		     &pl_scheme, &pl_hostport, &pl_path))
 		return EINVAL;
+
+	re_printf(".... path: '%r'\n", &pl_path);
+
+	tok = pl_strrchr(&pl_path, '/');
+	if (tok) {
+		pl_app.p = pl_path.p;
+		pl_app.l = tok - pl_path.p;
+
+		pl_stream.p = tok + 1;
+		pl_stream.l = pl_path.l - pl_app.l - 1;
+	}
+	else {
+		re_printf("missing slash\n");
+		return EINVAL;
+	}
+
+	re_printf(".... app:  '%r'\n", &pl_app);
+	re_printf(".... path: '%r'\n", &pl_stream);
 
 	if (!pl_strcasecmp(&pl_scheme, "rtmp")) {
 		tls     = NULL;
