@@ -774,23 +774,6 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 }
 
 
-static const char *pl_strrchr(const struct pl *pl, char c)
-{
-	const char *p, *end;
-
-	if (!pl_isset(pl))
-		return NULL;
-
-	end = pl->p + pl->l - 1;
-	for (p = end; p >= pl->p; p--) {
-		if (*p == c)
-			return p;
-	}
-
-	return NULL;
-}
-
-
 /**
  * Connect to an RTMP server
  *

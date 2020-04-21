@@ -503,3 +503,20 @@ const char *pl_strchr(const struct pl *pl, char c)
 
 	return NULL;
 }
+
+
+const char *pl_strrchr(const struct pl *pl, char c)
+{
+	const char *p, *end;
+
+	if (!pl_isset(pl))
+		return NULL;
+
+	end = pl->p + pl->l - 1;
+	for (p = end; p >= pl->p; p--) {
+		if (*p == c)
+			return p;
+	}
+
+	return NULL;
+}
