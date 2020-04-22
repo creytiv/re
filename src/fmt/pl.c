@@ -503,3 +503,28 @@ const char *pl_strchr(const struct pl *pl, char c)
 
 	return NULL;
 }
+
+
+/**
+ * Locate the last occurrence of character in pointer-length string
+ *
+ * @param pl  Pointer-length string
+ * @param c   Character to locate
+ *
+ * @return Pointer to last char if found, otherwise NULL
+ */
+const char *pl_strrchr(const struct pl *pl, char c)
+{
+	const char *p, *end;
+
+	if (!pl_isset(pl))
+		return NULL;
+
+	end = pl->p + pl->l - 1;
+	for (p = end; p >= pl->p; p--) {
+		if (*p == c)
+			return p;
+	}
+
+	return NULL;
+}
