@@ -505,6 +505,14 @@ const char *pl_strchr(const struct pl *pl, char c)
 }
 
 
+/**
+ * Locate the last occurrence of character in pointer-length string
+ *
+ * @param pl  Pointer-length string
+ * @param c   Character to locate
+ *
+ * @return Pointer to last char if found, otherwise NULL
+ */
 const char *pl_strrchr(const struct pl *pl, char c)
 {
 	const char *p, *end;
