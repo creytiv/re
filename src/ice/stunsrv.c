@@ -156,59 +156,7 @@ static int handle_stun_full(struct icem *icem,
 
 			cp->nominated = true;
 		}
-
-		/* Cancel conncheck. Choose Selected Pair */
-		icem_candpair_make_valid(cp);
-
-		if (icem->conf.nom == ICE_NOMINATION_REGULAR) {
-			icem_candpair_cancel(cp);
-			icem_comp_set_selected(comp, cp);
-		}
 	}
-
-	return 0;
-}
-
-
-/*
- * 7.2.2.  Additional Procedures for Lite Implementations
- */
-static int handle_stun_lite(struct icem *icem,
-			    struct icem_comp *comp, const struct sa *src,
-			    bool use_cand)
-{
-	struct ice_cand *lcand, *rcand;
-	struct ice_candpair *cp;
-	int err;
-
-	if (!use_cand)
-		return 0;
-
-	rcand = icem_cand_find(&icem->rcandl, comp->id, src);
-	if (!rcand) {
-		DEBUG_WARNING("lite: could not find remote candidate\n");
-		return 0;
-	}
-
-	/* find the local host candidate with the same component */
-	lcand = icem_cand_find(&icem->lcandl, comp->id, NULL);
-	if (!lcand) {
-		DEBUG_WARNING("lite: could not find local candidate\n");
-		return 0;
-	}
-
-	/* search validlist for existing candpair's */
-	if (icem_candpair_find(&icem->validl, lcand, rcand))
-		return 0;
-
-	err = icem_candpair_alloc(&cp, icem, lcand, rcand);
-	if (err) {
-		DEBUG_WARNING("lite: failed to created candidate pair\n");
-		return err;
-	}
-
-	icem_candpair_make_valid(cp);
-	cp->nominated = true;
 
 	return 0;
 }
@@ -294,16 +242,17 @@ int icem_stund_recv(struct icem_comp *comp, const struct sa *src,
 		goto badmsg;
 
 	attr = stun_msg_attr(req, STUN_ATTR_USE_CAND);
-	if (attr)
+	if (attr) {
 		use_cand = true;
+	}
 
-	if (icem->lmode == ICE_MODE_FULL) {
-		err = handle_stun_full(icem, comp, src, prio_prflx,
-				       use_cand, presz > 0);
+	if (rrole == ICE_ROLE_CONTROLLED && use_cand) {
+		DEBUG_NOTICE("remote peer is Controlled and"
+			      " should not send USE-CANDIDATE\n");
 	}
-	else {
-		err = handle_stun_lite(icem, comp, src, use_cand);
-	}
+
+	err = handle_stun_full(icem, comp, src, prio_prflx,
+			       use_cand, presz > 0);
 
 	if (err)
 		goto badmsg;
