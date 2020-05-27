@@ -92,6 +92,7 @@ void sdp_media_set_encode_handler(struct sdp_media *m, sdp_media_enc_h *ench,
 				  void *arg);
 void sdp_media_set_fmt_ignore(struct sdp_media *m, bool fmt_ignore);
 void sdp_media_set_disabled(struct sdp_media *m, bool disabled);
+bool sdp_media_disabled(struct sdp_media *m);
 void sdp_media_set_lport(struct sdp_media *m, uint16_t port);
 void sdp_media_set_laddr(struct sdp_media *m, const struct sa *laddr);
 void sdp_media_set_lbandwidth(struct sdp_media *m, enum sdp_bandwidth type,
