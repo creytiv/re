@@ -29,6 +29,7 @@ enum sdp_bandwidth {
 	SDP_BANDWIDTH_MAX,
 };
 
+struct odict;
 
 struct sdp_format;
 
@@ -66,20 +67,23 @@ void sdp_session_set_laddr(struct sdp_session *sess, const struct sa *laddr);
 void sdp_session_set_lbandwidth(struct sdp_session *sess,
 				enum sdp_bandwidth type, int32_t bw);
 int  sdp_session_set_lattr(struct sdp_session *sess, bool replace,
-			   const char *name, const char *value, ...);
+				const char *name, const char *value, ...);
 void sdp_session_del_lattr(struct sdp_session *sess, const char *name);
 int32_t sdp_session_lbandwidth(const struct sdp_session *sess,
-			       enum sdp_bandwidth type);
+				enum sdp_bandwidth type);
 int32_t sdp_session_rbandwidth(const struct sdp_session *sess,
-			       enum sdp_bandwidth type);
+				enum sdp_bandwidth type);
 const char *sdp_session_rattr(const struct sdp_session *sess,
-			      const char *name);
+				const char *name);
 const char *sdp_session_rattr_apply(const struct sdp_session *sess,
-				    const char *name,
-				    sdp_attr_h *attrh, void *arg);
+				const char *name,
+				sdp_attr_h *attrh, void *arg);
 const struct list *sdp_session_medial(const struct sdp_session *sess,
-				      bool local);
-int  sdp_session_debug(struct re_printf *pf, const struct sdp_session *sess);
+				bool local);
+int  sdp_session_debug(struct re_printf *pf,
+				const struct sdp_session *sess);
+int  sdp_session_json_api(struct odict *ods,
+				const struct sdp_session *sess);
 
 
 /* media */
@@ -133,6 +137,7 @@ const char *sdp_media_rattr_apply(const struct sdp_media *m, const char *name,
 				  sdp_attr_h *attrh, void *arg);
 const char *sdp_media_name(const struct sdp_media *m);
 int  sdp_media_debug(struct re_printf *pf, const struct sdp_media *m);
+int  sdp_media_json_api(struct odict *mod, const struct sdp_media *m);
 
 
 /* format */
@@ -145,6 +150,7 @@ int  sdp_format_set_params(struct sdp_format *fmt, const char *params, ...);
 bool sdp_format_cmp(const struct sdp_format *fmt1,
 		    const struct sdp_format *fmt2);
 int  sdp_format_debug(struct re_printf *pf, const struct sdp_format *fmt);
+int  sdp_format_json_api(struct odict *od, const struct sdp_format *fmt);
 
 
 /* encode/decode */

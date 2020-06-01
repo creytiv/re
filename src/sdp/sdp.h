@@ -1,7 +1,7 @@
 /**
  * @file sdp.h  Internal SDP interface
  *
- * Copyright (C) 2010 Creytiv.com
+ * Copyright (C) 2020 Creytiv.com
  */
 
 
@@ -85,3 +85,4 @@ const char *sdp_attr_apply(const struct list *lst, const char *name,
 			   sdp_attr_h *attrh, void *arg);
 int sdp_attr_print(struct re_printf *pf, const struct sdp_attr *attr);
 int sdp_attr_debug(struct re_printf *pf, const struct sdp_attr *attr);
+int sdp_attr_json_api(struct odict *od, const struct sdp_attr *attr);

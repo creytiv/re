@@ -13,6 +13,7 @@
 #include <re_sa.h>
 #include <re_sdp.h>
 #include "sdp.h"
+#include "re_odict.h"
 
 
 static void destructor(void *arg)
@@ -953,6 +954,77 @@ int sdp_media_debug(struct re_printf *pf, const struct sdp_media *m)
 
 	for (le=m->rattrl.head; le; le=le->next)
 		err |= re_hprintf(pf, "    %H\n", sdp_attr_debug, le->data);
+
+	return err;
+}
+
+
+/**
+ * Print the session information in JSON
+ *
+ * @param mod Media attributes and formats dict
+ * @param m   SDP Media line
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sdp_media_json_api(struct odict *mod, const struct sdp_media *m)
+{
+	struct le *le;
+	struct odict *media = NULL;
+	struct odict *lattr = NULL;
+	struct odict *rattr = NULL;
+	struct odict *lform = NULL;
+	struct odict *rform = NULL;
+	int err = 0;
+
+	if (!m)
+		return 0;
+
+	err |= odict_alloc(&media, 8);
+	err |= odict_alloc(&lattr, 8);
+	err |= odict_alloc(&rattr, 8);
+	err |= odict_alloc(&lform, 8);
+	err |= odict_alloc(&rform, 8);
+
+	/* local formats */
+	for (le=m->lfmtl.head; le; le=le->next)
+		err |= sdp_format_json_api(lform, le->data);
+	err |= odict_entry_add(media, "local_formats", ODICT_OBJECT,
+			lform);
+
+	/* remote formats */
+	for (le=m->rfmtl.head; le; le=le->next)
+		err |= sdp_format_json_api(rform, le->data);
+	err |= odict_entry_add(media, "remote_formats", ODICT_OBJECT,
+			rform);
+
+	/* local attributes */
+	for (le=m->lattrl.head; le; le=le->next)
+		err |= sdp_attr_json_api(lattr, le->data);
+	err |= odict_entry_add(media, "local_attributes", ODICT_OBJECT,
+			lattr);
+
+	/* remote attributes */
+	for (le=m->rattrl.head; le; le=le->next)
+		err |= sdp_attr_json_api(rattr, le->data);
+	err |= odict_entry_add(media, "remote_attributes", ODICT_OBJECT,
+			rattr);
+
+	/* package */
+	if (m->name)
+		err |= odict_entry_add(mod, m->name, ODICT_OBJECT, media);
+	else
+		err |= odict_entry_add(mod, "media", ODICT_OBJECT, media);
+
+	if (m->proto)
+		err |= odict_entry_add(mod, "protocol", ODICT_STRING,
+				m->proto);
+
+	mem_deref(media);
+	mem_deref(lattr);
+	mem_deref(rattr);
+	mem_deref(lform);
+	mem_deref(rform);
 
 	return err;
 }

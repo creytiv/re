@@ -13,6 +13,7 @@
 #include <re_sa.h>
 #include <re_sdp.h>
 #include "sdp.h"
+#include "re_odict.h"
 
 
 static void destructor(void *arg)
@@ -262,5 +263,45 @@ int sdp_format_debug(struct re_printf *pf, const struct sdp_format *fmt)
 	if (fmt->sup)
 		err |= re_hprintf(pf, " *");
 
+	return err;
+}
+
+
+/**
+ * Print SDP Format information in JSON
+ *
+ * @param od  Media format dict
+ * @param fmt SDP Format
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sdp_format_json_api(struct odict *od, const struct sdp_format *fmt)
+{
+	struct odict *arrd = NULL;
+	int err = 0;
+
+	if (!fmt)
+		return 0;
+
+	err |= odict_alloc(&arrd, 8);
+
+	/* TODO: can we find out whats the
+			current negotiated algorithm one */
+
+	err |= odict_entry_add(arrd, "name", ODICT_STRING,
+			fmt->name ? fmt->name : "unknown");
+	err |= odict_entry_add(arrd, "sample_rate", ODICT_INT,
+			fmt->srate ? (int64_t)fmt->srate : 0);
+	err |= odict_entry_add(arrd, "channels", ODICT_INT,
+			fmt->ch ? (int64_t)fmt->ch : 0);
+	err |= odict_entry_add(arrd, "parameters", ODICT_STRING,
+			fmt->params ? fmt->params : "");
+	err |= odict_entry_add(arrd, "supported", ODICT_BOOL,
+			fmt->sup ? true : false);
+
+	err |= odict_entry_add(arrd, "id", ODICT_STRING, fmt->id);
+	err |= odict_entry_add(od, fmt->id, ODICT_ARRAY, arrd);
+
+	mem_deref(arrd);
 	return err;
 }

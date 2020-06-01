@@ -13,6 +13,7 @@
 #include <re_sdp.h>
 #include <re_sys.h>
 #include "sdp.h"
+#include "re_odict.h"
 
 
 static void destructor(void *arg)
@@ -176,7 +177,7 @@ void sdp_session_del_lattr(struct sdp_session *sess, const char *name)
  * @return Bandwidth value
  */
 int32_t sdp_session_lbandwidth(const struct sdp_session *sess,
-			       enum sdp_bandwidth type)
+				   enum sdp_bandwidth type)
 {
 	if (!sess || type >= SDP_BANDWIDTH_MAX)
 		return 0;
@@ -270,12 +271,12 @@ const struct list *sdp_session_medial(const struct sdp_session *sess,
 int sdp_session_debug(struct re_printf *pf, const struct sdp_session *sess)
 {
 	struct le *le;
-	int err;
+	int err = 0;
 
 	if (!sess)
 		return 0;
 
-	err = re_hprintf(pf, "SDP session\n");
+	err |= re_hprintf(pf, "SDP session\n");
 
 	err |= re_hprintf(pf, "  local attributes:\n");
 
@@ -296,6 +297,63 @@ int sdp_session_debug(struct re_printf *pf, const struct sdp_session *sess)
 
 	for (le=sess->lmedial.head; le; le=le->next)
 		err |= sdp_media_debug(pf, le->data);
+
+	return err;
+}
+
+
+/**
+ * Print the session information in JSON
+ *
+ * @param od   Call session dict
+ * @param sess SDP Session object
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sdp_session_json_api(struct odict *ods, const struct sdp_session *sess)
+{
+	struct le *le;
+	struct odict *lattr = NULL;
+	struct odict *rattr = NULL;
+	struct odict *lmedi = NULL;
+	struct odict *smedi = NULL;
+	int err = 0;
+
+	if (!sess)
+		return 0;
+
+	err |= odict_alloc(&lattr, 8);
+	err |= odict_alloc(&rattr, 8);
+	err |= odict_alloc(&lmedi, 8);
+	err |= odict_alloc(&smedi, 8);
+
+	/* SDP session - local attributes */
+	for (le=sess->lattrl.head; le; le=le->next)
+		err |= sdp_attr_json_api(lattr, le->data);
+
+	/* SDP session - remote attributes */
+	for (le=sess->rattrl.head; le; le=le->next)
+		err |= sdp_attr_json_api(rattr, le->data);
+
+	/* session media */
+	for (le=sess->medial.head; le; le=le->next)
+		err |= sdp_media_json_api(smedi, le->data);
+
+	/* local media */
+	for (le=sess->lmedial.head; le; le=le->next)
+		err |= sdp_media_json_api(lmedi, le->data);
+
+	/* package */
+	err |= odict_entry_add(ods, "local", ODICT_OBJECT, lattr);
+	err |= odict_entry_add(ods, "remote", ODICT_OBJECT, rattr);
+	err |= odict_entry_add(ods, "media", ODICT_OBJECT, smedi);
+	/* TODO: what is local media */
+	err |= odict_entry_add(ods, "local_media", ODICT_OBJECT, lmedi);
+
+	mem_deref(lattr);
+	mem_deref(rattr);
+	mem_deref(lmedi);
+	mem_deref(smedi);
 
 	return err;
 }
