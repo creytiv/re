@@ -158,15 +158,6 @@ int sdp_attr_json_api(struct odict *od, const struct sdp_attr *attr)
 		return 0;
 
 	if (attr->val) {
-		/*
-		TODO: not working properly
-		if (isdigit(*attr->val)) {
-			err |= odict_entry_add(od, attr->name, ODICT_INT,
-				   (int64_t)attr->val - '0');
-		} else {
-			err |= odict_entry_add(od, attr->name, ODICT_STRING,
-				   attr->val);
-		}*/
 		err |= odict_entry_add(od, attr->name, ODICT_STRING,
 				   attr->val);
 	} else {
