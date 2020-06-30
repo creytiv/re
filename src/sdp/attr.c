@@ -157,12 +157,11 @@ int sdp_attr_json_api(struct odict *od, const struct sdp_attr *attr)
 	if (!attr)
 		return 0;
 
-	if (attr->val) {
+	if (attr->val)
 		err |= odict_entry_add(od, attr->name, ODICT_STRING,
-				   attr->val);
-	} else {
+				 attr->val);
+	else
 		err |= odict_entry_add(od, attr->name, ODICT_BOOL, true);
-	}
 
 	return err;
 }
