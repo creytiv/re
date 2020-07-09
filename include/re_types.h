@@ -47,14 +47,22 @@ typedef unsigned long long int    uint64_t;
 #endif /* __BIT_TYPES_DEFINED__ */
 
 #endif /* __int8_t_defined */
-#ifndef __ssize_t_defined
+#if !defined(__ssize_t_defined) && !defined(_SSIZE_T_DEFINED_)
 typedef long     ssize_t;
 #define __ssize_t_defined
+#define _SSIZE_T_DEFINED_
 #endif
 
 
 #ifndef WIN32
-typedef uint32_t socklen_t;
+#if !defined(__LP64__) && defined(__ANDROID__)
+/* This historical accident means that Android had a signed socklen_t on 32-bit architectures. */
+typedef int32_t __socklen_t;
+#else
+/* LP64 still has a 32-bit socklen_t. */
+typedef uint32_t __socklen_t;
+#endif
+typedef __socklen_t socklen_t;
 #endif
 #endif
 
