@@ -14,7 +14,7 @@ addons:
       libssl-dev
 
 install:
-    - wget "https://github.com/alfredh/pytools/raw/master/ccheck.py"
+  - wget "https://raw.githubusercontent.com/baresip/baresip/master/test/ccheck.py"
 
 script: 
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
@@ -23,4 +23,4 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         make EXTRA_CFLAGS="-I/usr/local/opt/openssl/include -Werror" EXTRA_LFLAGS="-L/usr/local/opt/openssl/lib" CCACHE=;
     fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python2 ccheck.py ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then python3 ccheck.py ; fi
