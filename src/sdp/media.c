@@ -421,6 +421,22 @@ void sdp_media_set_disabled(struct sdp_media *m, bool disabled)
 
 
 /**
+ * Check if an SDP Media line is disabled
+ *
+ * @param  m SDP Media line
+ * @return True if disabled, otherwise false
+
+ */
+bool sdp_media_disabled(struct sdp_media *m)
+{
+	if (!m)
+		return true;
+
+	return m->disabled;
+}
+
+
+/**
  * Set the local port number of an SDP Media line
  *
  * @param m    SDP Media line
