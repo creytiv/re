@@ -38,6 +38,7 @@ struct sipreg {
 	sip_resp_h *resph;
 	void *arg;
 	uint32_t expires;
+	uint32_t pexpires;
 	uint32_t failc;
 	uint32_t wait;
 	enum sip_transp tp;
@@ -189,6 +190,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		sip_msg_hdr_apply(msg, true, SIP_HDR_CONTACT, contact_handler,
 				  reg);
 		reg->wait *= 900;
+		reg->pexpires = reg->wait;
 		reg->failc = 0;
 
 		if (reg->regid > 0 && !reg->terminated && !reg->ka)
@@ -407,4 +409,17 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 const struct sa *sipreg_laddr(const struct sipreg *reg)
 {
 	return reg ? &reg->laddr : NULL;
+}
+
+
+/**
+ * Get the proxy expires value of a SIP registration client
+ *
+ * @param reg SIP registration client
+ *
+ * @return the proxy expires value
+ */
+uint32_t sipreg_proxy_expires(const struct sipreg *reg)
+{
+	return reg ? reg->pexpires : 0;
 }
