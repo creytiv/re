@@ -42,6 +42,7 @@ struct sipreg {
 	uint32_t failc;
 	uint32_t rwait;
 	uint32_t wait;
+	uint32_t fbregint;
 	enum sip_transp tp;
 	bool registered;
 	bool terminated;
@@ -176,8 +177,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 	struct sipreg *reg = arg;
 
 	reg->wait = failwait(reg->failc + 1);
-
-	if (err || sip_request_loops(&reg->ls, msg->scode)) {
+	if (err || !msg || sip_request_loops(&reg->ls, msg->scode)) {
 		reg->failc++;
 		goto out;
 	}
@@ -186,10 +186,10 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		return;
 	}
 	else if (msg->scode < 300) {
-		reg->registered = true;
 		reg->wait = reg->expires;
 		sip_msg_hdr_apply(msg, true, SIP_HDR_CONTACT, contact_handler,
 				  reg);
+		reg->registered = reg->wait > 0;
 		reg->pexpires = reg->wait;
 		reg->wait *= reg->rwait * (1000 / 100);
 		reg->failc = 0;
@@ -240,7 +240,14 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 
  out:
 	if (!reg->expires) {
-		mem_deref(reg);
+		if (msg && msg->scode >= 400 && msg->scode < 500)
+			reg->fbregint = 0;
+
+		if (!reg->terminated && reg->fbregint)
+			tmr_start(&reg->tmr, reg->fbregint * 1000, tmr_handler,
+					reg);
+		else if (reg->terminated)
+			mem_deref(reg);
 	}
 	else if (reg->terminated) {
 		if (!reg->registered || request(reg, true))
@@ -261,10 +268,8 @@ static int send_handler(enum sip_transp tp, const struct sa *src,
 
 	(void)dst;
 
-	if (reg->expires > 0) {
-		reg->laddr = *src;
-		reg->tp = tp;
-	}
+	reg->laddr = *src;
+	reg->tp = tp;
 
 	err = mbuf_printf(mb, "Contact: <sip:%s@%J%s>;expires=%u%s%s",
 			  reg->cuser, &reg->laddr, sip_transp_param(reg->tp),
@@ -337,8 +342,7 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 	struct sipreg *reg;
 	int err;
 
-	if (!regp || !sip || !reg_uri || !to_uri || !from_uri ||
-	    !expires || !cuser)
+	if (!regp || !sip || !reg_uri || !to_uri || !from_uri || !cuser)
 		return EINVAL;
 
 	reg = mem_zalloc(sizeof(*reg), destructor);
@@ -442,4 +446,26 @@ const struct sa *sipreg_laddr(const struct sipreg *reg)
 uint32_t sipreg_proxy_expires(const struct sipreg *reg)
 {
 	return reg ? reg->pexpires : 0;
+}
+
+
+bool sipreg_registered(const struct sipreg *reg)
+{
+	return reg ? reg->registered : false;
+}
+
+
+bool sipreg_failed(const struct sipreg *reg)
+{
+	return reg ? reg->failc > 0 : false;
+}
+
+
+int sipreg_set_fbregint(struct sipreg *reg, uint32_t fbregint)
+{
+	if (!reg)
+		return EINVAL;
+
+	reg->fbregint = fbregint;
+	return 0;
 }
