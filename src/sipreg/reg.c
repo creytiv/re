@@ -197,6 +197,9 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 			start_outbound(reg, msg);
 	}
 	else {
+		if (msg->scode != 401 && msg->scode != 407)
+			reg->registered = false;
+
 		if (reg->terminated && !reg->registered)
 			goto out;
 
