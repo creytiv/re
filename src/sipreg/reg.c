@@ -290,12 +290,13 @@ static int request(struct sipreg *reg, bool reset_ls)
 			     0, reg->auth, send_handler, response_handler, reg,
 			     "%s"
 			     "%b"
+			     "Expires: %u\r\n"
 			     "Content-Length: 0\r\n"
 			     "\r\n",
 			     reg->regid > 0
 			     ? "Supported: gruu, outbound, path\r\n" : "",
 			     reg->hdrs ? mbuf_buf(reg->hdrs) : NULL,
-			     reg->hdrs ? mbuf_get_left(reg->hdrs) : (size_t)0);
+			     reg->hdrs ? mbuf_get_left(reg->hdrs) : (size_t)0, reg->expires);
 }
 
 
