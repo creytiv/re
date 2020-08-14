@@ -189,8 +189,8 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		reg->wait = reg->expires;
 		sip_msg_hdr_apply(msg, true, SIP_HDR_CONTACT, contact_handler,
 				  reg);
-		reg->wait *= 900;
 		reg->pexpires = reg->wait;
+		reg->wait *= 400;
 		reg->failc = 0;
 
 		if (reg->regid > 0 && !reg->terminated && !reg->ka)
