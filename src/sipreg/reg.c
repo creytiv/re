@@ -205,6 +205,7 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 
 		case 401:
 		case 407:
+			sip_auth_reset(reg->auth);
 			err = sip_auth_authenticate(reg->auth, msg);
 			if (err) {
 				err = (err == EAUTH) ? 0 : err;
@@ -291,8 +292,10 @@ static int request(struct sipreg *reg, bool reset_ls)
 	if (reg->terminated)
 		reg->expires = 0;
 
-	if (reset_ls)
+	if (reset_ls) {
 		sip_loopstate_reset(&reg->ls);
+		sip_auth_reset(reg->auth);
+	}
 
 	return sip_drequestf(&reg->req, reg->sip, true, "REGISTER", reg->dlg,
 			     0, reg->auth, send_handler, response_handler, reg,
