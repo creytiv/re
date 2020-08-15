@@ -239,6 +239,12 @@ int tls_add_ca(struct tls *tls, const char *cafile)
  */
 int tls_set_selfsigned(struct tls *tls, const char *cn)
 {
+	return tls_set_selfsigned_rsa(tls, cn, 1024);
+}
+
+
+int tls_set_selfsigned_rsa(struct tls *tls, const char *cn, size_t bits)
+{
 	X509_NAME *subj = NULL;
 	EVP_PKEY *key = NULL;
 	X509 *cert = NULL;
@@ -258,7 +264,7 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 		goto out;
 
 	BN_set_word(bn, RSA_F4);
-	if (!RSA_generate_key_ex(rsa, 1024, bn, NULL))
+	if (!RSA_generate_key_ex(rsa, (int)bits, bn, NULL))
 		goto out;
 
 	key = EVP_PKEY_new();
