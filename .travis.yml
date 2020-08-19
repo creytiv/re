@@ -38,6 +38,14 @@ jobs:
           - tar -xf assets.tar.gz
           - make EXTRA_CFLAGS="-Iassets/libressl/include -Werror" EXTRA_LFLAGS="-Lassets/libressl" CCACHE=;
         stage: openssl
+      - name: OpenSSL 1.1.1g no-deprecated
+        os: linux
+        dist: xenial
+        script:
+          - wget "https://github.com/baresip/ci/releases/download/v0.1/assets.tar.gz"
+          - tar -xf assets.tar.gz
+          - make EXTRA_CFLAGS="-Iassets/openssl/include -Werror" EXTRA_LFLAGS="-Lassets/openssl" CCACHE=;
+        stage: openssl
 
 
 stages:
