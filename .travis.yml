@@ -62,6 +62,13 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
         make EXTRA_CFLAGS=-Werror CCACHE=;
     fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        cd ..; rm re/libre.so;
+        git clone https://github.com/creytiv/rem;
+        make -C rem librem.a;
+        git clone https://github.com/baresip/retest.git;
+        cd retest && make STATIC=1 LIBRE_SO=../re && ./retest -r;
+    fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         make EXTRA_CFLAGS="-I/usr/local/opt/openssl/include -Werror" EXTRA_LFLAGS="-L/usr/local/opt/openssl/lib" CCACHE=;
     fi
