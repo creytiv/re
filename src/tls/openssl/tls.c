@@ -297,9 +297,15 @@ int tls_set_selfsigned_rsa(struct tls *tls, const char *cn, size_t bits)
 	    !X509_set_subject_name(cert, subj))
 		goto out;
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	if (!X509_gmtime_adj(X509_getm_notBefore(cert), -3600*24*365) ||
+	    !X509_gmtime_adj(X509_getm_notAfter(cert),   3600*24*365*10))
+		goto out;
+#else
 	if (!X509_gmtime_adj(X509_get_notBefore(cert), -3600*24*365) ||
 	    !X509_gmtime_adj(X509_get_notAfter(cert),   3600*24*365*10))
 		goto out;
+#endif
 
 	if (!X509_set_pubkey(cert, key))
 		goto out;
