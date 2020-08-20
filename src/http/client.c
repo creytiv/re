@@ -446,7 +446,8 @@ static int conn_connect(struct http_req *req)
 			goto out;
 
 		if (req->cli->tls_hostname)
-			err = tls_peer_set_verify_host(conn->sc, req->cli->tls_hostname);
+			err = tls_peer_set_verify_host(conn->sc,
+				req->cli->tls_hostname);
 
 		if (err)
 			goto out;
@@ -743,7 +744,8 @@ int http_client_add_ca(struct http_cli *cli, const char *tls_ca)
  *
  * @return 0 if success, otherwise errorcode
  */
-int http_client_set_tls_hostname(struct http_cli *cli, const struct pl *hostname)
+int http_client_set_tls_hostname(struct http_cli *cli,
+				 const struct pl *hostname)
 {
 	if (!cli || !hostname)
 		return EINVAL;
