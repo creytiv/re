@@ -163,12 +163,6 @@ int icem_checklist_form(struct icem *icem)
 	if (!icem)
 		return EINVAL;
 
-	if (ICE_MODE_LITE == icem->lmode) {
-		DEBUG_WARNING("%s: Checklist: only valid for full-mode\n",
-			      icem->name);
-		return EINVAL;
-	}
-
 	if (!list_isempty(&icem->checkl))
 		return EALREADY;
 
@@ -211,6 +205,7 @@ static bool iscompleted(const struct icem *icem)
 static void concluding_ice(struct icem_comp *comp)
 {
 	struct ice_candpair *cp;
+	bool use_cand;
 
 	if (!comp || comp->concluded)
 		return;
@@ -228,12 +223,13 @@ static void concluding_ice(struct icem_comp *comp)
 
 	icem_comp_set_selected(comp, cp);
 
-	if (comp->icem->conf.nom == ICE_NOMINATION_REGULAR) {
+	/* Regular nomination */
 
-		/* send STUN request with USE_CAND flag via triggered qeueue */
-		(void)icem_conncheck_send(cp, true, true);
-		icem_conncheck_schedule_check(comp->icem);
-	}
+	use_cand = comp->icem->lrole == ICE_ROLE_CONTROLLING;
+
+	/* send STUN request with USE_CAND flag via triggered qeueue */
+	(void)icem_conncheck_send(cp, use_cand, true);
+	icem_conncheck_schedule_check(comp->icem);
 
 	comp->concluded = true;
 }
