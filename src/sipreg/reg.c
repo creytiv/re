@@ -158,12 +158,12 @@ static bool contact_handler(const struct sip_hdr *hdr,
 		return false;
 
 	if (!msg_param_decode(&c.params, "expires", &pval)) {
-	        reg->wait = pl_u32(&pval);
+		reg->wait = pl_u32(&pval);
 	}
 	else if (pl_isset(&msg->expires))
-	        reg->wait = pl_u32(&msg->expires);
+		reg->wait = pl_u32(&msg->expires);
 	else
-	        reg->wait = DEFAULT_EXPIRES;
+		reg->wait = DEFAULT_EXPIRES;
 
 	return true;
 }
