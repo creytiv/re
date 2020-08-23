@@ -49,6 +49,9 @@ int tls_fingerprint(const struct tls *tls, enum tls_fingerprint type,
 int tls_peer_fingerprint(const struct tls_conn *tc, enum tls_fingerprint type,
 			 uint8_t *md, size_t size);
 int tls_peer_common_name(const struct tls_conn *tc, char *cn, size_t size);
+int tls_peer_set_verify_host(struct tls_conn *tc, const char *hostname);
+int tls_set_verify_purpose(struct tls *tls, const char *purpose);
+int tls_set_hostname(char *tls_hostname, const struct pl *hostname);
 int tls_peer_verify(const struct tls_conn *tc);
 int tls_srtp_keyinfo(const struct tls_conn *tc, enum srtp_suite *suite,
 		     uint8_t *cli_key, size_t cli_key_size,

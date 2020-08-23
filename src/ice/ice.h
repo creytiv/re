@@ -60,7 +60,6 @@ struct icem {
 	struct list validl;          /**< Valid List of cand pairs (sorted)  */
 	uint64_t tiebrk;             /**< Tie-break value for roleconflict   */
 	bool mismatch;               /**< ICE mismatch flag                  */
-	enum ice_mode lmode;         /**< Local mode                         */
 	enum ice_mode rmode;         /**< Remote mode                        */
 	enum ice_role lrole;         /**< Local role                         */
 	struct tmr tmr_pace;         /**< Timer for pacing STUN requests     */

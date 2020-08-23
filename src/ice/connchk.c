@@ -225,13 +225,18 @@ int icem_conncheck_send(struct ice_candpair *cp, bool use_cand, bool trigged)
 
 	case ICE_ROLE_CONTROLLING:
 		ctrl_attr = STUN_ATTR_CONTROLLING;
-
-		if (icem->conf.nom == ICE_NOMINATION_AGGRESSIVE)
-			use_cand = true;
 		break;
 
 	case ICE_ROLE_CONTROLLED:
 		ctrl_attr = STUN_ATTR_CONTROLLED;
+
+		if (use_cand) {
+			DEBUG_WARNING("send: use_cand=true, but"
+				      " role is controlled (trigged=%d)"
+				      " [%H]\n", trigged,
+				      icem_candpair_debug, cp);
+			return EINVAL;
+		}
 		break;
 
 	default:
@@ -394,9 +399,6 @@ int icem_conncheck_start(struct icem *icem)
 	int err;
 
 	if (!icem)
-		return EINVAL;
-
-	if (ICE_MODE_FULL != icem->lmode)
 		return EINVAL;
 
 	err = icem_checklist_form(icem);

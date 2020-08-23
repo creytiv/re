@@ -27,7 +27,6 @@
 
 
 static const struct ice_conf conf_default = {
-	ICE_NOMINATION_REGULAR,
 	ICE_DEFAULT_RTO_RTP,
 	ICE_DEFAULT_RC,
 	false
@@ -40,12 +39,10 @@ static void ice_determine_role(struct icem *icem, enum ice_role role)
 	if (!icem)
 		return;
 
-	if (icem->lmode == icem->rmode)
-		icem->lrole = role;
-	else if (icem->lmode == ICE_MODE_FULL)
+	if (icem->rmode == ICE_MODE_LITE)
 		icem->lrole = ICE_ROLE_CONTROLLING;
 	else
-		icem->lrole = ICE_ROLE_CONTROLLED;
+		icem->lrole = role;
 }
 
 
@@ -95,6 +92,9 @@ int  icem_alloc(struct icem **icemp,
 	if (!icemp || !tiebrk || !lufrag || !lpwd)
 		return EINVAL;
 
+	if (mode != ICE_MODE_FULL)
+		return EINVAL;
+
 	if (str_len(lufrag) < 4 || str_len(lpwd) < 22) {
 		DEBUG_WARNING("alloc: lufrag/lpwd is too short\n");
 		return EINVAL;
@@ -124,7 +124,6 @@ int  icem_alloc(struct icem **icemp,
 	if (err)
 		goto out;
 
-	icem->lmode = mode;
 	icem->tiebrk = tiebrk;
 
 	err |= str_dup(&icem->lufrag, lufrag);
@@ -134,16 +133,13 @@ int  icem_alloc(struct icem **icemp,
 
 	ice_determine_role(icem, role);
 
-	if (ICE_MODE_FULL == icem->lmode) {
+	err = stun_alloc(&icem->stun, NULL, NULL, NULL);
+	if (err)
+		goto out;
 
-		err = stun_alloc(&icem->stun, NULL, NULL, NULL);
-		if (err)
-			goto out;
-
-		/* Update STUN Transport */
-		stun_conf(icem->stun)->rto = icem->conf.rto;
-		stun_conf(icem->stun)->rc = icem->conf.rc;
-	}
+	/* Update STUN Transport */
+	stun_conf(icem->stun)->rto = icem->conf.rto;
+	stun_conf(icem->stun)->rc = icem->conf.rc;
 
  out:
 	if (err)
@@ -458,8 +454,7 @@ int icem_debug(struct re_printf *pf, const struct icem *icem)
 
 	err |= re_hprintf(pf, "----- ICE Media <%s> -----\n", icem->name);
 
-	err |= re_hprintf(pf, " local_mode=%s, remote_mode=%s",
-			  ice_mode2name(icem->lmode),
+	err |= re_hprintf(pf, " local_mode=Full, remote_mode=%s",
 			  ice_mode2name(icem->rmode));
 	err |= re_hprintf(pf, ", local_role=%s\n", ice_role2name(icem->lrole));
 	err |= re_hprintf(pf, " local_ufrag=\"%s\" local_pwd=\"%s\"\n",
@@ -537,32 +532,6 @@ struct list *icem_checkl(const struct icem *icem)
 struct list *icem_validl(const struct icem *icem)
 {
 	return icem ? (struct list *)&icem->validl : NULL;
-}
-
-
-/**
- * Set the default local candidates, for ICE-lite mode only
- *
- * @param icem ICE Media object
- *
- * @return 0 if success, otherwise errorcode
- */
-int icem_lite_set_default_candidates(struct icem *icem)
-{
-	struct le *le;
-	int err = 0;
-
-	if (icem->lmode != ICE_MODE_LITE)
-		return EINVAL;
-
-	for (le = icem->compl.head; le; le = le->next) {
-
-		struct icem_comp *comp = le->data;
-
-		err |= icem_comp_set_default_cand(comp);
-	}
-
-	return err;
 }
 
 
