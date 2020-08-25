@@ -347,9 +347,149 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 }
 
 
+static int tls_generate_cert(X509 **pcert, const char *cn)
+{
+	X509 *cert = NULL;
+	X509_NAME *subj = NULL;
+	int e = 0;
+
+	if (!pcert || !cn)
+		goto err;
+
+	cert = X509_new();
+	if (!cert)
+		goto err;
+
+	if (!X509_set_version(cert, 2))
+		goto err;
+
+	if (!ASN1_INTEGER_set(X509_get_serialNumber(cert), rand_u32()))
+		goto err;
+
+	subj = X509_NAME_new();
+	if (!subj)
+		goto err;
+
+	if (!X509_NAME_add_entry_by_txt(subj, "CN", MBSTRING_ASC,
+					(unsigned char *)cn,
+					(int)strlen(cn), -1, 0))
+		goto err;
+
+	if (!X509_set_issuer_name(cert, subj) ||
+	    !X509_set_subject_name(cert, subj))
+		goto err;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	if (!X509_gmtime_adj(X509_getm_notBefore(cert), -3600*24*365) ||
+	    !X509_gmtime_adj(X509_getm_notAfter(cert),   3600*24*365*10))
+		goto err;
+#else
+	if (!X509_gmtime_adj(X509_get_notBefore(cert), -3600*24*365) ||
+	    !X509_gmtime_adj(X509_get_notAfter(cert),   3600*24*365*10))
+		goto err;
+#endif
+
+	goto out;
+
+ err:
+	e = 1;
+
+ out:
+	if (e)
+		X509_free(cert);
+	else
+		*pcert = cert;
+
+	X509_NAME_free(subj);
+	return e;
+}
+
+
+/**
+ * Create a selfsigned X509 certificate using EC
+ *
+ * @param tls      TLS Contect
+ * @param cn       Common Name
+ * @param curve_n  Known EC curve name
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_set_selfsigned_ec(struct tls *tls, const char *cn, const char *curve_n)
+{
+	EC_KEY *eckey = NULL;
+	EVP_PKEY *key = NULL;
+	X509 *cert = NULL;
+	int r, eccgrp, err = ENOMEM;
+
+	if (!tls || !cn)
+		return EINVAL;
+
+	eccgrp = OBJ_txt2nid(curve_n);
+	if (eccgrp == NID_undef)
+		return ENOTSUP;
+
+	eckey = EC_KEY_new_by_curve_name(eccgrp);
+	if (!eckey)
+		goto out;
+
+	if (!EC_KEY_generate_key(eckey))
+		goto out;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	EC_KEY_set_asn1_flag(eckey, OPENSSL_EC_NAMED_CURVE);
+#else
+	EC_KEY_set_asn1_flag(eckey, 0);
+#endif
+
+	key = EVP_PKEY_new();
+	if (!key)
+		goto out;
+
+	if (!EVP_PKEY_set1_EC_KEY(key, eckey))
+		goto out;
+
+	if (tls_generate_cert(&cert, cn))
+		goto out;
+
+	if (!X509_set_pubkey(cert, key))
+		goto out;
+
+	if (!X509_sign(cert, key, EVP_sha256()))
+		goto out;
+
+	r = SSL_CTX_use_certificate(tls->ctx, cert);
+	if (r != 1)
+		goto out;
+
+	r = SSL_CTX_use_PrivateKey(tls->ctx, key);
+	if (r != 1)
+		goto out;
+
+	if (tls->cert)
+		X509_free(tls->cert);
+
+	tls->cert = cert;
+	cert = NULL;
+
+	err = 0;
+
+ out:
+	if (eckey)
+		EC_KEY_free(eckey);
+
+	if (key)
+		EVP_PKEY_free(key);
+
+	if (cert)
+		X509_free(cert);
+
+
+	return err;
+}
+
+
 int tls_set_selfsigned_rsa(struct tls *tls, const char *cn, size_t bits)
 {
-	X509_NAME *subj = NULL;
 	EVP_PKEY *key = NULL;
 	X509 *cert = NULL;
 	BIGNUM *bn = NULL;
@@ -378,38 +518,8 @@ int tls_set_selfsigned_rsa(struct tls *tls, const char *cn, size_t bits)
 	if (!EVP_PKEY_set1_RSA(key, rsa))
 		goto out;
 
-	cert = X509_new();
-	if (!cert)
+	if (tls_generate_cert(&cert, cn))
 		goto out;
-
-	if (!X509_set_version(cert, 2))
-		goto out;
-
-	if (!ASN1_INTEGER_set(X509_get_serialNumber(cert), rand_u32()))
-		goto out;
-
-	subj = X509_NAME_new();
-	if (!subj)
-		goto out;
-
-	if (!X509_NAME_add_entry_by_txt(subj, "CN", MBSTRING_ASC,
-					(unsigned char *)cn,
-					(int)strlen(cn), -1, 0))
-		goto out;
-
-	if (!X509_set_issuer_name(cert, subj) ||
-	    !X509_set_subject_name(cert, subj))
-		goto out;
-
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	if (!X509_gmtime_adj(X509_getm_notBefore(cert), -3600*24*365) ||
-	    !X509_gmtime_adj(X509_getm_notAfter(cert),   3600*24*365*10))
-		goto out;
-#else
-	if (!X509_gmtime_adj(X509_get_notBefore(cert), -3600*24*365) ||
-	    !X509_gmtime_adj(X509_get_notAfter(cert),   3600*24*365*10))
-		goto out;
-#endif
 
 	if (!X509_set_pubkey(cert, key))
 		goto out;
@@ -434,9 +544,6 @@ int tls_set_selfsigned_rsa(struct tls *tls, const char *cn, size_t bits)
 	err = 0;
 
  out:
-	if (subj)
-		X509_NAME_free(subj);
-
 	if (cert)
 		X509_free(cert);
 
