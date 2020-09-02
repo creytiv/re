@@ -61,6 +61,8 @@ int tls_set_ciphers(struct tls *tls, const char *cipherv[], size_t count);
 int tls_set_servername(struct tls_conn *tc, const char *servername);
 int tls_set_verify_server(struct tls_conn *tc, const char *host);
 
+int tls_get_issuer(struct tls *tls, struct mbuf *mb);
+int tls_get_subject(struct tls *tls, struct mbuf *mb);
 
 /* TCP */
 

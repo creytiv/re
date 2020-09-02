@@ -25,6 +25,13 @@
 #endif
 
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+typedef X509_NAME*(tls_get_certfield_h)(const X509 *);
+#else
+typedef X509_NAME*(tls_get_certfield_h)(X509 *);
+#endif
+
+
 struct tls {
 	SSL_CTX *ctx;
 	X509 *cert;
