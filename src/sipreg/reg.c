@@ -244,11 +244,14 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		if (msg && msg->scode >= 400 && msg->scode < 500)
 			reg->fbregint = 0;
 
-		if (!reg->terminated && reg->fbregint)
+		if (!reg->terminated && reg->fbregint) {
 			tmr_start(&reg->tmr, reg->fbregint * 1000, tmr_handler,
 					reg);
-		else if (reg->terminated)
+			reg->resph(err, msg, reg->arg);
+		}
+		else if (reg->terminated) {
 			mem_deref(reg);
+		}
 	}
 	else if (reg->terminated) {
 		if (!reg->registered || request(reg, true))
