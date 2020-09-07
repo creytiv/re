@@ -461,6 +461,15 @@ bool sipreg_failed(const struct sipreg *reg)
 }
 
 
+void sipreg_incfailc(struct sipreg *reg)
+{
+	if (!reg)
+		return;
+
+	reg->failc++;
+}
+
+
 int sipreg_set_fbregint(struct sipreg *reg, uint32_t fbregint)
 {
 	if (!reg)
