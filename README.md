@@ -6,7 +6,7 @@ libre is a Generic library for real-time communications with async IO support.
 Copyright (C) 2010 - 2020 Creytiv.com
 
 
-[![Build Status](https://travis-ci.org/creytiv/re.svg?branch=master)](https://travis-ci.org/creytiv/re)
+[![Build Status](https://travis-ci.org/baresip/re.svg?branch=master)](https://travis-ci.org/baresip/re)
 
 
 ## Features
@@ -79,7 +79,7 @@ The libre project is using the BSD license.
 ## Contributing
 
 Patches can sent via Github
-[Pull-Requests](https://github.com/creytiv/re/pulls) or to the RE devel
+[Pull-Requests](https://github.com/baresip/re/pulls) or to the RE devel
 [mailing-list](http://lists.creytiv.com/mailman/listinfo/re-devel).
 Currently we only accept small patches.
 Please send private feedback to libre [at] creytiv.com
@@ -278,8 +278,8 @@ legend:
 ## Related projects
 
 * [librem](https://github.com/creytiv/rem)
-* [retest](https://github.com/creytiv/retest)
-* [baresip](https://github.com/alfredh/baresip)
+* [retest](https://github.com/baresip/retest)
+* [baresip](https://github.com/baresip/baresip)
 * [restund](http://creytiv.com/restund.html)
 
 
