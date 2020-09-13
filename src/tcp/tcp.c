@@ -377,7 +377,17 @@ static void tcp_recv_handler(int flags, void *arg)
 		return;
 	}
 	else if (n < 0) {
+#ifdef WIN32
+		err = WSAGetLastError();
+		DEBUG_WARNING("recv handler: recv(): %d\n", err);
+		if (err == WSAECONNRESET || err == WSAECONNABORTED) {
+			mem_deref(mb);
+			conn_close(tc, err);
+			return;
+		}
+#else
 		DEBUG_WARNING("recv handler: recv(): %m\n", errno);
+#endif
 		goto out;
 	}
 

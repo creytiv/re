@@ -230,6 +230,90 @@ int tls_add_ca(struct tls *tls, const char *cafile)
 
 
 /**
+ * Set SSL verification of the certificate purpose
+ *
+ * @param tls     TLS Context
+ * @param purpose Certificate purpose as string
+ *
+ * @return int    0 if success, errorcode otherwise
+ */
+int tls_set_verify_purpose(struct tls *tls, const char *purpose)
+{
+	int err;
+	int i;
+	X509_PURPOSE *xptmp;
+
+	if (!tls || !purpose)
+		return EINVAL;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	i = X509_PURPOSE_get_by_sname(purpose);
+#else
+	i = X509_PURPOSE_get_by_sname((char *) purpose);
+#endif
+
+	if (i < 0)
+		return EINVAL;
+
+	/* purpose index -> purpose object */
+	/* purpose object -> purpose value */
+	xptmp = X509_PURPOSE_get0(i);
+	i = X509_PURPOSE_get_id(xptmp);
+	err = SSL_CTX_set_purpose(tls->ctx, i);
+
+	return err == 1 ? 0 : EINVAL;
+}
+
+
+/**
+ * Set SSL verification of hostname
+ *
+ * @param tc       TLS Connection
+ * @param hostname Certificate hostname
+ *
+ * @return int     0 if success, errorcode otherwise
+ */
+int tls_peer_set_verify_host(struct tls_conn *tc, const char *hostname)
+{
+	int err = 0;
+
+	if (!tc)
+		return EINVAL;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	err = SSL_set1_host(tc->ssl, hostname);
+#else
+	DEBUG_WARNING("verify hostname needs openssl version 1.1.0\n");
+	return ENOSYS;
+#endif
+
+	return err == 1 ? 0 : EINVAL;
+}
+
+
+/**
+ * Convert string hostname to pl hostname
+ *
+ * @param tls_hostname Certificate hostname as string
+ * @param hostname     Certificate hostname as pl
+ *
+ * @return int         0 if success, errorcode otherwise
+ */
+int tls_set_hostname(char *tls_hostname, const struct pl *hostname)
+{
+	if (!tls_hostname || !hostname)
+		return EINVAL;
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	DEBUG_WARNING("verify hostname needs openssl version 1.1.0\n");
+	return ENOSYS;
+#endif
+
+	return pl_strdup(&tls_hostname, hostname);
+}
+
+
+/**
  * Generate and set selfsigned certificate on TLS context
  *
  * @param tls TLS Context
@@ -238,6 +322,12 @@ int tls_add_ca(struct tls *tls, const char *cafile)
  * @return 0 if success, otherwise errorcode
  */
 int tls_set_selfsigned(struct tls *tls, const char *cn)
+{
+	return tls_set_selfsigned_rsa(tls, cn, 1024);
+}
+
+
+int tls_set_selfsigned_rsa(struct tls *tls, const char *cn, size_t bits)
 {
 	X509_NAME *subj = NULL;
 	EVP_PKEY *key = NULL;
@@ -258,7 +348,7 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 		goto out;
 
 	BN_set_word(bn, RSA_F4);
-	if (!RSA_generate_key_ex(rsa, 1024, bn, NULL))
+	if (!RSA_generate_key_ex(rsa, (int)bits, bn, NULL))
 		goto out;
 
 	key = EVP_PKEY_new();
@@ -291,9 +381,15 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 	    !X509_set_subject_name(cert, subj))
 		goto out;
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	if (!X509_gmtime_adj(X509_getm_notBefore(cert), -3600*24*365) ||
+	    !X509_gmtime_adj(X509_getm_notAfter(cert),   3600*24*365*10))
+		goto out;
+#else
 	if (!X509_gmtime_adj(X509_get_notBefore(cert), -3600*24*365) ||
 	    !X509_gmtime_adj(X509_get_notAfter(cert),   3600*24*365*10))
 		goto out;
+#endif
 
 	if (!X509_set_pubkey(cert, key))
 		goto out;
@@ -936,4 +1032,130 @@ void tls_flush_error(void)
 struct ssl_ctx_st *tls_openssl_context(const struct tls *tls)
 {
 	return tls ? tls->ctx : NULL;
+}
+
+
+/**
+ * Convert a X509_NAME object into a human-readable form placed in an mbuf
+ *
+ * @param field  X509_NAME of Cert field
+ * @param mb     Memorybuffer to store the readable format
+ * @param flags  X509_NAME_print_ex flags
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+static int convert_X509_NAME_to_mbuf(X509_NAME *field, struct mbuf *mb,
+	unsigned long flags)
+{
+	BIO *outbio;
+	char *p;
+	long size;
+	int err = ENOMEM;
+
+	if (!field || !mb)
+		return EINVAL;
+
+	outbio = BIO_new(BIO_s_mem());
+	if (!outbio)
+		return ENOMEM;
+
+	if (X509_NAME_print_ex(outbio, field, 1, flags) <= 0)
+		goto out;
+
+	if (BIO_eof(outbio))
+		goto out;
+
+	size = BIO_get_mem_data(outbio, &p);
+	err = mbuf_write_mem(mb, (uint8_t *)p, size);
+	if (err)
+		goto out;
+
+	err = 0;
+
+ out:
+	if (outbio)
+		BIO_free(outbio);
+
+	return err;
+}
+
+
+/**
+ * Extract a X509 certficate issuer/subject and write the result into an mbuf
+ *
+ * @param tls           TLS Object
+ * @param mb            Memory buffer
+ * @param field_getter  Functionpointer to the X509 getter functon
+ * @param flags         X509_NAME_print_ex flags
+ *
+ * @return 0 if success, othewise errorcode
+ */
+static int tls_get_ca_chain_field(struct tls *tls, struct mbuf *mb,
+	tls_get_certfield_h *field_getter, unsigned long flags)
+{
+	STACK_OF(X509) *certstack;
+	X509 *cert;
+	X509_NAME *field;
+	int err = EINVAL;
+
+	if (!field_getter)
+		return EINVAL;
+
+	if (!SSL_CTX_get0_chain_certs(tls->ctx, &certstack) || !certstack)
+		goto out;
+
+	for (int i = 0; i < sk_X509_num(certstack); i++) {
+		cert = sk_X509_value(certstack, i);
+		if (!cert)
+			goto out;
+
+		field = field_getter(cert);
+		if (!field)
+			goto out;
+
+		err = convert_X509_NAME_to_mbuf(field, mb, flags);
+		if (err)
+			goto out;
+	}
+
+	err = 0;
+
+ out:
+	return err;
+}
+
+
+/**
+ * Get the issuers fields of a certificate chain
+ *
+ * @param tls  TLS Object
+ * @param mb   Memory Buffer
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_get_issuer(struct tls *tls, struct mbuf *mb)
+{
+	if (!tls || !tls->ctx || !mb)
+		return EINVAL;
+
+	return tls_get_ca_chain_field(tls, mb, &X509_get_issuer_name,
+		XN_FLAG_RFC2253);
+}
+
+
+/**
+ * Get the subject fields of a certificate chain
+ *
+ * @param tls  TLS Object
+ * @param mb   Memory Buffer
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_get_subject(struct tls *tls, struct mbuf *mb)
+{
+	if (!tls || !tls->ctx || !mb)
+		return EINVAL;
+
+	return tls_get_ca_chain_field(tls, mb, &X509_get_subject_name,
+		XN_FLAG_RFC2253);
 }

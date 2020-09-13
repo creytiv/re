@@ -236,3 +236,12 @@ int sip_debug(struct re_printf *pf, const struct sip *sip)
 
 	return err;
 }
+
+
+void sip_set_trace_handler(struct sip *sip, sip_trace_h *traceh)
+{
+	if (!sip)
+		return;
+
+	sip->traceh = traceh;
+}
