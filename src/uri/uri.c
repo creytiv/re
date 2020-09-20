@@ -117,17 +117,19 @@ int uri_decode(struct uri *uri, const struct pl *pl)
 
 	memset(uri, 0, sizeof(*uri));
 	if (0 == re_regex(pl->p, pl->l,
-			  "[^:]+:[^@:]*[:]*[^@]*@[^;? ]+[^?]*[^]*",
+			  "[^:]+:[^@:]*[:]*[^@]*@[^/;? ]+[^;? ]*[^?]*[^]*",
 			  &uri->scheme, &uri->user, NULL, &uri->password,
-			  &hostport, &uri->params, &uri->headers)) {
+			  &hostport, &uri->path, &uri->params,
+			  &uri->headers)) {
 
 		if (0 == uri_decode_hostport(&hostport, &uri->host, &port))
 			goto out;
 	}
 
 	memset(uri, 0, sizeof(*uri));
-	err = re_regex(pl->p, pl->l, "[^:]+:[^;? ]+[^?]*[^]*",
-		       &uri->scheme, &hostport, &uri->params, &uri->headers);
+	err = re_regex(pl->p, pl->l, "[^:]+:[^/;? ]+[^;? ]*[^?]*[^]*",
+		       &uri->scheme, &hostport, &uri->path, &uri->params,
+		       &uri->headers);
 	if (0 == err) {
 		err = uri_decode_hostport(&hostport, &uri->host, &port);
 		if (0 == err)

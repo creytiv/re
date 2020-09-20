@@ -13,6 +13,7 @@ struct uri {
 	struct pl host;      /**< Hostname or IP-address            */
 	int af;              /**< Address family of host IP-address */
 	uint16_t port;       /**< Port number                       */
+	struct pl path;      /**< Optional URI-path                 */
 	struct pl params;    /**< Optional URI-parameters           */
 	struct pl headers;   /**< Optional URI-headers              */
 };
