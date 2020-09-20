@@ -16,8 +16,19 @@
 #include <re_udp.h>
 #include <re_stun.h>
 #include <re_msg.h>
+#include <re_http.h>
+#include <re_websock.h>
 #include <re_sip.h>
 #include "sip.h"
+
+
+static void websock_shutdown_handler(void *arg)
+{
+	struct sip *sip = arg;
+
+	if (sip->exith)
+		sip->exith(sip->arg);
+}
 
 
 static void destructor(void *arg)
@@ -27,8 +38,24 @@ static void destructor(void *arg)
 	if (sip->closing) {
 		sip->closing = false;
 		mem_ref(sip);
-		if (sip->exith)
-			sip->exith(sip->arg);
+
+		if (mem_nrefs(sip->websock) > 1) {
+
+			/* NOTE: we must flush all connections here,
+			   since they have a reference to websock */
+			hash_flush(sip->ht_conn);
+			sip->ht_conn = mem_deref(sip->ht_conn);
+
+
+			websock_shutdown(sip->websock);
+		}
+		else {
+			if (sip->exith)
+				sip->exith(sip->arg);
+
+		}
+
+
 		return;
 	}
 
@@ -55,6 +82,8 @@ static void destructor(void *arg)
 	mem_deref(sip->software);
 	mem_deref(sip->dnsc);
 	mem_deref(sip->stun);
+
+	mem_deref(sip->websock);
 }
 
 
@@ -126,6 +155,11 @@ int sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
 	sip->dnsc  = mem_ref(dnsc);
 	sip->exith = exith;
 	sip->arg   = arg;
+
+	err = websock_alloc(&sip->websock, websock_shutdown_handler,
+			    sip);
+	if (err)
+		goto out;
 
  out:
 	if (err)

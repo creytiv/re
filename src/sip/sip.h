@@ -16,6 +16,7 @@ struct sip {
 	struct hash *ht_udpconn;
 	struct dnsc *dnsc;
 	struct stun *stun;
+	struct websock *websock;
 	char *software;
 	sip_exit_h *exith;
 	sip_trace_h *traceh;
