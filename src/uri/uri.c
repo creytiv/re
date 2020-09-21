@@ -65,7 +65,8 @@ int uri_encode(struct re_printf *pf, const struct uri *uri)
 	if (uri->port)
 		err = re_hprintf(pf, ":%u", uri->port);
 
-	err |= re_hprintf(pf, "%r%r", &uri->params, &uri->headers);
+	err |= re_hprintf(pf, "%r%r%r", &uri->path, &uri->params,
+			  &uri->headers);
 
 	return err;
 }
