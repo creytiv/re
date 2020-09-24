@@ -132,7 +132,8 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		 const char *uri, http_resp_h *resph, http_data_h *datah,
 		 void *arg, const char *fmt, ...);
 void http_req_set_conn_handler(struct http_req *req, http_conn_h *connh);
-
+void http_client_set_laddr(struct http_cli *cli, struct sa *addr);
+void http_client_set_laddr6(struct http_cli *cli, struct sa *addr);
 
 /* Server */
 struct http_sock;

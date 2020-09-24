@@ -36,6 +36,10 @@ struct http_cli {
 	struct dnsc *dnsc;
 	struct tls *tls;
 	char *tls_hostname;
+	struct sa laddr;
+#ifdef HAVE_INET6
+	struct sa laddr6;
+#endif
 };
 
 struct conn;
@@ -403,6 +407,7 @@ static int conn_connect(struct http_req *req)
 {
 	const struct sa *addr = &req->srvv[req->srvc];
 	struct conn *conn;
+	struct sa *laddr = NULL;
 	int err;
 
 	conn = list_ledata(hash_lookup(req->cli->ht_conn,
@@ -433,8 +438,19 @@ static int conn_connect(struct http_req *req)
 	conn->addr = *addr;
 	conn->usec = 1;
 
-	err = tcp_connect(&conn->tc, addr, estab_handler, recv_handler,
-			  close_handler, conn);
+	if (sa_af(&conn->addr) == AF_INET)
+		laddr = &req->cli->laddr;
+#ifdef HAVE_INET6
+	else if (sa_af(&conn->addr) == AF_INET6)
+		laddr = &req->cli->laddr6;
+#endif
+
+	if (sa_isset(laddr, SA_ADDR))
+		err = tcp_connect_bind(&conn->tc, addr, estab_handler,
+			recv_handler,close_handler, laddr, conn);
+	else
+		err = tcp_connect(&conn->tc, addr, estab_handler, recv_handler,
+			close_handler, conn);
 	if (err)
 		goto out;
 
@@ -753,3 +769,33 @@ int http_client_set_tls_hostname(struct http_cli *cli,
 	return tls_set_hostname(cli->tls_hostname, hostname);
 }
 #endif
+
+
+/**
+ * Send an HTTP request
+ *
+ * @param cli   HTTP Client
+ * @param addr  Bind to local v4 address
+ *
+ */
+void http_client_set_laddr(struct http_cli *cli, struct sa *addr)
+{
+	if (cli && addr)
+		sa_cpy(&cli->laddr, addr);
+}
+
+
+/**
+ * Send an HTTP request
+ *
+ * @param cli    HTTP Client
+ * @param addr   Bind to local v6 address
+ *
+ */
+void http_client_set_laddr6(struct http_cli *cli, struct sa *addr)
+{
+#ifdef HAVE_INET6
+	if (cli && addr)
+		sa_cpy(&cli->laddr6, addr);
+#endif
+}
