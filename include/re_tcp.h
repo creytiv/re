@@ -82,6 +82,9 @@ int  tcp_listen(struct tcp_sock **tsp, const struct sa *local,
 		tcp_conn_h *ch, void *arg);
 int  tcp_connect(struct tcp_conn **tcp, const struct sa *peer,
 		 tcp_estab_h *eh, tcp_recv_h *rh, tcp_close_h *ch, void *arg);
+int  tcp_connect_bind(struct tcp_conn **tcp, const struct sa *peer,
+		tcp_estab_h *eh, tcp_recv_h *rh, tcp_close_h *ch,
+		const struct sa *local, void *arg);
 int  tcp_local_get(const struct tcp_sock *ts, struct sa *local);
 
 
