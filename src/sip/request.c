@@ -373,6 +373,10 @@ static bool rr_naptr_handler(struct dnsrr *rr, void *arg)
 		tp = SIP_TRANSP_TCP;
 	else if (!str_casecmp(rr->rdata.naptr.services, "SIPS+D2T"))
 		tp = SIP_TRANSP_TLS;
+	else if (!str_casecmp(rr->rdata.naptr.services, "SIP+D2W"))
+		tp = SIP_TRANSP_WS;
+	else if (!str_casecmp(rr->rdata.naptr.services, "SIPS+D2W"))
+		tp = SIP_TRANSP_WSS;
 	else
 		return false;
 
@@ -646,6 +650,10 @@ int sip_request(struct sip_request **reqp, struct sip *sip, bool stateful,
 			req->tp = SIP_TRANSP_TCP;
 		else if (!pl_strcasecmp(&pl, "tls"))
 			req->tp = SIP_TRANSP_TLS;
+		else if (!pl_strcasecmp(&pl, "ws"))
+			req->tp = SIP_TRANSP_WS;
+		else if (!pl_strcasecmp(&pl, "wss"))
+			req->tp = SIP_TRANSP_WSS;
 		else {
 			err = EPROTONOSUPPORT;
 			goto out;
