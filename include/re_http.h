@@ -191,3 +191,24 @@ bool http_auth_check(const struct pl *hval, const struct pl *method,
 bool http_auth_check_request(const struct http_msg *msg,
 			     struct http_auth *auth,
 			     http_auth_h *authh, void *arg);
+
+/* http_reqconn - HTTP request connection */
+struct http_reqconn;
+int http_reqconn_alloc(struct http_reqconn **pconn,
+		struct http_cli *client,
+		http_resp_h *resph, http_data_h *datah, void* arg);
+int http_reqconn_set_auth(struct http_reqconn *conn, const struct pl *user,
+		const struct pl *pass);
+int http_reqconn_set_bearer(struct http_reqconn *conn,
+		const struct pl *bearer);
+int http_reqconn_set_method(struct http_reqconn *conn, const struct pl *met);
+int http_reqconn_set_body(struct http_reqconn *conn, const struct pl *body);
+int http_reqconn_set_ctype(struct http_reqconn *conn, const struct pl *ctype);
+int http_reqconn_add_header(struct http_reqconn *conn,
+		const struct pl *header);
+int http_reqconn_clr_header(struct http_reqconn *conn);
+int http_reqconn_send(struct http_reqconn *conn, const struct pl *uri);
+#ifdef USE_TLS
+int http_reqconn_set_tls_hostname(struct http_reqconn *conn,
+		const struct pl *hostname);
+#endif
