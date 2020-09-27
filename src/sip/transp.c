@@ -236,6 +236,11 @@ static void sip_recv(struct sip *sip, const struct sip_msg *msg)
 {
 	struct le *le = sip->lsnrl.head;
 
+	if (sip->traceh) {
+		sip->traceh(false, msg->tp, &msg->src, &msg->dst,
+			    msg->mb->buf, msg->mb->end, sip->arg);
+	}
+
 	while (le) {
 		struct sip_lsnr *lsnr = le->data;
 
@@ -453,6 +458,41 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 }
 
 
+static void trace_send(struct sip *sip, enum sip_transp tp,
+		       void *sock,
+		       const struct sa *dst, struct mbuf *mb)
+{
+	struct sa src;
+	struct sip_conn *conn;
+
+	if (sip->traceh) {
+
+		switch (tp) {
+
+		case SIP_TRANSP_UDP:
+
+			if (udp_local_get(sock, &src))
+				sa_init(&src, sa_af(dst));
+
+			break;
+
+		case SIP_TRANSP_TCP:
+		case SIP_TRANSP_TLS:
+			conn = sock;
+			src = conn->laddr;
+			break;
+
+		default:
+			return;
+		}
+
+		sip->traceh(true, tp, &src, dst,
+			    mbuf_buf(mb), mbuf_get_left(mb),
+			    sip->arg);
+	}
+}
+
+
 static void tcp_estab_handler(void *arg)
 {
 	struct sip_conn *conn = arg;
@@ -476,6 +516,11 @@ static void tcp_estab_handler(void *arg)
 			*qent->qentp = NULL;
 			qent->qentp = NULL;
 		}
+
+		trace_send(conn->sip,
+			   conn->sc ? SIP_TRANSP_TLS : SIP_TRANSP_TCP,
+			   conn,
+			   &conn->paddr, qent->mb);
 
 		err = tcp_send(conn->tc, qent->mb);
 		if (err)
@@ -554,6 +599,11 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 	if (conn) {
 		if (!conn->established)
 			goto enqueue;
+
+		trace_send(sip,
+			   secure ? SIP_TRANSP_TLS : SIP_TRANSP_TCP,
+			   conn,
+			   dst, mb);
 
 		return tcp_send(conn->tc, mb);
 	}
@@ -739,6 +789,8 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 			sock = transp->sock;
 		}
 
+		trace_send(sip, tp, sock, dst, mb);
+
 		err = udp_send(sock, dst, mb);
 		break;
 
@@ -749,8 +801,12 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 	case SIP_TRANSP_TCP:
 		conn = sock;
 
-		if (conn && conn->tc)
+		if (conn && conn->tc) {
+
+			trace_send(sip, tp, conn, dst, mb);
+
 			err = tcp_send(conn->tc, mb);
+		}
 		else
 			err = conn_send(qentp, sip, secure, dst, mb,
 					transph, arg);

@@ -199,9 +199,11 @@ void icem_comp_set_selected(struct icem_comp *comp, struct ice_candpair *cp)
 		return;
 
 	if (cp->state != ICE_CANDPAIR_SUCCEEDED) {
-		DEBUG_WARNING("{%s.%u} set_selected: invalid state %s\n",
+		DEBUG_WARNING("{%s.%u} set_selected: invalid state '%s'"
+			      " [%H]\n",
 			      comp->icem->name, comp->id,
-			      ice_candpair_state2name(cp->state));
+			      ice_candpair_state2name(cp->state),
+			      icem_candpair_debug, cp);
 	}
 
 	mem_deref(comp->cp_sel);

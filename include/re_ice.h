@@ -24,12 +24,6 @@ enum ice_compid {
 	ICE_COMPID_RTCP = 2
 };
 
-/** ICE Nomination */
-enum ice_nomination {
-	ICE_NOMINATION_REGULAR = 0,
-	ICE_NOMINATION_AGGRESSIVE
-};
-
 /** ICE Candidate type */
 enum ice_cand_type {
 	ICE_CAND_TYPE_HOST,   /**< Host candidate             */
@@ -61,7 +55,6 @@ struct turnc;
 
 /** ICE Configuration */
 struct ice_conf {
-	enum ice_nomination nom;  /**< Nomination algorithm        */
 	uint32_t rto;             /**< STUN Retransmission TimeOut */
 	uint32_t rc;              /**< STUN Retransmission Count   */
 	bool debug;               /**< Enable ICE debugging        */
@@ -84,7 +77,6 @@ int  icem_comp_add(struct icem *icem, unsigned compid, void *sock);
 int  icem_cand_add(struct icem *icem, unsigned compid, uint16_t lprio,
 		   const char *ifname, const struct sa *addr);
 
-int  icem_lite_set_default_candidates(struct icem *icem);
 bool icem_verify_support(struct icem *icem, unsigned compid,
 			 const struct sa *raddr);
 int  icem_conncheck_start(struct icem *icem);

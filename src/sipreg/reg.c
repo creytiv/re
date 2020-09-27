@@ -38,7 +38,9 @@ struct sipreg {
 	sip_resp_h *resph;
 	void *arg;
 	uint32_t expires;
+	uint32_t pexpires;
 	uint32_t failc;
+	uint32_t rwait;
 	uint32_t wait;
 	enum sip_transp tp;
 	bool registered;
@@ -157,12 +159,12 @@ static bool contact_handler(const struct sip_hdr *hdr,
 		return false;
 
 	if (!msg_param_decode(&c.params, "expires", &pval)) {
-	        reg->wait = pl_u32(&pval);
+		reg->wait = pl_u32(&pval);
 	}
 	else if (pl_isset(&msg->expires))
-	        reg->wait = pl_u32(&msg->expires);
+		reg->wait = pl_u32(&msg->expires);
 	else
-	        reg->wait = DEFAULT_EXPIRES;
+		reg->wait = DEFAULT_EXPIRES;
 
 	return true;
 }
@@ -188,7 +190,8 @@ static void response_handler(int err, const struct sip_msg *msg, void *arg)
 		reg->wait = reg->expires;
 		sip_msg_hdr_apply(msg, true, SIP_HDR_CONTACT, contact_handler,
 				  reg);
-		reg->wait *= 900;
+		reg->pexpires = reg->wait;
+		reg->wait *= reg->rwait * (1000 / 100);
 		reg->failc = 0;
 
 		if (reg->regid > 0 && !reg->terminated && !reg->ka)
@@ -308,7 +311,7 @@ static int request(struct sipreg *reg, bool reset_ls)
  * @param to_uri   SIP To-header URI
  * @param from_name  SIP From-header display name (optional)
  * @param from_uri SIP From-header URI
- * @param expires  Registration interval in [seconds]
+ * @param expires  Registration expiry time in [seconds]
  * @param cuser    Contact username
  * @param routev   Optional route vector
  * @param routec   Number of routes
@@ -378,6 +381,7 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 
 	reg->sip     = mem_ref(sip);
 	reg->expires = expires;
+	reg->rwait   = 90;
 	reg->resph   = resph ? resph : dummy_handler;
 	reg->arg     = arg;
 	reg->regid   = regid;
@@ -397,6 +401,25 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 
 
 /**
+ * Set the relative registration interval in percent from proxy expiry time. A
+ * value from 5-95% is accepted.
+ *
+ * @param reg   SIP Registration client
+ * @param rwait The relative registration interval in [%].
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int sipreg_set_rwait(struct sipreg *reg, uint32_t rwait)
+{
+	if (!reg || rwait < 5 || rwait > 95)
+		return EINVAL;
+
+	reg->rwait = rwait;
+	return 0;
+}
+
+
+/**
  * Get the local socket address for a SIP Registration client
  *
  * @param reg SIP Registration client
@@ -406,4 +429,17 @@ int sipreg_register(struct sipreg **regp, struct sip *sip, const char *reg_uri,
 const struct sa *sipreg_laddr(const struct sipreg *reg)
 {
 	return reg ? &reg->laddr : NULL;
+}
+
+
+/**
+ * Get the proxy expires value of a SIP registration client
+ *
+ * @param reg SIP registration client
+ *
+ * @return the proxy expires value
+ */
+uint32_t sipreg_proxy_expires(const struct sipreg *reg)
+{
+	return reg ? reg->pexpires : 0;
 }

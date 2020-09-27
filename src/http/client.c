@@ -35,6 +35,7 @@ struct http_cli {
 	struct hash *ht_conn;
 	struct dnsc *dnsc;
 	struct tls *tls;
+	char *tls_hostname;
 };
 
 struct conn;
@@ -97,6 +98,7 @@ static void cli_destructor(void *arg)
 	mem_deref(cli->ht_conn);
 	mem_deref(cli->dnsc);
 	mem_deref(cli->tls);
+	mem_deref(cli->tls_hostname);
 }
 
 
@@ -442,6 +444,17 @@ static int conn_connect(struct http_req *req)
 		err = tls_start_tcp(&conn->sc, req->cli->tls, conn->tc, 0);
 		if (err)
 			goto out;
+
+		if (req->cli->tls_hostname)
+			err = tls_peer_set_verify_host(conn->sc,
+				req->cli->tls_hostname);
+
+		if (err)
+			goto out;
+
+		err = tls_set_servername(conn->sc, req->host);
+		if (err)
+			goto out;
 	}
 #endif
 
@@ -683,11 +696,15 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 
 #ifdef USE_TLS
 	err = tls_alloc(&cli->tls, TLS_METHOD_SSLV23, NULL, NULL);
+	if (err)
+		goto out;
+
+	err = tls_set_verify_purpose(cli->tls, "sslserver");
+	if (err)
+		goto out;
 #else
 	err = 0;
 #endif
-	if (err)
-		goto out;
 
 	cli->dnsc = mem_ref(dnsc);
 
@@ -699,3 +716,40 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 
 	return err;
 }
+
+
+#ifdef USE_TLS
+/**
+ * Add trusted CA certificates
+ *
+ * @param cli     HTTP client
+ * @param capath  Path to CA certificates
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int http_client_add_ca(struct http_cli *cli, const char *tls_ca)
+{
+	if (!cli || !tls_ca)
+		return EINVAL;
+
+	return tls_add_ca(cli->tls, tls_ca);
+}
+
+
+/**
+ * Set verify host name
+ *
+ * @param cli       HTTP client
+ * @param hostname  String for alternative name validation.
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int http_client_set_tls_hostname(struct http_cli *cli,
+				 const struct pl *hostname)
+{
+	if (!cli || !hostname)
+		return EINVAL;
+
+	return tls_set_hostname(cli->tls_hostname, hostname);
+}
+#endif

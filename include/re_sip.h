@@ -242,6 +242,11 @@ typedef bool(sip_hdr_h)(const struct sip_hdr *hdr, const struct sip_msg *msg,
 			void *arg);
 typedef void(sip_keepalive_h)(int err, void *arg);
 
+#define LIBRE_HAVE_SIPTRACE 1
+typedef void(sip_trace_h)(bool tx, enum sip_transp tp,
+			  const struct sa *src, const struct sa *dst,
+			  const uint8_t *pkt, size_t len, void *arg);
+
 
 /* sip */
 int  sip_alloc(struct sip **sipp, struct dnsc *dnsc, uint32_t ctsz,
@@ -253,6 +258,7 @@ int  sip_listen(struct sip_lsnr **lsnrp, struct sip *sip, bool req,
 int  sip_debug(struct re_printf *pf, const struct sip *sip);
 int  sip_send(struct sip *sip, void *sock, enum sip_transp tp,
 	      const struct sa *dst, struct mbuf *mb);
+void sip_set_trace_handler(struct sip *sip, sip_trace_h *traceh);
 
 
 /* transport */
