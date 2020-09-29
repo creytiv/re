@@ -4,6 +4,10 @@
  * Copyright (C) 2010 Creytiv.com
  */
 
+/* also defined by wincrypt.h */
+#ifdef WIN32
+#undef X509_NAME
+#endif
 
 /*
  * Mapping of feature macros
