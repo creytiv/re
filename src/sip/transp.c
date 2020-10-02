@@ -189,8 +189,8 @@ static struct sip_conn *ws_conn_find(struct sip *sip, const struct sa *paddr,
 
 		struct sip_conn *conn = le->data;
 
-//		if (tp != conn->tp)
-//			continue;
+		/* if (tp != conn->tp)
+		   continue; */
 
 		if (!sa_cmp(&conn->paddr, paddr, SA_ALL))
 			continue;
@@ -868,7 +868,6 @@ static int ws_conn_send(struct sip_connqent **qentp, struct sip *sip,
 	/* TODO: how to select ports of outbound SIP/WS proxy ?
 	 * TODO: http url path "test" is temp, add config
 	 */
-
 
 	/* Use port if specified, otherwise use default HTTP/HTTPS ports */
 	if (sa_port(dst)) {
