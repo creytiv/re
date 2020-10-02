@@ -16,6 +16,9 @@ enum sip_transp {
 	SIP_TRANSP_UDP = 0,
 	SIP_TRANSP_TCP,
 	SIP_TRANSP_TLS,
+	SIP_TRANSP_WS,
+	SIP_TRANSP_WSS,
+
 	SIP_TRANSPC,
 };
 
@@ -264,6 +267,9 @@ void sip_set_trace_handler(struct sip *sip, sip_trace_h *traceh);
 /* transport */
 int  sip_transp_add(struct sip *sip, enum sip_transp tp,
 		    const struct sa *laddr, ...);
+int  sip_transp_add_websock(struct sip *sip, enum sip_transp tp,
+			    const struct sa *laddr,
+			    bool server, const char *cert);
 void sip_transp_flush(struct sip *sip);
 bool sip_transp_isladdr(const struct sip *sip, enum sip_transp tp,
 			const struct sa *laddr);

@@ -66,6 +66,7 @@ int websock_send(struct websock_conn *conn, enum websock_opcode opcode,
 int websock_close(struct websock_conn *conn, enum websock_scode scode,
 		  const char *fmt, ...);
 const struct sa *websock_peer(const struct websock_conn *conn);
+struct tcp_conn *websock_tcp(const struct websock_conn *conn);
 
 typedef void (websock_shutdown_h)(void *arg);
 

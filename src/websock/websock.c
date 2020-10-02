@@ -699,6 +699,12 @@ const struct sa *websock_peer(const struct websock_conn *conn)
 }
 
 
+struct tcp_conn *websock_tcp(const struct websock_conn *conn)
+{
+	return conn ? conn->tc : NULL;
+}
+
+
 int websock_alloc(struct websock **sockp, websock_shutdown_h *shuth, void *arg)
 {
 	struct websock *sock;

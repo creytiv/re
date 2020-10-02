@@ -20,6 +20,8 @@
 #include <re_tcp.h>
 #include <re_tls.h>
 #include <re_msg.h>
+#include <re_http.h>
+#include <re_websock.h>
 #include <re_sip.h>
 #include "sip.h"
 
@@ -40,6 +42,9 @@ struct sip_transport {
 	struct tls *tls;
 	void *sock;
 	enum sip_transp tp;
+
+	struct http_cli *http_cli;
+	struct http_sock *http_sock;
 };
 
 
@@ -57,6 +62,9 @@ struct sip_conn {
 	struct sip *sip;
 	uint32_t ka_interval;
 	bool established;
+
+	enum sip_transp tp;
+	struct websock_conn *websock_conn;
 };
 
 
@@ -89,6 +97,8 @@ static void transp_destructor(void *arg)
 	list_unlink(&transp->le);
 	mem_deref(transp->sock);
 	mem_deref(transp->tls);
+	mem_deref(transp->http_cli);
+	mem_deref(transp->http_sock);
 }
 
 
@@ -104,6 +114,7 @@ static void conn_destructor(void *arg)
 	mem_deref(conn->sc);
 	mem_deref(conn->tc);
 	mem_deref(conn->mb);
+	mem_deref(conn->websock_conn);
 }
 
 
@@ -167,9 +178,35 @@ static struct sip_conn *conn_find(struct sip *sip, const struct sa *paddr,
 }
 
 
+static struct sip_conn *ws_conn_find(struct sip *sip, const struct sa *paddr,
+				     enum sip_transp tp)
+{
+	struct le *le;
+
+	le = list_head(hash_list(sip->ht_conn, sa_hash(paddr, SA_ALL)));
+
+	for (; le; le = le->next) {
+
+		struct sip_conn *conn = le->data;
+
+		/* if (tp != conn->tp)
+		   continue; */
+
+		if (!sa_cmp(&conn->paddr, paddr, SA_ALL))
+			continue;
+
+		return conn;
+	}
+
+	return NULL;
+}
+
+
 static void conn_close(struct sip_conn *conn, int err)
 {
 	struct le *le;
+
+	conn->websock_conn = mem_deref(conn->websock_conn);
 
 	conn->sc = mem_deref(conn->sc);
 	conn->tc = mem_deref(conn->tc);
@@ -232,13 +269,15 @@ static void conn_keepalive_handler(void *arg)
 }
 
 
-static void sip_recv(struct sip *sip, const struct sip_msg *msg)
+static void sip_recv(struct sip *sip, const struct sip_msg *msg,
+		     size_t start)
 {
 	struct le *le = sip->lsnrl.head;
 
 	if (sip->traceh) {
 		sip->traceh(false, msg->tp, &msg->src, &msg->dst,
-			    msg->mb->buf, msg->mb->end, sip->arg);
+			    msg->mb->buf + start, msg->mb->end - start,
+			    sip->arg);
 	}
 
 	while (le) {
@@ -322,7 +361,7 @@ static void udp_recv_handler(const struct sa *src, struct mbuf *mb, void *arg)
 	msg->dst = transp->laddr;
 	msg->tp = SIP_TRANSP_UDP;
 
-	sip_recv(transp->sip, msg);
+	sip_recv(transp->sip, msg, 0);
 
 	mem_deref(msg);
 }
@@ -427,7 +466,7 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
 		msg->dst = conn->laddr;
 		msg->tp = conn->sc ? SIP_TRANSP_TLS : SIP_TRANSP_TCP;
 
-		sip_recv(conn->sip, msg);
+		sip_recv(conn->sip, msg, 0);
 		mem_deref(msg);
 
 		if (end <= conn->mb->end) {
@@ -478,6 +517,8 @@ static void trace_send(struct sip *sip, enum sip_transp tp,
 
 		case SIP_TRANSP_TCP:
 		case SIP_TRANSP_TLS:
+		case SIP_TRANSP_WS:
+		case SIP_TRANSP_WSS:
 			conn = sock;
 			src = conn->laddr;
 			break;
@@ -576,6 +617,8 @@ static void tcp_connect_handler(const struct sa *paddr, void *arg)
 	}
 #endif
 
+	conn->tp = transp->tls ? SIP_TRANSP_TLS : SIP_TRANSP_TCP;
+
 	tmr_start(&conn->tmr, TCP_ACCEPT_TIMEOUT * 1000,
 		  conn_tmr_handler, conn);
 
@@ -615,6 +658,7 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 	hash_append(sip->ht_conn, sa_hash(dst, SA_ALL), &conn->he, conn);
 	conn->paddr = *dst;
 	conn->sip   = sip;
+	conn->tp    = secure ? SIP_TRANSP_TLS : SIP_TRANSP_TCP;
 
 	err = tcp_connect(&conn->tc, dst, tcp_estab_handler, tcp_recv_handler,
 			  tcp_close_handler, conn);
@@ -669,9 +713,291 @@ static int conn_send(struct sip_connqent **qentp, struct sip *sip, bool secure,
 }
 
 
+static void websock_estab_handler(void *arg)
+{
+	struct sip_conn *conn = arg;
+	struct le *le;
+	int err;
+
+	re_printf("<%p> %s websock established to %J\n",
+		  conn, sip_transp_name(conn->tp), &conn->paddr);
+
+	conn->established = true;
+
+	err = tcp_conn_local_get(websock_tcp(conn->websock_conn),
+				 &conn->laddr);
+	if (err)
+		return;
+
+	le = list_head(&conn->ql);
+
+	while (le) {
+
+		struct sip_connqent *qent = le->data;
+		le = le->next;
+
+		if (qent->qentp) {
+			*qent->qentp = NULL;
+			qent->qentp = NULL;
+		}
+
+		trace_send(conn->sip,
+			   conn->tp,
+			   conn,
+			   &conn->paddr, qent->mb);
+
+		re_printf("--> send\n");
+
+		err = websock_send(conn->websock_conn, WEBSOCK_BIN,
+				   "%b",
+				   mbuf_buf(qent->mb),
+				   mbuf_get_left(qent->mb));
+		if (err)
+			qent->transph(err, qent->arg);
+
+		list_unlink(&qent->le);
+		mem_deref(qent);
+	}
+}
+
+
+static void websock_recv_handler(const struct websock_hdr *hdr,
+				 struct mbuf *mb, void *arg)
+{
+	struct sip_conn *conn = arg;
+	struct sip_msg *msg;
+	size_t start;
+	int err;
+
+#if 0
+	re_printf(
+		  "~ ~ ~ ~ ~ websock receive: ~ ~ ~ ~ ~\n"
+		  "\x1b[32m"
+		  "%b"
+		  "\x1b[;m\t\n"
+		  "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~\n"
+		  ,
+		  mbuf_buf(mb), mbuf_get_left(mb));
+#endif
+
+	if (mb->end <= 4)
+		return;
+
+	start = mb->pos;
+
+	err = sip_msg_decode(&msg, mb);
+	if (err) {
+		(void)re_fprintf(stderr, "sip: msg decode err: %m\n", err);
+		return;
+	}
+
+	msg->sock = mem_ref(conn);
+	msg->src = conn->paddr;
+	msg->dst = conn->laddr;
+	msg->tp = conn->tp;
+
+	sip_recv(conn->sip, msg, start);
+
+	mem_deref(msg);
+}
+
+
+static void websock_close_handler(int err, void *arg)
+{
+	struct sip_conn *conn = arg;
+
+	re_printf("sip: websock connection closed (%m)\n", err);
+	conn_close(conn, err ? err : ECONNRESET);
+	mem_deref(conn);
+}
+
+
+static int ws_conn_send(struct sip_connqent **qentp, struct sip *sip,
+			bool secure,
+			const struct sa *dst, struct mbuf *mb,
+			sip_transp_h *transph, void *arg)
+{
+	struct sip_conn *conn, *new_conn = NULL;
+	struct sip_connqent *qent;
+	struct sip_transport *transp;
+	enum sip_transp tp;
+	const char *prefix;
+	char ws_uri[256];
+	int err = 0;
+
+	if (secure) {
+		prefix = "wss";
+		tp = SIP_TRANSP_WSS;
+	}
+	else {
+		prefix = "ws";
+		tp = SIP_TRANSP_WS;
+	}
+
+	conn = ws_conn_find(sip, dst, tp);
+	if (conn) {
+		if (!conn->established)
+			goto enqueue;
+
+		trace_send(sip,
+			   secure ? SIP_TRANSP_WSS : SIP_TRANSP_WS,
+			   conn,
+			   dst, mb);
+
+		return websock_send(conn->websock_conn, WEBSOCK_BIN,
+				    "%b",
+				    mbuf_buf(mb), mbuf_get_left(mb));
+	}
+
+	transp = (struct sip_transport *)transp_find(sip, tp,
+						     sa_af(dst), dst);
+	if (!transp) {
+		err = EPROTONOSUPPORT;
+		goto out;
+	}
+
+	new_conn = conn = mem_zalloc(sizeof(*conn), conn_destructor);
+	if (!conn)
+		return ENOMEM;
+
+	hash_append(sip->ht_conn, sa_hash(dst, SA_ALL), &conn->he, conn);
+	conn->paddr = *dst;
+	conn->sip   = sip;
+	conn->tp    = tp;
+
+	/* TODO: how to select ports of outbound SIP/WS proxy ?
+	 * TODO: http url path "test" is temp, add config
+	 */
+
+	/* Use port if specified, otherwise use default HTTP/HTTPS ports */
+	if (sa_port(dst)) {
+		if (re_snprintf(ws_uri, sizeof(ws_uri),
+				"%s://%J/", prefix, dst) < 0) {
+			err = ENOMEM;
+			goto out;
+		}
+	}
+	else {
+		if (re_snprintf(ws_uri, sizeof(ws_uri),
+				"%s://%j/", prefix, dst) < 0) {
+			err = ENOMEM;
+			goto out;
+		}
+	}
+
+	if (!transp->http_cli) {
+		err = http_client_alloc(&transp->http_cli, sip->dnsc);
+		if (err) {
+			re_fprintf(stderr, "transp: could not create"
+				   " http client (%m)\n", err);
+			goto out;
+		}
+	}
+
+	re_printf("websock: connecting to '%s'\n", ws_uri);
+	err = websock_connect(&conn->websock_conn, sip->websock,
+			      transp->http_cli, ws_uri, 15000,
+			      websock_estab_handler, websock_recv_handler,
+			      websock_close_handler, conn,
+			      "Sec-WebSocket-Protocol: sip\r\n");
+	if (err) {
+		re_printf("websock_connect: %m\n", err);
+		goto out;
+	}
+
+	tmr_start(&conn->tmr, TCP_IDLE_TIMEOUT * 1000, conn_tmr_handler, conn);
+
+ enqueue:
+	qent = mem_zalloc(sizeof(*qent), qent_destructor);
+	if (!qent) {
+		err = ENOMEM;
+		goto out;
+
+	}
+
+	list_append(&conn->ql, &qent->le, qent);
+	qent->mb = mem_ref(mb);
+	qent->transph = transph ? transph : internal_transport_handler;
+	qent->arg = arg;
+
+	if (qentp) {
+		qent->qentp = qentp;
+		*qentp = qent;
+	}
+
+ out:
+	if (err)
+		mem_deref(new_conn);
+
+	return err;
+}
+
+
 int sip_transp_init(struct sip *sip, uint32_t sz)
 {
 	return hash_alloc(&sip->ht_conn, sz);
+}
+
+
+static void http_req_handler(struct http_conn *hc, const struct http_msg *msg,
+			     void *arg)
+{
+	struct sip_transport *transp = arg;
+	struct sip_conn *conn = NULL;
+	const struct sa *paddr;
+	const struct http_hdr *hdr;
+	int err;
+
+	paddr = http_conn_peer(hc);
+
+	re_printf("http request from %J\n", paddr);
+
+	hdr = http_msg_hdr(msg, HTTP_HDR_SEC_WEBSOCKET_PROTOCOL);
+	if (!hdr) {
+		re_printf("sip: missing Sec-WebSocket-Protocol header\n");
+		err = EPROTO;
+		goto out;
+	}
+	if (0 != pl_strcasecmp(&hdr->val, "sip")) {
+		re_printf("sip: unknown Sec-WebSocket-Protocol '%r'\n",
+			  &hdr->val);
+		err = EPROTO;
+		goto out;
+	}
+
+	conn = mem_zalloc(sizeof(*conn), conn_destructor);
+	if (!conn) {
+		err = ENOMEM;
+		goto out;
+	}
+
+	hash_append(transp->sip->ht_conn, sa_hash(paddr, SA_ALL),
+		    &conn->he, conn);
+
+	conn->paddr = *paddr;
+	conn->sip   = transp->sip;
+	conn->tp    = transp->tp;
+
+	err = websock_accept(&conn->websock_conn, transp->sip->websock,
+			     hc, msg, 15000,
+                             websock_recv_handler, websock_close_handler,
+                             conn);
+	if (err)
+		goto out;
+
+	err = tcp_conn_local_get(websock_tcp(conn->websock_conn),
+				 &conn->laddr);
+	if (err)
+		goto out;
+
+	tmr_start(&conn->tmr, TCP_ACCEPT_TIMEOUT * 1000,
+		  conn_tmr_handler, conn);
+
+ out:
+	if (err) {
+		(void)http_reply(hc, 500, "Server Error", NULL);
+		mem_deref(conn);
+	}
 }
 
 
@@ -691,7 +1017,7 @@ int sip_transp_add(struct sip *sip, enum sip_transp tp,
 	struct sip_transport *transp;
 	struct tls *tls;
 	va_list ap;
-	int err;
+	int err = 0;
 
 	if (!sip || !laddr || !sa_isset(laddr, SA_ADDR))
 		return EINVAL;
@@ -744,6 +1070,66 @@ int sip_transp_add(struct sip *sip, enum sip_transp tp,
 
 	va_end(ap);
 
+	if (err)
+		mem_deref(transp);
+
+	return err;
+}
+
+
+int sip_transp_add_websock(struct sip *sip, enum sip_transp tp,
+			   const struct sa *laddr,
+			   bool server, const char *cert)
+{
+	struct sip_transport *transp;
+	bool secure = tp == SIP_TRANSP_WSS;
+	int err = 0;
+
+	if (!sip || !laddr || !sa_isset(laddr, SA_ADDR))
+		return EINVAL;
+
+	transp = mem_zalloc(sizeof(*transp), transp_destructor);
+	if (!transp)
+		return ENOMEM;
+
+	list_append(&sip->transpl, &transp->le, transp);
+	transp->sip = sip;
+	transp->tp  = tp;
+
+	if (server) {
+
+		if (secure) {
+			err = https_listen(&transp->http_sock, laddr,
+					   cert,
+					   http_req_handler, transp);
+			if (err) {
+				re_fprintf(stderr,
+					   "websock: https_listen"
+					   " error (%m)\n", err);
+				goto out;
+			}
+		}
+		else {
+			err = http_listen(&transp->http_sock, laddr,
+					  http_req_handler, transp);
+			if (err) {
+				re_fprintf(stderr, "websock: http_listen"
+					   " error (%m)\n", err);
+				goto out;
+			}
+		}
+
+		err = tcp_sock_local_get(http_sock_tcp(transp->http_sock),
+					 &transp->laddr);
+		if (err)
+			goto out;
+	}
+	else {
+		transp->laddr = *laddr;
+		sa_set_port(&transp->laddr, 9);
+	}
+
+ out:
 	if (err)
 		mem_deref(transp);
 
@@ -810,6 +1196,34 @@ int sip_transp_send(struct sip_connqent **qentp, struct sip *sip, void *sock,
 		else
 			err = conn_send(qentp, sip, secure, dst, mb,
 					transph, arg);
+		break;
+
+	case SIP_TRANSP_WSS:
+		secure = true;
+		/*@fallthrough@*/
+
+	case SIP_TRANSP_WS:
+		conn = sock;
+		if (conn && conn->websock_conn) {
+
+			trace_send(sip, tp, conn, dst, mb);
+
+			err = websock_send(conn->websock_conn, WEBSOCK_BIN,
+					   "%b",
+					   mbuf_buf(mb), mbuf_get_left(mb));
+			if (err) {
+				re_fprintf(stderr, "websock_send failed"
+					   " (%m)\n", err);
+			}
+		}
+		else {
+			err = ws_conn_send(qentp, sip, secure, dst, mb,
+					   transph, arg);
+			if (err) {
+				re_fprintf(stderr, "ws_conn_send failed"
+					   " (%m)\n", err);
+			}
+		}
 		break;
 
 	default:
@@ -896,6 +1310,8 @@ const char *sip_transp_name(enum sip_transp tp)
 	case SIP_TRANSP_UDP: return "UDP";
 	case SIP_TRANSP_TCP: return "TCP";
 	case SIP_TRANSP_TLS: return "TLS";
+	case SIP_TRANSP_WS:  return "WS";
+	case SIP_TRANSP_WSS: return "WSS";
 	default:             return "???";
 	}
 }
@@ -927,6 +1343,8 @@ const char *sip_transp_param(enum sip_transp tp)
 	case SIP_TRANSP_UDP: return "";
 	case SIP_TRANSP_TCP: return ";transport=tcp";
 	case SIP_TRANSP_TLS: return ";transport=tls";
+	case SIP_TRANSP_WS:  return ";transport=ws";
+	case SIP_TRANSP_WSS: return ";transport=wss";
 	default:             return "";
 	}
 }
@@ -939,6 +1357,8 @@ bool sip_transp_reliable(enum sip_transp tp)
 	case SIP_TRANSP_UDP: return false;
 	case SIP_TRANSP_TCP: return true;
 	case SIP_TRANSP_TLS: return true;
+	case SIP_TRANSP_WS:  return true;
+	case SIP_TRANSP_WSS: return true;
 	default:             return false;
 	}
 }
@@ -962,6 +1382,8 @@ uint16_t sip_transp_port(enum sip_transp tp, uint16_t port)
 	case SIP_TRANSP_UDP: return SIP_PORT;
 	case SIP_TRANSP_TCP: return SIP_PORT;
 	case SIP_TRANSP_TLS: return SIP_PORT_TLS;
+	case SIP_TRANSP_WS:  return 80;
+	case SIP_TRANSP_WSS: return 443;
 	default:             return 0;
 	}
 }
@@ -980,12 +1402,31 @@ static bool debug_handler(struct le *le, void *arg)
 }
 
 
+static bool conn_debug_handler(struct le *le, void *arg)
+{
+	struct sip_conn *conn = le->data;
+	struct re_printf *pf = arg;
+
+	(void)re_hprintf(pf, "  [%u] %5s  %J --> %J  (%s)\n",
+			 mem_nrefs(conn),
+			 sip_transp_name(conn->tp),
+			 &conn->laddr, &conn->paddr,
+			 conn->established ? "Established" : "..."
+			 );
+
+	return false;
+}
+
+
 int sip_transp_debug(struct re_printf *pf, const struct sip *sip)
 {
 	int err;
 
 	err = re_hprintf(pf, "transports:\n");
 	list_apply(&sip->transpl, true, debug_handler, pf);
+
+	err |= re_hprintf(pf, "connections:\n");
+	hash_apply(sip->ht_conn, conn_debug_handler, pf);
 
 	return err;
 }
@@ -1008,6 +1449,12 @@ struct tcp_conn *sip_msg_tcpconn(const struct sip_msg *msg)
 	case SIP_TRANSP_TCP:
 	case SIP_TRANSP_TLS:
 		return ((struct sip_conn *)msg->sock)->tc;
+
+	case SIP_TRANSP_WS:
+	case SIP_TRANSP_WSS: {
+		struct sip_conn *conn = msg->sock;
+		return websock_tcp(conn->websock_conn);
+	}
 
 	default:
 		return NULL;
