@@ -81,6 +81,7 @@ struct dnsc {
 	struct hash *ht_query;
 	struct hash *ht_tcpconn;
 	struct udp_sock *us;
+	struct udp_sock *us6;
 	struct sa srvv[SRVC_MAX];
 	uint32_t srvc;
 };
@@ -578,12 +579,28 @@ static int send_udp(struct dns_query *q)
 
 	for (i=0; i<*q->srvc; i++) {
 
+		struct udp_sock *us;
+
 		srv = &q->srvv[q->ntx++%*q->srvc];
 
 		DEBUG_INFO("trying udp server#%u: %J\n", i, srv);
 
+		switch (sa_af(srv)) {
+
+		case AF_INET:
+			us = q->dnsc->us;
+			break;
+
+		case AF_INET6:
+			us = q->dnsc->us6;
+			break;
+
+		default:
+			continue;
+		}
+
 		q->mb.pos = 0;
-		err = udp_send(q->dnsc->us, srv, &q->mb);
+		err = udp_send(us, srv, &q->mb);
 		if (!err)
 			break;
 	}
@@ -820,6 +837,7 @@ static void dnsc_destructor(void *data)
 
 	mem_deref(dnsc->ht_tcpconn);
 	mem_deref(dnsc->ht_query);
+	mem_deref(dnsc->us6);
 	mem_deref(dnsc->us);
 }
 
@@ -838,6 +856,7 @@ int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 	       const struct sa *srvv, uint32_t srvc)
 {
 	struct dnsc *dnsc;
+	struct sa laddr, laddr6;
 	int err;
 
 	if (!dcpp)
@@ -856,7 +875,11 @@ int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 	if (err)
 		goto out;
 
-	err = udp_listen(&dnsc->us, NULL, udp_recv_handler, dnsc);
+	sa_set_str(&laddr, "0.0.0.0", 0);
+	sa_set_str(&laddr6, "::", 0);
+
+	err  = udp_listen(&dnsc->us, &laddr, udp_recv_handler, dnsc);
+	err |= udp_listen(&dnsc->us6, &laddr6, udp_recv_handler, dnsc);
 	if (err)
 		goto out;
 
