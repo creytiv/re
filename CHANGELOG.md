@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Christoph Huber
 - Franz Auernigg
 - Juha Heinanen
+- johnjuuljensen
 - Sebastian Reimers
 
 ## [v1.0.0] - 2020-09-08
