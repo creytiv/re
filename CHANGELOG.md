@@ -5,7 +5,31 @@ All notable changes to libre will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.1.0] - 2020-10-04
+
+### Added
+
+- tls: functions to get the certificate issuer and subject [#18]
+- uri: Added path field to struct uri and its decode to uri_decode [#22]
+- tcp: add tcp_connect_bind [#24]
+- http: support bind to laddr in http_request [#24]
+- sipreg: support Cisco REGISTER keep-alives [#19]
+- sip: websocket support [#26]
+
+### Fixed
+
+- tls/openssl: fix X509_NAME win32/wincrypt.h conflict
+- dns: listen on IPv4 and IPv6 socket [#27]
+- main: fix/optimize windows file descriptors [#25]
+
+### Contributors (many thanks)
+
+- Alfred E. Heggestad
+- Christian Spielberger
+- Christoph Huber
+- Franz Auernigg
+- Juha Heinanen
+- Sebastian Reimers
 
 ## [v1.0.0] - 2020-09-08
 
@@ -44,6 +68,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Richard Aas
 - Sebastian Reimers
 
+[#25]: https://github.com/baresip/re/pull/25
+[#27]: https://github.com/baresip/re/pull/27
+[#26]: https://github.com/baresip/re/pull/26
+[#19]: https://github.com/baresip/re/pull/19
+[#24]: https://github.com/baresip/re/pull/24
+[#22]: https://github.com/baresip/re/pull/22
+[#18]: https://github.com/baresip/re/pull/18
 [#13]: https://github.com/baresip/re/pull/13
 [#10]: https://github.com/baresip/re/pull/10
 [#6]: https://github.com/baresip/re/pull/6
@@ -52,4 +83,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1]: https://github.com/baresip/re/pull/1
 
 [v1.0.0]: https://github.com/baresip/re/compare/v0.6.1...v1.0.0
-[Unreleased]: https://github.com/baresip/re/compare/v1.0.0...HEAD
+[v1.1.0]: https://github.com/baresip/re/compare/v1.0.0...v1.1.0
+[Unreleased]: https://github.com/baresip/re/compare/v1.1.0...HEAD

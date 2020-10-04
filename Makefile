@@ -6,7 +6,7 @@
 
 # Master version number
 VER_MAJOR := 1
-VER_MINOR := 0
+VER_MINOR := 1
 VER_PATCH := 0
 
 PROJECT   := re
