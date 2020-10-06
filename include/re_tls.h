@@ -33,6 +33,7 @@ enum tls_keytype {
 int tls_alloc(struct tls **tlsp, enum tls_method method, const char *keyfile,
 	      const char *pwd);
 int tls_add_ca(struct tls *tls, const char *cafile);
+int tls_add_capem(struct tls *tls, const char *capem);
 int tls_set_selfsigned(struct tls *tls, const char *cn);
 int tls_set_selfsigned_rsa(struct tls *tls, const char *cn, size_t bits);
 int tls_set_certificate_pem(struct tls *tls, const char *cert, size_t len_cert,
