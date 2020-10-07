@@ -863,6 +863,10 @@
     <ClCompile Include="..\..\src\sha\sha1.c">
       <Filter>src\sha</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\websock\websock.c" />
+    <ClCompile Include="..\..\src\http\chunk.c">
+      <Filter>src\http</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\srtp\README">

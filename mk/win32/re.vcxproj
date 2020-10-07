@@ -113,6 +113,7 @@
     <ClCompile Include="..\..\src\httpauth\basic.c" />
     <ClCompile Include="..\..\src\httpauth\digest.c" />
     <ClCompile Include="..\..\src\http\auth.c" />
+    <ClCompile Include="..\..\src\http\chunk.c" />
     <ClCompile Include="..\..\src\http\client.c" />
     <ClCompile Include="..\..\src\http\msg.c" />
     <ClCompile Include="..\..\src\http\server.c" />
@@ -248,6 +249,7 @@
     <ClCompile Include="..\..\src\udp\udp.c" />
     <ClCompile Include="..\..\src\uri\uri.c" />
     <ClCompile Include="..\..\src\uri\uric.c" />
+    <ClCompile Include="..\..\src\websock\websock.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\srtp\README" />
@@ -256,17 +258,17 @@
     <ProjectName>re-win32</ProjectName>
     <ProjectGuid>{40B28DF6-4B4A-411A-9EB7-8D80C2A29B9D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
