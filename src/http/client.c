@@ -28,6 +28,8 @@ enum {
 	IDLE_TIMEOUT = 900000,
 	BUFSIZE_MAX  = 524288,
 	CONN_BSIZE   = 256,
+	QUERY_HASH_SIZE = 16,
+	TCP_HASH_SIZE = 2,
 };
 
 struct http_cli {
@@ -818,4 +820,28 @@ void http_client_set_laddr6(struct http_cli *cli, const struct sa *addr)
 	if (cli && addr)
 		sa_cpy(&cli->laddr6, addr);
 #endif
+}
+
+
+/**
+ * Set timeout for the HTTP Client in milli seconds.
+ *
+ * @param cli    HTTP Client
+ * @param ms     Timeout in milli seconds
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int http_client_set_timeout(struct http_cli *cli, uint32_t ms)
+{
+	struct dnsc_conf conf;
+	if (!cli)
+		return EINVAL;
+
+	/* TODO: TCP timeout connect/send/idle */
+	conf.query_hash_size = QUERY_HASH_SIZE;
+	conf.tcp_hash_size = TCP_HASH_SIZE;
+	conf.conn_timeout = ms;
+	conf.idle_timeout = ms;
+
+	return dnsc_conf_set(cli->dnsc, &conf);
 }
