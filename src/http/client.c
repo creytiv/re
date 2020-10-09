@@ -707,9 +707,9 @@ void http_req_set_conn_handler(struct http_req *req, http_conn_h *connh)
 
 
 /**
- * Allocate an HTTP client instance
+ * Allocate an HTTP Client instance
  *
- * @param clip      Pointer to allocated HTTP client
+ * @param clip      Pointer to allocated HTTP Client
  * @param dnsc      DNS Client
  *
  * @return 0 if success, otherwise errorcode
@@ -758,7 +758,7 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 /**
  * Add trusted CA certificates
  *
- * @param cli     HTTP client
+ * @param cli     HTTP Client
  * @param capath  Path to CA certificates
  *
  * @return 0 if success, otherwise errorcode
@@ -775,7 +775,7 @@ int http_client_add_ca(struct http_cli *cli, const char *tls_ca)
 /**
  * Set verify host name
  *
- * @param cli       HTTP client
+ * @param cli       HTTP Client
  * @param hostname  String for alternative name validation.
  *
  * @return 0 if success, otherwise errorcode
