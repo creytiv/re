@@ -87,6 +87,15 @@ struct http_msg {
 	uint32_t clen;         /**< Content length                         */
 };
 
+struct http_uri {
+	struct pl scheme;
+	struct pl host;
+	struct pl port;
+	struct pl path;
+};
+
+int http_uri_decode(struct http_uri *hu, const struct pl *uri);
+
 typedef bool(http_hdr_h)(const struct http_hdr *hdr, void *arg);
 
 int  http_msg_decode(struct http_msg **msgp, struct mbuf *mb, bool req);

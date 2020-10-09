@@ -556,6 +556,25 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 }
 
 
+int http_uri_decode(struct http_uri *hu, const struct pl *uri)
+{
+	if (!hu)
+		return EINVAL;
+
+	memset(hu, 0, sizeof(*hu));
+
+	/* Try IPv6 first */
+	if (!re_regex(uri->p, uri->l, "[a-z]+://\\[[^\\]]+\\][:]*[0-9]*[^]+",
+		     &hu->scheme, &hu->host, NULL, &hu->port, &hu->path))
+		return hu->scheme.p == uri->p ? 0 : EINVAL;
+
+	/* Then non-IPv6 host */
+	return re_regex(uri->p, uri->l, "[a-z]+://[^:/]+[:]*[0-9]*[^]+",
+		     &hu->scheme, &hu->host, NULL, &hu->port, &hu->path) ||
+			hu->scheme.p != uri->p;
+}
+
+
 /**
  * Send an HTTP request
  *
@@ -574,7 +593,8 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		 const char *uri, http_resp_h *resph, http_data_h *datah,
 		 void *arg, const char *fmt, ...)
 {
-	struct pl scheme, host, port, path;
+	struct http_uri http_uri;
+	struct pl pl;
 	struct http_req *req;
 	uint16_t defport;
 	bool secure;
@@ -584,18 +604,18 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 	if (!cli || !met || !uri)
 		return EINVAL;
 
-	if (re_regex(uri, strlen(uri), "[a-z]+://[^:/]+[:]*[0-9]*[^]+",
-		     &scheme, &host, NULL, &port, &path) || scheme.p != uri)
+	pl_set_str(&pl, uri);
+	if (http_uri_decode(&http_uri, &pl))
 		return EINVAL;
 
-	if (!pl_strcasecmp(&scheme, "http") ||
-	    !pl_strcasecmp(&scheme, "ws")) {
+	if (!pl_strcasecmp(&http_uri.scheme, "http") ||
+	    !pl_strcasecmp(&http_uri.scheme, "ws")) {
 		secure  = false;
 		defport = 80;
 	}
 #ifdef USE_TLS
-	else if (!pl_strcasecmp(&scheme, "https") ||
-		 !pl_strcasecmp(&scheme, "wss")) {
+	else if (!pl_strcasecmp(&http_uri.scheme, "https") ||
+		 !pl_strcasecmp(&http_uri.scheme, "wss")) {
 		secure  = true;
 		defport = 443;
 	}
@@ -611,12 +631,12 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 
 	req->cli    = cli;
 	req->secure = secure;
-	req->port   = pl_isset(&port) ? pl_u32(&port) : defport;
+	req->port   = pl_isset(&http_uri.port) ? pl_u32(&http_uri.port) : defport;
 	req->resph  = resph;
 	req->datah  = datah;
 	req->arg    = arg;
 
-	err = pl_strdup(&req->host, &host);
+	err = pl_strdup(&req->host, &http_uri.host);
 	if (err)
 		goto out;
 
@@ -629,7 +649,7 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 	err = mbuf_printf(req->mbreq,
 			  "%s %r HTTP/1.1\r\n"
 			  "Host: %r\r\n",
-			  met, &path, &host);
+			  met, &http_uri.path, &http_uri.host);
 	if (fmt) {
 		va_start(ap, fmt);
 		err |= mbuf_vprintf(req->mbreq, fmt, ap);
