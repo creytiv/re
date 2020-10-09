@@ -22,6 +22,11 @@
 #include "http.h"
 
 
+#define DEBUG_MODULE "http_client"
+#define DEBUG_LEVEL 5
+#include <re_dbg.h>
+
+
 enum {
 	CONN_TIMEOUT = 30000,
 	RECV_TIMEOUT = 60000,
@@ -38,6 +43,8 @@ struct http_cli {
 	struct dnsc *dnsc;
 	struct tls *tls;
 	char *tls_hostname;
+	char *cert;
+	char *key;
 	struct sa laddr;
 #ifdef HAVE_INET6
 	struct sa laddr6;
@@ -102,6 +109,8 @@ static void cli_destructor(void *arg)
 
 	hash_flush(cli->ht_conn);
 	mem_deref(cli->ht_conn);
+	mem_deref(cli->cert);
+	mem_deref(cli->key);
 	mem_deref(cli->dnsc);
 	mem_deref(cli->tls);
 	mem_deref(cli->tls_hostname);
@@ -558,6 +567,46 @@ static void query_handler(int err, const struct dnshdr *hdr, struct list *ansl,
 }
 
 
+#ifdef USE_TLS
+static int read_file(char **buf, const char *path)
+{
+	FILE *f = NULL;
+	size_t s = 0;
+	size_t n = 0;
+
+	if (!buf || !path)
+		return EINVAL;
+
+	f = fopen(path, "r");
+	if (!f) {
+		DEBUG_WARNING("Could not open cert file '%s'\n", path);
+		return EIO;
+	}
+
+	fseek(f, 0L, SEEK_END);
+	s = ftell(f);
+	fseek(f, 0L, SEEK_SET);
+
+	*buf = mem_alloc(s + 1, NULL);
+	if (!buf) {
+		DEBUG_WARNING("Could not allocate cert file buffer\n");
+		fclose(f);
+		return ENOMEM;
+	}
+
+	n = fread(buf, 1, s, f);
+	fclose(f);
+	buf[s] = 0;
+	if (n < s) {
+		*buf = mem_deref(*buf);
+		return EIO;
+	}
+
+	return 0;
+}
+#endif
+
+
 int http_uri_decode(struct http_uri *hu, const struct pl *uri)
 {
 	if (!hu)
@@ -633,7 +682,8 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 
 	req->cli    = cli;
 	req->secure = secure;
-	req->port   = pl_isset(&http_uri.port) ? pl_u32(&http_uri.port) : defport;
+	req->port   = pl_isset(&http_uri.port) ? pl_u32(&http_uri.port) :
+			defport;
 	req->resph  = resph;
 	req->datah  = datah;
 	req->arg    = arg;
@@ -664,6 +714,18 @@ int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		goto out;
 
 	req->mbreq->pos = 0;
+
+#ifdef USE_TLS
+	if (cli->cert && cli->key) {
+		err = tls_set_certificate_pem(cli->tls,
+				cli->cert, strlen(cli->cert),
+				cli->key, strlen(cli->key));
+	}
+	else if (cli->cert) {
+		err = tls_set_certificate(cli->tls,
+				cli->cert, strlen(cli->cert));
+	}
+#endif
 
 	if (!sa_set_str(&req->srvv[0], req->host, req->port)) {
 
@@ -788,6 +850,87 @@ int http_client_add_capem(struct http_cli *cli, const char *capem)
 		return EINVAL;
 
 	return tls_add_capem(cli->tls, capem);
+}
+
+
+/**
+ * Set client certificate
+ * @param cli   HTTP Client
+ * @param path  File path to client certificate
+ *
+ * @return 0 for success, error code otherwise.
+ */
+int http_client_set_cert(struct http_cli *cli, const char *path)
+{
+	int err = 0;
+
+	if (!cli || !path)
+		return EINVAL;
+
+	cli->cert = mem_deref(cli->cert);
+	err = read_file(&cli->cert, path);
+	if (err) {
+		cli->cert = mem_deref(cli->cert);
+		return err;
+	}
+
+	return 0;
+}
+
+
+/**
+ * Set client certificate in PEM format
+ * @param cli    HTTP Client
+ * @param pem    Client certificate in PEM format
+ *
+ * @return 0 for success, error code otherwise.
+ */
+/* ------------------------------------------------------------------------- */
+int http_client_set_certpem(struct http_cli *cli, const char *pem)
+{
+	if (!cli || !str_isset(pem))
+		return EINVAL;
+
+	cli->cert = mem_deref(cli->cert);
+	cli->cert = mem_zalloc(strlen(pem) + 1, NULL);
+	if (!cli->cert)
+		return ENOMEM;
+
+	strcpy(cli->cert, pem);
+	return 0;
+}
+
+
+int http_client_set_key(struct http_cli *cli, const char *path)
+{
+	int err = 0;
+
+	if (!cli || !path)
+		return EINVAL;
+
+	cli->key = mem_deref(cli->key);
+	err = read_file(&cli->key, path);
+	if (err) {
+		cli->key = mem_deref(cli->key);
+		return err;
+	}
+
+	return 0;
+}
+
+
+int http_client_set_keypem(struct http_cli *cli, const char *pem)
+{
+	if (!cli || !str_isset(pem))
+		return EINVAL;
+
+	cli->key = mem_deref(cli->key);
+	cli->key = mem_zalloc(strlen(pem) + 1, NULL);
+	if (!cli->key)
+		return ENOMEM;
+
+	strcpy(cli->key, pem);
+	return 0;
 }
 
 

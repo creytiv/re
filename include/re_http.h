@@ -134,8 +134,6 @@ typedef void (http_conn_h)(struct tcp_conn *tc, struct tls_conn *sc,
 			   void *arg);
 
 int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc);
-int http_client_set_tls_hostname(struct http_cli *cli,
-				 const struct pl *hostname);
 int http_client_set_timeout(struct http_cli *cli, uint32_t ms);
 int http_request(struct http_req **reqp, struct http_cli *cli, const char *met,
 		 const char *uri, http_resp_h *resph, http_data_h *datah,
@@ -147,6 +145,12 @@ void http_client_set_laddr6(struct http_cli *cli, const struct sa *addr);
 #ifdef USE_TLS
 int http_client_add_ca(struct http_cli *cli, const char *tls_ca);
 int http_client_add_capem(struct http_cli *cli, const char *capem);
+int http_client_set_tls_hostname(struct http_cli *cli,
+				 const struct pl *hostname);
+int http_client_set_cert(struct http_cli *cli, const char *path);
+int http_client_set_certpem(struct http_cli *cli, const char *pem);
+int http_client_set_key(struct http_cli *cli, const char *path);
+int http_client_set_keypem(struct http_cli *cli, const char *pem);
 #endif
 
 /* Server */
