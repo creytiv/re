@@ -798,7 +798,7 @@ int http_client_set_tls_hostname(struct http_cli *cli,
  * @param addr  Bind to local v4 address
  *
  */
-void http_client_set_laddr(struct http_cli *cli, struct sa *addr)
+void http_client_set_laddr(struct http_cli *cli, const struct sa *addr)
 {
 	if (cli && addr)
 		sa_cpy(&cli->laddr, addr);
@@ -812,7 +812,7 @@ void http_client_set_laddr(struct http_cli *cli, struct sa *addr)
  * @param addr   Bind to local v6 address
  *
  */
-void http_client_set_laddr6(struct http_cli *cli, struct sa *addr)
+void http_client_set_laddr6(struct http_cli *cli, const struct sa *addr)
 {
 #ifdef HAVE_INET6
 	if (cli && addr)
