@@ -775,6 +775,23 @@ int http_client_add_ca(struct http_cli *cli, const char *tls_ca)
 
 
 /**
+ * Add trusted CA certificates given as string
+ *
+ * @param cli    HTTP Client
+ * @param capem  The trusted CA as 0-terminated string given in PEM format
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int http_client_add_capem(struct http_cli *cli, const char *capem)
+{
+	if (!cli || !capem)
+		return EINVAL;
+
+	return tls_add_capem(cli->tls, capem);
+}
+
+
+/**
  * Set verify host name
  *
  * @param cli       HTTP Client
