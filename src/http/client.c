@@ -42,7 +42,7 @@ struct http_cli {
 	struct hash *ht_conn;
 	struct dnsc *dnsc;
 	struct tls *tls;
-	char *tls_hostname;
+	char *tlshn;
 	char *cert;
 	char *key;
 	struct sa laddr;
@@ -113,7 +113,7 @@ static void cli_destructor(void *arg)
 	mem_deref(cli->key);
 	mem_deref(cli->dnsc);
 	mem_deref(cli->tls);
-	mem_deref(cli->tls_hostname);
+	mem_deref(cli->tlshn);
 }
 
 
@@ -472,9 +472,9 @@ static int conn_connect(struct http_req *req)
 		if (err)
 			goto out;
 
-		if (req->cli->tls_hostname)
+		if (req->cli->tlshn)
 			err = tls_peer_set_verify_host(conn->sc,
-				req->cli->tls_hostname);
+				req->cli->tlshn);
 
 		if (err)
 			goto out;
@@ -945,10 +945,14 @@ int http_client_set_keypem(struct http_cli *cli, const char *pem)
 int http_client_set_tls_hostname(struct http_cli *cli,
 				 const struct pl *hostname)
 {
-	if (!cli || !hostname)
+	if (!cli)
 		return EINVAL;
 
-	return tls_set_hostname(cli->tls_hostname, hostname);
+	cli->tlshn = mem_deref(cli->tlshn);
+	if (!hostname)
+		return 0;
+
+	return pl_strdup(&cli->tlshn, hostname);
 }
 #endif
 

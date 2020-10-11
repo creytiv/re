@@ -334,28 +334,6 @@ int tls_peer_set_verify_host(struct tls_conn *tc, const char *hostname)
 
 
 /**
- * Convert string hostname to pl hostname
- *
- * @param tls_hostname Certificate hostname as string
- * @param hostname     Certificate hostname as pl
- *
- * @return int         0 if success, errorcode otherwise
- */
-int tls_set_hostname(char *tls_hostname, const struct pl *hostname)
-{
-	if (!tls_hostname || !hostname)
-		return EINVAL;
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-	DEBUG_WARNING("verify hostname needs openssl version 1.1.0\n");
-	return ENOSYS;
-#endif
-
-	return pl_strdup(&tls_hostname, hostname);
-}
-
-
-/**
  * Generate and set selfsigned certificate on TLS context
  *
  * @param tls TLS Context
