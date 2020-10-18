@@ -903,6 +903,33 @@ int dnsc_alloc(struct dnsc **dcpp, const struct dnsc_conf *conf,
 }
 
 
+int dnsc_conf_set(struct dnsc *dnsc, const struct dnsc_conf *conf)
+{
+	int err;
+	if (!dnsc)
+		return EINVAL;
+
+	if (conf)
+		dnsc->conf = *conf;
+	else
+		dnsc->conf = default_conf;
+
+
+	dnsc->ht_query = mem_deref(dnsc->ht_query);
+	dnsc->ht_tcpconn = mem_deref(dnsc->ht_tcpconn);
+
+	err = hash_alloc(&dnsc->ht_query, dnsc->conf.query_hash_size);
+	if (err)
+		return err;
+
+	err = hash_alloc(&dnsc->ht_tcpconn, dnsc->conf.tcp_hash_size);
+	if (err)
+		return err;
+
+	return err;
+}
+
+
 /**
  * Set the DNS Servers on a DNS Client
  *

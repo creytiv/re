@@ -224,6 +224,54 @@ int tls_add_ca(struct tls *tls, const char *cafile)
 
 
 /**
+ * Add trusted CA certificates given as string.
+ *
+ * @param tls    TLS Context
+ * @param capem  The trusted CA as null-terminated string given in PEM format.
+ *
+ * @return 0 if success, otherwise errorcode
+ */
+int tls_add_capem(struct tls *tls, const char *capem)
+{
+	X509_STORE *store;
+	X509 *x509;
+	BIO *bio;
+	int ok;
+	int err = 0;
+
+	if (!tls || !capem || !tls->ctx)
+		return EINVAL;
+
+	store = SSL_CTX_get_cert_store(tls->ctx);
+	if (!store)
+		return EINVAL;
+
+	bio  = BIO_new_mem_buf((char *)capem, strlen(capem));
+	if (!bio)
+		return EINVAL;
+
+	x509 = PEM_read_bio_X509(bio, NULL, 0, NULL);
+	if (!x509) {
+		err = EINVAL;
+		DEBUG_WARNING("Could not read certificate capem\n");
+		goto out;
+	}
+
+	ok = X509_STORE_add_cert(store, x509);
+	if (!ok) {
+		err = EINVAL;
+		DEBUG_WARNING("Could not add certificate capem\n");
+	}
+
+out:
+	X509_free(x509);
+	BIO_free(bio);
+
+	return err;
+}
+
+
+/**
  * Set SSL verification of the certificate purpose
  *
  * @param tls     TLS Context
@@ -282,28 +330,6 @@ int tls_peer_set_verify_host(struct tls_conn *tc, const char *hostname)
 #endif
 
 	return err == 1 ? 0 : EINVAL;
-}
-
-
-/**
- * Convert string hostname to pl hostname
- *
- * @param tls_hostname Certificate hostname as string
- * @param hostname     Certificate hostname as pl
- *
- * @return int         0 if success, errorcode otherwise
- */
-int tls_set_hostname(char *tls_hostname, const struct pl *hostname)
-{
-	if (!tls_hostname || !hostname)
-		return EINVAL;
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-	DEBUG_WARNING("verify hostname needs openssl version 1.1.0\n");
-	return ENOSYS;
-#endif
-
-	return pl_strdup(&tls_hostname, hostname);
 }
 
 
