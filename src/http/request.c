@@ -242,10 +242,9 @@ static void resp_handler(int err, const struct http_msg *msg, void *arg)
 	if (conn && conn->resph)
 		conn->resph(err, msg, conn->arg);
 
-	conn->tc = mem_deref(conn->tc);
-	conn->sc = mem_deref(conn->sc);
 	mem_deref(abuf);
 	mem_deref(basic);
+	mem_deref(conn);
 }
 
 
@@ -345,6 +344,9 @@ static int send_req(struct http_reqconn *conn, const struct pl *auth)
 	}
 
 	http_req_set_conn_handler(conn->req, conn_handler);
+
+	/* keep internal reference for resp_handler */
+	conn = mem_ref(conn);
 	return 0;
 }
 
@@ -373,6 +375,20 @@ out:
 }
 
 
+/**
+ * Allocates a new http_reqconn instance. Has to be freed after usage with
+ * mem_deref().
+ *
+ * @param pconn   A pointer for returning the new http_reqconn.
+ * @param client  The HTTP client. Multiple parallel HTTP request with the same
+ *                HTTP client are possible.
+ * @param resph   The optional response handler.
+ * @param datah   The optional data handler. This is useful for downloading
+ *                large files.
+ * @param arg     A pointer that will be passed to resph and datah.
+ *
+ * @return 0 if success, otherwise errorcode
+ */
 int http_reqconn_alloc(struct http_reqconn **pconn,
 		struct http_cli *client,
 		http_resp_h *resph, http_data_h *datah, void* arg)
