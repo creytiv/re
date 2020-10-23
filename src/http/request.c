@@ -79,7 +79,6 @@ static void destructor(void *arg)
 	mem_deref(conn->req);
 	mem_deref(conn->tc);
 	mem_deref(conn->sc);
-	mem_deref(conn->client);
 
 	mem_deref(conn->uri);
 	mem_deref(conn->met);
@@ -404,7 +403,7 @@ int http_reqconn_alloc(struct http_reqconn **pconn,
 	if (!conn)
 		return ENOMEM;
 
-	conn->client = mem_ref(client);
+	conn->client = client;
 	conn->resph = resph;
 	conn->datah = datah;
 	conn->arg = arg;
