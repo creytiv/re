@@ -544,7 +544,6 @@ int http_reqconn_send(struct http_reqconn *conn, const struct pl *uri)
 	char *host = NULL;
 #ifdef USE_TLS
 	struct pl tlshn;
-	struct sa sa;
 #endif
 
 	if (!conn || !pl_isset(uri))
@@ -569,10 +568,6 @@ int http_reqconn_send(struct http_reqconn *conn, const struct pl *uri)
 		pl_set_str(&tlshn, conn->tlshn);
 		err = http_client_set_tls_hostname(conn->client, &tlshn);
 	}
-	else if (sa_set_str(&sa, host, 0) && (
-			!pl_strcasecmp(&hu.scheme, "https") ||
-			!pl_strcasecmp(&hu.scheme, "wss")))
-		err = http_client_set_tls_hostname(conn->client, &hu.host);
 
 	if (err) {
 		DEBUG_WARNING("Could not set TLS hostname.\n");
