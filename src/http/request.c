@@ -547,7 +547,7 @@ int http_reqconn_send(struct http_reqconn *conn, const struct pl *uri)
 	struct sa sa;
 #endif
 
-	if (!pl_isset(uri))
+	if (!conn || !pl_isset(uri))
 		return EINVAL;
 
 	err = http_uri_decode(&hu, uri);
