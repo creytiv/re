@@ -38,6 +38,7 @@ enum {
 };
 
 struct http_cli {
+	struct http_conf conf;
 	struct list reql;
 	struct hash *ht_conn;
 	struct dnsc *dnsc;
@@ -75,6 +76,13 @@ struct http_req {
 	bool chunked;
 	bool secure;
 	bool close;
+};
+
+
+static const struct http_conf default_conf = {
+	CONN_TIMEOUT,
+	RECV_TIMEOUT,
+	IDLE_TIMEOUT,
 };
 
 
@@ -144,7 +152,20 @@ static void conn_destructor(void *arg)
 
 static void conn_idle(struct conn *conn)
 {
-	tmr_start(&conn->tmr, IDLE_TIMEOUT, timeout_handler, conn);
+	struct http_req *req;
+	struct http_cli *cli;
+	if (!conn)
+		return;
+
+	req =  conn->req;
+	if (req)
+		return;
+
+	cli = req->cli;
+	if (cli)
+		return;
+
+	tmr_start(&conn->tmr, cli->conf.idle_timeout, timeout_handler, conn);
 	conn->req = NULL;
 }
 
@@ -299,6 +320,7 @@ static void estab_handler(void *arg)
 {
 	struct conn *conn = arg;
 	struct http_req *req = conn->req;
+	struct http_cli *cli;
 	int err;
 
 	if (!req)
@@ -310,7 +332,11 @@ static void estab_handler(void *arg)
 		return;
 	}
 
-	tmr_start(&conn->tmr, RECV_TIMEOUT, timeout_handler, conn);
+	cli = req->cli;
+	if (!cli)
+		return;
+
+	tmr_start(&conn->tmr, cli->conf.recv_timeout, timeout_handler, conn);
 }
 
 
@@ -419,6 +445,7 @@ static int conn_connect(struct http_req *req)
 	const struct sa *addr = &req->srvv[req->srvc];
 	struct conn *conn;
 	struct sa *laddr = NULL;
+	struct http_cli *cli;
 	int err;
 
 	conn = list_ledata(hash_lookup(req->cli->ht_conn,
@@ -426,7 +453,11 @@ static int conn_connect(struct http_req *req)
 	if (conn) {
 		err = tcp_send(conn->tc, req->mbreq);
 		if (!err) {
-			tmr_start(&conn->tmr, RECV_TIMEOUT,
+			cli = req->cli;
+			if (!cli)
+				return EINVAL;
+
+			tmr_start(&conn->tmr, cli->conf.recv_timeout,
 				  timeout_handler, conn);
 
 			req->conn = conn;
@@ -487,7 +518,8 @@ static int conn_connect(struct http_req *req)
 	}
 #endif
 
-	tmr_start(&conn->tmr, CONN_TIMEOUT, timeout_handler, conn);
+	tmr_start(&conn->tmr, req->cli->conf.conn_timeout, timeout_handler,
+		  conn);
 
 	req->conn = conn;
 	conn->req = req;
@@ -611,20 +643,29 @@ static int read_file(char **buf, const char *path)
 
 int http_uri_decode(struct http_uri *hu, const struct pl *uri)
 {
+	int err = 0;
 	if (!hu)
 		return EINVAL;
 
 	memset(hu, 0, sizeof(*hu));
 
 	/* Try IPv6 first */
-	if (!re_regex(uri->p, uri->l, "[a-z]+://\\[[^\\]]+\\][:]*[0-9]*[^]+",
-		     &hu->scheme, &hu->host, NULL, &hu->port, &hu->path))
-		return hu->scheme.p == uri->p ? 0 : EINVAL;
+	err = re_regex(uri->p, uri->l, "[a-z]+://\\[[^\\]]+\\][:]*[0-9]*[^]+",
+		       &hu->scheme, &hu->host, NULL, &hu->port, &hu->path) ||
+	      hu->scheme.p != uri->p;
+	if (!err)
+		goto out;
 
 	/* Then non-IPv6 host */
-	return re_regex(uri->p, uri->l, "[a-z]+://[^:/]+[:]*[0-9]*[^]+",
-		     &hu->scheme, &hu->host, NULL, &hu->port, &hu->path) ||
-			hu->scheme.p != uri->p;
+	err = re_regex(uri->p, uri->l, "[a-z]+://[^:/]+[:]*[0-9]*[^]+",
+		       &hu->scheme, &hu->host, NULL, &hu->port, &hu->path) ||
+	      hu->scheme.p != uri->p;
+
+out:
+	if (!err && !pl_isset(&hu->path))
+		pl_set_str(&hu->path, "/");
+
+	return err;
 }
 
 
@@ -772,6 +813,23 @@ void http_req_set_conn_handler(struct http_req *req, http_conn_h *connh)
 }
 
 
+int http_client_set_config(struct http_cli *cli, struct http_conf *conf)
+{
+	struct dnsc_conf dconf;
+	if (!cli || !conf)
+		return EINVAL;
+
+	cli->conf = *conf;
+
+	dconf.query_hash_size = QUERY_HASH_SIZE;
+	dconf.tcp_hash_size = TCP_HASH_SIZE;
+	dconf.conn_timeout = conf->conn_timeout;
+	dconf.idle_timeout = conf->idle_timeout;
+
+	return dnsc_conf_set(cli->dnsc, &dconf);
+}
+
+
 /**
  * Allocate an HTTP Client instance
  *
@@ -809,6 +867,7 @@ int http_client_alloc(struct http_cli **clip, struct dnsc *dnsc)
 #endif
 
 	cli->dnsc = mem_ref(dnsc);
+	cli->conf = default_conf;
 
  out:
 	if (err)
@@ -986,28 +1045,4 @@ void http_client_set_laddr6(struct http_cli *cli, const struct sa *addr)
 	if (cli && addr)
 		sa_cpy(&cli->laddr6, addr);
 #endif
-}
-
-
-/**
- * Set timeout for the HTTP Client in milli seconds.
- *
- * @param cli    HTTP Client
- * @param ms     Timeout in milli seconds
- *
- * @return 0 if success, otherwise errorcode
- */
-int http_client_set_timeout(struct http_cli *cli, uint32_t ms)
-{
-	struct dnsc_conf conf;
-	if (!cli)
-		return EINVAL;
-
-	/* TODO: TCP timeout connect/send/idle */
-	conf.query_hash_size = QUERY_HASH_SIZE;
-	conf.tcp_hash_size = TCP_HASH_SIZE;
-	conf.conn_timeout = ms;
-	conf.idle_timeout = ms;
-
-	return dnsc_conf_set(cli->dnsc, &conf);
 }
