@@ -475,6 +475,8 @@ static int conn_connect(struct http_req *req)
 		if (req->cli->tlshn)
 			err = tls_peer_set_verify_host(conn->sc,
 				req->cli->tlshn);
+		else
+			err = tls_peer_set_verify_host(conn->sc, req->host);
 
 		if (err)
 			goto out;

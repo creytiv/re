@@ -79,7 +79,6 @@ static void destructor(void *arg)
 	mem_deref(conn->req);
 	mem_deref(conn->tc);
 	mem_deref(conn->sc);
-	mem_deref(conn->client);
 
 	mem_deref(conn->uri);
 	mem_deref(conn->met);
@@ -404,7 +403,7 @@ int http_reqconn_alloc(struct http_reqconn **pconn,
 	if (!conn)
 		return ENOMEM;
 
-	conn->client = mem_ref(client);
+	conn->client = client;
 	conn->resph = resph;
 	conn->datah = datah;
 	conn->arg = arg;
@@ -544,10 +543,9 @@ int http_reqconn_send(struct http_reqconn *conn, const struct pl *uri)
 	char *host = NULL;
 #ifdef USE_TLS
 	struct pl tlshn;
-	struct sa sa;
 #endif
 
-	if (!pl_isset(uri))
+	if (!conn || !pl_isset(uri))
 		return EINVAL;
 
 	err = http_uri_decode(&hu, uri);
@@ -569,10 +567,6 @@ int http_reqconn_send(struct http_reqconn *conn, const struct pl *uri)
 		pl_set_str(&tlshn, conn->tlshn);
 		err = http_client_set_tls_hostname(conn->client, &tlshn);
 	}
-	else if (sa_set_str(&sa, host, 0) && (
-			!pl_strcasecmp(&hu.scheme, "https") ||
-			!pl_strcasecmp(&hu.scheme, "wss")))
-		err = http_client_set_tls_hostname(conn->client, &hu.host);
 
 	if (err) {
 		DEBUG_WARNING("Could not set TLS hostname.\n");
