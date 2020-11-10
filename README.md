@@ -5,8 +5,9 @@ libre README
 libre is a Generic library for real-time communications with async IO support.
 Copyright (C) 2010 - 2020 Creytiv.com
 
-
-[![Build Status](https://travis-ci.org/baresip/re.svg?branch=master)](https://travis-ci.org/baresip/re)
+![Build](https://github.com/baresip/re/workflows/Build/badge.svg)
+![ccheck](https://github.com/baresip/re/workflows/ccheck/badge.svg)
+![OpenSSL no-deprecated and LibreSSL](https://github.com/baresip/re/workflows/OpenSSL%20no-deprecated%20and%20LibreSSL/badge.svg)
 
 
 ## Features
