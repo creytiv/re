@@ -1,0 +1,15 @@
+name: ccheck
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: ccheck
+      run: |
+        wget "https://raw.githubusercontent.com/baresip/baresip/master/test/ccheck.py"
+        python3 ccheck.py

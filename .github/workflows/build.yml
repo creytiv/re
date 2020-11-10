@@ -1,0 +1,31 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-latest]
+        exclude:
+           - os: macos-latest
+             compiler: gcc
+    env:
+      CC: ${{ matrix.compiler }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: make
+      run: make EXTRA_CFLAGS=-Werror CCACHE=
+    - name: retest
+      run: |
+        cd ..
+        rm re/libre.so || true
+        rm re/libre.dylib || true
+        git clone https://github.com/creytiv/rem
+        make -C rem librem.a
+        git clone https://github.com/baresip/retest.git
+        cd retest && make STATIC=1 LIBRE_SO=../re && ./retest -r
