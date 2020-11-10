@@ -1,0 +1,20 @@
+name: OpenSSL no-deprecated and LibreSSL
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ssl: [libressl, openssl]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Download pre-compiled OpenSSL/LibreSSL
+      run: |
+        wget "https://github.com/baresip/ci/releases/download/v0.1/assets.tar.gz"
+        tar -xf assets.tar.gz
+    - name: make
+      run: make EXTRA_CFLAGS="-Iassets/${{ matrix.ssl }}/include -Werror" EXTRA_LFLAGS="-Lassets/${{ matrix.ssl }}" CCACHE=;
