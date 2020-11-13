@@ -68,14 +68,10 @@
   - Look at howto optimise main loop
  */
 
-#if !defined (RELEASE) && !defined (MAIN_DEBUG)
-#define MAIN_DEBUG 1  /**< Enable main loop debugging */
-#endif
-
 
 /** Main loop values */
 enum {
-	MAX_BLOCKING = 100,    /**< Maximum time spent in handler in [ms] */
+	MAX_BLOCKING = 500,    /**< Maximum time spent in handler in [ms] */
 #if defined (FD_SETSIZE)
 	DEFAULT_MAXFDS = FD_SETSIZE
 #else
