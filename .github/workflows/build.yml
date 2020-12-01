@@ -18,14 +18,28 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: make
       run: make EXTRA_CFLAGS=-Werror CCACHE=
+
+    - uses: sreimers/pr-dependency-action@v0.2
+      with:
+        name: rem
+        repo: https://github.com/creytiv/rem
+        secret: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: '../.'
+
+    - uses: sreimers/pr-dependency-action@v0.2
+      with:
+        name: retest
+        repo: https://github.com/baresip/retest.git
+        secret: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: '../.'
+
     - name: retest
       run: |
         cd ..
         rm re/libre.so || true
         rm re/libre.dylib || true
-        git clone https://github.com/creytiv/rem
         make -C rem librem.a
-        git clone https://github.com/baresip/retest.git
         cd retest && make STATIC=1 LIBRE_SO=../re && ./retest -r
