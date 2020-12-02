@@ -228,14 +228,13 @@ static void resp_handler(int err, const struct http_msg *msg, void *arg)
 	if (err)
 		goto disconnect;
 
-	mem_deref(abuf);
-	mem_deref(basic);
-	return;
+	goto out;
 
  disconnect:
 	if (conn && conn->resph)
 		conn->resph(err, msg, conn->arg);
 
+ out:
 	mem_deref(abuf);
 	mem_deref(basic);
 	mem_deref(conn);
