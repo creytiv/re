@@ -158,14 +158,16 @@ static void conn_idle(struct conn *conn)
 		return;
 
 	req =  conn->req;
-	if (req)
-		return;
+	if (!req)
+		goto out;
 
 	cli = req->cli;
-	if (cli)
-		return;
+	if (!cli)
+		goto out;
 
 	tmr_start(&conn->tmr, cli->conf.idle_timeout, timeout_handler, conn);
+
+ out:
 	conn->req = NULL;
 }
 
