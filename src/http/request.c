@@ -47,8 +47,6 @@ struct http_reqconn {
 
 	struct sa peer;          /**< Peer address                           */
 	struct http_req *req;    /**< Current HTTP request                   */
-	struct tcp_conn *tc;     /**< TCP connection                         */
-	struct tls_conn *sc;     /**< TLS connection                         */
 
 	char *uri;               /**< Request URI                            */
 	char *met;               /**< Request Method                         */
@@ -77,9 +75,6 @@ static void destructor(void *arg)
 	struct http_reqconn *conn = arg;
 
 	mem_deref(conn->req);
-	mem_deref(conn->tc);
-	mem_deref(conn->sc);
-
 	mem_deref(conn->uri);
 	mem_deref(conn->met);
 	mem_deref(conn->path);
@@ -262,15 +257,6 @@ static int data_handler(const uint8_t *buf, size_t size,
 }
 
 
-static void conn_handler(struct tcp_conn *tc, struct tls_conn *sc, void *arg)
-{
-	struct http_reqconn *conn = arg;
-
-	conn->tc = mem_ref(tc);
-	conn->sc = mem_ref(sc);
-}
-
-
 static int send_req(struct http_reqconn *conn, const struct pl *auth)
 {
 	int err;
@@ -316,8 +302,6 @@ static int send_req(struct http_reqconn *conn, const struct pl *auth)
 	if (conn->custhdr)
 		pl_set_mbuf(&custh, conn->custhdr);
 
-	conn->tc = mem_deref(conn->tc);
-	conn->sc = mem_deref(conn->sc);
 	err = http_request(&conn->req, conn->client,
 			conn->met, conn->uri,
 			resp_handler, conn->datah ? data_handler : NULL, conn,
@@ -341,8 +325,6 @@ static int send_req(struct http_reqconn *conn, const struct pl *auth)
 		DEBUG_WARNING("Could not send %s request. (%m)\n", conn->met);
 		return err;
 	}
-
-	http_req_set_conn_handler(conn->req, conn_handler);
 
 	/* keep internal reference for resp_handler */
 	conn = mem_ref(conn);
