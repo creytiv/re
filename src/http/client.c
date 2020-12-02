@@ -154,10 +154,11 @@ static void conn_idle(struct conn *conn)
 {
 	struct http_req *req;
 	struct http_cli *cli;
+
 	if (!conn)
 		return;
 
-	req =  conn->req;
+	req = conn->req;
 	if (!req)
 		goto out;
 
