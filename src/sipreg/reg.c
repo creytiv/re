@@ -297,7 +297,10 @@ static int request(struct sipreg *reg, bool reset_ls)
 
 	if (reset_ls) {
 		sip_loopstate_reset(&reg->ls);
-		sip_auth_reset(reg->auth);
+		/* the dialog will stop in case of a de-registration so we
+		 * must skip the digest challenge */
+		if (!reg->terminated)
+			sip_auth_reset(reg->auth);
 	}
 
 	return sip_drequestf(&reg->req, reg->sip, true, "REGISTER", reg->dlg,
