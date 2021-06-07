@@ -144,7 +144,7 @@ uint32_t hash_joaat_pl_ci(const struct pl *pl)
      __BYTE_ORDER == __LITTLE_ENDIAN) ||			\
 	(defined(i386) || defined(__i386__) || defined(__i486__) ||	\
 	 defined(__i586__) || defined(__i686__) || \
-	 defined(vax) || defined(MIPSEL))
+	 defined(vax) || defined(MIPSEL)) || defined(__loongarch__)
 # define HASH_LITTLE_ENDIAN 1
 # define HASH_BIG_ENDIAN 0
 #elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) &&	\
