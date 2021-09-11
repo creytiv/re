@@ -258,7 +258,7 @@ int tls_set_selfsigned(struct tls *tls, const char *cn)
 		goto out;
 
 	BN_set_word(bn, RSA_F4);
-	if (!RSA_generate_key_ex(rsa, 1024, bn, NULL))
+	if (!RSA_generate_key_ex(rsa, 2048, bn, NULL))
 		goto out;
 
 	key = EVP_PKEY_new();
