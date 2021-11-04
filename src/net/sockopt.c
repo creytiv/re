@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <re_types.h>
 #include <re_fmt.h>
+#define __USE_MISC 1
 #include <re_net.h>
 
 
