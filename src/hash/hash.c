@@ -96,6 +96,23 @@ void hash_unlink(struct le *le)
 
 
 /**
+ * If the element is present in the hashmap table, unlink it and deref the object,
+ * otherwise do nothing.  This is like hash_flush but for a single entry.
+ *
+ * @param le     List element
+ */
+void hash_remove(struct le *le)
+{
+	if (le->list != NULL)
+	{
+		void *data = le->data;
+		list_unlink(le);
+		mem_deref(data);
+	}
+}
+
+
+/**
  * Apply a handler function to all elements in the hashmap with a matching key
  *
  * @param h   Hashmap table
