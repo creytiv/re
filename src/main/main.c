@@ -106,6 +106,7 @@ struct re {
 
 #ifdef HAVE_EPOLL
 	struct epoll_event *events;  /**< Event set for epoll()             */
+	int eventc;
 	int epfd;                    /**< epoll control file descriptor     */
 #endif
 
@@ -134,6 +135,7 @@ static struct re global_re = {
 #endif
 #ifdef HAVE_EPOLL
 	NULL,
+	0,
 	-1,
 #endif
 #ifdef HAVE_KQUEUE
@@ -321,6 +323,13 @@ static int set_epoll_fds(struct re *re, int fd, int flags)
 		}
 	}
 	else {
+		int i;
+
+		/* cancel pending events */
+		for (i=0; i<re->eventc; i++)
+			if (re->events[i].data.fd == fd)
+				re->events[i].data.fd = -1;
+
 		if (-1 == epoll_ctl(re->epfd, EPOLL_CTL_DEL, fd, &event)) {
 			err = errno;
 			DEBUG_INFO("epoll_ctl: EPOLL_CTL_DEL: fd=%d (%m)\n",
@@ -711,6 +720,7 @@ static int fd_poll(struct re *re)
 		re_unlock(re);
 		n = epoll_wait(re->epfd, re->events, re->maxfds,
 			       to ? (int)to : -1);
+		re->eventc = n;
 		re_lock(re);
 		break;
 #endif
@@ -779,6 +789,10 @@ static int fd_poll(struct re *re)
 #ifdef HAVE_EPOLL
 		case METHOD_EPOLL:
 			fd = re->events[i].data.fd;
+			if (fd < 0) {
+				--n;
+				continue;
+			}
 
 			if (re->events[i].events & EPOLLIN)
 				flags |= FD_READ;
