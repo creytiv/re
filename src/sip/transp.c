@@ -175,7 +175,6 @@ static void conn_close(struct sip_conn *conn, int err)
 	conn->tc = mem_deref(conn->tc);
 	tmr_cancel(&conn->tmr_ka);
 	tmr_cancel(&conn->tmr);
-	hash_unlink(&conn->he);
 
 	le = list_head(&conn->ql);
 
@@ -195,6 +194,7 @@ static void conn_close(struct sip_conn *conn, int err)
 	}
 
 	sip_keepalive_signal(&conn->kal, err);
+	hash_remove(&conn->he);
 }
 
 
@@ -203,7 +203,6 @@ static void conn_tmr_handler(void *arg)
 	struct sip_conn *conn = arg;
 
 	conn_close(conn, ETIMEDOUT);
-	mem_deref(conn);
 }
 
 
@@ -221,7 +220,6 @@ static void conn_keepalive_handler(void *arg)
 	err = tcp_send(conn->tc, &mb);
 	if (err) {
 		conn_close(conn, err);
-		mem_deref(conn);
 		return;
 	}
 
@@ -448,7 +446,6 @@ static void tcp_recv_handler(struct mbuf *mb, void *arg)
  out:
 	if (err) {
 		conn_close(conn, err);
-		mem_deref(conn);
 	}
 }
 
@@ -492,7 +489,6 @@ static void tcp_close_handler(int err, void *arg)
 	struct sip_conn *conn = arg;
 
 	conn_close(conn, err ? err : ECONNRESET);
-	mem_deref(conn);
 }
 
 

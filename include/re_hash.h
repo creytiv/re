@@ -12,6 +12,7 @@ struct pl;
 int  hash_alloc(struct hash **hp, uint32_t bsize);
 void hash_append(struct hash *h, uint32_t key, struct le *le, void *data);
 void hash_unlink(struct le *le);
+void hash_remove(struct le *le);
 struct le *hash_lookup(const struct hash *h, uint32_t key, list_apply_h *ah,
 		       void *arg);
 struct le *hash_apply(const struct hash *h, list_apply_h *ah, void *arg);
